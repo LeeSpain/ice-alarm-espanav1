@@ -43,6 +43,14 @@ export const WEBSITE_IMAGE_CONFIGS: WebsiteImageConfig[] = [
     aspectRatio: "square",
     usedIn: ["PendantPage"],
   },
+  {
+    locationKey: "homepage_pendant_promo",
+    title: "Homepage Pendant Promo Image",
+    description: "Product image in the pendant promotional section on homepage. Recommended: 400x400px (square)",
+    defaultAsset: pendantHeroDefault,
+    aspectRatio: "square",
+    usedIn: ["LandingPage"],
+  },
 ];
 
 /**
