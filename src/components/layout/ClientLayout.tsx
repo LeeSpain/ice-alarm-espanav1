@@ -51,9 +51,8 @@ export function ClientLayout() {
           <Logo size="sm" />
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
@@ -63,14 +62,15 @@ export function ClientLayout() {
                   <NavLink
                     to={item.path}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium transition-all touch-target",
+                      "flex items-center gap-3 rounded-lg px-4 py-4 text-lg font-medium transition-all touch-target",
                       "hover:bg-accent hover:text-accent-foreground",
+                      "min-h-[56px]", // Ensure minimum 48px touch target for elderly users
                       isActive 
                         ? "bg-primary text-primary-foreground" 
                         : "text-foreground"
                     )}
                   >
-                    <Icon className="h-5 w-5 shrink-0" />
+                    <Icon className="h-6 w-6 shrink-0" />
                     <span>{item.label}</span>
                   </NavLink>
                 </li>
@@ -79,13 +79,13 @@ export function ClientLayout() {
           </ul>
         </nav>
 
-        {/* Emergency Button */}
+        {/* Emergency Button - Large touch target */}
         <div className="p-4 border-t">
           <Button 
             size="lg" 
-            className="w-full h-14 text-lg font-semibold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground"
+            className="w-full h-16 text-xl font-bold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground shadow-lg"
           >
-            <Phone className="mr-2 h-5 w-5" />
+            <Phone className="mr-3 h-7 w-7" />
             {t("dashboard.contactIceAlarm")}
           </Button>
         </div>
@@ -108,7 +108,7 @@ export function ClientLayout() {
         {mobileMenuOpen && (
           <div className="absolute top-16 left-0 right-0 bg-card border-b shadow-lg animate-fade-in">
             <nav className="py-2 px-2">
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {menuItems.map((item) => {
                   const isActive = location.pathname === item.path;
                   const Icon = item.icon;
@@ -119,14 +119,15 @@ export function ClientLayout() {
                         to={item.path}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all",
+                          "flex items-center gap-3 rounded-lg px-4 py-4 text-lg font-medium transition-all",
                           "hover:bg-accent hover:text-accent-foreground",
+                          "min-h-[56px]", // Large touch target
                           isActive 
                             ? "bg-primary text-primary-foreground" 
                             : "text-foreground"
                         )}
                       >
-                        <Icon className="h-5 w-5 shrink-0" />
+                        <Icon className="h-6 w-6 shrink-0" />
                         <span>{item.label}</span>
                       </NavLink>
                     </li>
@@ -137,9 +138,9 @@ export function ClientLayout() {
             <div className="p-4 border-t">
               <Button 
                 size="lg" 
-                className="w-full h-14 text-lg font-semibold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground"
+                className="w-full h-16 text-xl font-bold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground shadow-lg"
               >
-                <Phone className="mr-2 h-5 w-5" />
+                <Phone className="mr-3 h-7 w-7" />
                 {t("dashboard.contactIceAlarm")}
               </Button>
             </div>
