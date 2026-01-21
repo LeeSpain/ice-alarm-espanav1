@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export function ImageUploadCard({
   aspectRatio = "video",
 }: ImageUploadCardProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -117,6 +119,10 @@ export function ImageUploadCard({
         if (insertError) throw insertError;
       }
 
+      // Invalidate all image-related caches so public pages refresh immediately
+      queryClient.invalidateQueries({ queryKey: ["website-image", locationKey] });
+      queryClient.invalidateQueries({ queryKey: ["website-images"] });
+
       toast({
         title: "Image updated",
         description: `${title} has been updated successfully.`,
@@ -146,6 +152,10 @@ export function ImageUploadCard({
         .eq("location_key", locationKey);
 
       if (error) throw error;
+
+      // Invalidate all image-related caches so public pages refresh immediately
+      queryClient.invalidateQueries({ queryKey: ["website-image", locationKey] });
+      queryClient.invalidateQueries({ queryKey: ["website-images"] });
 
       toast({
         title: "Reset to default",

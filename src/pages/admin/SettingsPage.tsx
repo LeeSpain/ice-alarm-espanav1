@@ -25,8 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploadCard } from "@/components/admin/settings/ImageUploadCard";
 import { useWebsiteImages } from "@/hooks/useWebsiteImage";
-import heroFamilyDefault from "@/assets/hero-family.jpg";
-import pendantProductDefault from "@/assets/pendant-product.jpg";
+import { WEBSITE_IMAGE_CONFIGS } from "@/config/websiteImages";
 
 interface SystemSetting {
   key: string;
@@ -741,36 +740,6 @@ function ImagesTab() {
     return images.find(img => img.location_key === locationKey)?.image_url;
   };
 
-  const imageConfigs: Array<{
-    locationKey: string;
-    title: string;
-    description: string;
-    defaultImageUrl: string;
-    aspectRatio: "video" | "square" | "landscape";
-  }> = [
-    {
-      locationKey: "homepage_hero",
-      title: "Homepage Hero Image",
-      description: "Main hero image displayed on the landing page. Recommended: 1200x900px (4:3).",
-      defaultImageUrl: heroFamilyDefault,
-      aspectRatio: "landscape",
-    },
-    {
-      locationKey: "pendant_hero",
-      title: "Pendant Page Hero",
-      description: "Main product image on the pendant page hero section. Recommended: 800x800px (1:1).",
-      defaultImageUrl: pendantProductDefault,
-      aspectRatio: "square",
-    },
-    {
-      locationKey: "pendant_specs",
-      title: "Pendant Specs Image",
-      description: "Pendant image shown in the specifications section. Recommended: 600x600px (1:1).",
-      defaultImageUrl: pendantProductDefault,
-      aspectRatio: "square",
-    },
-  ];
-
   return (
     <TabsContent value="images">
       <div className="space-y-6">
@@ -782,19 +751,20 @@ function ImagesTab() {
             </CardTitle>
             <CardDescription>
               Manage images displayed on public pages. Changes take effect immediately.
+              New image locations are automatically discovered from the registry.
             </CardDescription>
           </CardHeader>
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {imageConfigs.map((config) => (
+          {WEBSITE_IMAGE_CONFIGS.map((config) => (
             <ImageUploadCard
               key={config.locationKey}
               locationKey={config.locationKey}
               title={config.title}
               description={config.description}
               currentImageUrl={getImageUrl(config.locationKey)}
-              defaultImageUrl={config.defaultImageUrl}
+              defaultImageUrl={config.defaultAsset}
               onImageUpdated={refetch}
               aspectRatio={config.aspectRatio}
             />
