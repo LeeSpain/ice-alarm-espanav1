@@ -20,6 +20,9 @@ export default function LandingPage() {
             <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.features")}
             </a>
+            <Link to="/pendant" className="text-sm font-medium hover:text-primary transition-colors">
+              Pendant
+            </Link>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pricing")}
             </a>

@@ -16,6 +16,7 @@ import { ClientLayout } from "@/components/layout/ClientLayout";
 // Pages
 import Index from "./pages/Index";
 import ContactPage from "./pages/ContactPage";
+import PendantPage from "./pages/PendantPage";
 import NotFound from "./pages/NotFound";
 
 // Auth Pages
@@ -77,6 +78,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/pendant" element={<PendantPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/staff/login" element={<StaffLogin />} />
