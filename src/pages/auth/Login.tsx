@@ -3,27 +3,30 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Logo } from "@/components/ui/logo";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function Login() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
+
+  const loginSchema = z.object({
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(6, t("validation.passwordMin")),
+  });
+
+  type LoginFormValues = z.infer<typeof loginSchema>;
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -47,7 +50,6 @@ export default function Login() {
       }
 
       if (data.user) {
-        // Check if user is a member
         const { data: memberData } = await supabase
           .from("members")
           .select("id")
@@ -55,16 +57,15 @@ export default function Login() {
           .maybeSingle();
 
         if (memberData) {
-          toast.success("Welcome back!");
+          toast.success(t("auth.loginTitle"));
           navigate(from);
         } else {
-          // User exists but no member profile - redirect to complete registration
-          toast.info("Please complete your registration");
+          toast.info(t("auth.registerSubtitle"));
           navigate("/complete-registration");
         }
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t("errors.unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -73,17 +74,18 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="flex items-center justify-between mb-8">
           <Link to="/" className="inline-block">
             <Logo size="md" />
           </Link>
+          <LanguageSelector />
         </div>
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Member Login</CardTitle>
+            <CardTitle className="text-2xl">{t("auth.memberLogin")}</CardTitle>
             <CardDescription>
-              Sign in to access your ICE Alarm dashboard
+              {t("auth.memberLoginDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,7 +96,7 @@ export default function Login() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t("auth.email")}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -112,7 +114,7 @@ export default function Login() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("auth.password")}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
@@ -129,10 +131,10 @@ export default function Login() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      {t("auth.signingIn")}
                     </>
                   ) : (
-                    "Sign In"
+                    t("common.signIn")
                   )}
                 </Button>
               </form>
@@ -140,9 +142,9 @@ export default function Login() {
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
-                Don't have an account?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link to="/register" className="text-primary hover:underline font-medium">
-                  Register here
+                  {t("auth.registerHere")}
                 </Link>
               </p>
             </div>
@@ -153,16 +155,16 @@ export default function Login() {
                 className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to home
+                {t("auth.backToHome")}
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
-          Staff member?{" "}
+          {t("auth.staffMember")}{" "}
           <Link to="/staff/login" className="text-primary hover:underline">
-            Login here
+            {t("auth.loginHere")}
           </Link>
         </p>
       </div>

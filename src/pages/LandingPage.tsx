@@ -1,11 +1,15 @@
-import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, Play, ShieldCheck } from "lucide-react";
+import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import heroFamily from "@/assets/hero-family.jpg";
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -14,29 +18,29 @@ export default function LandingPage() {
           <Logo size="sm" />
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              Features
+              {t("navigation.features")}
             </a>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              Pricing
+              {t("navigation.pricing")}
             </a>
             <a href="#contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contact
+              {t("navigation.contact")}
             </a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
             <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
+              <Link to="/login">{t("common.signIn")}</Link>
             </Button>
             <Button asChild>
-              <Link to="/register">Get Started</Link>
+              <Link to="/register">{t("common.getStarted")}</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section - Enhanced */}
+      {/* Hero Section */}
       <section className="pt-24 pb-12 relative overflow-hidden">
-        {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/30 -z-10" />
         <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
         
@@ -49,23 +53,22 @@ export default function LandingPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-alert-resolved"></span>
                 </span>
-                <span className="text-sm font-medium text-primary">24/7 Emergency Response in Spain</span>
+                <span className="text-sm font-medium text-primary">{t("landing.emergencyResponse")}</span>
               </div>
               
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
-                Peace of Mind for 
-                <span className="text-gradient block mt-2">Your Family in Spain</span>
+                {t("landing.heroTitle")}
+                <span className="text-gradient block mt-2">{t("landing.heroTitleHighlight")}</span>
               </h1>
               
               <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
-                Professional 24/7 emergency medical response for English and Spanish-speaking 
-                expats. One press of a button connects you to our bilingual response team.
+                {t("landing.heroDescription")}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Button size="lg" className="h-14 px-8 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
                   <Link to="/register">
-                    Start Your Protection
+                    {t("landing.startProtection")}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -81,33 +84,31 @@ export default function LandingPage() {
                   <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
                     <Check className="h-3 w-3 text-alert-resolved" />
                   </div>
-                  <span className="text-muted-foreground">No contracts</span>
+                  <span className="text-muted-foreground">{t("landing.noContracts")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
                     <Check className="h-3 w-3 text-alert-resolved" />
                   </div>
-                  <span className="text-muted-foreground">Cancel anytime</span>
+                  <span className="text-muted-foreground">{t("landing.cancelAnytime")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
                     <Check className="h-3 w-3 text-alert-resolved" />
                   </div>
-                  <span className="text-muted-foreground">English & Spanish</span>
+                  <span className="text-muted-foreground">{t("landing.englishSpanish")}</span>
                 </div>
               </div>
             </div>
 
             {/* Right Image */}
             <div className="relative">
-              {/* Main image container */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10">
                 <img 
                   src={heroFamily} 
                   alt="Happy multigenerational family enjoying peace of mind with ICE Alarm protection" 
                   className="w-full h-auto object-cover"
                 />
-                {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
 
@@ -119,7 +120,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">10,000+</p>
-                    <p className="text-sm text-muted-foreground">Families Protected</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.familiesProtected")}</p>
                   </div>
                 </div>
               </div>
@@ -132,12 +133,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">&lt;30 sec</p>
-                    <p className="text-sm text-muted-foreground">Response Time</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.responseTime")}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Decorative elements */}
               <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-primary/10" />
               <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-primary/5" />
             </div>
@@ -149,10 +149,9 @@ export default function LandingPage() {
       <section id="features" className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose ICE Alarm España?</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("landing.whyChoose")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We understand the unique needs of expats living in Spain. Our service is designed 
-              specifically for you.
+              {t("landing.whyChooseDesc")}
             </p>
           </div>
 
@@ -162,9 +161,9 @@ export default function LandingPage() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Clock className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">24/7 Response</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.feature24_7")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Round-the-clock monitoring with immediate response to all alerts, day or night.
+                  {t("landing.feature24_7Desc")}
                 </p>
               </CardContent>
             </Card>
@@ -174,9 +173,9 @@ export default function LandingPage() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Bilingual Support</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureBilingual")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Fluent English and Spanish operators who can communicate with you and local services.
+                  {t("landing.featureBilingualDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -186,9 +185,9 @@ export default function LandingPage() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Shield className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">GPS Location</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureGps")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Automatic location sharing ensures help finds you quickly, wherever you are.
+                  {t("landing.featureGpsDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -198,9 +197,9 @@ export default function LandingPage() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Heart className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Medical Profile</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureMedical")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Your medical information is instantly available to responders for better care.
+                  {t("landing.featureMedicalDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -212,10 +211,10 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Simple, Transparent Pricing</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("landing.simplePricing")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that fits your needs. All plans include 24/7 monitoring and bilingual support.
-              <span className="block mt-2 text-sm">All prices include IVA. One-time registration fee: €59.99</span>
+              {t("landing.pricingDesc")}
+              <span className="block mt-2 text-sm">{t("landing.pricesIncludeIva")}</span>
             </p>
           </div>
 
@@ -223,35 +222,35 @@ export default function LandingPage() {
             {/* Single Membership */}
             <Card className="relative">
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">Single Membership</h3>
-                <p className="text-sm text-muted-foreground mb-4">For one person</p>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.singleMembership")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("landing.forOnePerson")}</p>
                 <div className="mb-2">
                   <span className="text-4xl font-bold">€27.49</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-muted-foreground">{t("landing.perMonth")}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  or €274.89/year <span className="text-alert-resolved">(Save 2 months!)</span>
+                  {t("common.or")} €274.89{t("landing.perYear")} <span className="text-alert-resolved">({t("landing.saveTwoMonths")})</span>
                 </p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    24/7 emergency monitoring
+                    {t("landing.emergencyMonitoring")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Bilingual support (EN/ES)
+                    {t("landing.bilingualSupport")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Works anywhere in Spain
+                    {t("landing.worksAnywhere")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Phone-only or with pendant
+                    {t("landing.phoneOrPendant")}
                   </li>
                 </ul>
                 <Button className="w-full" variant="outline" asChild>
-                  <Link to="/register">Get Started</Link>
+                  <Link to="/register">{t("common.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -260,43 +259,43 @@ export default function LandingPage() {
             <Card className="relative border-primary shadow-glow">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
-                  Most Popular
+                  {t("landing.mostPopular")}
                 </span>
               </div>
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">Couple Membership</h3>
-                <p className="text-sm text-muted-foreground mb-4">For two people in the same household</p>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.coupleMembership")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("landing.forTwoPeople")}</p>
                 <div className="mb-2">
                   <span className="text-4xl font-bold">€38.49</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-muted-foreground">{t("landing.perMonth")}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  or €384.89/year <span className="text-alert-resolved">(Save 2 months!)</span>
+                  {t("common.or")} €384.89{t("landing.perYear")} <span className="text-alert-resolved">({t("landing.saveTwoMonths")})</span>
                 </p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    24/7 emergency monitoring
+                    {t("landing.emergencyMonitoring")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Bilingual support (EN/ES)
+                    {t("landing.bilingualSupport")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Works anywhere in Spain
+                    {t("landing.worksAnywhere")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Both members protected
+                    {t("landing.bothProtected")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Share one pendant device
+                    {t("landing.sharePendant")}
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
-                  <Link to="/register">Get Started</Link>
+                  <Link to="/register">{t("common.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -308,39 +307,38 @@ export default function LandingPage() {
               <CardContent className="pt-6">
                 <div className="grid md:grid-cols-2 gap-6 items-center">
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">ICE Alarm GPS Pendant</h3>
-                    <p className="text-sm text-muted-foreground mb-2">Optional but highly recommended</p>
+                    <h3 className="font-semibold text-lg mb-2">{t("landing.gpsPendant")}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{t("landing.optionalRecommended")}</p>
                     <div className="mb-4">
                       <span className="text-2xl font-bold">€151.25</span>
-                      <span className="text-muted-foreground text-sm"> (incl. 21% IVA) + €14.99 shipping</span>
+                      <span className="text-muted-foreground text-sm"> ({t("landing.inclIva")}) + €14.99 {t("landing.shipping")}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Without a pendant, you can still call our 24/7 emergency line from your phone, 
-                      but you won't have GPS tracking, fall detection, or SOS button features.
+                      {t("landing.withoutPendant")}
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-medium mb-3 text-sm">Pendant Features:</h4>
+                    <h4 className="font-medium mb-3 text-sm">{t("landing.pendantFeatures")}</h4>
                     <ul className="space-y-2">
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-alert-resolved" />
-                        GPS location tracking
+                        {t("landing.gpsTracking")}
                       </li>
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-alert-resolved" />
-                        Automatic fall detection
+                        {t("landing.fallDetection")}
                       </li>
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-alert-resolved" />
-                        SOS button with 2-way communication
+                        {t("landing.sosButton")}
                       </li>
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-alert-resolved" />
-                        Geo-fencing alerts
+                        {t("landing.geoFencing")}
                       </li>
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-alert-resolved" />
-                        Lightweight & long battery life
+                        {t("landing.longBattery")}
                       </li>
                     </ul>
                   </div>
@@ -360,13 +358,32 @@ export default function LandingPage() {
             ))}
           </div>
           <blockquote className="text-xl md:text-2xl font-medium mb-6">
-            "ICE Alarm gave me peace of mind after my husband's heart attack. 
-            Knowing that help is just one button press away, in a language I understand, 
-            has made all the difference living abroad."
+            "{t("landing.testimonialQuote")}"
           </blockquote>
           <cite className="text-primary-foreground/80">
-            — Margaret Thompson, British expat in Mojácar
+            — {t("landing.testimonialAuthor")}, {t("landing.testimonialLocation")}
           </cite>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto text-center max-w-2xl">
+          <h2 className="text-3xl font-bold mb-4">{t("landing.readyToJoin")}</h2>
+          <p className="text-muted-foreground mb-8">
+            {t("landing.readyToJoinDesc")}
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="h-14 px-8 text-lg" asChild>
+              <Link to="/register">
+                {t("landing.startProtection")}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-6">
+            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <strong>+34 900 123 456</strong>
+          </p>
         </div>
       </section>
 
@@ -377,11 +394,11 @@ export default function LandingPage() {
             <div>
               <Logo variant="white" size="sm" className="mb-4" />
               <p className="text-sm text-sidebar-foreground/70">
-                24/7 emergency medical response for English and Spanish-speaking expats in Spain.
+                {t("landing.heroDescription")}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
+              <h4 className="font-semibold mb-4">{t("navigation.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
                 <li>+34 900 123 456</li>
                 <li>info@icealarm.es</li>
@@ -392,23 +409,21 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Links</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">How It Works</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">FAQs</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">Blog</a></li>
+                <li><a href="#features" className="hover:text-sidebar-foreground transition-colors">{t("navigation.features")}</a></li>
+                <li><a href="#pricing" className="hover:text-sidebar-foreground transition-colors">{t("navigation.pricing")}</a></li>
+                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">{t("support.faq")}</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">{t("landing.termsOfService")}</a></li>
+                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">{t("landing.privacyPolicy")}</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-sidebar-border pt-8 text-center text-sm text-sidebar-foreground/60">
-            <p>© {new Date().getFullYear()} ICE Alarm España. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ICE Alarm España. {t("landing.allRightsReserved")}</p>
           </div>
         </div>
       </footer>
