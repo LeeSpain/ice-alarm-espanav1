@@ -51,6 +51,7 @@ import DevicePage from "./pages/client/DevicePage";
 import SubscriptionPage from "./pages/client/SubscriptionPage";
 import AlertHistoryPage from "./pages/client/AlertHistoryPage";
 import SupportPage from "./pages/client/SupportPage";
+import ClientMessagesPage from "./pages/client/MessagesPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -123,6 +124,7 @@ const App = () => (
               <Route path="subscription" element={<SubscriptionPage />} />
               <Route path="alerts" element={<AlertHistoryPage />} />
               <Route path="support" element={<SupportPage />} />
+              <Route path="messages" element={<ClientMessagesPage />} />
             </Route>
 
             {/* Catch-all route */}

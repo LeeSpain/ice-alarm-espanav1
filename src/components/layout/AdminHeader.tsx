@@ -1,4 +1,5 @@
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, User, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,26 +17,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function AdminHeader() {
   const { t } = useTranslation();
   const { user, signOut, staffRole } = useAuth();
   const navigate = useNavigate();
+  const [staffId, setStaffId] = useState<string | null>(null);
 
-  // Fetch active alerts count
-  const { data: alertCount = 0 } = useQuery({
-    queryKey: ["active-alerts-count"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("alerts")
-        .select("*", { count: "exact", head: true })
-        .in("status", ["incoming", "in_progress"]);
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+  // Fetch staff ID
+  useEffect(() => {
+    const fetchStaffId = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from("staff")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+        setStaffId(data?.id || null);
+      }
+    };
+    fetchStaffId();
+  }, [user?.id]);
 
   // Fetch staff info
   const { data: staffInfo } = useQuery({
@@ -88,19 +91,7 @@ export function AdminHeader() {
         <LanguageSelector variant="icon-only" />
 
         {/* Notifications */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="relative"
-          onClick={() => navigate("/admin/alerts")}
-        >
-          <Bell className="h-5 w-5" />
-          {alertCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-alert-sos text-alert-sos-foreground">
-              {alertCount > 9 ? "9+" : alertCount}
-            </Badge>
-          )}
-        </Button>
+        <NotificationBell staffId={staffId} />
 
         {/* User Menu */}
         <DropdownMenu>
