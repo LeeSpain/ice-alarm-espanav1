@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { FileText, User, Phone, LogOut } from "lucide-react";
+import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +51,32 @@ export function CallCentreLayout() {
             <Link to="/call-centre">
               <Phone className="h-4 w-4 mr-2" />
               {t("navigation.alerts")}
+            </Link>
+          </Button>
+
+          {/* Messages */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${location.pathname.includes('messages') ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre/messages">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Messages
+            </Link>
+          </Button>
+
+          {/* Tasks */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-sidebar-foreground hover:bg-sidebar-accent"
+            asChild
+          >
+            <Link to="/call-centre/tasks">
+              <CheckSquare className="h-4 w-4 mr-2" />
+              Tasks
             </Link>
           </Button>
 

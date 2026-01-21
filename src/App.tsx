@@ -37,6 +37,7 @@ import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import MemberDetailPage from "./pages/admin/MemberDetailPage";
+import AddMemberWizard from "./pages/admin/AddMemberWizard";
 
 // Call Centre Pages
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
@@ -90,6 +91,7 @@ const App = () => (
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
             </Route>
 
