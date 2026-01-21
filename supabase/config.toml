@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.save-api-keys]
 verify_jwt = false
+
+[functions.save-registration-draft]
+verify_jwt = false

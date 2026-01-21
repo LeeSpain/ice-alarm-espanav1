@@ -989,6 +989,65 @@ export type Database = {
           },
         ]
       }
+      registration_drafts: {
+        Row: {
+          abandoned_at: string | null
+          converted_member_id: string | null
+          created_at: string
+          current_step: number
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          session_id: string
+          source: string
+          status: string
+          updated_at: string
+          wizard_data: Json
+        }
+        Insert: {
+          abandoned_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          current_step?: number
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          session_id: string
+          source?: string
+          status?: string
+          updated_at?: string
+          wizard_data?: Json
+        }
+        Update: {
+          abandoned_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          current_step?: number
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          session_id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          wizard_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_drafts_converted_member_id_fkey"
+            columns: ["converted_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_notes: {
         Row: {
           created_at: string | null
