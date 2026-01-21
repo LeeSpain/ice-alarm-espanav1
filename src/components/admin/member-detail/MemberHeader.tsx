@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, Edit, MoreHorizontal, Phone, Mail, MapPin } from "lucide-react";
+import { Edit, MoreHorizontal, Phone, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,12 +58,6 @@ export function MemberHeader({
 
   return (
     <div className="space-y-4">
-      {/* Back Button */}
-      <Link to="/admin/members" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Members
-      </Link>
-
       {/* Member Info Card */}
       <div className="flex flex-col md:flex-row md:items-start gap-4 p-4 bg-card rounded-lg border">
         {/* Photo */}

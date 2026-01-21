@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -52,11 +52,16 @@ interface Device {
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [member, setMember] = useState<Member | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [device, setDevice] = useState<Device | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
+
+  // Determine if we're in call-centre or admin context
+  const isCallCentre = location.pathname.startsWith('/call-centre');
+  const backPath = isCallCentre ? '/call-centre/members' : '/admin/members';
 
   useEffect(() => {
     if (id) {
@@ -79,7 +84,7 @@ export default function MemberDetailPage() {
     } catch (error) {
       console.error("Error fetching member:", error);
       toast.error("Failed to load member");
-      navigate("/admin/members");
+      navigate(backPath);
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +148,7 @@ export default function MemberDetailPage() {
 
       if (error) throw error;
       toast.success("Member deleted");
-      navigate("/admin/members");
+      navigate(backPath);
     } catch (error) {
       console.error("Error deleting member:", error);
       toast.error("Failed to delete member");
@@ -162,7 +167,7 @@ export default function MemberDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Member not found</p>
-        <Button variant="link" onClick={() => navigate("/admin/members")}>
+        <Button variant="link" onClick={() => navigate(backPath)}>
           Back to Members
         </Button>
       </div>
@@ -174,7 +179,7 @@ export default function MemberDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate("/admin/members")} className="mb-2">
+      <Button variant="ghost" onClick={() => navigate(backPath)} className="mb-2">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Members
       </Button>
