@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 
 interface AlertStats {
   incoming: number;
@@ -605,8 +606,10 @@ export default function StaffDashboard() {
         </Card>
       </div>
 
-      {/* Bottom Row: Birthdays and Shift Notes */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Bottom Row: Leads, Birthdays and Shift Notes */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Leads Widget */}
+        <LeadsWidget variant="staff" />
         {/* Today's Birthdays */}
         <Card>
           <CardHeader className="pb-3">

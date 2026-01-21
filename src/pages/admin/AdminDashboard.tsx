@@ -10,12 +10,14 @@ import {
   Calendar,
   TrendingUp,
   Package,
-  AlertTriangle
+  AlertTriangle,
+  UserPlus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 
 export default function AdminDashboard() {
   // Fetch active members count
@@ -241,7 +243,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Leads Widget */}
+        <LeadsWidget variant="admin" />
+
         {/* Active Alerts */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -256,7 +261,7 @@ export default function AdminDashboard() {
           <CardContent>
             {alertsData?.alerts && alertsData.alerts.length > 0 ? (
               <div className="space-y-3">
-                {alertsData.alerts.map((alert: any) => (
+                {alertsData.alerts.slice(0, 4).map((alert: any) => (
                   <div
                     key={alert.id}
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"

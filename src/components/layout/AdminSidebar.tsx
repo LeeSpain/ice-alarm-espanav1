@@ -16,7 +16,8 @@ import {
   MessageSquare,
   CheckSquare,
   UserPlus,
-  Ticket
+  Ticket,
+  Contact
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -45,6 +46,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+  { icon: Contact, label: "Leads", path: "/admin/leads" },
   { icon: Users, label: "Members", path: "/admin/members" },
   { icon: UserPlus, label: "Add Member", path: "/admin/members/new" },
   { icon: Smartphone, label: "Devices", path: "/admin/devices" },
