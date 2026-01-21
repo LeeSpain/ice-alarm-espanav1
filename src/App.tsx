@@ -46,6 +46,7 @@ import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
 import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
 import CallCentreTasksPage from "./pages/call-centre/TasksPage";
 import CallCentreMembersPage from "./pages/call-centre/MembersPage";
+import CallCentreMessagesPage from "./pages/call-centre/MessagesPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -114,7 +115,7 @@ const App = () => (
               <Route path="members" element={<CallCentreMembersPage />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
               <Route path="shift-notes" element={<ShiftNotesPage />} />
-              <Route path="messages" element={<MessagesPage />} />
+              <Route path="messages" element={<CallCentreMessagesPage />} />
               <Route path="tasks" element={<CallCentreTasksPage />} />
             </Route>
 
