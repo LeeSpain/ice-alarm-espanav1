@@ -1,77 +1,63 @@
-import { useState } from "react";
-import { Search, Filter, Clock, AlertTriangle, Battery, CheckCircle, PhoneCall } from "lucide-react";
-import { AlertCard } from "@/components/dashboard/AlertCard";
+import { useState, useEffect } from "react";
+import { Search, Filter, Clock, AlertTriangle, CheckCircle, PhoneCall, Volume2, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useAlerts, EnrichedAlert } from "@/hooks/useAlerts";
+import { AlertDetailPanel } from "@/components/call-centre/AlertDetailPanel";
+import { MemberQuickSearch } from "@/components/call-centre/MemberQuickSearch";
+import { AlertCard } from "@/components/dashboard/AlertCard";
 
-// Mock alerts data
-const mockAlerts = [
-  {
-    id: "1",
-    type: "sos_button" as const,
-    status: "incoming" as const,
-    memberName: "María García",
-    location: "Calle Mayor 42, Albox, Almería",
-    medicalConditions: ["Diabetes", "Heart condition", "High blood pressure"],
-    receivedAt: new Date(Date.now() - 1000 * 60 * 2),
-  },
-  {
-    id: "2",
-    type: "fall_detected" as const,
-    status: "incoming" as const,
-    memberName: "Antonio Ruiz",
-    location: "Avenida del Sol 15, Mojácar, Almería",
-    medicalConditions: ["Arthritis"],
-    receivedAt: new Date(Date.now() - 1000 * 60 * 5),
-  },
-  {
-    id: "3",
-    type: "sos_button" as const,
-    status: "in_progress" as const,
-    memberName: "Carmen Vega",
-    location: "Plaza España 8, Vera, Almería",
-    medicalConditions: ["Asthma"],
-    receivedAt: new Date(Date.now() - 1000 * 60 * 12),
-  },
-  {
-    id: "4",
-    type: "low_battery" as const,
-    status: "incoming" as const,
-    memberName: "Pedro Fernández",
-    location: "Calle Luna 22, Garrucha, Almería",
-    receivedAt: new Date(Date.now() - 1000 * 60 * 20),
-  },
-  {
-    id: "5",
-    type: "check_in" as const,
-    status: "resolved" as const,
-    memberName: "Isabel Martínez",
-    location: "Calle del Mar 5, Carboneras, Almería",
-    receivedAt: new Date(Date.now() - 1000 * 60 * 45),
-  },
-];
-
-type TabValue = "all" | "incoming" | "in_progress" | "resolved";
+type TabValue = "all" | "incoming" | "in_progress" | "escalated";
 
 export default function CallCentreDashboard() {
+  const { alerts, isLoading, claimAlert, resolveAlert, escalateAlert } = useAlerts();
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAlert, setSelectedAlert] = useState<EnrichedAlert | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const filteredAlerts = mockAlerts.filter((alert) => {
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const filteredAlerts = alerts.filter((alert) => {
     const matchesTab = activeTab === "all" || alert.status === activeTab;
-    const matchesSearch = alert.memberName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = 
+      alert.memberName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       alert.location?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
   const alertCounts = {
-    all: mockAlerts.length,
-    incoming: mockAlerts.filter(a => a.status === "incoming").length,
-    in_progress: mockAlerts.filter(a => a.status === "in_progress").length,
-    resolved: mockAlerts.filter(a => a.status === "resolved").length,
+    all: alerts.length,
+    incoming: alerts.filter(a => a.status === "incoming").length,
+    in_progress: alerts.filter(a => a.status === "in_progress").length,
+    escalated: alerts.filter(a => a.status === "escalated").length,
+  };
+
+  const handleClaimAlert = async (alertId: string) => {
+    const enrichedAlert = await claimAlert(alertId);
+    if (enrichedAlert) {
+      setSelectedAlert(enrichedAlert);
+      setIsDetailOpen(true);
+    }
+  };
+
+  const handleResolveAlert = async (alertId: string, notes: string) => {
+    await resolveAlert(alertId, notes);
+    setSelectedAlert(null);
+    setIsDetailOpen(false);
+  };
+
+  const handleEscalateAlert = async (alertId: string) => {
+    await escalateAlert(alertId);
   };
 
   return (
@@ -79,7 +65,10 @@ export default function CallCentreDashboard() {
       {/* Status Bar */}
       <div className="bg-accent/50 border-b px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Badge variant="outline" className="bg-alert-sos/10 text-alert-sos border-alert-sos/30 animate-pulse-soft">
+          <Badge variant="outline" className={cn(
+            "bg-alert-sos/10 text-alert-sos border-alert-sos/30",
+            alertCounts.incoming > 0 && "animate-pulse"
+          )}>
             <AlertTriangle className="w-3 h-3 mr-1" />
             {alertCounts.incoming} Incoming
           </Badge>
@@ -87,19 +76,31 @@ export default function CallCentreDashboard() {
             <Clock className="w-3 h-3 mr-1" />
             {alertCounts.in_progress} In Progress
           </Badge>
-          <Badge variant="outline" className="bg-alert-resolved/10 text-alert-resolved border-alert-resolved/30">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            {alertCounts.resolved} Resolved Today
-          </Badge>
+          {alertCounts.escalated > 0 && (
+            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {alertCounts.escalated} Escalated
+            </Badge>
+          )}
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          <span>{new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={cn(!soundEnabled && "text-muted-foreground")}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span>{currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Alert Queue */}
         <div className="flex-1 border-r flex flex-col">
           {/* Search and Filters */}
@@ -127,15 +128,17 @@ export default function CallCentreDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="incoming" className="gap-1">
                   Incoming
-                  <Badge className="ml-1 h-5 px-1.5 bg-alert-sos">{alertCounts.incoming}</Badge>
+                  <Badge className={cn("ml-1 h-5 px-1.5", alertCounts.incoming > 0 ? "bg-alert-sos" : "bg-muted text-muted-foreground")}>
+                    {alertCounts.incoming}
+                  </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="in_progress" className="gap-1">
                   In Progress
                   <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.in_progress}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="resolved" className="gap-1">
-                  Resolved
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.resolved}</Badge>
+                <TabsTrigger value="escalated" className="gap-1">
+                  Escalated
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.escalated}</Badge>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -143,43 +146,43 @@ export default function CallCentreDashboard() {
 
           {/* Alert List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {filteredAlerts.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                <p>Loading alerts...</p>
+              </div>
+            ) : filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => (
                 <AlertCard
                   key={alert.id}
-                  {...alert}
-                  onClaim={() => console.log("Claim alert:", alert.id)}
+                  id={alert.id}
+                  type={alert.type}
+                  status={alert.status}
+                  memberName={alert.memberName}
+                  location={alert.location}
+                  medicalConditions={alert.medicalConditions}
+                  receivedAt={alert.receivedAt}
+                  onClaim={() => handleClaimAlert(alert.id)}
                 />
               ))
             ) : (
               <div className="text-center py-12 text-muted-foreground">
-                <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p className="text-lg font-medium">No alerts found</p>
-                <p className="text-sm">Alerts will appear here in real-time</p>
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-30 text-status-active" />
+                <p className="text-lg font-medium">All clear</p>
+                <p className="text-sm">No active alerts at the moment</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Member Quick Search Panel */}
-        <div className="w-80 bg-muted/30 p-4 hidden lg:block">
-          <h3 className="font-semibold mb-4">Quick Member Search</h3>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search members..."
-              className="pl-10 bg-background"
-            />
-          </div>
+        <div className="w-80 bg-muted/30 p-4 hidden lg:flex flex-col">
+          <MemberQuickSearch />
           
-          <div className="text-center text-sm text-muted-foreground py-8">
-            <p>Search for a member to view their details</p>
-          </div>
-
           <div className="mt-auto pt-4 border-t">
             <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
             <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="destructive" className="w-full justify-start gap-2">
                 <PhoneCall className="h-4 w-4" />
                 Call Emergency Services (112)
               </Button>
@@ -187,6 +190,18 @@ export default function CallCentreDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Alert Detail Panel */}
+      <AlertDetailPanel
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedAlert(null);
+        }}
+        alert={selectedAlert}
+        onResolve={handleResolveAlert}
+        onEscalate={handleEscalateAlert}
+      />
     </div>
   );
 }

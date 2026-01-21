@@ -38,6 +38,7 @@ import SettingsPage from "./pages/admin/SettingsPage";
 
 // Call Centre Pages
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
+import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -91,7 +92,7 @@ const App = () => (
               }
             >
               <Route index element={<CallCentreDashboard />} />
-              <Route path="shift-notes" element={<CallCentreDashboard />} />
+              <Route path="shift-notes" element={<ShiftNotesPage />} />
             </Route>
 
             {/* Client Dashboard Routes - Require Member */}
