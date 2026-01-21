@@ -1,5 +1,5 @@
-import heroFamilyDefault from "@/assets/hero-family.jpg";
-import pendantImageDefault from "@/assets/pendant-product.jpg";
+import pendantHeroDefault from "@/assets/pendant-product.png";
+import pendantSpecsDefault from "@/assets/pendant-specs.png";
 
 export interface WebsiteImageConfig {
   locationKey: string;
@@ -23,7 +23,7 @@ export const WEBSITE_IMAGE_CONFIGS: WebsiteImageConfig[] = [
     locationKey: "homepage_hero",
     title: "Homepage Hero Image",
     description: "Main hero image on landing page. Recommended: 1200x900px (4:3 aspect ratio)",
-    defaultAsset: heroFamilyDefault,
+    defaultAsset: pendantHeroDefault,
     aspectRatio: "landscape",
     usedIn: ["LandingPage"],
   },
@@ -31,7 +31,7 @@ export const WEBSITE_IMAGE_CONFIGS: WebsiteImageConfig[] = [
     locationKey: "pendant_hero",
     title: "Pendant Page Hero",
     description: "Main product image on pendant page. Recommended: 800x800px (square)",
-    defaultAsset: pendantImageDefault,
+    defaultAsset: pendantHeroDefault,
     aspectRatio: "square",
     usedIn: ["PendantPage"],
   },
@@ -39,7 +39,7 @@ export const WEBSITE_IMAGE_CONFIGS: WebsiteImageConfig[] = [
     locationKey: "pendant_specs",
     title: "Pendant Specs Image",
     description: "Specifications section image on pendant page. Recommended: 600x600px (square)",
-    defaultAsset: pendantImageDefault,
+    defaultAsset: pendantSpecsDefault,
     aspectRatio: "square",
     usedIn: ["PendantPage"],
   },
@@ -57,5 +57,5 @@ export function getImageConfig(locationKey: string): WebsiteImageConfig | undefi
  */
 export function getDefaultAsset(locationKey: string): string {
   const config = getImageConfig(locationKey);
-  return config?.defaultAsset || pendantImageDefault;
+  return config?.defaultAsset || pendantHeroDefault;
 }
