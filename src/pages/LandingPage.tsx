@@ -35,15 +35,15 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section - Enhanced */}
-      <section className="pt-20 lg:pt-16 min-h-screen flex items-center relative overflow-hidden">
+      <section className="pt-24 pb-12 relative overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/30 -z-10" />
         <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
         
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="space-y-8 text-center lg:text-left">
+            <div className="space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75"></span>
@@ -52,12 +52,12 @@ export default function LandingPage() {
                 <span className="text-sm font-medium text-primary">24/7 Emergency Response in Spain</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
                 Peace of Mind for 
-                <span className="text-gradient block mt-1">Your Family in Spain</span>
+                <span className="text-gradient block mt-2">Your Family in Spain</span>
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
                 Professional 24/7 emergency medical response for English and Spanish-speaking 
                 expats. One press of a button connects you to our bilingual response team.
               </p>
