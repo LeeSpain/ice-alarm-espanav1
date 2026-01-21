@@ -1,6 +1,8 @@
-import { Bell, Globe, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, User, LogOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AdminHeader() {
+  const { t } = useTranslation();
   const { user, signOut, staffRole } = useAuth();
   const navigate = useNavigate();
 
@@ -82,21 +85,7 @@ export function AdminHeader() {
       {/* Right side actions */}
       <div className="flex items-center gap-2">
         {/* Language Selector */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Globe className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <span className="mr-2">🇬🇧</span> English
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span className="mr-2">🇪🇸</span> Español
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <LanguageSelector variant="icon-only" />
 
         {/* Notifications */}
         <Button 
@@ -134,13 +123,13 @@ export function AdminHeader() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
-              Profile Settings
+              {t("navigation.settings")}
             </DropdownMenuItem>
-            <DropdownMenuItem>Preferences</DropdownMenuItem>
+            <DropdownMenuItem>{t("profile.preferences")}</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              {t("auth.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

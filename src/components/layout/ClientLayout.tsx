@@ -1,8 +1,9 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { 
-  Globe, 
   Home, 
   User, 
   Heart, 
@@ -25,20 +26,21 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-const menuItems = [
-  { icon: Home, label: "Home", path: "/dashboard" },
-  { icon: User, label: "My Profile", path: "/dashboard/profile" },
-  { icon: Heart, label: "Medical Info", path: "/dashboard/medical" },
-  { icon: Phone, label: "Emergency Contacts", path: "/dashboard/contacts" },
-  { icon: Smartphone, label: "My Device", path: "/dashboard/device" },
-  { icon: CreditCard, label: "Subscription", path: "/dashboard/subscription" },
-  { icon: Bell, label: "Alert History", path: "/dashboard/alerts" },
-  { icon: Headphones, label: "Contact Support", path: "/dashboard/support" },
-];
-
 export function ClientLayout() {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  const menuItems = [
+    { icon: Home, label: t("navigation.home"), path: "/dashboard" },
+    { icon: User, label: t("navigation.profile"), path: "/dashboard/profile" },
+    { icon: Heart, label: t("navigation.medicalInfo"), path: "/dashboard/medical" },
+    { icon: Phone, label: t("navigation.emergencyContacts"), path: "/dashboard/contacts" },
+    { icon: Smartphone, label: t("navigation.myDevice"), path: "/dashboard/device" },
+    { icon: CreditCard, label: t("navigation.subscription"), path: "/dashboard/subscription" },
+    { icon: Bell, label: t("navigation.alertHistory"), path: "/dashboard/alerts" },
+    { icon: Headphones, label: t("navigation.contactSupport"), path: "/dashboard/support" },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -84,7 +86,7 @@ export function ClientLayout() {
             className="w-full h-14 text-lg font-semibold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground"
           >
             <Phone className="mr-2 h-5 w-5" />
-            Contact ICE Alarm
+            {t("dashboard.contactIceAlarm")}
           </Button>
         </div>
       </aside>
@@ -138,7 +140,7 @@ export function ClientLayout() {
                 className="w-full h-14 text-lg font-semibold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground"
               >
                 <Phone className="mr-2 h-5 w-5" />
-                Contact ICE Alarm
+                {t("dashboard.contactIceAlarm")}
               </Button>
             </div>
           </div>
@@ -151,21 +153,7 @@ export function ClientLayout() {
         <header className="hidden md:flex sticky top-0 z-30 h-16 items-center justify-end border-b bg-background/95 backdrop-blur px-6">
           <div className="flex items-center gap-2">
             {/* Language Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Globe className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <span className="mr-2">🇬🇧</span> English
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span className="mr-2">🇪🇸</span> Español
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <LanguageSelector variant="icon-only" />
 
             {/* User Menu */}
             <DropdownMenu>
@@ -185,9 +173,9 @@ export function ClientLayout() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Account Settings</DropdownMenuItem>
+                <DropdownMenuItem>{t("auth.accountSettings")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">{t("auth.signOut")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

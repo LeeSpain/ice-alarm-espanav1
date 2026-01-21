@@ -1,7 +1,9 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
-import { Globe, FileText, User, Phone, LogOut } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { FileText, User, Phone, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,15 +17,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export function CallCentreLayout() {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/staff/login");
   };
-
+  const location = useLocation();
   const isShiftNotesActive = location.pathname.includes("shift-notes");
 
   return (
@@ -48,7 +50,7 @@ export function CallCentreLayout() {
           >
             <Link to="/call-centre">
               <Phone className="h-4 w-4 mr-2" />
-              Alerts
+              {t("navigation.alerts")}
             </Link>
           </Button>
 
@@ -61,26 +63,12 @@ export function CallCentreLayout() {
           >
             <Link to="/call-centre/shift-notes">
               <FileText className="h-4 w-4 mr-2" />
-              Shift Notes
+              {t("navigation.shiftNotes")}
             </Link>
           </Button>
 
           {/* Language Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent">
-                <Globe className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <span className="mr-2">🇬🇧</span> English
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span className="mr-2">🇪🇸</span> Español
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LanguageSelector variant="icon-only" />
 
           {/* User Menu */}
           <DropdownMenu>
