@@ -14,16 +14,840 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          staff_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          staff_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_communications: {
+        Row: {
+          alert_id: string
+          communication_type: Database["public"]["Enums"]["communication_type"]
+          created_at: string | null
+          direction: Database["public"]["Enums"]["communication_direction"]
+          duration_seconds: number | null
+          id: string
+          message_content: string | null
+          notes: string | null
+          recipient_phone: string
+          recipient_type: Database["public"]["Enums"]["recipient_type"]
+          recording_url: string | null
+          staff_id: string | null
+          twilio_sid: string | null
+        }
+        Insert: {
+          alert_id: string
+          communication_type: Database["public"]["Enums"]["communication_type"]
+          created_at?: string | null
+          direction: Database["public"]["Enums"]["communication_direction"]
+          duration_seconds?: number | null
+          id?: string
+          message_content?: string | null
+          notes?: string | null
+          recipient_phone: string
+          recipient_type: Database["public"]["Enums"]["recipient_type"]
+          recording_url?: string | null
+          staff_id?: string | null
+          twilio_sid?: string | null
+        }
+        Update: {
+          alert_id?: string
+          communication_type?: Database["public"]["Enums"]["communication_type"]
+          created_at?: string | null
+          direction?: Database["public"]["Enums"]["communication_direction"]
+          duration_seconds?: number | null
+          id?: string
+          message_content?: string | null
+          notes?: string | null
+          recipient_phone?: string
+          recipient_type?: Database["public"]["Enums"]["recipient_type"]
+          recording_url?: string | null
+          staff_id?: string | null
+          twilio_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_communications_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_communications_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alerts: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          claimed_at: string | null
+          claimed_by: string | null
+          device_id: string | null
+          emergency_services_called: boolean | null
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          member_id: string
+          next_of_kin_notified: boolean | null
+          received_at: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["alert_status"] | null
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          claimed_at?: string | null
+          claimed_by?: string | null
+          device_id?: string | null
+          emergency_services_called?: boolean | null
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          member_id: string
+          next_of_kin_notified?: boolean | null
+          received_at?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"] | null
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["alert_type"]
+          claimed_at?: string | null
+          claimed_by?: string | null
+          device_id?: string | null
+          emergency_services_called?: boolean | null
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          member_id?: string
+          next_of_kin_notified?: boolean | null
+          received_at?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          assigned_at: string | null
+          battery_level: number | null
+          configuration_status:
+            | Database["public"]["Enums"]["device_config_status"]
+            | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          imei: string
+          last_checkin_at: string | null
+          last_location_address: string | null
+          last_location_lat: number | null
+          last_location_lng: number | null
+          member_id: string | null
+          notes: string | null
+          purchased_at: string | null
+          sim_phone_number: string
+          status: Database["public"]["Enums"]["device_status"] | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          battery_level?: number | null
+          configuration_status?:
+            | Database["public"]["Enums"]["device_config_status"]
+            | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          imei: string
+          last_checkin_at?: string | null
+          last_location_address?: string | null
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          member_id?: string | null
+          notes?: string | null
+          purchased_at?: string | null
+          sim_phone_number: string
+          status?: Database["public"]["Enums"]["device_status"] | null
+        }
+        Update: {
+          assigned_at?: string | null
+          battery_level?: number | null
+          configuration_status?:
+            | Database["public"]["Enums"]["device_config_status"]
+            | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          imei?: string
+          last_checkin_at?: string | null
+          last_location_address?: string | null
+          last_location_lat?: number | null
+          last_location_lng?: number | null
+          member_id?: string | null
+          notes?: string | null
+          purchased_at?: string | null
+          sim_phone_number?: string
+          status?: Database["public"]["Enums"]["device_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_contacts: {
+        Row: {
+          contact_name: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          member_id: string
+          notes: string | null
+          phone: string
+          priority_order: number
+          relationship: string
+          speaks_spanish: boolean | null
+        }
+        Insert: {
+          contact_name: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          member_id: string
+          notes?: string | null
+          phone: string
+          priority_order: number
+          relationship: string
+          speaks_spanish?: boolean | null
+        }
+        Update: {
+          contact_name?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          member_id?: string
+          notes?: string | null
+          phone?: string
+          priority_order?: number
+          relationship?: string
+          speaks_spanish?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_information: {
+        Row: {
+          additional_notes: string | null
+          allergies: string[] | null
+          blood_type: string | null
+          doctor_name: string | null
+          doctor_phone: string | null
+          hospital_preference: string | null
+          id: string
+          medical_conditions: string[] | null
+          medications: string[] | null
+          member_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          allergies?: string[] | null
+          blood_type?: string | null
+          doctor_name?: string | null
+          doctor_phone?: string | null
+          hospital_preference?: string | null
+          id?: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          member_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          allergies?: string[] | null
+          blood_type?: string | null
+          doctor_name?: string | null
+          doctor_phone?: string | null
+          hospital_preference?: string | null
+          id?: string
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          member_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_information_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          address_line_1: string
+          address_line_2: string | null
+          city: string
+          country: string | null
+          created_at: string | null
+          date_of_birth: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          nie_dni: string | null
+          phone: string
+          photo_url: string | null
+          postal_code: string
+          preferred_language:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          province: string
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["member_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address_line_1: string
+          address_line_2?: string | null
+          city: string
+          country?: string | null
+          created_at?: string | null
+          date_of_birth: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          nie_dni?: string | null
+          phone: string
+          photo_url?: string | null
+          postal_code: string
+          preferred_language?:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          province: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address_line_1?: string
+          address_line_2?: string | null
+          city?: string
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          nie_dni?: string | null
+          phone?: string
+          photo_url?: string | null
+          postal_code?: string
+          preferred_language?:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          province?: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string | null
+          description: string
+          device_id: string | null
+          id: string
+          item_type: Database["public"]["Enums"]["order_item_type"]
+          order_id: string
+          quantity: number | null
+          tax_amount: number
+          tax_rate: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          device_id?: string | null
+          id?: string
+          item_type: Database["public"]["Enums"]["order_item_type"]
+          order_id: string
+          quantity?: number | null
+          tax_amount: number
+          tax_rate: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          device_id?: string | null
+          id?: string
+          item_type?: Database["public"]["Enums"]["order_item_type"]
+          order_id?: string
+          quantity?: number | null
+          tax_amount?: number
+          tax_rate?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          id: string
+          member_id: string
+          notes: string | null
+          order_number: string
+          shipped_at: string | null
+          shipping_address_line_1: string
+          shipping_address_line_2: string | null
+          shipping_amount: number | null
+          shipping_city: string
+          shipping_country: string | null
+          shipping_postal_code: string
+          shipping_province: string
+          status: Database["public"]["Enums"]["order_status"] | null
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          tracking_number: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          member_id: string
+          notes?: string | null
+          order_number: string
+          shipped_at?: string | null
+          shipping_address_line_1: string
+          shipping_address_line_2?: string | null
+          shipping_amount?: number | null
+          shipping_city: string
+          shipping_country?: string | null
+          shipping_postal_code: string
+          shipping_province: string
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          tracking_number?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          member_id?: string
+          notes?: string | null
+          order_number?: string
+          shipped_at?: string | null
+          shipping_address_line_1?: string
+          shipping_address_line_2?: string | null
+          shipping_amount?: number | null
+          shipping_city?: string
+          shipping_country?: string | null
+          shipping_postal_code?: string
+          shipping_province?: string
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          tracking_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          invoice_number: string | null
+          member_id: string
+          notes: string | null
+          order_id: string | null
+          paid_at: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          status: Database["public"]["Enums"]["payment_status"] | null
+          stripe_payment_id: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          member_id: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          stripe_payment_id?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          member_id?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          stripe_payment_id?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_notes: {
+        Row: {
+          created_at: string | null
+          followup_completed: boolean | null
+          id: string
+          member_id: string | null
+          note_content: string
+          requires_followup: boolean | null
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          followup_completed?: boolean | null
+          id?: string
+          member_id?: string | null
+          note_content: string
+          requires_followup?: boolean | null
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          followup_completed?: boolean | null
+          id?: string
+          member_id?: string | null
+          note_content?: string
+          requires_followup?: boolean | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_notes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_notes_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff: {
+        Row: {
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          is_active: boolean | null
+          last_login_at: string | null
+          last_name: string
+          phone: string | null
+          preferred_language:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          last_name: string
+          phone?: string | null
+          preferred_language?:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          last_name?: string
+          phone?: string | null
+          preferred_language?:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          billing_frequency: Database["public"]["Enums"]["billing_frequency"]
+          created_at: string | null
+          has_pendant: boolean | null
+          id: string
+          member_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          plan_type: Database["public"]["Enums"]["plan_type"]
+          registration_fee_paid: boolean | null
+          renewal_date: string
+          start_date: string
+          status: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          billing_frequency: Database["public"]["Enums"]["billing_frequency"]
+          created_at?: string | null
+          has_pendant?: boolean | null
+          id?: string
+          member_id: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          plan_type: Database["public"]["Enums"]["plan_type"]
+          registration_fee_paid?: boolean | null
+          renewal_date: string
+          start_date: string
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
+          created_at?: string | null
+          has_pendant?: boolean | null
+          id?: string
+          member_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          plan_type?: Database["public"]["Enums"]["plan_type"]
+          registration_fee_paid?: boolean | null
+          renewal_date?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_member_id: { Args: { _user_id: string }; Returns: string }
+      get_staff_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      alert_status: "incoming" | "in_progress" | "resolved" | "escalated"
+      alert_type:
+        | "sos_button"
+        | "fall_detected"
+        | "low_battery"
+        | "geo_fence"
+        | "check_in"
+        | "manual"
+      app_role: "super_admin" | "admin" | "call_centre"
+      billing_frequency: "monthly" | "annual"
+      communication_direction: "inbound" | "outbound"
+      communication_type: "call_inbound" | "call_outbound" | "sms" | "whatsapp"
+      device_config_status: "pending" | "configured" | "failed"
+      device_status: "active" | "inactive" | "faulty" | "returned" | "in_stock"
+      member_status: "active" | "inactive" | "suspended"
+      order_item_type:
+        | "pendant"
+        | "registration_fee"
+        | "subscription"
+        | "shipping"
+      order_status:
+        | "pending"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+      payment_method: "stripe" | "bank_transfer" | "paypal"
+      payment_status: "pending" | "completed" | "failed" | "refunded"
+      payment_type:
+        | "registration"
+        | "subscription"
+        | "device"
+        | "shipping"
+        | "order"
+      plan_type: "single" | "couple"
+      preferred_language: "en" | "es"
+      recipient_type: "member" | "emergency_contact" | "emergency_services"
+      subscription_status: "active" | "cancelled" | "expired" | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +974,49 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      alert_status: ["incoming", "in_progress", "resolved", "escalated"],
+      alert_type: [
+        "sos_button",
+        "fall_detected",
+        "low_battery",
+        "geo_fence",
+        "check_in",
+        "manual",
+      ],
+      app_role: ["super_admin", "admin", "call_centre"],
+      billing_frequency: ["monthly", "annual"],
+      communication_direction: ["inbound", "outbound"],
+      communication_type: ["call_inbound", "call_outbound", "sms", "whatsapp"],
+      device_config_status: ["pending", "configured", "failed"],
+      device_status: ["active", "inactive", "faulty", "returned", "in_stock"],
+      member_status: ["active", "inactive", "suspended"],
+      order_item_type: [
+        "pendant",
+        "registration_fee",
+        "subscription",
+        "shipping",
+      ],
+      order_status: [
+        "pending",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      payment_method: ["stripe", "bank_transfer", "paypal"],
+      payment_status: ["pending", "completed", "failed", "refunded"],
+      payment_type: [
+        "registration",
+        "subscription",
+        "device",
+        "shipping",
+        "order",
+      ],
+      plan_type: ["single", "couple"],
+      preferred_language: ["en", "es"],
+      recipient_type: ["member", "emergency_contact", "emergency_services"],
+      subscription_status: ["active", "cancelled", "expired", "paused"],
+    },
   },
 } as const
