@@ -50,6 +50,25 @@ export default function Login() {
       }
 
       if (data.user) {
+        // Check if user is staff first - redirect them to staff login
+        const { data: staffData } = await supabase
+          .from("staff")
+          .select("id, role, is_active")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        if (staffData && staffData.is_active) {
+          toast.success(t("auth.loginTitle"));
+          // Redirect staff to appropriate dashboard
+          if (staffData.role === "call_centre") {
+            navigate("/call-centre");
+          } else {
+            navigate("/admin");
+          }
+          return;
+        }
+
+        // Check if user is a member
         const { data: memberData } = await supabase
           .from("members")
           .select("id")
