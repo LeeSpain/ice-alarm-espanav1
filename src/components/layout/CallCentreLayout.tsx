@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare, LayoutDashboard, Users, AlertTriangle, Ticket, Clock, Settings } from "lucide-react";
+import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare, LayoutDashboard, Users, AlertTriangle, Ticket, Clock, Settings, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,6 +106,19 @@ export function CallCentreLayout() {
                   {incomingAlerts}
                 </Badge>
               )}
+            </Link>
+          </Button>
+
+          {/* Leads */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/leads') ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre/leads">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Leads
             </Link>
           </Button>
 

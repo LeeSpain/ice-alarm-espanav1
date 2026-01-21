@@ -439,6 +439,81 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          contacted_at: string | null
+          converted_at: string | null
+          converted_member_id: string | null
+          created_at: string
+          email: string
+          enquiry_type: string
+          first_name: string
+          id: string
+          last_name: string
+          message: string | null
+          notes: string | null
+          phone: string
+          preferred_language: string
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          email: string
+          enquiry_type?: string
+          first_name: string
+          id?: string
+          last_name: string
+          message?: string | null
+          notes?: string | null
+          phone: string
+          preferred_language?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          email?: string
+          enquiry_type?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          message?: string | null
+          notes?: string | null
+          phone?: string
+          preferred_language?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_converted_member_id_fkey"
+            columns: ["converted_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_information: {
         Row: {
           additional_notes: string | null

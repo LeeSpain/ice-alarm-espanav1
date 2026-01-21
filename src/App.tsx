@@ -15,6 +15,7 @@ import { ClientLayout } from "@/components/layout/ClientLayout";
 
 // Pages
 import Index from "./pages/Index";
+import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 
 // Auth Pages
@@ -38,6 +39,7 @@ import SettingsPage from "./pages/admin/SettingsPage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import TasksPage from "./pages/admin/TasksPage";
 import AdminTicketsPage from "./pages/admin/TicketsPage";
+import LeadsPage from "./pages/admin/LeadsPage";
 import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
 
@@ -51,6 +53,7 @@ import CallCentreTasksPage from "./pages/call-centre/TasksPage";
 import CallCentreMembersPage from "./pages/call-centre/MembersPage";
 import CallCentreMessagesPage from "./pages/call-centre/MessagesPage";
 import CallCentreTicketsPage from "./pages/call-centre/TicketsPage";
+import CallCentreLeadsPage from "./pages/call-centre/LeadsPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -74,6 +77,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/staff/login" element={<StaffLogin />} />
             <Route path="/register" element={<Register />} />
@@ -102,6 +106,7 @@ const App = () => (
               <Route path="messages" element={<MessagesPage />} />
               <Route path="tasks" element={<TasksPage />} />
               <Route path="tickets" element={<AdminTicketsPage />} />
+              <Route path="leads" element={<LeadsPage />} />
               <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
             </Route>
@@ -125,6 +130,7 @@ const App = () => (
               <Route path="messages" element={<CallCentreMessagesPage />} />
               <Route path="tasks" element={<CallCentreTasksPage />} />
               <Route path="tickets" element={<CallCentreTicketsPage />} />
+              <Route path="leads" element={<CallCentreLeadsPage />} />
             </Route>
 
             {/* Client Dashboard Routes - Require Member */}

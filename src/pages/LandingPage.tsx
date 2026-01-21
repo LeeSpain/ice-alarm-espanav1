@@ -23,9 +23,9 @@ export default function LandingPage() {
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pricing")}
             </a>
-            <a href="#contact" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.contact")}
-            </a>
+            </Link>
           </nav>
           <div className="flex items-center gap-2">
             <LanguageSelector />
