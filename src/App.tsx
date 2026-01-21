@@ -41,9 +41,11 @@ import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
 
 // Call Centre Pages
+import StaffDashboard from "./pages/call-centre/StaffDashboard";
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
 import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
 import CallCentreTasksPage from "./pages/call-centre/TasksPage";
+import CallCentreMembersPage from "./pages/call-centre/MembersPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -107,7 +109,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route index element={<CallCentreDashboard />} />
+              <Route index element={<StaffDashboard />} />
+              <Route path="alerts" element={<CallCentreDashboard />} />
+              <Route path="members" element={<CallCentreMembersPage />} />
+              <Route path="members/:id" element={<MemberDetailPage />} />
               <Route path="shift-notes" element={<ShiftNotesPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="tasks" element={<CallCentreTasksPage />} />

@@ -1,9 +1,10 @@
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare } from "lucide-react";
+import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare, LayoutDashboard, Users, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,18 +16,55 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export function CallCentreLayout() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [incomingAlerts, setIncomingAlerts] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    fetchCounts();
+
+    const alertsChannel = supabase
+      .channel('layout-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, fetchCounts)
+      .subscribe();
+
+    const messagesChannel = supabase
+      .channel('layout-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchCounts)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(alertsChannel);
+      supabase.removeChannel(messagesChannel);
+    };
+  }, []);
+
+  const fetchCounts = async () => {
+    const [alertsRes, messagesRes] = await Promise.all([
+      supabase.from('alerts').select('id', { count: 'exact' }).eq('status', 'incoming'),
+      supabase.from('messages').select('id', { count: 'exact' }).eq('is_read', false).eq('sender_type', 'member')
+    ]);
+    setIncomingAlerts(alertsRes.count || 0);
+    setUnreadMessages(messagesRes.count || 0);
+  };
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/staff/login");
   };
-  const location = useLocation();
-  const isShiftNotesActive = location.pathname.includes("shift-notes");
+
+  const isActive = (path: string) => {
+    if (path === '/call-centre' && location.pathname === '/call-centre') return true;
+    if (path !== '/call-centre' && location.pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -40,17 +78,48 @@ export function CallCentreLayout() {
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Navigation */}
+        <div className="flex items-center gap-1">
+          {/* Dashboard */}
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`text-sidebar-foreground hover:bg-sidebar-accent ${!isShiftNotesActive ? 'bg-sidebar-accent' : ''}`}
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre') && location.pathname === '/call-centre' ? 'bg-sidebar-accent' : ''}`}
             asChild
           >
             <Link to="/call-centre">
-              <Phone className="h-4 w-4 mr-2" />
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Link>
+          </Button>
+
+          {/* Alerts */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/alerts') ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre/alerts" className="relative">
+              <AlertTriangle className="h-4 w-4 mr-2" />
               {t("navigation.alerts")}
+              {incomingAlerts > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {incomingAlerts}
+                </Badge>
+              )}
+            </Link>
+          </Button>
+
+          {/* Members */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/members') ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre/members">
+              <Users className="h-4 w-4 mr-2" />
+              Members
             </Link>
           </Button>
 
@@ -58,12 +127,17 @@ export function CallCentreLayout() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`text-sidebar-foreground hover:bg-sidebar-accent ${location.pathname.includes('messages') ? 'bg-sidebar-accent' : ''}`}
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/messages') ? 'bg-sidebar-accent' : ''}`}
             asChild
           >
-            <Link to="/call-centre/messages">
+            <Link to="/call-centre/messages" className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
               Messages
+              {unreadMessages > 0 && (
+                <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary">
+                  {unreadMessages}
+                </Badge>
+              )}
             </Link>
           </Button>
 
@@ -71,7 +145,7 @@ export function CallCentreLayout() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`text-sidebar-foreground hover:bg-sidebar-accent ${location.pathname.includes('tasks') ? 'bg-sidebar-accent' : ''}`}
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/tasks') ? 'bg-sidebar-accent' : ''}`}
             asChild
           >
             <Link to="/call-centre/tasks">
@@ -84,7 +158,7 @@ export function CallCentreLayout() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isShiftNotesActive ? 'bg-sidebar-accent' : ''}`}
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isActive('/call-centre/shift-notes') ? 'bg-sidebar-accent' : ''}`}
             asChild
           >
             <Link to="/call-centre/shift-notes">
