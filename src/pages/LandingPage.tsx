@@ -5,10 +5,12 @@ import { Logo } from "@/components/ui/logo";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import heroFamily from "@/assets/hero-family.jpg";
+import heroFamilyDefault from "@/assets/hero-family.jpg";
+import { useWebsiteImage } from "@/hooks/useWebsiteImage";
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", heroFamilyDefault);
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +110,7 @@ export default function LandingPage() {
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10">
                 <img 
-                  src={heroFamily} 
+                  src={heroImage} 
                   alt="Happy multigenerational family enjoying peace of mind with ICE Alarm protection" 
                   className="w-full h-auto object-cover"
                 />

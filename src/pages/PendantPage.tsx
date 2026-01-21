@@ -31,9 +31,12 @@ import {
   Signal,
   ChevronRight
 } from "lucide-react";
-import pendantImage from "@/assets/pendant-product.jpg";
+import pendantImageDefault from "@/assets/pendant-product.jpg";
+import { useWebsiteImage } from "@/hooks/useWebsiteImage";
 
 export default function PendantPage() {
+  const { imageUrl: pendantHeroImage } = useWebsiteImage("pendant_hero", pendantImageDefault);
+  const { imageUrl: pendantSpecsImage } = useWebsiteImage("pendant_specs", pendantImageDefault);
   const { t } = useTranslation();
 
   const features = [
@@ -194,7 +197,7 @@ export default function PendantPage() {
               <div className="relative mx-auto max-w-md">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl -z-10" />
                 <img
-                  src={pendantImage}
+                  src={pendantHeroImage}
                   alt="ICE Alarm GPS Personal Pendant"
                   className="w-full h-auto rounded-2xl shadow-2xl"
                 />
@@ -386,7 +389,7 @@ export default function PendantPage() {
             </div>
             <div className="relative">
               <img
-                src={pendantImage}
+                src={pendantSpecsImage}
                 alt="ICE Alarm Pendant Specifications"
                 className="w-full max-w-sm mx-auto rounded-2xl shadow-xl"
               />
