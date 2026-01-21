@@ -1,4 +1,4 @@
-import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck } from "lucide-react";
+import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck, MapPin, Zap, Radio, Battery, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
@@ -11,6 +11,7 @@ import { getDefaultAsset } from "@/config/websiteImages";
 export default function LandingPage() {
   const { t } = useTranslation();
   const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", getDefaultAsset("homepage_hero"));
+  const { imageUrl: pendantPromoImage } = useWebsiteImage("homepage_pendant_promo", getDefaultAsset("homepage_pendant_promo"));
 
   return (
     <div className="min-h-screen bg-background">
@@ -306,46 +307,84 @@ export default function LandingPage() {
             </Card>
           </div>
 
-          {/* Optional Pendant Section */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <Card className="bg-muted/50">
-              <CardContent className="pt-6">
-                <div className="grid md:grid-cols-2 gap-6 items-center">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">{t("landing.gpsPendant")}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{t("landing.optionalRecommended")}</p>
-                    <div className="mb-4">
-                      <span className="text-2xl font-bold">€151.25</span>
-                      <span className="text-muted-foreground text-sm"> ({t("landing.inclIva")}) + €14.99 {t("landing.shipping")}</span>
+          {/* ICE Alarm GPS Pendant - Premium Section */}
+          <div className="mt-12 max-w-4xl mx-auto relative">
+            {/* Recommended Badge */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+              <span className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 rounded-full shadow-lg">
+                {t('landing.pricing.pendant.recommended', 'Highly Recommended')}
+              </span>
+            </div>
+            
+            <Card className="border-2 border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 shadow-xl overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid md:grid-cols-5 gap-0">
+                  {/* Product Image */}
+                  <div className="md:col-span-2 bg-gradient-to-br from-muted/50 to-muted p-8 flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl scale-75"></div>
+                      <img 
+                        src={pendantPromoImage} 
+                        alt="ICE Alarm GPS Pendant" 
+                        className="relative w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
+                      />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {t("landing.withoutPendant")}
-                    </p>
                   </div>
-                  <div>
-                    <h4 className="font-medium mb-3 text-sm">{t("landing.pendantFeatures")}</h4>
-                    <ul className="space-y-2">
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-alert-resolved" />
-                        {t("landing.gpsTracking")}
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-alert-resolved" />
-                        {t("landing.fallDetection")}
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-alert-resolved" />
-                        {t("landing.sosButton")}
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-alert-resolved" />
-                        {t("landing.geoFencing")}
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-alert-resolved" />
-                        {t("landing.longBattery")}
-                      </li>
-                    </ul>
+                  
+                  {/* Content */}
+                  <div className="md:col-span-3 p-8 flex flex-col justify-center">
+                    <div className="mb-6">
+                      <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                        ICE Alarm GPS Pendant
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {t('landing.pricing.pendant.subtitle', 'Your personal safety companion - worn as a pendant or wristband')}
+                      </p>
+                    </div>
+                    
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-3xl md:text-4xl font-bold text-primary">€151.25</span>
+                        <span className="text-sm text-muted-foreground">{t('landing.inclIva', '(incl. 21% IVA)')}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">+ €14.99 {t('landing.shipping', 'shipping & handling')}</p>
+                    </div>
+                    
+                    {/* Feature Badges */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <AlertCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.sosButton', 'One-touch SOS')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.gpsTracking', 'GPS Tracking')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <Zap className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.fallDetection', 'Fall Detection')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <Radio className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.twoWayAudio', '2-Way Audio')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <Battery className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.longBattery', '7-Day Battery')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                        <Shield className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium text-foreground">{t('landing.waterproof', 'Waterproof')}</span>
+                      </div>
+                    </div>
+                    
+                    {/* CTA */}
+                    <Link to="/pendant">
+                      <Button variant="outline" className="w-full md:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                        {t('landing.learnMore', 'Learn More About Our Pendant')}
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </CardContent>
