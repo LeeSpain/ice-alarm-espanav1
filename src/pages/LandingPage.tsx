@@ -7,9 +7,11 @@ import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
 import { getDefaultAsset } from "@/config/websiteImages";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const { settings: companySettings } = useCompanySettings();
   const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", getDefaultAsset("homepage_hero"));
   const { imageUrl: pendantPromoImage } = useWebsiteImage("homepage_pendant_promo", getDefaultAsset("homepage_pendant_promo"));
 
@@ -78,9 +80,11 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg group">
-                  <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                  +34 900 123 456
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg group" asChild>
+                  <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
+                    <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+                    {companySettings.emergency_phone}
+                  </a>
                 </Button>
               </div>
 
@@ -426,7 +430,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
-            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <strong>+34 900 123 456</strong>
+            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <strong>{companySettings.emergency_phone}</strong>
           </p>
         </div>
       </section>
@@ -444,10 +448,9 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">{t("navigation.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li>+34 900 123 456</li>
-                <li>info@icealarm.es</li>
-                <li>Calle Principal 1, Albox</li>
-                <li>04800 Almería, Spain</li>
+                <li>{companySettings.emergency_phone}</li>
+                <li>{companySettings.support_email}</li>
+                <li>{companySettings.address}</li>
               </ul>
             </div>
             <div>
