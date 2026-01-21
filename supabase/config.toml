@@ -1,1 +1,16 @@
 project_id = "pduhccavshrhfkfbjgmj"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.twilio-voice]
+verify_jwt = false
+
+[functions.twilio-sms]
+verify_jwt = false
+
+[functions.twilio-whatsapp]
+verify_jwt = false
+
+[functions.save-api-keys]
+verify_jwt = false
