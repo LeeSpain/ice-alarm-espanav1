@@ -15,7 +15,8 @@ import {
   X,
   MessageSquare,
   CheckSquare,
-  UserPlus
+  UserPlus,
+  Ticket
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -53,6 +54,7 @@ const menuItems: MenuItem[] = [
   { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
   { icon: Bell, label: "Alerts", path: "/admin/alerts" },
   { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" },
+  { icon: Ticket, label: "Staff Tickets", path: "/admin/tickets" },
   { icon: UserCog, label: "Staff", path: "/admin/staff", superAdminOnly: true },
   { icon: BarChart3, label: "Reports", path: "/admin/reports" },
   { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true },

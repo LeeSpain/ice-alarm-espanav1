@@ -37,6 +37,7 @@ import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import MessagesPage from "./pages/admin/MessagesPage";
 import TasksPage from "./pages/admin/TasksPage";
+import AdminTicketsPage from "./pages/admin/TicketsPage";
 import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
 
@@ -47,6 +48,7 @@ import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
 import CallCentreTasksPage from "./pages/call-centre/TasksPage";
 import CallCentreMembersPage from "./pages/call-centre/MembersPage";
 import CallCentreMessagesPage from "./pages/call-centre/MessagesPage";
+import CallCentreTicketsPage from "./pages/call-centre/TicketsPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -97,6 +99,7 @@ const App = () => (
               <Route path="settings" element={<SettingsPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="tasks" element={<TasksPage />} />
+              <Route path="tickets" element={<AdminTicketsPage />} />
               <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
             </Route>
@@ -117,6 +120,7 @@ const App = () => (
               <Route path="shift-notes" element={<ShiftNotesPage />} />
               <Route path="messages" element={<CallCentreMessagesPage />} />
               <Route path="tasks" element={<CallCentreTasksPage />} />
+              <Route path="tickets" element={<CallCentreTicketsPage />} />
             </Route>
 
             {/* Client Dashboard Routes - Require Member */}
