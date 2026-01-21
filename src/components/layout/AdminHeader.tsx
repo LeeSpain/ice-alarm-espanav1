@@ -1,4 +1,4 @@
-import { Bell, Globe, Search, User } from "lucide-react";
+import { Bell, Globe, Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +10,64 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminHeader() {
+  const { user, signOut, staffRole } = useAuth();
+  const navigate = useNavigate();
+
+  // Fetch active alerts count
+  const { data: alertCount = 0 } = useQuery({
+    queryKey: ["active-alerts-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("alerts")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["incoming", "in_progress"]);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch staff info
+  const { data: staffInfo } = useQuery({
+    queryKey: ["staff-info", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("staff")
+        .select("first_name, last_name, email, role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/staff/login");
+  };
+
+  const displayName = staffInfo 
+    ? `${staffInfo.first_name} ${staffInfo.last_name}` 
+    : user?.email || "Admin User";
+
+  const displayEmail = staffInfo?.email || user?.email || "";
+
+  const roleLabel = staffRole === "super_admin" 
+    ? "Super Admin" 
+    : staffRole === "admin" 
+    ? "Admin" 
+    : "Staff";
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
       {/* Search */}
@@ -43,11 +99,18 @@ export function AdminHeader() {
         </DropdownMenu>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative"
+          onClick={() => navigate("/admin/alerts")}
+        >
           <Bell className="h-5 w-5" />
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-alert-sos text-alert-sos-foreground">
-            3
-          </Badge>
+          {alertCount > 0 && (
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-alert-sos text-alert-sos-foreground">
+              {alertCount > 9 ? "9+" : alertCount}
+            </Badge>
+          )}
         </Button>
 
         {/* User Menu */}
@@ -62,15 +125,23 @@ export function AdminHeader() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="font-medium">Admin User</span>
-                <span className="text-xs text-muted-foreground">admin@icealarm.es</span>
+                <span className="font-medium">{displayName}</span>
+                <span className="text-xs text-muted-foreground">{displayEmail}</span>
+                <Badge variant="secondary" className="w-fit mt-1 text-xs">
+                  {roleLabel}
+                </Badge>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
+              Profile Settings
+            </DropdownMenuItem>
             <DropdownMenuItem>Preferences</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

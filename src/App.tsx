@@ -26,6 +26,15 @@ import Unauthorized from "./pages/auth/Unauthorized";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import MembersPage from "./pages/admin/MembersPage";
+import DevicesPage from "./pages/admin/DevicesPage";
+import OrdersPage from "./pages/admin/OrdersPage";
+import SubscriptionsPage from "./pages/admin/SubscriptionsPage";
+import PaymentsPage from "./pages/admin/PaymentsPage";
+import AlertsPage from "./pages/admin/AlertsPage";
+import StaffPage from "./pages/admin/StaffPage";
+import ReportsPage from "./pages/admin/ReportsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 // Call Centre Pages
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
@@ -61,14 +70,15 @@ const App = () => (
               }
             >
               <Route index element={<AdminDashboard />} />
-              <Route path="members" element={<AdminDashboard />} />
-              <Route path="devices" element={<AdminDashboard />} />
-              <Route path="subscriptions" element={<AdminDashboard />} />
-              <Route path="payments" element={<AdminDashboard />} />
-              <Route path="alerts" element={<AdminDashboard />} />
-              <Route path="staff" element={<AdminDashboard />} />
-              <Route path="reports" element={<AdminDashboard />} />
-              <Route path="settings" element={<AdminDashboard />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="devices" element={<DevicesPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="subscriptions" element={<SubscriptionsPage />} />
+              <Route path="payments" element={<PaymentsPage />} />
+              <Route path="alerts" element={<AlertsPage />} />
+              <Route path="staff" element={<StaffPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
 
             {/* Call Centre Dashboard Routes - Require Staff Role */}

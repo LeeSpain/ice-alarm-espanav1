@@ -2,6 +2,7 @@ import {
   LayoutDashboard, 
   Users, 
   Smartphone, 
+  ShoppingCart,
   CreditCard, 
   DollarSign, 
   Bell, 
@@ -11,7 +12,7 @@ import {
   LogOut,
   ChevronLeft
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,22 +22,45 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
-const menuItems = [
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  superAdminOnly?: boolean;
+}
+
+const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: Users, label: "Members", path: "/admin/members" },
   { icon: Smartphone, label: "Devices", path: "/admin/devices" },
+  { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
   { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
   { icon: DollarSign, label: "Payments", path: "/admin/payments" },
   { icon: Bell, label: "Alerts", path: "/admin/alerts" },
-  { icon: UserCog, label: "Staff", path: "/admin/staff", adminOnly: true },
+  { icon: UserCog, label: "Staff", path: "/admin/staff", superAdminOnly: true },
   { icon: BarChart3, label: "Reports", path: "/admin/reports" },
-  { icon: Settings, label: "Settings", path: "/admin/settings", adminOnly: true },
+  { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true },
 ];
 
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, staffRole } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/staff/login");
+  };
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.superAdminOnly && staffRole !== "super_admin") {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <aside className={cn(
@@ -54,8 +78,9 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+          {filteredMenuItems.map((item) => {
+            const isActive = location.pathname === item.path || 
+              (item.path !== "/admin" && location.pathname.startsWith(item.path));
             const Icon = item.icon;
             
             const linkContent = (
@@ -101,6 +126,7 @@ export function AdminSidebar() {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={handleSignOut}
               className={cn(
                 "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 collapsed && "justify-center px-2"
