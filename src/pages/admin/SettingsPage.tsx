@@ -17,11 +17,16 @@ import {
   Save,
   Loader2,
   AlertCircle,
-  Map
+  Map,
+  Image as ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageUploadCard } from "@/components/admin/settings/ImageUploadCard";
+import { useWebsiteImages } from "@/hooks/useWebsiteImage";
+import heroFamilyDefault from "@/assets/hero-family.jpg";
+import pendantProductDefault from "@/assets/pendant-product.jpg";
 
 interface SystemSetting {
   key: string;
@@ -245,11 +250,12 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company">Company</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="communications">Communications</TabsTrigger>
+          <TabsTrigger value="images">Images</TabsTrigger>
         </TabsList>
 
         {/* Company Tab */}
@@ -720,7 +726,71 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Images Tab */}
+        <ImagesTab />
       </Tabs>
     </div>
+  );
+}
+
+function ImagesTab() {
+  const { images, refetch } = useWebsiteImages();
+
+  const getImageUrl = (locationKey: string) => {
+    return images.find(img => img.location_key === locationKey)?.image_url;
+  };
+
+  const imageConfigs = [
+    {
+      locationKey: "homepage_hero",
+      title: "Homepage Hero Image",
+      description: "Main hero image displayed on the landing page. Recommended: 1920x1080px.",
+      defaultImageUrl: heroFamilyDefault,
+    },
+    {
+      locationKey: "pendant_hero",
+      title: "Pendant Page Hero",
+      description: "Main product image on the pendant page hero section. Recommended: 800x800px.",
+      defaultImageUrl: pendantProductDefault,
+    },
+    {
+      locationKey: "pendant_specs",
+      title: "Pendant Specs Image",
+      description: "Pendant image shown in the specifications section. Recommended: 600x600px.",
+      defaultImageUrl: pendantProductDefault,
+    },
+  ];
+
+  return (
+    <TabsContent value="images">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5" />
+              Website Images
+            </CardTitle>
+            <CardDescription>
+              Manage images displayed on public pages. Changes take effect immediately.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {imageConfigs.map((config) => (
+            <ImageUploadCard
+              key={config.locationKey}
+              locationKey={config.locationKey}
+              title={config.title}
+              description={config.description}
+              currentImageUrl={getImageUrl(config.locationKey)}
+              defaultImageUrl={config.defaultImageUrl}
+              onImageUpdated={refetch}
+            />
+          ))}
+        </div>
+      </div>
+    </TabsContent>
   );
 }
