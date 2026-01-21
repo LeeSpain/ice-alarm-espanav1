@@ -13,7 +13,8 @@ import {
   Bell, 
   Headphones,
   Menu,
-  X
+  X,
+  MessageSquare
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ export function ClientLayout() {
     { icon: Heart, label: t("navigation.medicalInfo"), path: "/dashboard/medical" },
     { icon: Phone, label: t("navigation.emergencyContacts"), path: "/dashboard/contacts" },
     { icon: Smartphone, label: t("navigation.myDevice"), path: "/dashboard/device" },
+    { icon: MessageSquare, label: t("navigation.messages") || "Messages", path: "/dashboard/messages" },
     { icon: CreditCard, label: t("navigation.subscription"), path: "/dashboard/subscription" },
     { icon: Bell, label: t("navigation.alertHistory"), path: "/dashboard/alerts" },
     { icon: Headphones, label: t("navigation.contactSupport"), path: "/dashboard/support" },
