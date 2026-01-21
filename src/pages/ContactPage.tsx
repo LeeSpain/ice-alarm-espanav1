@@ -141,7 +141,7 @@ export default function ContactPage() {
               <Link to="/login">{t("common.signIn")}</Link>
             </Button>
             <Button asChild>
-              <Link to="/register">{t("common.getStarted")}</Link>
+              <Link to="/join">{t("common.getStarted")}</Link>
             </Button>
           </div>
         </div>

@@ -182,7 +182,7 @@ export default function PendantPage() {
               <Link to="/login">Sign In</Link>
             </Button>
             <Button asChild>
-              <Link to="/register">Join Now</Link>
+              <Link to="/join">Join Now</Link>
             </Button>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function PendantPage() {
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button size="lg" className="h-14 px-8 text-lg shadow-lg" asChild>
-                  <Link to="/register">
+                  <Link to="/join">
                     Join ICE Alarm Today
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
@@ -453,7 +453,7 @@ export default function PendantPage() {
                   </li>
                 </ul>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to="/register">Select Phone Only</Link>
+                  <Link to="/join">Select Phone Only</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -504,7 +504,7 @@ export default function PendantPage() {
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
-                  <Link to="/register">
+                  <Link to="/join">
                     Select with Pendant
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
@@ -545,7 +545,7 @@ export default function PendantPage() {
                   </div>
                 </div>
                 <Button className="w-full" asChild>
-                  <Link to="/register">Get Started</Link>
+                  <Link to="/join">Get Started</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -567,7 +567,7 @@ export default function PendantPage() {
                   </div>
                 </div>
                 <Button className="w-full" asChild>
-                  <Link to="/register">Get Started</Link>
+                  <Link to="/join">Get Started</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -657,7 +657,7 @@ export default function PendantPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="h-14 px-8 text-lg" asChild>
-              <Link to="/register">
+              <Link to="/join">
                 Join ICE Alarm Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -699,7 +699,7 @@ export default function PendantPage() {
                 <li><Link to="/" className="hover:text-sidebar-foreground">Home</Link></li>
                 <li><Link to="/pendant" className="hover:text-sidebar-foreground">Pendant</Link></li>
                 <li><Link to="/contact" className="hover:text-sidebar-foreground">Contact</Link></li>
-                <li><Link to="/register" className="hover:text-sidebar-foreground">Join Now</Link></li>
+                <li><Link to="/join" className="hover:text-sidebar-foreground">Join Now</Link></li>
               </ul>
             </div>
             <div>
