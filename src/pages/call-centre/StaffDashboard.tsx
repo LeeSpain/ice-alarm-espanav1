@@ -16,7 +16,8 @@ import {
   ArrowRight,
   User,
   FileText,
-  Plus
+  Plus,
+  Cake
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,6 +75,14 @@ interface ShiftNote {
   };
 }
 
+interface BirthdayMember {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  phone: string;
+}
+
 export default function StaffDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -87,6 +96,7 @@ export default function StaffDashboard() {
   const [myTasks, setMyTasks] = useState<Task[]>([]);
   const [recentMessages, setRecentMessages] = useState<Message[]>([]);
   const [shiftNotes, setShiftNotes] = useState<ShiftNote[]>([]);
+  const [birthdays, setBirthdays] = useState<BirthdayMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -125,9 +135,17 @@ export default function StaffDashboard() {
       })
       .subscribe();
 
+    const membersChannel = supabase
+      .channel('dashboard-members')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
+        fetchBirthdays();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(alertsChannel);
       supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(membersChannel);
     };
   }, [staffId]);
 
@@ -138,7 +156,8 @@ export default function StaffDashboard() {
       fetchUnreadMessages(),
       fetchRecentMessages(),
       fetchMyTasks(),
-      fetchShiftNotes()
+      fetchShiftNotes(),
+      fetchBirthdays()
     ]);
   };
 
@@ -249,6 +268,30 @@ export default function StaffDashboard() {
       .limit(5);
 
     setShiftNotes((data as any[]) || []);
+  };
+
+  const fetchBirthdays = async () => {
+    // Get today's month and day
+    const today = new Date();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    
+    // Query members whose date_of_birth matches today's month and day
+    // We'll fetch all members and filter client-side since Supabase doesn't have a native way to extract month/day
+    const { data } = await supabase
+      .from('members')
+      .select('id, first_name, last_name, date_of_birth, phone')
+      .eq('status', 'active');
+
+    if (data) {
+      const birthdayMembers = data.filter((member) => {
+        if (!member.date_of_birth) return false;
+        const dob = new Date(member.date_of_birth);
+        return (dob.getMonth() + 1).toString().padStart(2, '0') === month &&
+               dob.getDate().toString().padStart(2, '0') === day;
+      });
+      setBirthdays(birthdayMembers);
+    }
   };
 
   const handleSearch = async (query: string) => {
@@ -562,43 +605,105 @@ export default function StaffDashboard() {
         </Card>
       </div>
 
-      {/* Shift Notes */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Today's Shift Notes</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/call-centre/shift-notes">
-                <Plus className="h-4 w-4 mr-1" /> Add Note
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {shiftNotes.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <FileText className="h-8 w-8 mx-auto mb-2" />
-              <p>No shift notes yet today</p>
+      {/* Bottom Row: Birthdays and Shift Notes */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Today's Birthdays */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Cake className="h-5 w-5 text-pink-500" />
+                Today's Birthdays
+              </CardTitle>
+              {birthdays.length > 0 && (
+                <Badge className="bg-pink-500/20 text-pink-600 border-pink-500/30">
+                  {birthdays.length} {birthdays.length === 1 ? 'birthday' : 'birthdays'}
+                </Badge>
+              )}
             </div>
-          ) : (
-            <div className="space-y-3">
-              {shiftNotes.map((note) => (
-                <div key={note.id} className="flex gap-3 p-3 border rounded-lg">
-                  <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {format(new Date(note.created_at), 'HH:mm')}
-                  </p>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {note.staff?.first_name} {note.staff?.last_name}
+          </CardHeader>
+          <CardContent>
+            {birthdays.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Cake className="h-8 w-8 mx-auto mb-2" />
+                <p>No birthdays today</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {birthdays.map((member) => {
+                  const dob = new Date(member.date_of_birth);
+                  const age = new Date().getFullYear() - dob.getFullYear();
+                  return (
+                    <div 
+                      key={member.id} 
+                      className="flex items-center justify-between p-3 border rounded-lg bg-pink-500/5 border-pink-500/20 cursor-pointer hover:bg-pink-500/10"
+                      onClick={() => navigate(`/call-centre/members/${member.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                          <Cake className="h-5 w-5 text-pink-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{member.first_name} {member.last_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Turning {age} today! 🎉
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}
+                        title="Call to wish happy birthday"
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Shift Notes */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Today's Shift Notes</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/call-centre/shift-notes">
+                  <Plus className="h-4 w-4 mr-1" /> Add Note
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {shiftNotes.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2" />
+                <p>No shift notes yet today</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {shiftNotes.map((note) => (
+                  <div key={note.id} className="flex gap-3 p-3 border rounded-lg">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
+                      {format(new Date(note.created_at), 'HH:mm')}
                     </p>
-                    <p className="text-sm text-muted-foreground">{note.note_content}</p>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {note.staff?.first_name} {note.staff?.last_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{note.note_content}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
