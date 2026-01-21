@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { JoinWizardData, initialJoinWizardData } from "@/types/wizard";
 import { Logo } from "@/components/ui/logo";
 import { toast } from "sonner";
+import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
 
 // Step Components
 import { JoinMembershipStep } from "@/components/join/steps/JoinMembershipStep";
@@ -41,6 +42,9 @@ export default function JoinWizard() {
   const [wizardData, setWizardData] = useState<JoinWizardData>(initialJoinWizardData);
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Progressive save hook
+  const { saveDraft, clearSession, isSaving } = useRegistrationDraft();
 
   // Handle return from Stripe checkout
   useEffect(() => {
@@ -74,8 +78,9 @@ export default function JoinWizard() {
         setCurrentStep(9);
         toast.success("Payment successful! Welcome to ICE Alarm.");
       }
-      // Clear saved data
+      // Clear saved data and registration session
       localStorage.removeItem(WIZARD_STORAGE_KEY);
+      clearSession();
       // Clear URL params
       navigate("/join", { replace: true });
     } else if (cancelled === "true") {
@@ -209,6 +214,10 @@ export default function JoinWizard() {
   const handleNext = async () => {
     if (validateCurrentStep()) {
       setStepValidation((prev) => ({ ...prev, [currentStep]: true }));
+      
+      // Save progress to database before advancing
+      // This ensures we capture data even if user abandons later
+      await saveDraft(currentStep, wizardData);
       
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
