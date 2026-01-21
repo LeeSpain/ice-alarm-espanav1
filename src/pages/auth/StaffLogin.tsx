@@ -3,27 +3,30 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Logo } from "@/components/ui/logo";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { Loader2, ArrowLeft, Shield } from "lucide-react";
 import { toast } from "sonner";
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function StaffLogin() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/admin";
+
+  const loginSchema = z.object({
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(6, t("validation.passwordMin")),
+  });
+
+  type LoginFormValues = z.infer<typeof loginSchema>;
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -47,7 +50,6 @@ export default function StaffLogin() {
       }
 
       if (data.user) {
-        // Check if user is staff
         const { data: staffData, error: staffError } = await supabase
           .from("staff")
           .select("id, role, is_active")
@@ -56,19 +58,18 @@ export default function StaffLogin() {
 
         if (staffError || !staffData) {
           await supabase.auth.signOut();
-          toast.error("Access denied. This login is for staff only.");
+          toast.error(t("auth.errors.accessDenied"));
           return;
         }
 
         if (!staffData.is_active) {
           await supabase.auth.signOut();
-          toast.error("Your account has been deactivated. Please contact an administrator.");
+          toast.error(t("auth.errors.accountDeactivated"));
           return;
         }
 
-        toast.success("Welcome back!");
+        toast.success(t("auth.loginTitle"));
         
-        // Redirect based on role
         if (staffData.role === "call_centre") {
           navigate("/call-centre");
         } else {
@@ -76,7 +77,7 @@ export default function StaffLogin() {
         }
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t("errors.unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -85,10 +86,11 @@ export default function StaffLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="flex items-center justify-between mb-8">
           <Link to="/" className="inline-block">
             <Logo size="md" />
           </Link>
+          <LanguageSelector />
         </div>
 
         <Card className="border-primary/20">
@@ -96,9 +98,9 @@ export default function StaffLogin() {
             <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Shield className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Staff Login</CardTitle>
+            <CardTitle className="text-2xl">{t("auth.staffLogin")}</CardTitle>
             <CardDescription>
-              Access the admin or call centre dashboard
+              {t("auth.staffLoginDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -109,7 +111,7 @@ export default function StaffLogin() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t("auth.email")}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -127,7 +129,7 @@ export default function StaffLogin() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("auth.password")}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
@@ -144,10 +146,10 @@ export default function StaffLogin() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      {t("auth.signingIn")}
                     </>
                   ) : (
-                    "Sign In"
+                    t("common.signIn")
                   )}
                 </Button>
               </form>
@@ -159,16 +161,16 @@ export default function StaffLogin() {
                 className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to home
+                {t("auth.backToHome")}
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
-          ICE Alarm Member?{" "}
+          {t("auth.memberQuestion")}{" "}
           <Link to="/login" className="text-primary hover:underline">
-            Login here
+            {t("auth.loginHere")}
           </Link>
         </p>
       </div>
