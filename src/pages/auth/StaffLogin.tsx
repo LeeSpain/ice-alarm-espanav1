@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { Loader2, ArrowLeft, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StaffLogin() {
+  const { refreshAuth } = useAuth();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -68,6 +70,9 @@ export default function StaffLogin() {
           return;
         }
 
+        // Refresh auth context to update isStaff before navigation
+        await refreshAuth();
+        
         toast.success(t("auth.loginTitle"));
         
         if (staffData.role === "call_centre") {

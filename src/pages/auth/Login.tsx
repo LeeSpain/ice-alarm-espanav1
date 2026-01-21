@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 
 export default function Login() {
   const { t } = useTranslation();
+  const { refreshAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +60,7 @@ export default function Login() {
           .maybeSingle();
 
         if (staffData && staffData.is_active) {
+          await refreshAuth();
           toast.success(t("auth.loginTitle"));
           // Redirect staff to appropriate dashboard
           if (staffData.role === "call_centre") {
@@ -76,6 +79,7 @@ export default function Login() {
           .maybeSingle();
 
         if (memberData) {
+          await refreshAuth();
           toast.success(t("auth.loginTitle"));
           navigate(from);
         } else {
