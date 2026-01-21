@@ -45,6 +45,8 @@ import AddMemberWizard from "./pages/admin/AddMemberWizard";
 import StaffDashboard from "./pages/call-centre/StaffDashboard";
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
 import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
+import ShiftHistoryPage from "./pages/call-centre/ShiftHistoryPage";
+import StaffPreferencesPage from "./pages/call-centre/StaffPreferencesPage";
 import CallCentreTasksPage from "./pages/call-centre/TasksPage";
 import CallCentreMembersPage from "./pages/call-centre/MembersPage";
 import CallCentreMessagesPage from "./pages/call-centre/MessagesPage";
@@ -118,6 +120,8 @@ const App = () => (
               <Route path="members" element={<CallCentreMembersPage />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
               <Route path="shift-notes" element={<ShiftNotesPage />} />
+              <Route path="shift-history" element={<ShiftHistoryPage />} />
+              <Route path="preferences" element={<StaffPreferencesPage />} />
               <Route path="messages" element={<CallCentreMessagesPage />} />
               <Route path="tasks" element={<CallCentreTasksPage />} />
               <Route path="tickets" element={<CallCentreTicketsPage />} />

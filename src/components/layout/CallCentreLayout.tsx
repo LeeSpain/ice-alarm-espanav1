@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare, LayoutDashboard, Users, AlertTriangle, Ticket } from "lucide-react";
+import { FileText, User, Phone, LogOut, MessageSquare, CheckSquare, LayoutDashboard, Users, AlertTriangle, Ticket, Clock, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CallCentreLayout() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const navigateTo = useNavigate();
   const location = useLocation();
   
   const [incomingAlerts, setIncomingAlerts] = useState(0);
@@ -57,7 +56,7 @@ export function CallCentreLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/staff/login");
+    navigateTo("/staff/login");
   };
 
   const isActive = (path: string) => {
@@ -201,8 +200,18 @@ export function CallCentreLayout() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>My Shift History</DropdownMenuItem>
-              <DropdownMenuItem>Preferences</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/call-centre/shift-history" className="flex items-center cursor-pointer">
+                  <Clock className="w-4 h-4 mr-2" />
+                  My Shift History
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/call-centre/preferences" className="flex items-center cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Preferences
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
