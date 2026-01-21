@@ -81,8 +81,6 @@ export function SubscriptionTab({ memberId }: SubscriptionTabProps) {
     } catch (error) {
       console.error("Error updating subscription:", error);
       toast.error("Failed to update subscription");
-    } catch (err) {
-      console.error("Error:", err);
     }
   };
 

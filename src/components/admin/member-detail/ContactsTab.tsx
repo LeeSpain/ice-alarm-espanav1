@@ -146,10 +146,16 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
         if (error) throw error;
         toast.success("Contact updated");
       } else {
-      const { error } = await supabase
+        const { error } = await supabase
           .from("emergency_contacts")
           .insert([{
-            ...data,
+            contact_name: data.contact_name || "",
+            phone: data.phone || "",
+            relationship: data.relationship || "",
+            email: data.email,
+            speaks_spanish: data.speaks_spanish,
+            is_primary: data.is_primary,
+            notes: data.notes,
             member_id: memberId,
             priority_order: contacts.length + 1,
           }]);
