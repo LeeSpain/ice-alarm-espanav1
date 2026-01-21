@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Heart, Phone, Smartphone, FileText, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Heart, Phone, Smartphone, FileText, CreditCard, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JoinWizardData, initialJoinWizardData } from "@/types/wizard";
 import { Logo } from "@/components/ui/logo";
@@ -17,6 +17,7 @@ import { JoinMedicalStep } from "@/components/join/steps/JoinMedicalStep";
 import { JoinContactsStep } from "@/components/join/steps/JoinContactsStep";
 import { JoinPendantStep } from "@/components/join/steps/JoinPendantStep";
 import { JoinSummaryStep } from "@/components/join/steps/JoinSummaryStep";
+import { JoinPaymentStep } from "@/components/join/steps/JoinPaymentStep";
 import { JoinConfirmationStep } from "@/components/join/steps/JoinConfirmationStep";
 
 const steps = [
@@ -27,15 +28,73 @@ const steps = [
   { id: 5, title: "Contacts", icon: Phone, shortTitle: "Contacts" },
   { id: 6, title: "Device", icon: Smartphone, shortTitle: "Device" },
   { id: 7, title: "Review", icon: FileText, shortTitle: "Review" },
-  { id: 8, title: "Complete", icon: PartyPopper, shortTitle: "Done" },
+  { id: 8, title: "Payment", icon: CreditCard, shortTitle: "Pay" },
+  { id: 9, title: "Complete", icon: PartyPopper, shortTitle: "Done" },
 ];
+
+const WIZARD_STORAGE_KEY = "join_wizard_data";
 
 export default function JoinWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [wizardData, setWizardData] = useState<JoinWizardData>(initialJoinWizardData);
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const cancelled = searchParams.get("cancelled");
+    const orderNumber = searchParams.get("order");
+
+    if (success === "true" && orderNumber) {
+      // Payment was successful - load saved data and go to confirmation
+      const savedData = localStorage.getItem(WIZARD_STORAGE_KEY);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          setWizardData({
+            ...parsed,
+            paymentComplete: true,
+            orderId: orderNumber,
+          });
+          setCurrentStep(9); // Go to confirmation step
+          toast.success("Payment successful! Welcome to ICE Alarm.");
+        } catch (e) {
+          console.error("Failed to parse saved wizard data:", e);
+        }
+      } else {
+        // No saved data, but payment was successful
+        setWizardData((prev) => ({
+          ...prev,
+          paymentComplete: true,
+          orderId: orderNumber,
+        }));
+        setCurrentStep(9);
+        toast.success("Payment successful! Welcome to ICE Alarm.");
+      }
+      // Clear saved data
+      localStorage.removeItem(WIZARD_STORAGE_KEY);
+      // Clear URL params
+      navigate("/join", { replace: true });
+    } else if (cancelled === "true") {
+      // Payment was cancelled - restore saved data
+      const savedData = localStorage.getItem(WIZARD_STORAGE_KEY);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          setWizardData(parsed);
+          setCurrentStep(8); // Go back to payment step
+        } catch (e) {
+          console.error("Failed to parse saved wizard data:", e);
+        }
+      }
+      toast.error("Payment was cancelled. You can try again when ready.");
+      // Clear URL params
+      navigate("/join", { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   const updateWizardData = (data: Partial<JoinWizardData>) => {
     setWizardData((prev) => ({ ...prev, ...data }));
@@ -80,6 +139,8 @@ export default function JoinWizard() {
       case 7:
         return wizardData.acceptTerms && wizardData.acceptPrivacy;
       case 8:
+        return wizardData.paymentComplete;
+      case 9:
         return true;
       default:
         return true;
@@ -149,25 +210,7 @@ export default function JoinWizard() {
     if (validateCurrentStep()) {
       setStepValidation((prev) => ({ ...prev, [currentStep]: true }));
       
-      if (currentStep === 7) {
-        // Submit registration
-        setIsSubmitting(true);
-        try {
-          // Simulate API call - in production this would create the member in DB
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Generate a mock order ID
-          const orderId = `ICE-${Date.now().toString(36).toUpperCase()}`;
-          updateWizardData({ orderId, paymentComplete: true });
-          
-          toast.success("Registration successful!");
-          setCurrentStep(8);
-        } catch (error) {
-          toast.error("Registration failed. Please try again.");
-        } finally {
-          setIsSubmitting(false);
-        }
-      } else if (currentStep < steps.length) {
+      if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
       }
     } else {
@@ -186,9 +229,14 @@ export default function JoinWizard() {
 
   const handleStepClick = (stepId: number) => {
     // Allow navigation to completed steps or current step (but not beyond, and not after completion)
-    if (stepId <= currentStep && currentStep < 8) {
+    if (stepId <= currentStep && currentStep < 9) {
       setCurrentStep(stepId);
     }
+  };
+
+  const handlePaymentInitiated = () => {
+    // Save wizard data to localStorage before redirecting to Stripe
+    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(wizardData));
   };
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -210,11 +258,22 @@ export default function JoinWizard() {
       case 7:
         return <JoinSummaryStep data={wizardData} onUpdate={updateWizardData} />;
       case 8:
+        return (
+          <JoinPaymentStep 
+            data={wizardData} 
+            onUpdate={updateWizardData} 
+            onPaymentInitiated={handlePaymentInitiated}
+          />
+        );
+      case 9:
         return <JoinConfirmationStep data={wizardData} />;
       default:
         return null;
     }
   };
+
+  // Don't show navigation buttons on payment step (handled internally) or confirmation step
+  const showNavigationButtons = currentStep !== 8 && currentStep !== 9;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -224,7 +283,7 @@ export default function JoinWizard() {
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-8 w-auto" />
           </Link>
-          {currentStep < 8 && (
+          {currentStep < 9 && (
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
               Exit
             </Link>
@@ -233,7 +292,7 @@ export default function JoinWizard() {
       </header>
 
       <main className="container max-w-4xl py-8 px-4">
-        {currentStep < 8 && (
+        {currentStep < 9 && (
           <>
             {/* Progress Bar */}
             <Progress value={progress} className="h-2 mb-6" />
@@ -252,23 +311,23 @@ export default function JoinWizard() {
                     onClick={() => handleStepClick(step.id)}
                     disabled={!isClickable}
                     className={cn(
-                      "flex flex-col items-center gap-1 min-w-[60px] md:min-w-[80px] p-2 rounded-lg transition-colors",
+                      "flex flex-col items-center gap-1 min-w-[50px] md:min-w-[70px] p-2 rounded-lg transition-colors",
                       isClickable && "cursor-pointer hover:bg-accent",
                       !isClickable && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <div
                       className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                        "w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors",
                         isCurrent && "bg-primary text-primary-foreground",
                         isCompleted && !isCurrent && "bg-status-active text-white",
                         !isCurrent && !isCompleted && "bg-muted text-muted-foreground"
                       )}
                     >
                       {isCompleted && !isCurrent ? (
-                        <Check className="h-5 w-5" />
+                        <Check className="h-4 w-4 md:h-5 md:w-5" />
                       ) : (
-                        <StepIcon className="h-5 w-5" />
+                        <StepIcon className="h-4 w-4 md:h-5 md:w-5" />
                       )}
                     </div>
                     <span
@@ -295,7 +354,7 @@ export default function JoinWizard() {
         </Card>
 
         {/* Navigation Buttons */}
-        {currentStep < 8 && (
+        {showNavigationButtons && (
           <div className="flex justify-between mt-8">
             <Button
               variant="outline"
@@ -314,17 +373,26 @@ export default function JoinWizard() {
             >
               {isSubmitting ? (
                 <>Processing...</>
-              ) : currentStep === 7 ? (
-                <>
-                  Complete Registration
-                  <Check className="h-4 w-4" />
-                </>
               ) : (
                 <>
                   Continue
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
+            </Button>
+          </div>
+        )}
+
+        {/* Back button on payment step */}
+        {currentStep === 8 && (
+          <div className="flex justify-start mt-8">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Review
             </Button>
           </div>
         )}
