@@ -176,7 +176,10 @@ export function NotesTab({ memberId }: NotesTabProps) {
         const { error } = await supabase
           .from("member_notes")
           .insert([{
-            ...data,
+            content: data.content || "",
+            note_type: data.note_type,
+            is_pinned: data.is_pinned,
+            is_private: data.is_private,
             member_id: memberId,
             staff_id: staffData?.id,
             followup_date: data.followup_date || null,
