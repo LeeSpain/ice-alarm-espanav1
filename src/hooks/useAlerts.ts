@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
+import { useBrowserNotifications } from "./useBrowserNotifications";
 
 type Alert = Tables<"alerts">;
 
@@ -92,6 +93,14 @@ export function useAlerts() {
   const [alerts, setAlerts] = useState<EnrichedAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const alertsRef = useRef<EnrichedAlert[]>([]);
+  const { showAlertNotification, requestPermission, permission } = useBrowserNotifications();
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (permission === "default") {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
   const fetchAlertDetails = async (alertId: string): Promise<EnrichedAlert | null> => {
     try {
@@ -339,7 +348,7 @@ export function useAlerts() {
           if (payload.eventType === "INSERT") {
             const newAlert = payload.new;
             
-            // Play sound for new incoming alerts
+            // Play sound and show notifications for new incoming alerts
             if (newAlert.status === "incoming") {
               playAlertSound();
               toast({
@@ -349,18 +358,26 @@ export function useAlerts() {
               });
             }
 
-            // Fetch member details for the new alert
-            const { data: memberData } = await supabase
+            // Fetch member details for the new alert and browser notification
+            const { data: memberDataForAlert } = await supabase
               .from("members")
               .select("first_name, last_name")
               .eq("id", newAlert.member_id)
               .single();
 
+            // Show browser notification
+            if (memberDataForAlert) {
+              showAlertNotification(
+                newAlert.alert_type,
+                `${memberDataForAlert.first_name} ${memberDataForAlert.last_name}`
+              );
+            }
+
             const enrichedAlert: EnrichedAlert = {
               id: newAlert.id,
               type: newAlert.alert_type as EnrichedAlert["type"],
               status: newAlert.status as EnrichedAlert["status"],
-              memberName: memberData ? `${memberData.first_name} ${memberData.last_name}` : "Unknown",
+              memberName: memberDataForAlert ? `${memberDataForAlert.first_name} ${memberDataForAlert.last_name}` : "Unknown",
               location: newAlert.location_address || undefined,
               locationLat: newAlert.location_lat ? Number(newAlert.location_lat) : undefined,
               locationLng: newAlert.location_lng ? Number(newAlert.location_lng) : undefined,
