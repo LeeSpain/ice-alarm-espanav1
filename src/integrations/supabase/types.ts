@@ -369,6 +369,76 @@ export type Database = {
           },
         ]
       }
+      internal_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          member_id: string | null
+          priority: string
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          ticket_number: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          member_id?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_number: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          member_id?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_number?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_tickets_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_information: {
         Row: {
           additional_notes: string | null
@@ -1087,6 +1157,48 @@ export type Database = {
           },
         ]
       }
+      ticket_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          staff_id: string
+          ticket_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          staff_id: string
+          ticket_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          staff_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "internal_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1139,6 +1251,14 @@ export type Database = {
       preferred_language: "en" | "es"
       recipient_type: "member" | "emergency_contact" | "emergency_services"
       subscription_status: "active" | "cancelled" | "expired" | "paused"
+      ticket_category:
+        | "pendant_help"
+        | "technical_issue"
+        | "member_query"
+        | "billing_question"
+        | "general"
+        | "other"
+      ticket_status: "open" | "in_progress" | "pending" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1308,6 +1428,15 @@ export const Constants = {
       preferred_language: ["en", "es"],
       recipient_type: ["member", "emergency_contact", "emergency_services"],
       subscription_status: ["active", "cancelled", "expired", "paused"],
+      ticket_category: [
+        "pendant_help",
+        "technical_issue",
+        "member_query",
+        "billing_question",
+        "general",
+        "other",
+      ],
+      ticket_status: ["open", "in_progress", "pending", "resolved", "closed"],
     },
   },
 } as const
