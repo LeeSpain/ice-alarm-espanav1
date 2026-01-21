@@ -130,7 +130,7 @@ serve(async (req) => {
         province: body.address.province,
         postal_code: body.address.postalCode,
         country: body.address.country,
-        status: "pending", // Will be activated after payment
+        status: "inactive", // Will be activated after payment
       })
       .select()
       .single();
@@ -161,7 +161,7 @@ serve(async (req) => {
           province: body.address.province,
           postal_code: body.address.postalCode,
           country: body.address.country,
-          status: "pending",
+          status: "inactive",
         })
         .select()
         .single();
