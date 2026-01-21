@@ -35,6 +35,8 @@ import AlertsPage from "./pages/admin/AlertsPage";
 import StaffPage from "./pages/admin/StaffPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
+import MessagesPage from "./pages/admin/MessagesPage";
+import MemberDetailPage from "./pages/admin/MemberDetailPage";
 
 // Call Centre Pages
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
@@ -86,6 +88,8 @@ const App = () => (
               <Route path="staff" element={<StaffPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="members/:id" element={<MemberDetailPage />} />
             </Route>
 
             {/* Call Centre Dashboard Routes - Require Staff Role */}
@@ -99,6 +103,7 @@ const App = () => (
             >
               <Route index element={<CallCentreDashboard />} />
               <Route path="shift-notes" element={<ShiftNotesPage />} />
+              <Route path="messages" element={<MessagesPage />} />
             </Route>
 
             {/* Client Dashboard Routes - Require Member */}
