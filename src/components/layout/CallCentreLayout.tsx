@@ -71,7 +71,7 @@ export function CallCentreLayout() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${location.pathname.includes('tasks') ? 'bg-sidebar-accent' : ''}`}
             asChild
           >
             <Link to="/call-centre/tasks">

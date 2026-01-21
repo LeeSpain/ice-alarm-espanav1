@@ -36,12 +36,14 @@ import StaffPage from "./pages/admin/StaffPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import MessagesPage from "./pages/admin/MessagesPage";
+import TasksPage from "./pages/admin/TasksPage";
 import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
 
 // Call Centre Pages
 import CallCentreDashboard from "./pages/call-centre/CallCentreDashboard";
 import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
+import CallCentreTasksPage from "./pages/call-centre/TasksPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
@@ -91,6 +93,7 @@ const App = () => (
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="tasks" element={<TasksPage />} />
               <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
             </Route>
@@ -107,6 +110,7 @@ const App = () => (
               <Route index element={<CallCentreDashboard />} />
               <Route path="shift-notes" element={<ShiftNotesPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="tasks" element={<CallCentreTasksPage />} />
             </Route>
 
             {/* Client Dashboard Routes - Require Member */}
