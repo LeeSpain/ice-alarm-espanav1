@@ -22,12 +22,14 @@ export function useCompanySettings() {
       const { data, error } = await supabase
         .from("system_settings")
         .select("key, value")
-        .in("key", ["company_name", "emergency_phone", "support_email", "address"]);
+        .in("key", ["settings_company_name", "settings_emergency_phone", "settings_support_email", "settings_address"]);
       
       if (error) throw error;
       
       const settingsMap = (data || []).reduce((acc, setting) => {
-        acc[setting.key] = setting.value;
+        // Strip the 'settings_' prefix to normalize keys
+        const normalizedKey = setting.key.replace(/^settings_/, '');
+        acc[normalizedKey] = setting.value;
         return acc;
       }, {} as Record<string, string>);
       
