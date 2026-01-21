@@ -19,6 +19,9 @@ import ContactPage from "./pages/ContactPage";
 import PendantPage from "./pages/PendantPage";
 import NotFound from "./pages/NotFound";
 
+// Join Flow
+import JoinWizard from "./pages/join/JoinWizard";
+
 // Auth Pages
 import Login from "./pages/auth/Login";
 import StaffLogin from "./pages/auth/StaffLogin";
@@ -80,6 +83,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/pendant" element={<PendantPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/join" element={<JoinWizard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/staff/login" element={<StaffLogin />} />
             <Route path="/register" element={<Register />} />
