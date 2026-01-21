@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Users, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSubscriptionMonthlyFinal, formatPrice } from "@/config/pricing";
 
 interface MembershipTypeStepProps {
   data: WizardData;
@@ -17,14 +18,14 @@ export function MembershipTypeStep({ data, onUpdate }: MembershipTypeStepProps) 
       title: "Single Membership",
       description: "Protection for one person living independently. Includes 24/7 emergency response, GPS tracking, and fall detection.",
       icon: User,
-      price: "€27.49/month",
+      price: `${formatPrice(getSubscriptionMonthlyFinal('single'))}/month`,
     },
     {
       value: "couple",
       title: "Couple Membership",
       description: "Protection for two people living together. Both members receive full coverage with a shared address. Save 20% compared to two single memberships.",
       icon: Users,
-      price: "€43.99/month",
+      price: `${formatPrice(getSubscriptionMonthlyFinal('couple'))}/month`,
     },
   ];
 

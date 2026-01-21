@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Users, Check, Shield, Phone, MapPin, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSubscriptionMonthlyFinal, formatPrice } from "@/config/pricing";
 
 interface JoinMembershipStepProps {
   data: JoinWizardData;
@@ -16,7 +17,7 @@ export function JoinMembershipStep({ data, onUpdate }: JoinMembershipStepProps) 
       value: "single" as const,
       title: "Individual Plan",
       description: "Perfect for one person living independently",
-      price: "€27.49",
+      price: formatPrice(getSubscriptionMonthlyFinal('single')),
       priceNote: "/month",
       icon: User,
     },
@@ -24,7 +25,7 @@ export function JoinMembershipStep({ data, onUpdate }: JoinMembershipStepProps) 
       value: "couple" as const,
       title: "Couple Plan",
       description: "Ideal for couples living together",
-      price: "€43.99",
+      price: formatPrice(getSubscriptionMonthlyFinal('couple')),
       priceNote: "/month",
       icon: Users,
     },

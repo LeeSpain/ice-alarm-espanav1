@@ -58,13 +58,16 @@ interface RegistrationRequest {
   billingFrequency: "monthly" | "annual";
 }
 
-// Pricing constants
+// Pricing constants (NET prices)
 const PRICING = {
-  single: { monthly: 27.49, annualMonthly: 22.99 },
-  couple: { monthly: 43.99, annualMonthly: 36.99 },
-  pendant: 151.25,
-  registrationFee: 29.99,
-  taxRate: 0.21,
+  single: { monthlyNet: 24.99 },  // 10% IVA
+  couple: { monthlyNet: 34.99 },  // 10% IVA
+  annualMonths: 10,               // Pay for 10 months (2 free)
+  pendantNet: 125.00,             // 21% IVA
+  pendantTaxRate: 0.21,
+  subscriptionTaxRate: 0.10,
+  registrationFee: 59.99,         // No IVA
+  shipping: 14.99,                // IVA included
 };
 
 serve(async (req) => {
@@ -81,23 +84,34 @@ serve(async (req) => {
     const body: RegistrationRequest = await req.json();
     console.log("Processing registration for:", body.primaryMember.email);
 
-    // Calculate pricing
-    const monthlyPrice = body.membershipType === "single" 
-      ? PRICING.single.monthly 
-      : PRICING.couple.monthly;
-    const annualMonthlyPrice = body.membershipType === "single" 
-      ? PRICING.single.annualMonthly 
-      : PRICING.couple.annualMonthly;
-    const basePrice = body.billingFrequency === "monthly" 
-      ? monthlyPrice 
-      : annualMonthlyPrice * 12;
+    // Calculate pricing with correct IVA rates
+    const monthlyNetPrice = body.membershipType === "single" 
+      ? PRICING.single.monthlyNet 
+      : PRICING.couple.monthlyNet;
+    
+    // Subscription: net price × months (10 for annual, 1 for monthly) + 10% IVA
+    const subscriptionNet = body.billingFrequency === "monthly" 
+      ? monthlyNetPrice 
+      : monthlyNetPrice * PRICING.annualMonths;
+    const subscriptionTax = subscriptionNet * PRICING.subscriptionTaxRate;
+    const subscriptionFinal = subscriptionNet + subscriptionTax;
+    
+    // Pendant: net price + 21% IVA
     const pendantCount = body.includePendant 
       ? (body.membershipType === "couple" ? 2 : 1) 
       : 0;
-    const pendantTotal = pendantCount * PRICING.pendant;
-    const subtotal = basePrice + pendantTotal + PRICING.registrationFee;
-    const taxAmount = subtotal * PRICING.taxRate;
-    const total = subtotal + taxAmount;
+    const pendantNet = pendantCount * PRICING.pendantNet;
+    const pendantTax = pendantNet * PRICING.pendantTaxRate;
+    const pendantFinal = pendantNet + pendantTax;
+    
+    // Registration: no IVA
+    const registrationFee = PRICING.registrationFee;
+    
+    // Shipping: IVA included (only if pendant ordered)
+    const shipping = pendantCount > 0 ? PRICING.shipping : 0;
+    
+    // Totals
+    const total = subscriptionFinal + pendantFinal + registrationFee + shipping;
 
     // 1. Create primary member
     const { data: primaryMemberData, error: memberError } = await supabase
@@ -240,7 +254,7 @@ serve(async (req) => {
         member_id: primaryMemberData.id,
         plan_type: body.membershipType,
         billing_frequency: body.billingFrequency,
-        amount: basePrice,
+        amount: subscriptionNet,
         start_date: new Date().toISOString().split("T")[0],
         renewal_date: renewalDate.toISOString().split("T")[0],
         has_pendant: body.includePendant,
@@ -268,9 +282,10 @@ serve(async (req) => {
         member_id: primaryMemberData.id,
         order_number: orderNumber,
         status: "pending",
-        subtotal: subtotal,
-        tax_amount: taxAmount,
+        subtotal: subscriptionNet + pendantNet + registrationFee,
+        tax_amount: subscriptionTax + pendantTax,
         total_amount: total,
+        shipping_amount: shipping,
         shipping_address_line_1: body.address.addressLine1,
         shipping_address_line_2: body.address.addressLine2 || null,
         shipping_city: body.address.city,
@@ -297,10 +312,10 @@ serve(async (req) => {
       item_type: "subscription",
       description: `${body.membershipType === "couple" ? "Couple" : "Individual"} Membership - ${body.billingFrequency === "annual" ? "Annual" : "Monthly"}`,
       quantity: 1,
-      unit_price: basePrice,
-      tax_rate: PRICING.taxRate,
-      tax_amount: basePrice * PRICING.taxRate,
-      total_price: basePrice * (1 + PRICING.taxRate),
+      unit_price: subscriptionNet,
+      tax_rate: PRICING.subscriptionTaxRate,
+      tax_amount: subscriptionTax,
+      total_price: subscriptionFinal,
     });
 
     // Pendant items
@@ -310,23 +325,23 @@ serve(async (req) => {
         item_type: "pendant",
         description: "GPS Safety Pendant",
         quantity: pendantCount,
-        unit_price: PRICING.pendant,
-        tax_rate: PRICING.taxRate,
-        tax_amount: pendantTotal * PRICING.taxRate,
-        total_price: pendantTotal * (1 + PRICING.taxRate),
+        unit_price: PRICING.pendantNet,
+        tax_rate: PRICING.pendantTaxRate,
+        tax_amount: pendantTax,
+        total_price: pendantFinal,
       });
     }
 
-    // Registration fee
+    // Registration fee (no IVA)
     orderItems.push({
       order_id: orderData.id,
       item_type: "registration_fee",
       description: "One-time Registration Fee",
       quantity: 1,
-      unit_price: PRICING.registrationFee,
-      tax_rate: PRICING.taxRate,
-      tax_amount: PRICING.registrationFee * PRICING.taxRate,
-      total_price: PRICING.registrationFee * (1 + PRICING.taxRate),
+      unit_price: registrationFee,
+      tax_rate: 0,
+      tax_amount: 0,
+      total_price: registrationFee,
     });
 
     for (const item of orderItems) {
@@ -370,17 +385,17 @@ serve(async (req) => {
         lineItems: [
           {
             name: `${body.membershipType === "couple" ? "Couple" : "Individual"} Membership - ${body.billingFrequency === "annual" ? "Annual" : "Monthly"}`,
-            amount: basePrice * (1 + PRICING.taxRate),
+            amount: subscriptionFinal,
             quantity: 1,
           },
           ...(pendantCount > 0 ? [{
             name: `GPS Safety Pendant${pendantCount > 1 ? ` (×${pendantCount})` : ""}`,
-            amount: PRICING.pendant * (1 + PRICING.taxRate),
+            amount: pendantFinal / pendantCount,
             quantity: pendantCount,
           }] : []),
           {
             name: "Registration Fee",
-            amount: PRICING.registrationFee * (1 + PRICING.taxRate),
+            amount: registrationFee,
             quantity: 1,
           },
         ],

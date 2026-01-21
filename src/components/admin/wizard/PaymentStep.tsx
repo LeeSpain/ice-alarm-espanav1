@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCard, Building2, Loader2, Lock, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateOrder, formatPrice, getSubscriptionNetPrice, PRICING } from "@/config/pricing";
 
 interface PaymentStepProps {
   data: WizardData;
@@ -24,17 +25,16 @@ export function PaymentStep({ data, onUpdate }: PaymentStepProps) {
     name: "",
   });
 
-  // Calculate total
-  const monthlyPrice = data.membershipType === "single" ? 27.49 : 43.99;
-  const annualMonthlyPrice = data.membershipType === "single" ? 22.99 : 36.99;
-  const basePrice = data.billingFrequency === "monthly" ? monthlyPrice : annualMonthlyPrice * 12;
-  const pendantPrice = 151.25;
-  const pendantCount = data.membershipType === "couple" && data.includePendant ? 2 : data.includePendant ? 1 : 0;
-  const pendantTotal = pendantCount * pendantPrice;
-  const registrationFee = 29.99;
-  const subtotal = basePrice + pendantTotal + registrationFee;
-  const taxAmount = subtotal * 0.21;
-  const total = subtotal + taxAmount;
+  // Calculate order using centralized pricing
+  const order = calculateOrder({
+    membershipType: data.membershipType,
+    billingFrequency: data.billingFrequency,
+    includePendant: data.includePendant,
+    includeShipping: data.includePendant,
+  });
+  
+  const total = order.grandTotal;
+  const subscriptionAmount = getSubscriptionNetPrice(data.membershipType, data.billingFrequency);
 
   const handleProcessPayment = async () => {
     setIsProcessing(true);
@@ -67,12 +67,11 @@ export function PaymentStep({ data, onUpdate }: PaymentStepProps) {
 
       if (memberError) throw memberError;
 
-      // Create subscription
       const { error: subError } = await supabase.from("subscriptions").insert({
         member_id: memberData.id,
         plan_type: data.membershipType,
         billing_frequency: data.billingFrequency,
-        amount: data.billingFrequency === "monthly" ? monthlyPrice : annualMonthlyPrice * 12,
+        amount: subscriptionAmount,
         start_date: new Date().toISOString().split("T")[0],
         renewal_date: new Date(
           data.billingFrequency === "monthly"
@@ -263,7 +262,7 @@ export function PaymentStep({ data, onUpdate }: PaymentStepProps) {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-lg font-medium">Total to Pay</span>
-            <span className="text-2xl font-bold text-primary">€{total.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-primary">{formatPrice(total)}</span>
           </div>
 
           <Button

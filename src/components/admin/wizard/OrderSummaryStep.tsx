@@ -3,27 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { User, MapPin, Heart, Phone, Smartphone, CreditCard } from "lucide-react";
+import { 
+  calculateOrder, 
+  formatPrice, 
+  getSubscriptionMonthlyFinal 
+} from "@/config/pricing";
 
 interface OrderSummaryStepProps {
   data: WizardData;
 }
 
 export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
-  // Pricing calculations
-  const monthlyPrice = data.membershipType === "single" ? 27.49 : 43.99;
-  const annualMonthlyPrice = data.membershipType === "single" ? 22.99 : 36.99;
-  const basePrice = data.billingFrequency === "monthly" ? monthlyPrice : annualMonthlyPrice * 12;
+  // Use centralized pricing calculations
+  const order = calculateOrder({
+    membershipType: data.membershipType,
+    billingFrequency: data.billingFrequency,
+    includePendant: data.includePendant,
+    includeShipping: data.includePendant,
+  });
   
-  const pendantPrice = 151.25;
-  const pendantCount = data.membershipType === "couple" && data.includePendant ? 2 : data.includePendant ? 1 : 0;
-  const pendantTotal = pendantCount * pendantPrice;
-  
-  const registrationFee = 29.99;
-  
-  const subtotal = basePrice + pendantTotal + registrationFee;
-  const taxRate = 0.21; // 21% IVA
-  const taxAmount = subtotal * taxRate;
-  const total = subtotal + taxAmount;
+  const monthlyFinal = getSubscriptionMonthlyFinal(data.membershipType);
 
   return (
     <div className="space-y-6">
@@ -140,24 +139,35 @@ export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
               <p className="text-sm text-muted-foreground">
                 {data.billingFrequency === "monthly"
                   ? "Monthly subscription"
-                  : "Annual subscription (12 months)"}
+                  : "Annual subscription (10 months price)"}
               </p>
             </div>
-            <p className="font-medium">€{basePrice.toFixed(2)}</p>
+            <p className="font-medium">{formatPrice(order.subscriptionFinal)}</p>
           </div>
 
           {/* Pendant */}
-          {pendantCount > 0 && (
+          {order.pendantCount > 0 && (
             <div className="flex justify-between items-start">
               <div>
                 <p className="font-medium flex items-center gap-2">
                   <Smartphone className="h-4 w-4" />
                   Medical Alert Pendant
-                  {pendantCount > 1 && <span>× {pendantCount}</span>}
+                  {order.pendantCount > 1 && <span>× {order.pendantCount}</span>}
                 </p>
-                <p className="text-sm text-muted-foreground">One-time purchase</p>
+                <p className="text-sm text-muted-foreground">One-time purchase (incl. 21% IVA)</p>
               </div>
-              <p className="font-medium">€{pendantTotal.toFixed(2)}</p>
+              <p className="font-medium">{formatPrice(order.pendantFinal)}</p>
+            </div>
+          )}
+
+          {/* Shipping */}
+          {order.shipping > 0 && (
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium">Shipping</p>
+                <p className="text-sm text-muted-foreground">Delivery to address</p>
+              </div>
+              <p className="font-medium">{formatPrice(order.shipping)}</p>
             </div>
           )}
 
@@ -165,23 +175,9 @@ export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
           <div className="flex justify-between items-start">
             <div>
               <p className="font-medium">Registration Fee</p>
-              <p className="text-sm text-muted-foreground">One-time setup fee</p>
+              <p className="text-sm text-muted-foreground">One-time setup fee (no IVA)</p>
             </div>
-            <p className="font-medium">€{registrationFee.toFixed(2)}</p>
-          </div>
-
-          <Separator />
-
-          {/* Subtotal */}
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>€{subtotal.toFixed(2)}</span>
-          </div>
-
-          {/* Tax */}
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">IVA (21%)</span>
-            <span>€{taxAmount.toFixed(2)}</span>
+            <p className="font-medium">{formatPrice(order.registrationFee)}</p>
           </div>
 
           <Separator />
@@ -189,12 +185,12 @@ export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
           {/* Total */}
           <div className="flex justify-between text-lg font-bold">
             <span>Total Due Today</span>
-            <span className="text-primary">€{total.toFixed(2)}</span>
+            <span className="text-primary">{formatPrice(order.grandTotal)}</span>
           </div>
 
           {data.billingFrequency === "monthly" && (
             <p className="text-sm text-muted-foreground text-center">
-              Then €{(monthlyPrice * 1.21).toFixed(2)}/month starting next month
+              Then {formatPrice(monthlyFinal)}/month starting next month
             </p>
           )}
         </CardContent>

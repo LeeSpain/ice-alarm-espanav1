@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, X, Smartphone, Phone, Award, Shield, Droplets, Battery, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPendantFinalPrice, formatPrice } from "@/config/pricing";
 
 interface JoinPendantStepProps {
   data: JoinWizardData;
@@ -11,7 +12,7 @@ interface JoinPendantStepProps {
 }
 
 export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
-  const pendantPrice = 151.25;
+  const pendantFinalPrice = getPendantFinalPrice(1);
   const pendantCount = data.membershipType === "couple" ? 2 : 1;
 
   const features = [
@@ -81,7 +82,7 @@ export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
                 <div>
                   <CardTitle className="text-xl">GPS Safety Pendant</CardTitle>
                   <p className="text-2xl font-bold text-primary mt-2">
-                    €{pendantPrice.toFixed(2)}
+                    {formatPrice(pendantFinalPrice)}
                     {data.membershipType === "couple" && (
                       <span className="text-sm font-normal text-muted-foreground ml-1">
                         × {pendantCount}
