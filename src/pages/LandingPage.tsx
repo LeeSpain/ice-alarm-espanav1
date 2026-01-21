@@ -108,11 +108,11 @@ export default function LandingPage() {
 
             {/* Right Image */}
             <div className="relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 aspect-[4/3] bg-muted">
                 <img 
                   src={heroImage} 
                   alt="Happy multigenerational family enjoying peace of mind with ICE Alarm protection" 
-                  className="w-full h-auto object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>

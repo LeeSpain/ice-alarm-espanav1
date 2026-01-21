@@ -196,11 +196,13 @@ export default function PendantPage() {
             <div className="relative order-2 lg:order-1">
               <div className="relative mx-auto max-w-md">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl -z-10" />
-                <img
-                  src={pendantHeroImage}
-                  alt="ICE Alarm GPS Personal Pendant"
-                  className="w-full h-auto rounded-2xl shadow-2xl"
-                />
+                <div className="aspect-square overflow-hidden rounded-2xl shadow-2xl bg-muted">
+                  <img
+                    src={pendantHeroImage}
+                    alt="ICE Alarm GPS Personal Pendant"
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
                 {/* Trust Badge */}
                 <div className="absolute -bottom-4 -right-4 bg-card rounded-xl shadow-xl p-3 border">
                   <div className="flex items-center gap-2">
@@ -388,11 +390,13 @@ export default function PendantPage() {
               </div>
             </div>
             <div className="relative">
-              <img
-                src={pendantSpecsImage}
-                alt="ICE Alarm Pendant Specifications"
-                className="w-full max-w-sm mx-auto rounded-2xl shadow-xl"
-              />
+              <div className="aspect-square max-w-sm mx-auto overflow-hidden rounded-2xl shadow-xl bg-muted">
+                <img
+                  src={pendantSpecsImage}
+                  alt="ICE Alarm Pendant Specifications"
+                  className="w-full h-full object-cover object-center"
+                />
+              </div>
             </div>
           </div>
         </div>

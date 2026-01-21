@@ -741,24 +741,33 @@ function ImagesTab() {
     return images.find(img => img.location_key === locationKey)?.image_url;
   };
 
-  const imageConfigs = [
+  const imageConfigs: Array<{
+    locationKey: string;
+    title: string;
+    description: string;
+    defaultImageUrl: string;
+    aspectRatio: "video" | "square" | "landscape";
+  }> = [
     {
       locationKey: "homepage_hero",
       title: "Homepage Hero Image",
-      description: "Main hero image displayed on the landing page. Recommended: 1920x1080px.",
+      description: "Main hero image displayed on the landing page. Recommended: 1200x900px (4:3).",
       defaultImageUrl: heroFamilyDefault,
+      aspectRatio: "landscape",
     },
     {
       locationKey: "pendant_hero",
       title: "Pendant Page Hero",
-      description: "Main product image on the pendant page hero section. Recommended: 800x800px.",
+      description: "Main product image on the pendant page hero section. Recommended: 800x800px (1:1).",
       defaultImageUrl: pendantProductDefault,
+      aspectRatio: "square",
     },
     {
       locationKey: "pendant_specs",
       title: "Pendant Specs Image",
-      description: "Pendant image shown in the specifications section. Recommended: 600x600px.",
+      description: "Pendant image shown in the specifications section. Recommended: 600x600px (1:1).",
       defaultImageUrl: pendantProductDefault,
+      aspectRatio: "square",
     },
   ];
 
@@ -787,6 +796,7 @@ function ImagesTab() {
               currentImageUrl={getImageUrl(config.locationKey)}
               defaultImageUrl={config.defaultImageUrl}
               onImageUpdated={refetch}
+              aspectRatio={config.aspectRatio}
             />
           ))}
         </div>
