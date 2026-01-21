@@ -22,7 +22,8 @@ import {
   ChevronUp,
   Copy,
   ExternalLink,
-  Globe
+  Globe,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 
 type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
 
@@ -132,6 +134,8 @@ export function AlertDetailPanel({
   const [showPreviousAlerts, setShowPreviousAlerts] = useState(false);
   const [selectedSmsTemplate, setSelectedSmsTemplate] = useState("");
   const [customMessage, setCustomMessage] = useState("");
+  const [isSendingSms, setIsSendingSms] = useState(false);
+  const [sendingContactId, setSendingContactId] = useState<string | null>(null);
 
   if (!alert) return null;
 
@@ -167,8 +171,113 @@ export function AlertDetailPanel({
     setEmergencyServicesCalled(true);
   };
 
-  const handleSendSms = (message: string) => {
-    toast({ title: "SMS Sent", description: message });
+  const handleSendSms = async (message: string, toPhone?: string, recipientType: 'member' | 'emergency_contact' = 'member', contactId?: string) => {
+    const phone = toPhone || alert.member?.phone;
+    if (!phone) {
+      toast({ title: "No phone number", description: "Cannot send SMS without a phone number", variant: "destructive" });
+      return;
+    }
+
+    if (contactId) {
+      setSendingContactId(contactId);
+    } else {
+      setIsSendingSms(true);
+    }
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        toast({ title: "Not authenticated", variant: "destructive" });
+        return;
+      }
+
+      const response = await supabase.functions.invoke("twilio-sms", {
+        body: {
+          to: phone,
+          message,
+          alertId: alert.id,
+          recipientType,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to send SMS");
+      }
+
+      toast({ title: "SMS Sent", description: `Message sent to ${phone}` });
+      
+      // Log to member_interactions
+      if (alert.member?.id) {
+        const { data: staffData } = await supabase.auth.getUser();
+        if (staffData.user) {
+          const { data: staff } = await supabase
+            .from("staff")
+            .select("id")
+            .eq("user_id", staffData.user.id)
+            .single();
+            
+          if (staff) {
+            await supabase.from("member_interactions").insert({
+              member_id: alert.member.id,
+              staff_id: staff.id,
+              interaction_type: "sms_sent",
+              description: message,
+              metadata: { 
+                twilio_sid: response.data?.sid,
+                to: phone,
+                alert_id: alert.id,
+                recipient_type: recipientType
+              }
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("SMS error:", error);
+      toast({ 
+        title: "Failed to send SMS", 
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsSendingSms(false);
+      setSendingContactId(null);
+    }
+  };
+
+  const handleSendWhatsApp = async (message: string, toPhone?: string, recipientType: 'member' | 'emergency_contact' = 'member') => {
+    const phone = toPhone || alert.member?.phone;
+    if (!phone) {
+      toast({ title: "No phone number", description: "Cannot send WhatsApp without a phone number", variant: "destructive" });
+      return;
+    }
+
+    setIsSendingSms(true);
+    try {
+      const response = await supabase.functions.invoke("twilio-whatsapp", {
+        body: {
+          to: phone,
+          message,
+          alertId: alert.id,
+          recipientType,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to send WhatsApp");
+      }
+
+      toast({ title: "WhatsApp Sent", description: `Message sent to ${phone}` });
+    } catch (error) {
+      console.error("WhatsApp error:", error);
+      toast({ 
+        title: "Failed to send WhatsApp", 
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsSendingSms(false);
+    }
   };
 
   const handleResolve = () => {
@@ -477,11 +586,37 @@ export function AlertDetailPanel({
                             <PhoneCall className="w-3 h-3 mr-1" />
                             Call
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            SMS
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            disabled={sendingContactId === contact.id}
+                            onClick={() => handleSendSms(
+                              `ICE Alarm: Alert received for ${alert.member?.firstName} ${alert.member?.lastName}. Please contact us.`,
+                              contact.phone,
+                              'emergency_contact',
+                              contact.id
+                            )}
+                          >
+                            {sendingContactId === contact.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <>
+                                <MessageSquare className="w-3 h-3 mr-1" />
+                                SMS
+                              </>
+                            )}
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleSendWhatsApp(
+                              `ICE Alarm: Alert received for ${alert.member?.firstName} ${alert.member?.lastName}. Please contact us.`,
+                              contact.phone,
+                              'emergency_contact'
+                            )}
+                          >
                             WhatsApp
                           </Button>
                         </div>
@@ -508,6 +643,7 @@ export function AlertDetailPanel({
                         key={i} 
                         variant="outline" 
                         size="sm"
+                        disabled={isSendingSms}
                         onClick={() => handleSendSms(template)}
                       >
                         {template}
@@ -521,16 +657,29 @@ export function AlertDetailPanel({
                       onChange={(e) => setCustomMessage(e.target.value)}
                       className="min-h-[60px]"
                     />
-                    <Button 
-                      size="sm"
-                      disabled={!customMessage.trim()}
-                      onClick={() => {
-                        handleSendSms(customMessage);
-                        setCustomMessage("");
-                      }}
-                    >
-                      Send
-                    </Button>
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        size="sm"
+                        disabled={!customMessage.trim() || isSendingSms}
+                        onClick={() => {
+                          handleSendSms(customMessage);
+                          setCustomMessage("");
+                        }}
+                      >
+                        {isSendingSms ? <Loader2 className="w-4 h-4 animate-spin" /> : "SMS"}
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        disabled={!customMessage.trim() || isSendingSms}
+                        onClick={() => {
+                          handleSendWhatsApp(customMessage);
+                          setCustomMessage("");
+                        }}
+                      >
+                        WA
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
