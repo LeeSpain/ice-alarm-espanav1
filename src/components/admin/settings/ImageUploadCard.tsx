@@ -15,6 +15,7 @@ interface ImageUploadCardProps {
   currentImageUrl?: string;
   defaultImageUrl: string;
   onImageUpdated: () => void;
+  aspectRatio?: "video" | "square" | "landscape";
 }
 
 export function ImageUploadCard({
@@ -24,6 +25,7 @@ export function ImageUploadCard({
   currentImageUrl,
   defaultImageUrl,
   onImageUpdated,
+  aspectRatio = "video",
 }: ImageUploadCardProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -191,11 +193,15 @@ export function ImageUploadCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Image Preview */}
-        <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+        <div className={`relative rounded-lg overflow-hidden border bg-muted ${
+          aspectRatio === "square" ? "aspect-square" : 
+          aspectRatio === "landscape" ? "aspect-[4/3]" : 
+          "aspect-video"
+        }`}>
           <img
             src={displayUrl}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
           {previewUrl && (
             <div className="absolute top-2 right-2">
