@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { JoinWizardData } from "@/types/wizard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Loader2, Lock, Shield, ExternalLink, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateOrder, formatPrice } from "@/config/pricing";
 
 interface JoinPaymentStepProps {
   data: JoinWizardData;
@@ -15,17 +16,15 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate total for display
-  const monthlyPrice = data.membershipType === "single" ? 27.49 : 43.99;
-  const annualMonthlyPrice = data.membershipType === "single" ? 22.99 : 36.99;
-  const basePrice = data.billingFrequency === "monthly" ? monthlyPrice : annualMonthlyPrice * 12;
-  const pendantPrice = 151.25;
-  const pendantCount = data.membershipType === "couple" && data.includePendant ? 2 : data.includePendant ? 1 : 0;
-  const pendantTotal = pendantCount * pendantPrice;
-  const registrationFee = 29.99;
-  const subtotal = basePrice + pendantTotal + registrationFee;
-  const taxAmount = subtotal * 0.21;
-  const total = subtotal + taxAmount;
+  // Calculate order using centralized pricing
+  const order = calculateOrder({
+    membershipType: data.membershipType,
+    billingFrequency: data.billingFrequency,
+    includePendant: data.includePendant,
+    includeShipping: data.includePendant,
+  });
+  
+  const total = order.grandTotal;
 
   const handlePayWithStripe = async () => {
     setIsProcessing(true);
@@ -45,7 +44,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
             partnerMedicalInfo: data.partnerMedicalInfo,
             emergencyContacts: data.emergencyContacts,
             includePendant: data.includePendant,
-            pendantCount: pendantCount,
+            pendantCount: order.pendantCount,
             billingFrequency: data.billingFrequency,
           },
         }
@@ -146,38 +145,34 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
               {data.membershipType === "couple" ? "Couple" : "Individual"} Membership
               {data.billingFrequency === "annual" && " (Annual)"}
             </span>
-            <span>€{basePrice.toFixed(2)}</span>
+            <span>{formatPrice(order.subscriptionFinal)}</span>
           </div>
           
-          {pendantCount > 0 && (
+          {order.pendantCount > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                GPS Safety Pendant {pendantCount > 1 && `(×${pendantCount})`}
+                GPS Safety Pendant {order.pendantCount > 1 && `(×${order.pendantCount})`}
               </span>
-              <span>€{pendantTotal.toFixed(2)}</span>
+              <span>{formatPrice(order.pendantFinal)}</span>
+            </div>
+          )}
+          
+          {order.shipping > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Shipping</span>
+              <span>{formatPrice(order.shipping)}</span>
             </div>
           )}
           
           <div className="flex justify-between">
             <span className="text-muted-foreground">Registration Fee</span>
-            <span>€{registrationFee.toFixed(2)}</span>
-          </div>
-          
-          <div className="border-t pt-3 mt-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>€{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">IVA (21%)</span>
-              <span>€{taxAmount.toFixed(2)}</span>
-            </div>
+            <span>{formatPrice(order.registrationFee)}</span>
           </div>
           
           <div className="border-t pt-3 mt-3">
             <div className="flex justify-between text-lg font-bold">
               <span>Total Due Today</span>
-              <span className="text-primary">€{total.toFixed(2)}</span>
+              <span className="text-primary">{formatPrice(total)}</span>
             </div>
           </div>
         </CardContent>
@@ -213,7 +208,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
             ) : (
               <>
                 <CreditCard className="h-5 w-5" />
-                Pay €{total.toFixed(2)} with Stripe
+                Pay {formatPrice(total)} with Stripe
                 <ExternalLink className="h-4 w-4 ml-1" />
               </>
             )}

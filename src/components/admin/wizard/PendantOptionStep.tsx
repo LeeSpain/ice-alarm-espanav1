@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, X, Smartphone, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPendantFinalPrice, formatPrice } from "@/config/pricing";
 
 interface PendantOptionStepProps {
   data: WizardData;
@@ -11,7 +12,7 @@ interface PendantOptionStepProps {
 }
 
 export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
-  const pendantPrice = 151.25;
+  const pendantFinalPrice = getPendantFinalPrice(1);
   const pendantCount = data.membershipType === "couple" && data.includePendant ? 2 : 1;
 
   const features = [
@@ -60,7 +61,7 @@ export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
                 <div>
                   <CardTitle className="text-lg">Include Pendant</CardTitle>
                   <p className="text-primary font-semibold">
-                    €{pendantPrice.toFixed(2)}{" "}
+                    {formatPrice(pendantFinalPrice)}{" "}
                     {data.membershipType === "couple" && "× 2 pendants"}
                   </p>
                 </div>

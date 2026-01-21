@@ -4,6 +4,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Calendar, CalendarDays, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  getSubscriptionMonthlyFinal, 
+  getSubscriptionFinalPrice, 
+  getAnnualSavings,
+  formatPrice 
+} from "@/config/pricing";
 
 interface BillingFrequencyStepProps {
   data: WizardData;
@@ -11,12 +17,11 @@ interface BillingFrequencyStepProps {
 }
 
 export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepProps) {
-  const monthlyPrice = data.membershipType === "single" ? 27.49 : 43.99;
-  const annualMonthlyPrice = data.membershipType === "single" ? 22.99 : 36.99;
-  const annualTotal = annualMonthlyPrice * 12;
-  const monthlySavings = monthlyPrice - annualMonthlyPrice;
-  const annualSavings = monthlySavings * 12;
-  const savingsPercentage = Math.round((monthlySavings / monthlyPrice) * 100);
+  const monthlyPrice = getSubscriptionMonthlyFinal(data.membershipType);
+  const annualTotal = getSubscriptionFinalPrice(data.membershipType, 'annual');
+  const annualMonthlyPrice = annualTotal / 12;
+  const annualSavings = getAnnualSavings(data.membershipType);
+  const savingsPercentage = Math.round((annualSavings / (monthlyPrice * 12)) * 100);
 
   return (
     <div className="space-y-6">
@@ -55,7 +60,7 @@ export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepPro
                 <div>
                   <CardTitle className="text-lg">Monthly</CardTitle>
                   <p className="text-2xl font-bold text-primary">
-                    €{monthlyPrice.toFixed(2)}
+                    {formatPrice(monthlyPrice)}
                     <span className="text-sm font-normal text-muted-foreground">/month</span>
                   </p>
                 </div>
@@ -117,11 +122,11 @@ export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepPro
                   <CardTitle className="text-lg">Annual</CardTitle>
                   <div className="flex items-baseline gap-2">
                     <p className="text-2xl font-bold text-primary">
-                      €{annualMonthlyPrice.toFixed(2)}
+                      {formatPrice(annualMonthlyPrice)}
                       <span className="text-sm font-normal text-muted-foreground">/month</span>
                     </p>
                     <span className="text-sm line-through text-muted-foreground">
-                      €{monthlyPrice.toFixed(2)}
+                      {formatPrice(monthlyPrice)}
                     </span>
                   </div>
                 </div>
@@ -129,13 +134,13 @@ export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepPro
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="bg-status-active/10 text-status-active rounded-lg p-3 text-center">
-                <span className="font-semibold">Save €{annualSavings.toFixed(2)}/year</span>
-                <span className="text-sm ml-1">({savingsPercentage}% off)</span>
+                <span className="font-semibold">Save {formatPrice(annualSavings)}/year</span>
+                <span className="text-sm ml-1">(2 months free)</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-status-active" />
-                  Billed annually: €{annualTotal.toFixed(2)}
+                  Billed annually: {formatPrice(annualTotal)}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-status-active" />
@@ -167,12 +172,12 @@ export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepPro
               {data.billingFrequency === "monthly" ? "Monthly cost:" : "Annual cost:"}
             </span>
             <span className="text-xl font-bold text-primary">
-              €{data.billingFrequency === "monthly" ? monthlyPrice.toFixed(2) : annualTotal.toFixed(2)}
+              {formatPrice(data.billingFrequency === "monthly" ? monthlyPrice : annualTotal)}
             </span>
           </div>
           {data.billingFrequency === "annual" && (
             <p className="text-sm text-status-active mt-2 text-right">
-              You're saving €{annualSavings.toFixed(2)} per year!
+              You're saving {formatPrice(annualSavings)} per year (2 months free)!
             </p>
           )}
         </CardContent>
