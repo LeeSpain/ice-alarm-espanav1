@@ -31,12 +31,12 @@ import {
   Signal,
   ChevronRight
 } from "lucide-react";
-import pendantImageDefault from "@/assets/pendant-product.jpg";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
+import { getDefaultAsset } from "@/config/websiteImages";
 
 export default function PendantPage() {
-  const { imageUrl: pendantHeroImage } = useWebsiteImage("pendant_hero", pendantImageDefault);
-  const { imageUrl: pendantSpecsImage } = useWebsiteImage("pendant_specs", pendantImageDefault);
+  const { imageUrl: pendantHeroImage } = useWebsiteImage("pendant_hero", getDefaultAsset("pendant_hero"));
+  const { imageUrl: pendantSpecsImage } = useWebsiteImage("pendant_specs", getDefaultAsset("pendant_specs"));
   const { t } = useTranslation();
 
   const features = [

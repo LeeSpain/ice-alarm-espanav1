@@ -5,12 +5,12 @@ import { Logo } from "@/components/ui/logo";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import heroFamilyDefault from "@/assets/hero-family.jpg";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
+import { getDefaultAsset } from "@/config/websiteImages";
 
 export default function LandingPage() {
   const { t } = useTranslation();
-  const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", heroFamilyDefault);
+  const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", getDefaultAsset("homepage_hero"));
 
   return (
     <div className="min-h-screen bg-background">
