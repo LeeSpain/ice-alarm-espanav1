@@ -1,4 +1,5 @@
-import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck, MapPin, Zap, Radio, Battery, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck, MapPin, Zap, Radio, Battery, AlertCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
@@ -8,12 +9,22 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
 import { getDefaultAsset } from "@/config/websiteImages";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function LandingPage() {
   const { t } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
   const { imageUrl: heroImage } = useWebsiteImage("homepage_hero", getDefaultAsset("homepage_hero"));
   const { imageUrl: pendantPromoImage } = useWebsiteImage("homepage_pendant_promo", getDefaultAsset("homepage_pendant_promo"));
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+
+  // Format phone for WhatsApp (remove spaces and + sign)
+  const whatsappNumber = companySettings.emergency_phone.replace(/[\s+]/g, '');
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,11 +91,14 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg group" asChild>
-                  <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
-                    <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                    {companySettings.emergency_phone}
-                  </a>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="h-14 px-8 text-lg group"
+                  onClick={() => setContactDialogOpen(true)}
+                >
+                  <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+                  {companySettings.emergency_phone}
                 </Button>
               </div>
 
@@ -550,6 +564,57 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Contact Options Dialog */}
+      <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">
+              {t("landing.contactDialog.title", "How would you like to contact us?")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center mb-6">
+            <p className="text-2xl font-bold text-primary">{companySettings.emergency_phone}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("landing.contactDialog.available", "Available 24/7")}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              size="lg" 
+              className="h-20 flex-col gap-2"
+              asChild
+            >
+              <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
+                <Phone className="h-6 w-6" />
+                <span className="text-sm font-medium">
+                  {t("landing.contactDialog.phoneCall", "Phone Call")}
+                </span>
+              </a>
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="h-20 flex-col gap-2 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
+              asChild
+            >
+              <a 
+                href={`https://wa.me/${whatsappNumber}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-6 w-6" />
+                <span className="text-sm font-medium">
+                  {t("landing.contactDialog.whatsapp", "WhatsApp")}
+                </span>
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-center text-muted-foreground mt-4">
+            {t("landing.contactDialog.voiceOnly", "Voice calls only - no video")}
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
