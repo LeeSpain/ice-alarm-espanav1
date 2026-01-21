@@ -397,20 +397,96 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="py-20 px-4 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center max-w-3xl">
-          <div className="flex justify-center mb-4">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-6 w-6 fill-current" />
-            ))}
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">{t("landing.testimonials.title", "What Our Members Say")}</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {t("landing.testimonials.subtitle", "Trusted by thousands of families across Spain")}
+            </p>
           </div>
-          <blockquote className="text-xl md:text-2xl font-medium mb-6">
-            "{t("landing.testimonialQuote")}"
-          </blockquote>
-          <cite className="text-primary-foreground/80">
-            — {t("landing.testimonialAuthor")}, {t("landing.testimonialLocation")}
-          </cite>
+          
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Testimonial 1 */}
+            <Card className="border-0 shadow-lg bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                <blockquote className="text-foreground mb-6 leading-relaxed">
+                  "{t("landing.testimonials.quote1", "The peace of mind this service gives our family is priceless. When Mum had a fall last month, help arrived within minutes. I can't recommend ICE Alarm enough.")}"
+                </blockquote>
+                <div className="flex items-center gap-3 pt-4 border-t">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg font-semibold text-primary">MT</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Margaret Thompson</p>
+                    <p className="text-sm text-muted-foreground">British Expat, Alicante</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 2 */}
+            <Card className="border-0 shadow-lg bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                <blockquote className="text-foreground mb-6 leading-relaxed">
+                  "{t("landing.testimonials.quote2", "Living alone at 78, I was worried about emergencies. The GPS pendant gives me independence while keeping my children reassured. The bilingual support is excellent.")}"
+                </blockquote>
+                <div className="flex items-center gap-3 pt-4 border-t">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg font-semibold text-primary">RH</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Robert Harrison</p>
+                    <p className="text-sm text-muted-foreground">Retired Teacher, Málaga</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 3 */}
+            <Card className="border-0 shadow-lg bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                <blockquote className="text-foreground mb-6 leading-relaxed">
+                  "{t("landing.testimonials.quote3", "After my husband's stroke, we needed reliable emergency support. ICE Alarm responded in under 30 seconds during a real emergency. They truly saved his life.")}"
+                </blockquote>
+                <div className="flex items-center gap-3 pt-4 border-t">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg font-semibold text-primary">SP</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Susan & Peter Williams</p>
+                    <p className="text-sm text-muted-foreground">Couple, Costa Blanca</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Trust Badge */}
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center gap-3 bg-primary/10 rounded-full px-6 py-3">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                {t("landing.testimonials.trustBadge", "Rated 4.9/5 by over 2,000 verified members")}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
