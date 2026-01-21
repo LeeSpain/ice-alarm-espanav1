@@ -42,7 +42,13 @@ import ShiftNotesPage from "./pages/call-centre/ShiftNotesPage";
 
 // Client Pages
 import ClientDashboard from "./pages/client/ClientDashboard";
-
+import ProfilePage from "./pages/client/ProfilePage";
+import MedicalInfoPage from "./pages/client/MedicalInfoPage";
+import EmergencyContactsPage from "./pages/client/EmergencyContactsPage";
+import DevicePage from "./pages/client/DevicePage";
+import SubscriptionPage from "./pages/client/SubscriptionPage";
+import AlertHistoryPage from "./pages/client/AlertHistoryPage";
+import SupportPage from "./pages/client/SupportPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -105,13 +111,13 @@ const App = () => (
               }
             >
               <Route index element={<ClientDashboard />} />
-              <Route path="profile" element={<ClientDashboard />} />
-              <Route path="medical" element={<ClientDashboard />} />
-              <Route path="contacts" element={<ClientDashboard />} />
-              <Route path="device" element={<ClientDashboard />} />
-              <Route path="subscription" element={<ClientDashboard />} />
-              <Route path="alerts" element={<ClientDashboard />} />
-              <Route path="support" element={<ClientDashboard />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="medical" element={<MedicalInfoPage />} />
+              <Route path="contacts" element={<EmergencyContactsPage />} />
+              <Route path="device" element={<DevicePage />} />
+              <Route path="subscription" element={<SubscriptionPage />} />
+              <Route path="alerts" element={<AlertHistoryPage />} />
+              <Route path="support" element={<SupportPage />} />
             </Route>
 
             {/* Catch-all route */}
