@@ -166,8 +166,8 @@ export default function Login() {
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 {t("auth.noAccount")}{" "}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  {t("auth.registerHere")}
+                <Link to="/join" className="text-primary hover:underline font-medium">
+                  {t("common.joinNow")}
                 </Link>
               </p>
             </div>

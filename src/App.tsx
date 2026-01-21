@@ -26,7 +26,7 @@ import JoinWizard from "./pages/join/JoinWizard";
 // Auth Pages
 import Login from "./pages/auth/Login";
 import StaffLogin from "./pages/auth/StaffLogin";
-import Register from "./pages/auth/Register";
+import { Navigate } from "react-router-dom";
 import CompleteRegistration from "./pages/auth/CompleteRegistration";
 import Unauthorized from "./pages/auth/Unauthorized";
 
@@ -88,7 +88,7 @@ const App = () => (
             <Route path="/join" element={<JoinWizard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/staff/login" element={<StaffLogin />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<Navigate to="/join" replace />} />
             <Route path="/complete-registration" element={<CompleteRegistration />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 

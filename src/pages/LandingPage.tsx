@@ -72,7 +72,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Button size="lg" className="h-14 px-8 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
-                  <Link to="/register">
+                  <Link to="/join">
                     {t("landing.startProtection")}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
@@ -255,7 +255,7 @@ export default function LandingPage() {
                   </li>
                 </ul>
                 <Button className="w-full" variant="outline" asChild>
-                  <Link to="/register">{t("common.getStarted")}</Link>
+                  <Link to="/join">{t("common.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -300,7 +300,7 @@ export default function LandingPage() {
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
-                  <Link to="/register">{t("common.getStarted")}</Link>
+                  <Link to="/join">{t("common.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -380,7 +380,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="h-14 px-8 text-lg" asChild>
-              <Link to="/register">
+              <Link to="/join">
                 {t("landing.startProtection")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
