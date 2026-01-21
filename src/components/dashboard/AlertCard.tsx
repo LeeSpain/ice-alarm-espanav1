@@ -1,11 +1,11 @@
-import { Clock, MapPin, AlertTriangle, Heart, Battery, CheckCircle } from "lucide-react";
+import { Clock, MapPin, AlertTriangle, Heart, Battery, CheckCircle, Navigation, Radio } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type AlertType = "sos_button" | "fall_detected" | "low_battery" | "check_in";
-type AlertStatus = "incoming" | "in_progress" | "resolved";
+type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
+type AlertStatus = "incoming" | "in_progress" | "resolved" | "escalated";
 
 interface AlertCardProps {
   id: string;
@@ -40,12 +40,26 @@ const alertConfig = {
     borderColor: "border-l-alert-battery",
     badge: "secondary" as const,
   },
+  geo_fence: {
+    icon: Navigation,
+    label: "Geo-Fence Alert",
+    color: "bg-yellow-500 text-white",
+    borderColor: "border-l-yellow-500",
+    badge: "secondary" as const,
+  },
   check_in: {
     icon: CheckCircle,
     label: "Check-in",
     color: "bg-alert-checkin text-alert-checkin-foreground",
     borderColor: "border-l-alert-checkin",
     badge: "outline" as const,
+  },
+  manual: {
+    icon: Radio,
+    label: "Manual Alert",
+    color: "bg-gray-500 text-white",
+    borderColor: "border-l-gray-500",
+    badge: "secondary" as const,
   },
 };
 
@@ -123,6 +137,12 @@ export function AlertCard({
           {status === "in_progress" && (
             <Badge variant="outline" className="bg-alert-battery/10 text-alert-battery border-alert-battery/30">
               In Progress
+            </Badge>
+          )}
+
+          {status === "escalated" && (
+            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+              Escalated
             </Badge>
           )}
 

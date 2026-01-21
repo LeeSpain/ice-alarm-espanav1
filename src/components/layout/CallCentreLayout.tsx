@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
-import { Globe, FileText, User, Phone } from "lucide-react";
+import { Globe, FileText, User, Phone, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +11,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function CallCentreLayout() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/staff/login");
+  };
+
+  const isShiftNotesActive = location.pathname.includes("shift-notes");
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -26,10 +39,30 @@ export function CallCentreLayout() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Navigation */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${!isShiftNotesActive ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre">
+              <Phone className="h-4 w-4 mr-2" />
+              Alerts
+            </Link>
+          </Button>
+
           {/* Shift Notes */}
-          <Button variant="ghost" size="sm" className="text-sidebar-foreground hover:bg-sidebar-accent">
-            <FileText className="h-4 w-4 mr-2" />
-            Shift Notes
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`text-sidebar-foreground hover:bg-sidebar-accent ${isShiftNotesActive ? 'bg-sidebar-accent' : ''}`}
+            asChild
+          >
+            <Link to="/call-centre/shift-notes">
+              <FileText className="h-4 w-4 mr-2" />
+              Shift Notes
+            </Link>
           </Button>
 
           {/* Language Selector */}
@@ -56,13 +89,13 @@ export function CallCentreLayout() {
                 <div className="h-7 w-7 rounded-full bg-sidebar-primary flex items-center justify-center">
                   <User className="h-4 w-4 text-sidebar-primary-foreground" />
                 </div>
-                <span className="hidden md:inline">Maria Lopez</span>
+                <span className="hidden md:inline">{user?.email?.split('@')[0] || 'Operator'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span className="font-medium">Maria Lopez</span>
+                  <span className="font-medium">{user?.email?.split('@')[0] || 'Operator'}</span>
                   <span className="text-xs text-muted-foreground">Call Centre Operator</span>
                 </div>
               </DropdownMenuLabel>
@@ -70,7 +103,10 @@ export function CallCentreLayout() {
               <DropdownMenuItem>My Shift History</DropdownMenuItem>
               <DropdownMenuItem>Preferences</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">End Shift</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <LogOut className="h-4 w-4 mr-2" />
+                End Shift
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
