@@ -1,8 +1,9 @@
-import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star } from "lucide-react";
+import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, Play, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { Link } from "react-router-dom";
+import heroFamily from "@/assets/hero-family.jpg";
 
 export default function LandingPage() {
   return (
@@ -33,52 +34,112 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto text-center max-w-4xl">
-          <div className="inline-flex items-center gap-2 bg-accent rounded-full px-4 py-2 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-alert-resolved"></span>
-            </span>
-            <span className="text-sm font-medium">24/7 Emergency Response in Spain</span>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            Peace of Mind for 
-            <span className="text-gradient block mt-2">Expats in Spain</span>
-          </h1>
-          
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Professional 24/7 emergency medical response for English and Spanish-speaking 
-            expats. One press of a button connects you to our bilingual response team.
-          </p>
+      {/* Hero Section - Enhanced */}
+      <section className="pt-20 lg:pt-16 min-h-screen flex items-center relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/30 -z-10" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
+        
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content */}
+            <div className="space-y-8 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-alert-resolved"></span>
+                </span>
+                <span className="text-sm font-medium text-primary">24/7 Emergency Response in Spain</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+                Peace of Mind for 
+                <span className="text-gradient block mt-1">Your Family in Spain</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
+                Professional 24/7 emergency medical response for English and Spanish-speaking 
+                expats. One press of a button connects you to our bilingual response team.
+              </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="h-14 px-8 text-lg" asChild>
-              <Link to="/register">
-                Start Your Protection
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg">
-              <Phone className="mr-2 h-5 w-5" />
-              Call Us: +34 900 123 456
-            </Button>
-          </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                <Button size="lg" className="h-14 px-8 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
+                  <Link to="/register">
+                    Start Your Protection
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg group">
+                  <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+                  +34 900 123 456
+                </Button>
+              </div>
 
-          <div className="flex items-center justify-center gap-8 mt-12 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-alert-resolved" />
-              <span>No contracts</span>
+              {/* Trust indicators */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 pt-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">No contracts</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">Cancel anytime</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">English & Spanish</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-alert-resolved" />
-              <span>Cancel anytime</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-alert-resolved" />
-              <span>English & Spanish</span>
+
+            {/* Right Image */}
+            <div className="relative">
+              {/* Main image container */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10">
+                <img 
+                  src={heroFamily} 
+                  alt="Happy multigenerational family enjoying peace of mind with ICE Alarm protection" 
+                  className="w-full h-auto object-cover"
+                />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              </div>
+
+              {/* Floating stats card */}
+              <div className="absolute -bottom-6 -left-6 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-alert-resolved/20 flex items-center justify-center">
+                    <ShieldCheck className="h-6 w-6 text-alert-resolved" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">10,000+</p>
+                    <p className="text-sm text-muted-foreground">Families Protected</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating response time card */}
+              <div className="absolute -top-4 -right-4 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block" style={{ animationDelay: '0.2s' }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">&lt;30 sec</p>
+                    <p className="text-sm text-muted-foreground">Response Time</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Decorative elements */}
+              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-primary/10" />
+              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-primary/5" />
             </div>
           </div>
         </div>
