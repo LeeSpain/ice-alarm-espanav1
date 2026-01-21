@@ -215,43 +215,48 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold mb-4">Simple, Transparent Pricing</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Choose the plan that fits your needs. All plans include 24/7 monitoring and bilingual support.
+              <span className="block mt-2 text-sm">All prices include IVA. One-time registration fee: €59.99</span>
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {/* Single Plan */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Single Membership */}
             <Card className="relative">
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">Single Person</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">€24.99</span>
+                <h3 className="font-semibold text-lg mb-2">Single Membership</h3>
+                <p className="text-sm text-muted-foreground mb-4">For one person</p>
+                <div className="mb-2">
+                  <span className="text-4xl font-bold">€27.49</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  or €274.89/year <span className="text-alert-resolved">(Save 2 months!)</span>
+                </p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    One pendant device
+                    24/7 emergency monitoring
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    24/7 monitoring
+                    Bilingual support (EN/ES)
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    GPS location
+                    Works anywhere in Spain
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Fall detection
+                    Phone-only or with pendant
                   </li>
                 </ul>
-                <Button className="w-full" variant="outline">
-                  Get Started
+                <Button className="w-full" variant="outline" asChild>
+                  <Link to="/register">Get Started</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Couple Plan */}
+            {/* Couple Membership */}
             <Card className="relative border-primary shadow-glow">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
@@ -259,72 +264,87 @@ export default function LandingPage() {
                 </span>
               </div>
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">Couple</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">€39.99</span>
+                <h3 className="font-semibold text-lg mb-2">Couple Membership</h3>
+                <p className="text-sm text-muted-foreground mb-4">For two people in the same household</p>
+                <div className="mb-2">
+                  <span className="text-4xl font-bold">€38.49</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  or €384.89/year <span className="text-alert-resolved">(Save 2 months!)</span>
+                </p>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Two pendant devices
+                    24/7 emergency monitoring
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    24/7 monitoring
+                    Bilingual support (EN/ES)
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    GPS location
+                    Works anywhere in Spain
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Fall detection
+                    Both members protected
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    Linked accounts
+                    Share one pendant device
                   </li>
                 </ul>
-                <Button className="w-full">
-                  Get Started
+                <Button className="w-full" asChild>
+                  <Link to="/register">Get Started</Link>
                 </Button>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Family Plan */}
-            <Card className="relative">
+          {/* Optional Pendant Section */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <Card className="bg-muted/50">
               <CardContent className="pt-6">
-                <h3 className="font-semibold text-lg mb-2">Family</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">€54.99</span>
-                  <span className="text-muted-foreground">/month</span>
+                <div className="grid md:grid-cols-2 gap-6 items-center">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">ICE Alarm GPS Pendant</h3>
+                    <p className="text-sm text-muted-foreground mb-2">Optional but highly recommended</p>
+                    <div className="mb-4">
+                      <span className="text-2xl font-bold">€151.25</span>
+                      <span className="text-muted-foreground text-sm"> (incl. 21% IVA) + €14.99 shipping</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Without a pendant, you can still call our 24/7 emergency line from your phone, 
+                      but you won't have GPS tracking, fall detection, or SOS button features.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-3 text-sm">Pendant Features:</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-alert-resolved" />
+                        GPS location tracking
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-alert-resolved" />
+                        Automatic fall detection
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-alert-resolved" />
+                        SOS button with 2-way communication
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-alert-resolved" />
+                        Geo-fencing alerts
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-alert-resolved" />
+                        Lightweight & long battery life
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    Up to 4 devices
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    24/7 monitoring
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    GPS location
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    Fall detection
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    Priority support
-                  </li>
-                </ul>
-                <Button className="w-full" variant="outline">
-                  Get Started
-                </Button>
               </CardContent>
             </Card>
           </div>
