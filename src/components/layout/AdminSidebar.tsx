@@ -81,6 +81,7 @@ const secondaryMenuItems: MenuItem[] = [
   { icon: Handshake, label: "Partners", path: "/admin/partners" },
   { icon: ClipboardCheck, label: "Partners QA", path: "/admin/partners-qa", superAdminOnly: true },
   { icon: Upload, label: "CRM Import", path: "/admin/crm-import", superAdminOnly: true },
+  { icon: Contact, label: "CRM Contacts", path: "/admin/crm-contacts", superAdminOnly: true },
   { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
   { icon: Bell, label: "Alerts", path: "/admin/alerts" },
   { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" },

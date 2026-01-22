@@ -17,6 +17,7 @@ import { NotesTab } from "@/components/admin/member-detail/NotesTab";
 import { ActivityTab } from "@/components/admin/member-detail/ActivityTab";
 import { AlertsTab } from "@/components/admin/member-detail/AlertsTab";
 import { TasksTab } from "@/components/admin/member-detail/TasksTab";
+import { CRMTab } from "@/components/admin/member-detail/CRMTab";
 
 interface Member {
   id: string;
@@ -208,6 +209,7 @@ export default function MemberDetailPage() {
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="crm">CRM</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -252,6 +254,10 @@ export default function MemberDetailPage() {
 
         <TabsContent value="tasks">
           <TasksTab memberId={member.id} />
+        </TabsContent>
+
+        <TabsContent value="crm">
+          <CRMTab memberId={member.id} />
         </TabsContent>
       </Tabs>
     </div>

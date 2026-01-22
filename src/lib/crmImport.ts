@@ -6,6 +6,35 @@ export interface KarmaCRMRow {
   [key: string]: string;
 }
 
+// Sensitive payment fields that should NEVER be stored in structured tables
+// These are kept ONLY in crm_import_rows.raw for admin review
+export const SENSITIVE_PAYMENT_FIELDS = [
+  'Credit Card Details',
+  'credit_card',
+  '20 Digit Bank No',
+  'bank_number',
+  'Bank Account',
+  'IBAN',
+  'Card Number',
+  'CVV',
+  'card_cvv',
+  'Account Number',
+];
+
+// Safe billing metadata that can be imported
+export const SAFE_BILLING_FIELDS = [
+  'Payment Type', // DD/TVP
+  'Monthly Fee',
+  'Monthly Payment Date',
+  'Membership Type',
+];
+
+export interface BillingMetadata {
+  paymentType: string | null;
+  monthlyFee: number | null;
+  monthlyPaymentDate: string | null;
+}
+
 export interface ParsedCRMRow {
   firstName: string;
   lastName: string;
@@ -40,11 +69,15 @@ export interface ParsedCRMRow {
   emergencyContact1: { name: string; phone: string; relationship: string } | null;
   emergencyContact2: { name: string; phone: string; relationship: string } | null;
   emergencyContact3: { name: string; phone: string; relationship: string } | null;
+  // Billing metadata (safe fields only)
+  billingMetadata: BillingMetadata;
   // Raw data
   raw: KarmaCRMRow;
   dedupeKey: string;
   canBeMember: boolean;
   importTarget: 'member' | 'crm_contact' | 'skip';
+  // Flags
+  hasSensitivePaymentData: boolean;
 }
 
 // KarmaCRM column mappings
@@ -195,6 +228,23 @@ export function parseCSVRow(row: KarmaCRMRow): ParsedCRMRow {
   const ec3Phone = findColumnValue(row, COLUMN_MAPPINGS.emergencyContact3Phone);
   const ec3Rel = findColumnValue(row, COLUMN_MAPPINGS.emergencyContact3Relationship);
 
+  // Check for sensitive payment data (GDPR/PCI compliance)
+  const hasSensitivePaymentData = SENSITIVE_PAYMENT_FIELDS.some(field => {
+    const value = row[field];
+    return value && value.trim() !== '';
+  });
+
+  // Extract safe billing metadata only
+  const paymentTypeRaw = findColumnValue(row, ['Payment Type', 'payment_type']);
+  const monthlyFeeRaw = findColumnValue(row, ['Monthly Fee', 'monthly_fee']);
+  const monthlyPaymentDateRaw = findColumnValue(row, ['Monthly Payment Date', 'monthly_payment_date']);
+  
+  const billingMetadata: BillingMetadata = {
+    paymentType: paymentTypeRaw || null,
+    monthlyFee: monthlyFeeRaw ? parseFloat(monthlyFeeRaw.replace(/[^0-9.]/g, '')) || null : null,
+    monthlyPaymentDate: monthlyPaymentDateRaw || null,
+  };
+
   // Compute dedupe key
   const dedupeKey = emailPrimary 
     ? emailPrimary.toLowerCase() 
@@ -248,10 +298,12 @@ export function parseCSVRow(row: KarmaCRMRow): ParsedCRMRow {
     emergencyContact1: ec1Name ? { name: ec1Name, phone: ec1Phone, relationship: ec1Rel || 'Other' } : null,
     emergencyContact2: ec2Name ? { name: ec2Name, phone: ec2Phone, relationship: ec2Rel || 'Other' } : null,
     emergencyContact3: ec3Name ? { name: ec3Name, phone: ec3Phone, relationship: ec3Rel || 'Other' } : null,
+    billingMetadata,
     raw: row,
     dedupeKey,
     canBeMember,
     importTarget,
+    hasSensitivePaymentData,
   };
 }
 
