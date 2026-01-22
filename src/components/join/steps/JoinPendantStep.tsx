@@ -2,7 +2,8 @@ import { JoinWizardData } from "@/types/wizard";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, Smartphone, Phone, Award, Shield, Droplets, Battery, Wifi } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, X, Smartphone, Phone, Award, Shield, Droplets, Battery, Wifi, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPendantFinalPrice, formatPrice } from "@/config/pricing";
 
@@ -13,7 +14,10 @@ interface JoinPendantStepProps {
 
 export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
   const pendantFinalPrice = getPendantFinalPrice(1);
-  const pendantCount = data.membershipType === "couple" ? 2 : 1;
+  
+  // Use data.pendantCount, with smart defaults
+  const defaultCount = data.membershipType === "couple" ? 2 : 1;
+  const currentCount = data.pendantCount || defaultCount;
 
   const features = [
     { name: "24/7 Emergency Response", pendant: true, phoneOnly: true },
@@ -33,6 +37,24 @@ export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
     { icon: Wifi, text: "4G Connectivity" },
   ];
 
+  const handlePendantChange = (value: string) => {
+    const includePendant = value === "yes";
+    if (includePendant) {
+      // Set default count when selecting pendant
+      onUpdate({ 
+        includePendant: true, 
+        pendantCount: data.pendantCount || defaultCount 
+      });
+    } else {
+      onUpdate({ includePendant: false, pendantCount: 0 });
+    }
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    const newCount = Math.max(1, Math.min(4, currentCount + delta));
+    onUpdate({ pendantCount: newCount });
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -44,7 +66,7 @@ export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
 
       <RadioGroup
         value={data.includePendant ? "yes" : "no"}
-        onValueChange={(value) => onUpdate({ includePendant: value === "yes" })}
+        onValueChange={handlePendantChange}
         className="grid gap-4 md:grid-cols-2"
       >
         {/* With Pendant - Recommended */}
@@ -83,11 +105,9 @@ export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
                   <CardTitle className="text-xl">GPS Safety Pendant</CardTitle>
                   <p className="text-2xl font-bold text-primary mt-2">
                     {formatPrice(pendantFinalPrice)}
-                    {data.membershipType === "couple" && (
-                      <span className="text-sm font-normal text-muted-foreground ml-1">
-                        × {pendantCount}
-                      </span>
-                    )}
+                    <span className="text-sm font-normal text-muted-foreground ml-1">
+                      each
+                    </span>
                   </p>
                   <p className="text-xs text-muted-foreground">One-time purchase</p>
                 </div>
@@ -98,6 +118,58 @@ export function JoinPendantStep({ data, onUpdate }: JoinPendantStepProps) {
                 Our waterproof pendant provides complete protection with automatic 
                 fall detection — no smartphone needed.
               </p>
+              
+              {/* Quantity Selector - Only show when pendant is selected */}
+              {data.includePendant && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Quantity</span>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleQuantityChange(-1);
+                        }}
+                        disabled={currentCount <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center font-semibold text-lg">
+                        {currentCount}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleQuantityChange(1);
+                        }}
+                        disabled={currentCount >= 4}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-bold text-primary text-lg">
+                      {formatPrice(getPendantFinalPrice(currentCount))}
+                    </span>
+                  </div>
+                  {data.membershipType === "couple" && currentCount < 2 && (
+                    <p className="text-xs text-amber-600 text-center">
+                      Tip: Consider 2 pendants for couple membership
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2">
                 {pendantFeatures.map((feature) => (
                   <div key={feature.text} className="flex items-center gap-2 text-xs">
