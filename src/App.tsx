@@ -49,6 +49,7 @@ import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
 import PartnersPage from "./pages/admin/PartnersPage";
 import PartnerDetailPage from "./pages/admin/PartnerDetailPage";
+import AddPartnerPage from "./pages/admin/AddPartnerPage";
 import CommissionsPage from "./pages/admin/CommissionsPage";
 import PartnersQAPage from "./pages/admin/PartnersQAPage";
 
@@ -133,6 +134,7 @@ const App = () => (
               <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
               <Route path="partners" element={<PartnersPage />} />
+              <Route path="partners/new" element={<AddPartnerPage />} />
               <Route path="partners/:id" element={<PartnerDetailPage />} />
               <Route path="partners-qa" element={<PartnersQAPage />} />
               <Route path="commissions" element={<CommissionsPage />} />
