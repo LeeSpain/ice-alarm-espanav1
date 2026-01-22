@@ -248,6 +248,99 @@ export type Database = {
           },
         ]
       }
+      crm_contacts: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          assigned_to_staff_id: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email_primary: string | null
+          first_name: string | null
+          full_name: string | null
+          groups: string[] | null
+          id: string
+          last_name: string | null
+          last_synced_at: string | null
+          linked_member_id: string | null
+          notes: string | null
+          phone_primary: string | null
+          postal_code: string | null
+          province: string | null
+          referral_source: string | null
+          source: string
+          stage: string | null
+          status: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          assigned_to_staff_id?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email_primary?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          groups?: string[] | null
+          id?: string
+          last_name?: string | null
+          last_synced_at?: string | null
+          linked_member_id?: string | null
+          notes?: string | null
+          phone_primary?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_source?: string | null
+          source?: string
+          stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          assigned_to_staff_id?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email_primary?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          groups?: string[] | null
+          id?: string
+          last_name?: string | null
+          last_synced_at?: string | null
+          linked_member_id?: string | null
+          notes?: string | null
+          phone_primary?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_source?: string | null
+          source?: string
+          stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_assigned_to_staff_id_fkey"
+            columns: ["assigned_to_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_linked_member_id_fkey"
+            columns: ["linked_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_events: {
         Row: {
           created_at: string
@@ -274,6 +367,212 @@ export type Database = {
           processed_at?: string | null
         }
         Relationships: []
+      }
+      crm_import_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          failed_rows: number
+          filename: string
+          id: string
+          imported_rows: number
+          notes: string | null
+          skipped_rows: number
+          source: string
+          status: Database["public"]["Enums"]["import_batch_status"]
+          total_rows: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          failed_rows?: number
+          filename: string
+          id?: string
+          imported_rows?: number
+          notes?: string | null
+          skipped_rows?: number
+          source?: string
+          status?: Database["public"]["Enums"]["import_batch_status"]
+          total_rows?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          failed_rows?: number
+          filename?: string
+          id?: string
+          imported_rows?: number
+          notes?: string | null
+          skipped_rows?: number
+          source?: string
+          status?: Database["public"]["Enums"]["import_batch_status"]
+          total_rows?: number
+        }
+        Relationships: []
+      }
+      crm_import_rows: {
+        Row: {
+          batch_id: string
+          created_at: string
+          dedupe_key: string | null
+          error_message: string | null
+          id: string
+          import_status: Database["public"]["Enums"]["import_row_status"]
+          import_target: Database["public"]["Enums"]["import_row_target"] | null
+          imported_crm_contact_id: string | null
+          imported_member_id: string | null
+          parsed_city: string | null
+          parsed_country: string | null
+          parsed_device_imei: string | null
+          parsed_email_primary: string | null
+          parsed_first_name: string | null
+          parsed_full_name: string | null
+          parsed_last_name: string | null
+          parsed_membership_type: string | null
+          parsed_notes: string | null
+          parsed_phone_primary: string | null
+          parsed_postal_code: string | null
+          parsed_referral_source: string | null
+          parsed_stage: string | null
+          parsed_status: string | null
+          raw: Json
+          row_index: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          dedupe_key?: string | null
+          error_message?: string | null
+          id?: string
+          import_status?: Database["public"]["Enums"]["import_row_status"]
+          import_target?:
+            | Database["public"]["Enums"]["import_row_target"]
+            | null
+          imported_crm_contact_id?: string | null
+          imported_member_id?: string | null
+          parsed_city?: string | null
+          parsed_country?: string | null
+          parsed_device_imei?: string | null
+          parsed_email_primary?: string | null
+          parsed_first_name?: string | null
+          parsed_full_name?: string | null
+          parsed_last_name?: string | null
+          parsed_membership_type?: string | null
+          parsed_notes?: string | null
+          parsed_phone_primary?: string | null
+          parsed_postal_code?: string | null
+          parsed_referral_source?: string | null
+          parsed_stage?: string | null
+          parsed_status?: string | null
+          raw: Json
+          row_index: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          dedupe_key?: string | null
+          error_message?: string | null
+          id?: string
+          import_status?: Database["public"]["Enums"]["import_row_status"]
+          import_target?:
+            | Database["public"]["Enums"]["import_row_target"]
+            | null
+          imported_crm_contact_id?: string | null
+          imported_member_id?: string | null
+          parsed_city?: string | null
+          parsed_country?: string | null
+          parsed_device_imei?: string | null
+          parsed_email_primary?: string | null
+          parsed_first_name?: string | null
+          parsed_full_name?: string | null
+          parsed_last_name?: string | null
+          parsed_membership_type?: string | null
+          parsed_notes?: string | null
+          parsed_phone_primary?: string | null
+          parsed_postal_code?: string | null
+          parsed_referral_source?: string | null
+          parsed_stage?: string | null
+          parsed_status?: string | null
+          raw?: Json
+          row_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_import_rows_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "crm_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_import_rows_imported_crm_contact_id_fkey"
+            columns: ["imported_crm_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_import_rows_imported_member_id_fkey"
+            columns: ["imported_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_profiles: {
+        Row: {
+          assigned_to_staff_id: string | null
+          department: string | null
+          groups: string[] | null
+          industry: string | null
+          member_id: string
+          referral_source: string | null
+          stage: string | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_staff_id?: string | null
+          department?: string | null
+          groups?: string[] | null
+          industry?: string | null
+          member_id: string
+          referral_source?: string | null
+          stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_staff_id?: string | null
+          department?: string | null
+          groups?: string[] | null
+          industry?: string | null
+          member_id?: string
+          referral_source?: string | null
+          stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_profiles_assigned_to_staff_id_fkey"
+            columns: ["assigned_to_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_profiles_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       devices: {
         Row: {
@@ -584,6 +883,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "medical_information_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_contact_methods: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          label: string | null
+          member_id: string
+          type: Database["public"]["Enums"]["contact_method_type"]
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          member_id: string
+          type: Database["public"]["Enums"]["contact_method_type"]
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          member_id?: string
+          type?: Database["public"]["Enums"]["contact_method_type"]
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_contact_methods_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
@@ -1735,8 +2072,17 @@ export type Database = {
       commission_status: "pending_release" | "approved" | "paid" | "cancelled"
       communication_direction: "inbound" | "outbound"
       communication_type: "call_inbound" | "call_outbound" | "sms" | "whatsapp"
+      contact_method_type: "email" | "phone" | "social" | "other"
       device_config_status: "pending" | "configured" | "failed"
       device_status: "active" | "inactive" | "faulty" | "returned" | "in_stock"
+      import_batch_status:
+        | "uploaded"
+        | "parsed"
+        | "importing"
+        | "completed"
+        | "failed"
+      import_row_status: "pending" | "imported" | "failed" | "skipped"
+      import_row_target: "member" | "crm_contact" | "skip"
       invite_channel: "email" | "sms" | "whatsapp" | "link"
       invite_status: "draft" | "sent" | "registered" | "converted" | "expired"
       member_status: "active" | "inactive" | "suspended"
@@ -1913,8 +2259,18 @@ export const Constants = {
       commission_status: ["pending_release", "approved", "paid", "cancelled"],
       communication_direction: ["inbound", "outbound"],
       communication_type: ["call_inbound", "call_outbound", "sms", "whatsapp"],
+      contact_method_type: ["email", "phone", "social", "other"],
       device_config_status: ["pending", "configured", "failed"],
       device_status: ["active", "inactive", "faulty", "returned", "in_stock"],
+      import_batch_status: [
+        "uploaded",
+        "parsed",
+        "importing",
+        "completed",
+        "failed",
+      ],
+      import_row_status: ["pending", "imported", "failed", "skipped"],
+      import_row_target: ["member", "crm_contact", "skip"],
       invite_channel: ["email", "sms", "whatsapp", "link"],
       invite_status: ["draft", "sent", "registered", "converted", "expired"],
       member_status: ["active", "inactive", "suspended"],
