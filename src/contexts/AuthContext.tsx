@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isPartner, setIsPartner] = useState(false);
   const [roleLoadFailed, setRoleLoadFailed] = useState(false);
 
+  // Reduced timeout from 8s to 4s for faster perceived performance
   const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
     return await Promise.race([
       promise,
@@ -40,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ),
     ]);
   };
+  
+  const ROLE_FETCH_TIMEOUT = 4000; // 4 seconds (reduced from 8s)
 
   const fetchUserRole = async (userId: string) => {
     // Clear previous role state first to avoid stale data when switching accounts
@@ -105,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(session?.user ?? null);
     if (session?.user) {
       try {
-        await withTimeout(fetchUserRole(session.user.id), 8000);
+        await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
       } catch (e) {
         console.error("[AuthContext] Role fetch failed on refresh:", e);
         setRoleLoadFailed(true);
@@ -118,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       setRoleLoadFailed(false);
       try {
-        await withTimeout(fetchUserRole(user.id), 8000);
+        await withTimeout(fetchUserRole(user.id), ROLE_FETCH_TIMEOUT);
       } catch (e) {
         console.error("[AuthContext] Role fetch failed on retry:", e);
         setRoleLoadFailed(true);
@@ -150,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (session?.user) {
             try {
-              await withTimeout(fetchUserRole(session.user.id), 8000);
+              await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
             } catch (e) {
               console.error("[AuthContext] Role fetch failed:", e);
               if (isMounted) setRoleLoadFailed(true);
@@ -186,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         // Avoid getting stuck in a forever-loading state if RPCs hang.
         try {
-          await withTimeout(fetchUserRole(session.user.id), 8000);
+          await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
         } catch (e) {
           console.error("[AuthContext] Role fetch failed:", e);
           if (isMounted) setRoleLoadFailed(true);

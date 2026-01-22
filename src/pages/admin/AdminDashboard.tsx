@@ -11,115 +11,52 @@ import {
   TrendingUp,
   Package,
   AlertTriangle,
-  UserPlus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 
+interface DashboardStats {
+  active_members: number;
+  new_members_30d: number;
+  active_alerts: number;
+  devices_in_stock: number;
+  devices_assigned: number;
+  pending_orders: number;
+  monthly_revenue: number;
+  expiring_subscriptions: number;
+}
+
 export default function AdminDashboard() {
-  // Fetch active members count
-  const { data: membersData } = useQuery({
-    queryKey: ["admin-stats-members"],
+  // Single RPC call replaces 7 separate queries
+  const { data: stats } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
-      const { count: activeCount } = await supabase
-        .from("members")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
-      
-      const lastMonth = subDays(new Date(), 30);
-      const { count: newCount } = await supabase
-        .from("members")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", lastMonth.toISOString());
-      
-      return { activeCount: activeCount || 0, newCount: newCount || 0 };
+      const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
+      if (error) throw error;
+      return data as unknown as DashboardStats;
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchInterval: 30000, // Refresh every 30s for alerts
   });
 
-  // Fetch active alerts
+  // Fetch active alerts list (separate query for the detail cards)
   const { data: alertsData } = useQuery({
-    queryKey: ["admin-stats-alerts"],
+    queryKey: ["admin-alerts-list"],
     queryFn: async () => {
-      const { data: alerts, count } = await supabase
+      const { data: alerts } = await supabase
         .from("alerts")
-        .select("*", { count: "exact" })
+        .select("*")
         .in("status", ["incoming", "in_progress"])
         .order("received_at", { ascending: false })
         .limit(5);
       
-      return { alerts: alerts || [], count: count || 0 };
+      return alerts || [];
     },
+    staleTime: 1000 * 60, // 1 minute
     refetchInterval: 30000,
-  });
-
-  // Fetch devices stats
-  const { data: devicesData } = useQuery({
-    queryKey: ["admin-stats-devices"],
-    queryFn: async () => {
-      const { count: inStock } = await supabase
-        .from("devices")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "in_stock");
-      
-      const { count: assigned } = await supabase
-        .from("devices")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
-      
-      return { inStock: inStock || 0, assigned: assigned || 0 };
-    },
-  });
-
-  // Fetch pending orders
-  const { data: ordersData } = useQuery({
-    queryKey: ["admin-stats-orders"],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("orders")
-        .select("*", { count: "exact", head: true })
-        .in("status", ["pending", "processing"]);
-      
-      return count || 0;
-    },
-  });
-
-  // Fetch this month's revenue
-  const { data: revenueData } = useQuery({
-    queryKey: ["admin-stats-revenue"],
-    queryFn: async () => {
-      const start = startOfMonth(new Date());
-      const end = endOfMonth(new Date());
-      
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("status", "completed")
-        .gte("paid_at", start.toISOString())
-        .lte("paid_at", end.toISOString());
-      
-      const total = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      return total;
-    },
-  });
-
-  // Fetch expiring subscriptions
-  const { data: expiringData } = useQuery({
-    queryKey: ["admin-stats-expiring"],
-    queryFn: async () => {
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      
-      const { count } = await supabase
-        .from("subscriptions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active")
-        .lte("renewal_date", thirtyDaysFromNow.toISOString().split("T")[0]);
-      
-      return count || 0;
-    },
   });
 
   // Fetch recent activity
@@ -137,6 +74,7 @@ export default function AdminDashboard() {
       
       return data || [];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 
   return (
@@ -154,7 +92,7 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Now using single RPC data */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -162,12 +100,12 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{membersData?.activeCount || 0}</div>
+            <div className="text-2xl font-bold">{stats?.active_members || 0}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              {membersData?.newCount ? (
+              {stats?.new_members_30d ? (
                 <>
                   <TrendingUp className="h-3 w-3 text-alert-resolved" />
-                  <span className="text-alert-resolved">+{membersData.newCount}</span> this month
+                  <span className="text-alert-resolved">+{stats.new_members_30d}</span> this month
                 </>
               ) : (
                 "No new members this month"
@@ -176,17 +114,17 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className={alertsData?.count ? "border-alert-sos/50 bg-alert-sos/5" : ""}>
+        <Card className={stats?.active_alerts ? "border-alert-sos/50 bg-alert-sos/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-            <Bell className={`h-4 w-4 ${alertsData?.count ? "text-alert-sos" : "text-muted-foreground"}`} />
+            <Bell className={`h-4 w-4 ${stats?.active_alerts ? "text-alert-sos" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${alertsData?.count ? "text-alert-sos" : ""}`}>
-              {alertsData?.count || 0}
+            <div className={`text-2xl font-bold ${stats?.active_alerts ? "text-alert-sos" : ""}`}>
+              {stats?.active_alerts || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {alertsData?.count ? "Require attention" : "No active alerts"}
+              {stats?.active_alerts ? "Require attention" : "No active alerts"}
             </p>
           </CardContent>
         </Card>
@@ -198,20 +136,20 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {devicesData?.inStock || 0} / {devicesData?.assigned || 0}
+              {stats?.devices_in_stock || 0} / {stats?.devices_assigned || 0}
             </div>
             <p className="text-xs text-muted-foreground">In Stock / Assigned</p>
           </CardContent>
         </Card>
 
-        <Card className={ordersData ? "border-amber-500/50 bg-amber-500/5" : ""}>
+        <Card className={stats?.pending_orders ? "border-amber-500/50 bg-amber-500/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-            <ShoppingCart className={`h-4 w-4 ${ordersData ? "text-amber-500" : "text-muted-foreground"}`} />
+            <ShoppingCart className={`h-4 w-4 ${stats?.pending_orders ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${ordersData ? "text-amber-500" : ""}`}>
-              {ordersData || 0}
+            <div className={`text-2xl font-bold ${stats?.pending_orders ? "text-amber-500" : ""}`}>
+              {stats?.pending_orders || 0}
             </div>
             <p className="text-xs text-muted-foreground">Need processing</p>
           </CardContent>
@@ -223,19 +161,19 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{(revenueData || 0).toLocaleString()}</div>
+            <div className="text-2xl font-bold">€{(stats?.monthly_revenue || 0).toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
 
-        <Card className={expiringData ? "border-amber-500/50 bg-amber-500/5" : ""}>
+        <Card className={stats?.expiring_subscriptions ? "border-amber-500/50 bg-amber-500/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-            <Calendar className={`h-4 w-4 ${expiringData ? "text-amber-500" : "text-muted-foreground"}`} />
+            <Calendar className={`h-4 w-4 ${stats?.expiring_subscriptions ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${expiringData ? "text-amber-500" : ""}`}>
-              {expiringData || 0}
+            <div className={`text-2xl font-bold ${stats?.expiring_subscriptions ? "text-amber-500" : ""}`}>
+              {stats?.expiring_subscriptions || 0}
             </div>
             <p className="text-xs text-muted-foreground">In next 30 days</p>
           </CardContent>
@@ -259,9 +197,9 @@ export default function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            {alertsData?.alerts && alertsData.alerts.length > 0 ? (
+            {alertsData && alertsData.length > 0 ? (
               <div className="space-y-3">
-                {alertsData.alerts.slice(0, 4).map((alert: any) => (
+                {alertsData.slice(0, 4).map((alert: any) => (
                   <div
                     key={alert.id}
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
