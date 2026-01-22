@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { logActivity, logCommissionActivity } from "@/lib/auditLog";
+import { logCommissionActivity } from "@/lib/auditLog";
+import { logCrmEvent } from "@/lib/crmEvents";
 
 interface UpdateOrderStatusParams {
   orderId: string;
@@ -35,6 +36,13 @@ export function useOrderActions() {
       // If delivered, check for partner attribution and create commission
       if (status === "delivered") {
         await createCommissionIfAttributed(orderId, memberId, now);
+        
+        // Log CRM event for pendant delivered
+        await logCrmEvent("pendant_delivered", {
+          order_id: orderId,
+          member_id: memberId,
+          delivered_at: now,
+        });
       }
 
       return { orderId, status };
@@ -133,6 +141,17 @@ async function createCommissionIfAttributed(
       order_id: orderId,
       amount_eur: 50.0,
       trigger_event: "device_delivered",
+    });
+
+    // Log CRM event
+    await logCrmEvent("commission_created", {
+      commission_id: commission.id,
+      partner_id: attribution.partner_id,
+      member_id: memberId,
+      order_id: orderId,
+      amount_eur: 50.0,
+      trigger_event: "device_delivered",
+      release_at: releaseAt.toISOString(),
     });
 
     toast.success("Partner commission created (€50)");

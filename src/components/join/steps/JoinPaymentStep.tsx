@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Loader2, Lock, Shield, ExternalLink, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateOrder, formatPrice } from "@/config/pricing";
+import { getStoredReferralData, clearReferralData } from "@/lib/crmEvents";
 
 interface JoinPaymentStepProps {
   data: JoinWizardData;
@@ -26,15 +27,13 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   
   const total = order.grandTotal;
 
-  const PARTNER_REF_KEY = "partner_ref";
-
   const handlePayWithStripe = async () => {
     setIsProcessing(true);
     setError(null);
 
     try {
-      // Get stored partner referral code if any
-      const partnerRef = localStorage.getItem(PARTNER_REF_KEY);
+      // Get stored partner referral code and UTM data
+      const { referralCode: partnerRef, utmParams } = getStoredReferralData();
 
       // Step 1: Submit registration data to create DB records
       const { data: registrationResult, error: registrationError } = await supabase.functions.invoke(
@@ -52,6 +51,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
             pendantCount: order.pendantCount,
             billingFrequency: data.billingFrequency,
             partnerRef: partnerRef, // Pass partner referral code for attribution
+            utmParams: utmParams, // Pass UTM parameters for analytics
           },
         }
       );
@@ -107,8 +107,8 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
       // Notify parent that payment was initiated
       onPaymentInitiated();
 
-      // Clear partner ref after successful registration (attribution is done)
-      localStorage.removeItem(PARTNER_REF_KEY);
+      // Clear partner ref and UTM data after successful registration (attribution is done)
+      clearReferralData();
 
       // Redirect to Stripe Checkout
       window.location.href = checkoutResult.url;

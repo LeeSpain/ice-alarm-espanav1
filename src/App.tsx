@@ -50,6 +50,7 @@ import AddMemberWizard from "./pages/admin/AddMemberWizard";
 import PartnersPage from "./pages/admin/PartnersPage";
 import PartnerDetailPage from "./pages/admin/PartnerDetailPage";
 import CommissionsPage from "./pages/admin/CommissionsPage";
+import PartnersQAPage from "./pages/admin/PartnersQAPage";
 
 // Partner Pages
 import PartnerOnboarding from "./pages/partner/PartnerOnboarding";
@@ -133,6 +134,7 @@ const App = () => (
               <Route path="members/:id" element={<MemberDetailPage />} />
               <Route path="partners" element={<PartnersPage />} />
               <Route path="partners/:id" element={<PartnerDetailPage />} />
+              <Route path="partners-qa" element={<PartnersQAPage />} />
               <Route path="commissions" element={<CommissionsPage />} />
             </Route>
 

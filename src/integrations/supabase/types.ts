@@ -248,6 +248,33 @@ export type Database = {
           },
         ]
       }
+      crm_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           assigned_at: string | null
@@ -926,6 +953,7 @@ export type Database = {
           id: string
           last_touch_at: string
           member_id: string
+          metadata: Json | null
           partner_id: string
           ref_param: string | null
           source: string
@@ -936,6 +964,7 @@ export type Database = {
           id?: string
           last_touch_at?: string
           member_id: string
+          metadata?: Json | null
           partner_id: string
           ref_param?: string | null
           source: string
@@ -946,6 +975,7 @@ export type Database = {
           id?: string
           last_touch_at?: string
           member_id?: string
+          metadata?: Json | null
           partner_id?: string
           ref_param?: string | null
           source?: string
