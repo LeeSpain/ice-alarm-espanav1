@@ -52,6 +52,9 @@ import PartnerDetailPage from "./pages/admin/PartnerDetailPage";
 
 // Partner Pages
 import PartnerOnboarding from "./pages/partner/PartnerOnboarding";
+import PartnerJoin from "./pages/partner/PartnerJoin";
+import PartnerVerify from "./pages/partner/PartnerVerify";
+import PartnerLogin from "./pages/partner/PartnerLogin";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 import { PartnerLayout } from "./components/layout/PartnerLayout";
 
@@ -128,14 +131,17 @@ const App = () => (
               <Route path="partners/:id" element={<PartnerDetailPage />} />
             </Route>
 
-            {/* Partner Onboarding (Public) */}
+            {/* Partner Public Routes */}
             <Route path="/partner" element={<PartnerOnboarding />} />
+            <Route path="/partner/join" element={<PartnerJoin />} />
+            <Route path="/partner/verify" element={<PartnerVerify />} />
+            <Route path="/partner/login" element={<PartnerLogin />} />
 
             {/* Partner Dashboard Routes - Require Partner Role */}
             <Route
               path="/partner-dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requirePartner>
                   <PartnerLayout />
                 </ProtectedRoute>
               }

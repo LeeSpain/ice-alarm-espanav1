@@ -11,6 +11,8 @@ interface AuthContextType {
   isStaff: boolean;
   staffRole: StaffRole;
   memberId: string | null;
+  partnerId: string | null;
+  isPartner: boolean;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
@@ -24,11 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isStaff, setIsStaff] = useState(false);
   const [staffRole, setStaffRole] = useState<StaffRole>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [isPartner, setIsPartner] = useState(false);
 
   const fetchUserRole = async (userId: string) => {
     try {
       // Check if user is staff
-      const { data: staffData, error: staffError } = await supabase
+      const { data: staffData } = await supabase
         .from("staff")
         .select("id, role, is_active")
         .eq("user_id", userId)
@@ -38,11 +42,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsStaff(true);
         setStaffRole(staffData.role as StaffRole);
         setMemberId(null);
+        setPartnerId(null);
+        setIsPartner(false);
+        return;
+      }
+
+      // Check if user is a partner
+      const { data: partnerData } = await supabase
+        .from("partners")
+        .select("id, status")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (partnerData && partnerData.status === "active") {
+        setPartnerId(partnerData.id);
+        setIsPartner(true);
+        setIsStaff(false);
+        setStaffRole(null);
+        setMemberId(null);
         return;
       }
 
       // Check if user is a member
-      const { data: memberData, error: memberError } = await supabase
+      const { data: memberData } = await supabase
         .from("members")
         .select("id")
         .eq("user_id", userId)
@@ -52,18 +74,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMemberId(memberData.id);
         setIsStaff(false);
         setStaffRole(null);
+        setPartnerId(null);
+        setIsPartner(false);
         return;
       }
 
-      // User exists but is neither staff nor member yet
+      // User exists but is neither staff, partner, nor member yet
       setIsStaff(false);
       setStaffRole(null);
       setMemberId(null);
+      setPartnerId(null);
+      setIsPartner(false);
     } catch (error) {
       console.error("Error fetching user role:", error);
       setIsStaff(false);
       setStaffRole(null);
       setMemberId(null);
+      setPartnerId(null);
+      setIsPartner(false);
     }
   };
 
@@ -90,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsStaff(false);
           setStaffRole(null);
           setMemberId(null);
+          setPartnerId(null);
+          setIsPartner(false);
         }
         setIsLoading(false);
       }
@@ -115,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsStaff(false);
     setStaffRole(null);
     setMemberId(null);
+    setPartnerId(null);
+    setIsPartner(false);
   };
 
   return (
@@ -126,6 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isStaff,
         staffRole,
         memberId,
+        partnerId,
+        isPartner,
         signOut,
         refreshAuth,
       }}
