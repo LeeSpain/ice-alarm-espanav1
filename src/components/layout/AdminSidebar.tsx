@@ -19,7 +19,8 @@ import {
   Contact,
   Wallet,
   Handshake,
-  ClipboardCheck
+  ClipboardCheck,
+  Upload
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -79,6 +80,7 @@ const financeGroup: MenuGroup = {
 const secondaryMenuItems: MenuItem[] = [
   { icon: Handshake, label: "Partners", path: "/admin/partners" },
   { icon: ClipboardCheck, label: "Partners QA", path: "/admin/partners-qa", superAdminOnly: true },
+  { icon: Upload, label: "CRM Import", path: "/admin/crm-import", superAdminOnly: true },
   { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
   { icon: Bell, label: "Alerts", path: "/admin/alerts" },
   { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" },
