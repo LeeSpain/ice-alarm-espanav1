@@ -1683,6 +1683,39 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_todays_birthdays: {
+        Args: never
+        Returns: {
+          address_line_1: string
+          address_line_2: string | null
+          city: string
+          country: string | null
+          created_at: string | null
+          date_of_birth: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          nie_dni: string | null
+          phone: string
+          photo_url: string | null
+          postal_code: string
+          preferred_language:
+            | Database["public"]["Enums"]["preferred_language"]
+            | null
+          province: string
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["member_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "members"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_partner: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
