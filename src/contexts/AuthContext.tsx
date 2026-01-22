@@ -51,32 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoleLoadFailed(false);
 
     try {
-      // Prefer SECURITY DEFINER RPCs to avoid RLS issues when determining role.
-      const [isStaffRes, roleRes, isPartnerRes, partnerIdRes, memberIdRes] = await Promise.all([
-        supabase.rpc("is_staff", { _user_id: userId }),
-        supabase.rpc("get_staff_role", { _user_id: userId }),
-        supabase.rpc("is_partner", { _user_id: userId }),
-        supabase.rpc("get_partner_id", { _user_id: userId }),
-        supabase.rpc("get_member_id", { _user_id: userId }),
-      ]);
+      // Single RPC call to get all role info - replaces 5 separate calls
+      const { data, error } = await supabase.rpc("get_user_role_info", { _user_id: userId });
 
-      const isStaff = Boolean(isStaffRes.data);
-      const staffRole = (roleRes.data as StaffRole) ?? null;
-      const isPartner = Boolean(isPartnerRes.data);
-      const partnerId = (partnerIdRes.data as string | null) ?? null;
-      const memberId = (memberIdRes.data as string | null) ?? null;
+      if (error) throw error;
 
-      if (isStaff && staffRole) {
+      const roleInfo = data as {
+        is_staff: boolean;
+        staff_role: StaffRole;
+        is_partner: boolean;
+        partner_id: string | null;
+        member_id: string | null;
+      };
+
+      if (roleInfo.is_staff && roleInfo.staff_role) {
         setIsStaff(true);
-        setStaffRole(staffRole);
+        setStaffRole(roleInfo.staff_role);
         setMemberId(null);
         setPartnerId(null);
         setIsPartner(false);
         return;
       }
 
-      if (isPartner && partnerId) {
-        setPartnerId(partnerId);
+      if (roleInfo.is_partner && roleInfo.partner_id) {
+        setPartnerId(roleInfo.partner_id);
         setIsPartner(true);
         setIsStaff(false);
         setStaffRole(null);
@@ -84,8 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (memberId) {
-        setMemberId(memberId);
+      if (roleInfo.member_id) {
+        setMemberId(roleInfo.member_id);
         setIsStaff(false);
         setStaffRole(null);
         setPartnerId(null);
@@ -131,33 +129,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let initialSessionHandled = false;
 
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
 
-        setIsLoading(true);
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Skip INITIAL_SESSION since we handle it in initializeAuth
+        // This prevents duplicate role fetching
+        if (event === 'INITIAL_SESSION') {
+          return;
+        }
 
-        if (session?.user) {
-          // Avoid getting stuck in a forever-loading state if RPCs hang.
-          try {
-            await withTimeout(fetchUserRole(session.user.id), 8000);
-          } catch (e) {
-            console.error("[AuthContext] Role fetch failed:", e);
-            if (isMounted) setRoleLoadFailed(true);
+        // Only re-fetch roles on actual auth changes (sign in/out)
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setIsLoading(true);
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user) {
+            try {
+              await withTimeout(fetchUserRole(session.user.id), 8000);
+            } catch (e) {
+              console.error("[AuthContext] Role fetch failed:", e);
+              if (isMounted) setRoleLoadFailed(true);
+            }
           }
-        } else {
+          
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
           setIsStaff(false);
           setStaffRole(null);
           setMemberId(null);
           setPartnerId(null);
           setIsPartner(false);
-        }
-        
-        if (isMounted) {
           setIsLoading(false);
         }
       }

@@ -24,17 +24,17 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
   const { user, signOut, staffRole } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch partner data (for display)
+  // Fetch partner data (for display) - use same queryKey as usePartnerData for cache sharing
   const { data: partner } = useQuery({
-    queryKey: ["partner-header", isAdminViewMode ? partnerIdParam : user?.id],
+    queryKey: ["my-partner-data", isAdminViewMode ? partnerIdParam : user?.id],
     queryFn: async () => {
       if (isAdminViewMode && partnerIdParam) {
         // Admin viewing specific partner
         const { data, error } = await supabase
           .from("partners")
-          .select("contact_name, company_name, status")
+          .select("*")
           .eq("id", partnerIdParam)
-          .single();
+          .maybeSingle();
         if (error) throw error;
         return data;
       }
@@ -42,9 +42,9 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
       // Regular partner viewing their own data
       const { data, error } = await supabase
         .from("partners")
-        .select("contact_name, company_name, status")
+        .select("*")
         .eq("user_id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
