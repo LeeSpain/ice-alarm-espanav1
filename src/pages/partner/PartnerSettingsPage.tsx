@@ -2,17 +2,30 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Save, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PartnerSettingsPage() {
   const queryClient = useQueryClient();
-  const { data: partner, isLoading: partnerLoading } = usePartnerData();
+  const { isStaff, staffRole } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Admin view mode detection
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const partnerIdParam = searchParams.get("partnerId");
+  const isAdminViewMode = isAdminRole && !!partnerIdParam;
+
+  const { data: partner, isLoading: partnerLoading } = usePartnerData(
+    isAdminViewMode ? partnerIdParam : undefined
+  );
 
   const [formData, setFormData] = useState({
     payoutBeneficiaryName: "",
@@ -61,24 +74,40 @@ export default function PartnerSettingsPage() {
     );
   }
 
-
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your partner account settings
+          {isAdminViewMode 
+            ? `Viewing ${partner?.contact_name}'s settings`
+            : "Manage your partner account settings"
+          }
         </p>
       </div>
+
+      {/* Admin View Mode Notice */}
+      {isAdminViewMode && (
+        <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+              <Eye className="h-4 w-4" />
+              <span className="text-sm">
+                You are viewing this partner's settings in read-only mode. Changes made here will update the partner's account.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Account Info */}
       <Card>
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
-          <CardDescription>Your partner account details</CardDescription>
+          <CardDescription>Partner account details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-muted-foreground">Contact Name</Label>
               <p className="font-medium">{partner?.contact_name}</p>
@@ -101,7 +130,14 @@ export default function PartnerSettingsPage() {
             </div>
             <div>
               <Label className="text-muted-foreground">Status</Label>
-              <p className="font-medium capitalize">{partner?.status}</p>
+              <div className="mt-1">
+                <Badge 
+                  variant={partner?.status === "active" ? "default" : "secondary"}
+                  className="capitalize"
+                >
+                  {partner?.status}
+                </Badge>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -112,7 +148,7 @@ export default function PartnerSettingsPage() {
         <CardHeader>
           <CardTitle>Payout Information</CardTitle>
           <CardDescription>
-            Bank details for receiving your commission payments
+            Bank details for receiving commission payments
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,6 +168,7 @@ export default function PartnerSettingsPage() {
                   setFormData({ ...formData, payoutBeneficiaryName: e.target.value })
                 }
                 placeholder="Full name as it appears on your bank account"
+                disabled={isAdminViewMode}
               />
             </div>
 
@@ -145,6 +182,7 @@ export default function PartnerSettingsPage() {
                 }
                 placeholder="ES00 0000 0000 0000 0000 0000"
                 className="font-mono"
+                disabled={isAdminViewMode}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Your IBAN for bank transfers
@@ -158,6 +196,7 @@ export default function PartnerSettingsPage() {
                 onValueChange={(value) =>
                   setFormData({ ...formData, preferredLanguage: value })
                 }
+                disabled={isAdminViewMode}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -172,19 +211,21 @@ export default function PartnerSettingsPage() {
               </p>
             </div>
 
-            <Button
-              type="submit"
-              disabled={updateSettingsMutation.isPending}
-            >
-              {updateSettingsMutation.isPending ? (
-                "Saving..."
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
+            {!isAdminViewMode && (
+              <Button
+                type="submit"
+                disabled={updateSettingsMutation.isPending}
+              >
+                {updateSettingsMutation.isPending ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>

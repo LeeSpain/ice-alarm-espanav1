@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,7 +18,16 @@ export function ProtectedRoute({
   requireMember = false,
   requirePartner = false,
 }: ProtectedRouteProps) {
-  const { user, isLoading, isStaff, staffRole, memberId, isPartner } = useAuth();
+  const { 
+    user, 
+    isLoading, 
+    isStaff, 
+    staffRole, 
+    memberId, 
+    isPartner,
+    roleLoadFailed,
+    retryRoleLoad,
+  } = useAuth();
   const location = useLocation();
 
   // Check if user is admin or super_admin
@@ -41,6 +51,21 @@ export function ProtectedRoute({
       return <Navigate to="/partner/login" state={{ from: location }} replace />;
     }
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Role loading failed - show retry option instead of immediate denial
+  if (roleLoadFailed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Failed to load your account permissions.</p>
+          <Button onClick={retryRoleLoad} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // ADMIN OVERRIDE: Admins have access to ALL pages
