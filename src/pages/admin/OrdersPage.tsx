@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useOrderActions } from "@/hooks/useOrderActions";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -47,6 +48,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
+  const { updateOrderStatus } = useOrderActions();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders", searchQuery, statusFilter, page],
@@ -207,19 +209,40 @@ export default function OrdersPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {order.status === "pending" && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus.mutate({
+                                orderId: order.id,
+                                status: "processing",
+                                memberId: order.member_id,
+                              });
+                            }}>
                               <Package className="mr-2 h-4 w-4" />
                               Mark Processing
                             </DropdownMenuItem>
                           )}
                           {order.status === "processing" && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus.mutate({
+                                orderId: order.id,
+                                status: "shipped",
+                                memberId: order.member_id,
+                              });
+                            }}>
                               <Truck className="mr-2 h-4 w-4" />
                               Mark Shipped
                             </DropdownMenuItem>
                           )}
                           {order.status === "shipped" && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus.mutate({
+                                orderId: order.id,
+                                status: "delivered",
+                                memberId: order.member_id,
+                              });
+                            }}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Mark Delivered
                             </DropdownMenuItem>
