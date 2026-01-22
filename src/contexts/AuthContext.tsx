@@ -31,31 +31,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      // Check if user is staff
-      const { data: staffData } = await supabase
-        .from("staff")
-        .select("id, role, is_active")
-        .eq("user_id", userId)
-        .maybeSingle();
+      // Prefer SECURITY DEFINER RPCs to avoid RLS issues when determining role.
+      // NOTE: We pass the userId explicitly (instead of relying on auth.uid())
+      // because these RPCs are designed to accept a _user_id argument.
+      const [isStaffRes, roleRes, isPartnerRes, partnerIdRes, memberIdRes] = await Promise.all([
+        supabase.rpc("is_staff", { _user_id: userId }),
+        supabase.rpc("get_staff_role", { _user_id: userId }),
+        supabase.rpc("is_partner", { _user_id: userId }),
+        supabase.rpc("get_partner_id", { _user_id: userId }),
+        supabase.rpc("get_member_id", { _user_id: userId }),
+      ]);
 
-      if (staffData && staffData.is_active) {
+      const isStaff = Boolean(isStaffRes.data);
+      const staffRole = (roleRes.data as StaffRole) ?? null;
+      const isPartner = Boolean(isPartnerRes.data);
+      const partnerId = (partnerIdRes.data as string | null) ?? null;
+      const memberId = (memberIdRes.data as string | null) ?? null;
+
+      if (isStaff && staffRole) {
         setIsStaff(true);
-        setStaffRole(staffData.role as StaffRole);
+        setStaffRole(staffRole);
         setMemberId(null);
         setPartnerId(null);
         setIsPartner(false);
         return;
       }
 
-      // Check if user is a partner
-      const { data: partnerData } = await supabase
-        .from("partners")
-        .select("id, status")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (partnerData && partnerData.status === "active") {
-        setPartnerId(partnerData.id);
+      if (isPartner && partnerId) {
+        setPartnerId(partnerId);
         setIsPartner(true);
         setIsStaff(false);
         setStaffRole(null);
@@ -63,15 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if user is a member
-      const { data: memberData } = await supabase
-        .from("members")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (memberData) {
-        setMemberId(memberData.id);
+      if (memberId) {
+        setMemberId(memberId);
         setIsStaff(false);
         setStaffRole(null);
         setPartnerId(null);
