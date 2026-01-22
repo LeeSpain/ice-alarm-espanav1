@@ -2,7 +2,8 @@ import { WizardData } from "@/pages/admin/AddMemberWizard";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, Smartphone, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, X, Smartphone, Phone, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPendantFinalPrice, formatPrice } from "@/config/pricing";
 
@@ -13,7 +14,10 @@ interface PendantOptionStepProps {
 
 export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
   const pendantFinalPrice = getPendantFinalPrice(1);
-  const pendantCount = data.membershipType === "couple" && data.includePendant ? 2 : 1;
+  
+  // Use pendantCount from data, with smart defaults
+  const defaultCount = data.membershipType === "couple" ? 2 : 1;
+  const currentCount = data.pendantCount || defaultCount;
 
   const features = [
     { name: "24/7 Emergency Response", pendant: true, phoneOnly: true },
@@ -26,11 +30,29 @@ export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
     { name: "Automatic Check-ins", pendant: true, phoneOnly: true },
   ];
 
+  const handlePendantChange = (value: string) => {
+    const includePendant = value === "yes";
+    if (includePendant) {
+      onUpdate({ 
+        includePendant: true, 
+        pendantCount: data.pendantCount || defaultCount 
+      });
+    } else {
+      onUpdate({ includePendant: false, pendantCount: 0 });
+    }
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    // Admin can select up to 10 pendants
+    const newCount = Math.max(1, Math.min(10, currentCount + delta));
+    onUpdate({ pendantCount: newCount });
+  };
+
   return (
     <div className="space-y-6">
       <RadioGroup
         value={data.includePendant ? "yes" : "no"}
-        onValueChange={(value) => onUpdate({ includePendant: value === "yes" })}
+        onValueChange={handlePendantChange}
         className="grid gap-4 md:grid-cols-2"
       >
         {/* With Pendant */}
@@ -61,8 +83,7 @@ export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
                 <div>
                   <CardTitle className="text-lg">Include Pendant</CardTitle>
                   <p className="text-primary font-semibold">
-                    {formatPrice(pendantFinalPrice)}{" "}
-                    {data.membershipType === "couple" && "× 2 pendants"}
+                    {formatPrice(pendantFinalPrice)} each
                   </p>
                 </div>
               </div>
@@ -72,6 +93,53 @@ export function PendantOptionStep({ data, onUpdate }: PendantOptionStepProps) {
                 Our medical alert pendant provides complete protection with fall detection
                 and works without needing a smartphone.
               </p>
+              
+              {/* Quantity Selector - Only show when pendant is selected */}
+              {data.includePendant && (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Quantity</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleQuantityChange(-1);
+                        }}
+                        disabled={currentCount <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-6 text-center font-semibold">
+                        {currentCount}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleQuantityChange(1);
+                        }}
+                        disabled={currentCount >= 10}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-bold text-primary">
+                      {formatPrice(getPendantFinalPrice(currentCount))}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <RadioGroupItem value="yes" id="pendant-yes" className="sr-only" />
             </CardContent>
           </Card>
