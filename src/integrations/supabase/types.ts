@@ -1716,6 +1716,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_user_role_info: { Args: { _user_id: string }; Returns: Json }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_partner: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
