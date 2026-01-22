@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getDefaultAsset } from "@/config/websiteImages";
 
 interface WebsiteImage {
   id: string;
@@ -11,13 +10,10 @@ interface WebsiteImage {
 }
 
 /**
- * Fetch a single website image with instant fallback to bundled asset.
- * Shows the local default immediately while loading, then swaps to custom if available.
+ * Fetch a single website image - returns only custom uploaded images, no defaults.
  */
 export function useWebsiteImage(locationKey: string) {
-  const defaultAsset = getDefaultAsset(locationKey);
-  
-  const { data, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["website-image", locationKey],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,14 +25,13 @@ export function useWebsiteImage(locationKey: string) {
       if (error) throw error;
       return data as WebsiteImage | null;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes cache (increased from 5)
+    staleTime: 1000 * 60 * 10, // 10 minutes cache
   });
 
-  // Return default asset immediately while loading - eliminates visual flicker
   return {
-    imageUrl: data?.image_url || defaultAsset,
+    imageUrl: data?.image_url || null,
     altText: data?.alt_text || "",
-    isLoading: false, // Never show loading state - always have an image ready
+    isLoading,
     error,
     hasCustomImage: !!data?.image_url,
   };
@@ -68,12 +63,11 @@ export function useWebsiteImagesBatch(locationKeys: string[]) {
     enabled: locationKeys.length > 0,
   });
 
-  // Helper to get a specific image from the batch with fallback
+  // Helper to get a specific image from the batch - no defaults
   const getImage = (locationKey: string) => {
-    const defaultAsset = getDefaultAsset(locationKey);
     const customImage = data?.[locationKey];
     return {
-      imageUrl: customImage?.image_url || defaultAsset,
+      imageUrl: customImage?.image_url || null,
       altText: customImage?.alt_text || "",
       hasCustomImage: !!customImage?.image_url,
     };
