@@ -56,6 +56,9 @@ import PartnerJoin from "./pages/partner/PartnerJoin";
 import PartnerVerify from "./pages/partner/PartnerVerify";
 import PartnerLogin from "./pages/partner/PartnerLogin";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import PartnerInvitesPage from "./pages/partner/PartnerInvitesPage";
+import PartnerCommissionsPage from "./pages/partner/PartnerCommissionsPage";
+import PartnerSettingsPage from "./pages/partner/PartnerSettingsPage";
 import { PartnerLayout } from "./components/layout/PartnerLayout";
 
 // Call Centre Pages
@@ -147,6 +150,9 @@ const App = () => (
               }
             >
               <Route index element={<PartnerDashboard />} />
+              <Route path="invites" element={<PartnerInvitesPage />} />
+              <Route path="commissions" element={<PartnerCommissionsPage />} />
+              <Route path="settings" element={<PartnerSettingsPage />} />
             </Route>
 
             {/* Call Centre Dashboard Routes - Require Staff Role */}
