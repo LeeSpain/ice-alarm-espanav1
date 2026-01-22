@@ -29,6 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [isPartner, setIsPartner] = useState(false);
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Role fetch timed out after ${ms}ms`)), ms)
+      ),
+    ]);
+  };
+
   const fetchUserRole = async (userId: string) => {
     // Clear previous role state first to avoid stale data when switching accounts
     setIsStaff(false);
@@ -52,16 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isPartner = Boolean(isPartnerRes.data);
       const partnerId = (partnerIdRes.data as string | null) ?? null;
       const memberId = (memberIdRes.data as string | null) ?? null;
-
-      // Debug logging - can remove after confirming fix
-      console.log("[AuthContext] Role fetch results:", {
-        userId,
-        isStaff,
-        staffRole,
-        isPartner,
-        partnerId,
-        memberId,
-      });
 
       if (isStaff && staffRole) {
         setIsStaff(true);
@@ -112,14 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
-        
-        console.log("[AuthContext] Auth state changed:", event);
+
+        setIsLoading(true);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // CRITICAL: Await role fetch before setting isLoading to false
-          await fetchUserRole(session.user.id);
+          // Avoid getting stuck in a forever-loading state if RPCs hang.
+          try {
+            await withTimeout(fetchUserRole(session.user.id), 8000);
+          } catch (e) {
+            console.error("[AuthContext] Role fetch failed:", e);
+          }
         } else {
           setIsStaff(false);
           setStaffRole(null);
@@ -136,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Get initial session
     const initializeAuth = async () => {
+      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!isMounted) return;
@@ -144,8 +148,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // CRITICAL: Await role fetch before setting isLoading to false
-        await fetchUserRole(session.user.id);
+        // Avoid getting stuck in a forever-loading state if RPCs hang.
+        try {
+          await withTimeout(fetchUserRole(session.user.id), 8000);
+        } catch (e) {
+          console.error("[AuthContext] Role fetch failed:", e);
+        }
       }
       
       if (isMounted) {
