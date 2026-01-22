@@ -32,11 +32,10 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
-import { getDefaultAsset } from "@/config/websiteImages";
 
 export default function PendantPage() {
-  const { imageUrl: pendantHeroImage } = useWebsiteImage("pendant_hero", getDefaultAsset("pendant_hero"));
-  const { imageUrl: pendantSpecsImage } = useWebsiteImage("pendant_specs", getDefaultAsset("pendant_specs"));
+  const { imageUrl: pendantHeroImage, isLoading: heroLoading } = useWebsiteImage("pendant_hero");
+  const { imageUrl: pendantSpecsImage, isLoading: specsLoading } = useWebsiteImage("pendant_specs");
   const { t } = useTranslation();
 
   const features = [
@@ -197,11 +196,15 @@ export default function PendantPage() {
               <div className="relative mx-auto max-w-md">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl -z-10" />
                 <div className="aspect-square overflow-hidden rounded-2xl shadow-2xl bg-muted">
-                  <img
-                    src={pendantHeroImage}
-                    alt="ICE Alarm GPS Personal Pendant"
-                    className="w-full h-full object-cover object-center"
-                  />
+                  {heroLoading ? (
+                    <div className="w-full h-full animate-pulse bg-muted" />
+                  ) : pendantHeroImage ? (
+                    <img
+                      src={pendantHeroImage}
+                      alt="ICE Alarm GPS Personal Pendant"
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : null}
                 </div>
                 {/* Trust Badge */}
                 <div className="absolute -bottom-4 -right-4 bg-card rounded-xl shadow-xl p-3 border">
@@ -391,11 +394,15 @@ export default function PendantPage() {
             </div>
             <div className="relative">
               <div className="aspect-square max-w-sm mx-auto overflow-hidden rounded-2xl shadow-xl bg-muted">
-                <img
-                  src={pendantSpecsImage}
-                  alt="ICE Alarm Pendant Specifications"
-                  className="w-full h-full object-cover object-center"
-                />
+                {specsLoading ? (
+                  <div className="w-full h-full animate-pulse bg-muted" />
+                ) : pendantSpecsImage ? (
+                  <img
+                    src={pendantSpecsImage}
+                    alt="ICE Alarm Pendant Specifications"
+                    className="w-full h-full object-cover object-center"
+                  />
+                ) : null}
               </div>
             </div>
           </div>
