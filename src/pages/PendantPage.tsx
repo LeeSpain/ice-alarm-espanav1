@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -31,12 +30,15 @@ import {
   Signal,
   ChevronRight
 } from "lucide-react";
-import { useWebsiteImage } from "@/hooks/useWebsiteImage";
+import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 
 export default function PendantPage() {
-  const { imageUrl: pendantHeroImage, isLoading: heroLoading } = useWebsiteImage("pendant_hero");
-  const { imageUrl: pendantSpecsImage, isLoading: specsLoading } = useWebsiteImage("pendant_specs");
   const { t } = useTranslation();
+  
+  // Batch fetch all images in a single query
+  const { getImage } = useWebsiteImagesBatch(["pendant_hero", "pendant_specs"]);
+  const pendantHeroImage = getImage("pendant_hero");
+  const pendantSpecsImage = getImage("pendant_specs");
 
   const features = [
     {
@@ -196,15 +198,13 @@ export default function PendantPage() {
               <div className="relative mx-auto max-w-md">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl -z-10" />
                 <div className="aspect-square overflow-hidden rounded-2xl shadow-2xl bg-muted">
-                  {heroLoading ? (
-                    <div className="w-full h-full animate-pulse bg-muted" />
-                  ) : pendantHeroImage ? (
-                    <img
-                      src={pendantHeroImage}
-                      alt="ICE Alarm GPS Personal Pendant"
-                      className="w-full h-full object-cover object-center"
-                    />
-                  ) : null}
+                  <img
+                    src={pendantHeroImage.imageUrl}
+                    alt={pendantHeroImage.altText || "ICE Alarm GPS Personal Pendant"}
+                    className="w-full h-full object-cover object-center"
+                    loading="eager"
+                    decoding="async"
+                  />
                 </div>
                 {/* Trust Badge */}
                 <div className="absolute -bottom-4 -right-4 bg-card rounded-xl shadow-xl p-3 border">
@@ -394,15 +394,13 @@ export default function PendantPage() {
             </div>
             <div className="relative">
               <div className="aspect-square max-w-sm mx-auto overflow-hidden rounded-2xl shadow-xl bg-muted">
-                {specsLoading ? (
-                  <div className="w-full h-full animate-pulse bg-muted" />
-                ) : pendantSpecsImage ? (
-                  <img
-                    src={pendantSpecsImage}
-                    alt="ICE Alarm Pendant Specifications"
-                    className="w-full h-full object-cover object-center"
-                  />
-                ) : null}
+                <img
+                  src={pendantSpecsImage.imageUrl}
+                  alt={pendantSpecsImage.altText || "ICE Alarm Pendant Specifications"}
+                  className="w-full h-full object-cover object-center"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             </div>
           </div>

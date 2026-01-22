@@ -7,7 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useWebsiteImage } from "@/hooks/useWebsiteImage";
+import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   Dialog,
@@ -19,8 +19,12 @@ import {
 export default function LandingPage() {
   const { t } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
-  const { imageUrl: heroImage, isLoading: heroLoading } = useWebsiteImage("homepage_hero");
-  const { imageUrl: pendantPromoImage, isLoading: promoLoading } = useWebsiteImage("homepage_pendant_promo");
+  
+  // Batch fetch all images in a single query
+  const { getImage } = useWebsiteImagesBatch(["homepage_hero", "homepage_pendant_promo"]);
+  const heroImage = getImage("homepage_hero");
+  const pendantPromoImage = getImage("homepage_pendant_promo");
+  
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
@@ -138,15 +142,13 @@ export default function LandingPage() {
             {/* Right Image */}
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 aspect-[4/3] bg-muted">
-                {heroLoading ? (
-                  <div className="w-full h-full animate-pulse bg-muted" />
-                ) : heroImage ? (
-                  <img 
-                    src={heroImage} 
-                    alt="Happy multigenerational family enjoying peace of mind with ICE Alarm protection" 
-                    className="w-full h-full object-cover object-center"
-                  />
-                ) : null}
+                <img 
+                  src={heroImage.imageUrl} 
+                  alt={heroImage.altText || "Happy multigenerational family enjoying peace of mind with ICE Alarm protection"}
+                  className="w-full h-full object-cover object-center"
+                  loading="eager"
+                  decoding="async"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
 
@@ -355,15 +357,13 @@ export default function LandingPage() {
                   <div className="md:col-span-2 bg-gradient-to-br from-muted/50 to-muted p-8 flex items-center justify-center">
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl scale-75"></div>
-                      {promoLoading ? (
-                        <div className="relative w-48 h-48 md:w-56 md:h-56 animate-pulse bg-muted rounded-lg" />
-                      ) : pendantPromoImage ? (
-                        <img 
-                          src={pendantPromoImage} 
-                          alt="ICE Alarm GPS Pendant" 
-                          className="relative w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
-                        />
-                      ) : null}
+                      <img 
+                        src={pendantPromoImage.imageUrl} 
+                        alt={pendantPromoImage.altText || "ICE Alarm GPS Pendant"}
+                        className="relative w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                   </div>
                   

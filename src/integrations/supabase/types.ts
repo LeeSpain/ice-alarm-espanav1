@@ -2014,6 +2014,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_member_id: { Args: { _user_id: string }; Returns: string }
       get_partner_id: { Args: { _user_id: string }; Returns: string }
       get_staff_role: {
