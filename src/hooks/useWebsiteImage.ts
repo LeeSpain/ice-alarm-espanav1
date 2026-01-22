@@ -9,7 +9,7 @@ interface WebsiteImage {
   updated_at: string;
 }
 
-export function useWebsiteImage(locationKey: string, defaultImage: string) {
+export function useWebsiteImage(locationKey: string) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["website-image", locationKey],
     queryFn: async () => {
@@ -26,7 +26,7 @@ export function useWebsiteImage(locationKey: string, defaultImage: string) {
   });
 
   return {
-    imageUrl: data?.image_url || defaultImage,
+    imageUrl: isLoading ? null : (data?.image_url || null),
     altText: data?.alt_text || "",
     isLoading,
     error,
