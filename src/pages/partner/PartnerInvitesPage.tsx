@@ -15,6 +15,7 @@ import { Copy, Mail, MessageCircle, Plus, Send, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { generateReferralLink } from "@/lib/crmEvents";
 
 type InviteStatus = Database["public"]["Enums"]["invite_status"];
 type InviteChannel = Database["public"]["Enums"]["invite_channel"];
@@ -54,7 +55,7 @@ export default function PartnerInvitesPage() {
   });
 
   const referralLink = partner
-    ? `${window.location.origin}/join?ref=${partner.referral_code}`
+    ? generateReferralLink(partner.referral_code)
     : "";
 
   const { data: invites, isLoading: invitesLoading } = useQuery({

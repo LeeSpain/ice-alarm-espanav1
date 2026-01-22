@@ -162,6 +162,18 @@ serve(async (req: Request): Promise<Response> => {
       new_values: { email: data.email, contact_name: data.contact_name }
     });
 
+    // Log CRM event for partner_created
+    await supabase.from("crm_events").insert({
+      event_type: "partner_created",
+      payload: {
+        partner_id: partner.id,
+        email: data.email,
+        contact_name: data.contact_name,
+        company_name: data.company_name || null,
+        referral_code: referralCode,
+      },
+    });
+
     // Get base URL from request origin or use fallback
     const origin = req.headers.get("origin") || "https://shelter-span.lovable.app";
     const verificationUrl = `${origin}/partner/verify?token=${token}`;

@@ -161,6 +161,18 @@ serve(async (req) => {
       throw new Error("Invalid channel");
     }
 
+    // Log CRM event for invite_sent
+    await supabaseClient.from("crm_events").insert({
+      event_type: "invite_sent",
+      payload: {
+        invite_id: inviteId,
+        partner_id: partner.id,
+        channel,
+        recipient,
+        language,
+      },
+    });
+
     return new Response(
       JSON.stringify({ success, message: "Invite sent successfully" }),
       {

@@ -83,6 +83,28 @@ serve(async (req) => {
             })
             .eq("member_id", session.metadata.member_id);
         }
+
+        // Log CRM event for order_paid (checkout completed means paid)
+        if (session.metadata?.order_id && session.metadata?.member_id) {
+          // Check if this member has partner attribution
+          const { data: attribution } = await supabase
+            .from("partner_attributions")
+            .select("partner_id")
+            .eq("member_id", session.metadata.member_id)
+            .maybeSingle();
+
+          await supabase.from("crm_events").insert({
+            event_type: "order_paid",
+            payload: {
+              order_id: session.metadata.order_id,
+              member_id: session.metadata.member_id,
+              payment_id: session.metadata.payment_id || null,
+              amount: session.amount_total ? session.amount_total / 100 : null,
+              partner_id: attribution?.partner_id || null,
+              has_attribution: !!attribution,
+            },
+          });
+        }
         break;
       }
 

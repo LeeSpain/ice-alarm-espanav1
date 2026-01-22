@@ -57,6 +57,13 @@ interface RegistrationRequest {
   pendantCount: number;
   billingFrequency: "monthly" | "annual";
   partnerRef?: string; // Partner referral code for attribution
+  utmParams?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_term?: string;
+    utm_content?: string;
+  };
 }
 
 // Pricing constants (NET prices)
@@ -394,8 +401,17 @@ serve(async (req) => {
           .maybeSingle();
 
         if (!existingAttribution) {
-          // Create attribution
+          // Create attribution with UTM metadata
           const now = new Date().toISOString();
+          const metadata: Record<string, unknown> = {};
+          if (body.utmParams) {
+            if (body.utmParams.utm_source) metadata.utm_source = body.utmParams.utm_source;
+            if (body.utmParams.utm_medium) metadata.utm_medium = body.utmParams.utm_medium;
+            if (body.utmParams.utm_campaign) metadata.utm_campaign = body.utmParams.utm_campaign;
+            if (body.utmParams.utm_term) metadata.utm_term = body.utmParams.utm_term;
+            if (body.utmParams.utm_content) metadata.utm_content = body.utmParams.utm_content;
+          }
+          
           const { data: attribution, error: attrError } = await supabase
             .from("partner_attributions")
             .insert({
@@ -405,6 +421,7 @@ serve(async (req) => {
               ref_param: body.partnerRef,
               first_touch_at: now,
               last_touch_at: now,
+              metadata: Object.keys(metadata).length > 0 ? metadata : null,
             })
             .select()
             .single();
@@ -439,6 +456,20 @@ serve(async (req) => {
                 partner_id: partner.id,
                 member_id: primaryMemberData.id,
                 referral_code: body.partnerRef,
+              },
+            });
+
+            // Log CRM event for attribution created
+            await supabase.from("crm_events").insert({
+              event_type: "member_registered",
+              payload: {
+                member_id: primaryMemberData.id,
+                partner_id: partner.id,
+                referral_code: body.partnerRef,
+                email: body.primaryMember.email,
+                membership_type: body.membershipType,
+                has_pendant: body.includePendant,
+                utm_params: body.utmParams || null,
               },
             });
           }

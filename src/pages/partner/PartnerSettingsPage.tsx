@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
@@ -15,13 +15,13 @@ export default function PartnerSettingsPage() {
   const { data: partner, isLoading: partnerLoading } = usePartnerData();
 
   const [formData, setFormData] = useState({
-    payoutBeneficiaryName: partner?.payout_beneficiary_name || "",
-    payoutIban: partner?.payout_iban || "",
-    preferredLanguage: partner?.preferred_language || "en",
+    payoutBeneficiaryName: "",
+    payoutIban: "",
+    preferredLanguage: "en",
   });
 
   // Update form when partner data loads
-  useState(() => {
+  useEffect(() => {
     if (partner) {
       setFormData({
         payoutBeneficiaryName: partner.payout_beneficiary_name || "",
@@ -29,7 +29,7 @@ export default function PartnerSettingsPage() {
         preferredLanguage: partner.preferred_language || "en",
       });
     }
-  });
+  }, [partner]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async () => {
@@ -61,14 +61,6 @@ export default function PartnerSettingsPage() {
     );
   }
 
-  // Sync form data when partner loads
-  if (partner && !formData.payoutBeneficiaryName && partner.payout_beneficiary_name) {
-    setFormData({
-      payoutBeneficiaryName: partner.payout_beneficiary_name || "",
-      payoutIban: partner.payout_iban || "",
-      preferredLanguage: partner.preferred_language || "en",
-    });
-  }
 
   return (
     <div className="space-y-6">
