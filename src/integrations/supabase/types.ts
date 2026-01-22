@@ -919,6 +919,242 @@ export type Database = {
           },
         ]
       }
+      partner_attributions: {
+        Row: {
+          created_at: string
+          first_touch_at: string
+          id: string
+          last_touch_at: string
+          member_id: string
+          partner_id: string
+          ref_param: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          first_touch_at?: string
+          id?: string
+          last_touch_at?: string
+          member_id: string
+          partner_id: string
+          ref_param?: string | null
+          source: string
+        }
+        Update: {
+          created_at?: string
+          first_touch_at?: string
+          id?: string
+          last_touch_at?: string
+          member_id?: string
+          partner_id?: string
+          ref_param?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_attributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_attributions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_commissions: {
+        Row: {
+          amount_eur: number
+          approved_at: string | null
+          cancel_reason: string | null
+          created_at: string
+          device_id: string | null
+          id: string
+          member_id: string
+          order_id: string | null
+          paid_at: string | null
+          partner_id: string
+          release_at: string | null
+          status: Database["public"]["Enums"]["commission_status"]
+          trigger_at: string | null
+          trigger_event: string
+        }
+        Insert: {
+          amount_eur?: number
+          approved_at?: string | null
+          cancel_reason?: string | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          member_id: string
+          order_id?: string | null
+          paid_at?: string | null
+          partner_id: string
+          release_at?: string | null
+          status?: Database["public"]["Enums"]["commission_status"]
+          trigger_at?: string | null
+          trigger_event?: string
+        }
+        Update: {
+          amount_eur?: number
+          approved_at?: string | null
+          cancel_reason?: string | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          member_id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          partner_id?: string
+          release_at?: string | null
+          status?: Database["public"]["Enums"]["commission_status"]
+          trigger_at?: string | null
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_invites: {
+        Row: {
+          channel: Database["public"]["Enums"]["invite_channel"]
+          converted_member_id: string | null
+          created_at: string
+          id: string
+          invitee_email: string | null
+          invitee_name: string
+          invitee_phone: string | null
+          metadata: Json | null
+          partner_id: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invite_status"]
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["invite_channel"]
+          converted_member_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_email?: string | null
+          invitee_name: string
+          invitee_phone?: string | null
+          metadata?: Json | null
+          partner_id: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["invite_channel"]
+          converted_member_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_email?: string | null
+          invitee_name?: string
+          invitee_phone?: string | null
+          metadata?: Json | null
+          partner_id?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_invites_converted_member_id_fkey"
+            columns: ["converted_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_invites_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          company_name: string | null
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          notes_internal: string | null
+          payout_beneficiary_name: string | null
+          payout_iban: string | null
+          payout_method: string
+          phone: string | null
+          preferred_language: string
+          referral_code: string
+          status: Database["public"]["Enums"]["partner_status"]
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          notes_internal?: string | null
+          payout_beneficiary_name?: string | null
+          payout_iban?: string | null
+          payout_method?: string
+          phone?: string | null
+          preferred_language?: string
+          referral_code: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notes_internal?: string | null
+          payout_beneficiary_name?: string | null
+          payout_iban?: string | null
+          payout_method?: string
+          phone?: string | null
+          preferred_language?: string
+          referral_code?: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -1377,11 +1613,13 @@ export type Database = {
     }
     Functions: {
       get_member_id: { Args: { _user_id: string }; Returns: string }
+      get_partner_id: { Args: { _user_id: string }; Returns: string }
       get_staff_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_partner: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
@@ -1395,10 +1633,13 @@ export type Database = {
         | "manual"
       app_role: "super_admin" | "admin" | "call_centre"
       billing_frequency: "monthly" | "annual"
+      commission_status: "pending_release" | "approved" | "paid" | "cancelled"
       communication_direction: "inbound" | "outbound"
       communication_type: "call_inbound" | "call_outbound" | "sms" | "whatsapp"
       device_config_status: "pending" | "configured" | "failed"
       device_status: "active" | "inactive" | "faulty" | "returned" | "in_stock"
+      invite_channel: "email" | "sms" | "whatsapp" | "link"
+      invite_status: "draft" | "sent" | "registered" | "converted" | "expired"
       member_status: "active" | "inactive" | "suspended"
       order_item_type:
         | "pendant"
@@ -1411,6 +1652,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
+      partner_status: "pending" | "active" | "suspended"
       payment_method: "stripe" | "bank_transfer" | "paypal"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       payment_type:
@@ -1569,10 +1811,13 @@ export const Constants = {
       ],
       app_role: ["super_admin", "admin", "call_centre"],
       billing_frequency: ["monthly", "annual"],
+      commission_status: ["pending_release", "approved", "paid", "cancelled"],
       communication_direction: ["inbound", "outbound"],
       communication_type: ["call_inbound", "call_outbound", "sms", "whatsapp"],
       device_config_status: ["pending", "configured", "failed"],
       device_status: ["active", "inactive", "faulty", "returned", "in_stock"],
+      invite_channel: ["email", "sms", "whatsapp", "link"],
+      invite_status: ["draft", "sent", "registered", "converted", "expired"],
       member_status: ["active", "inactive", "suspended"],
       order_item_type: [
         "pendant",
@@ -1587,6 +1832,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      partner_status: ["pending", "active", "suspended"],
       payment_method: ["stripe", "bank_transfer", "paypal"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       payment_type: [
