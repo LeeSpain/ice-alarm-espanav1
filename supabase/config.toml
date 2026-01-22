@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.save-registration-draft]
 verify_jwt = false
+
+[functions.partner-register]
+verify_jwt = false
+
+[functions.partner-verify]
+verify_jwt = false
