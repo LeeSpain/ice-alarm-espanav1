@@ -9,6 +9,7 @@ import { JoinWizardData, initialJoinWizardData } from "@/types/wizard";
 import { Logo } from "@/components/ui/logo";
 import { toast } from "sonner";
 import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
+import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 
 // Step Components
 import { JoinMembershipStep } from "@/components/join/steps/JoinMembershipStep";
@@ -47,16 +48,16 @@ export default function JoinWizard() {
   // Progressive save hook
   const { saveDraft, clearSession, isSaving } = useRegistrationDraft();
 
-  // Capture partner referral code from URL and store in localStorage
+  // Capture partner referral code and UTM params from URL
   useEffect(() => {
     const refCode = searchParams.get("ref");
     if (refCode) {
-      // Store referral code - first-touch wins, don't overwrite existing
-      const existingRef = localStorage.getItem(PARTNER_REF_KEY);
-      if (!existingRef) {
-        localStorage.setItem(PARTNER_REF_KEY, refCode);
-        console.log("Partner referral captured:", refCode);
-      }
+      // Extract UTM parameters if present
+      const utmParams = extractUtmParams(searchParams);
+      
+      // Store referral code and UTM data - first-touch wins, don't overwrite existing
+      storeReferralData(refCode, utmParams);
+      console.log("Partner referral captured:", refCode, utmParams);
     }
   }, [searchParams]);
 
