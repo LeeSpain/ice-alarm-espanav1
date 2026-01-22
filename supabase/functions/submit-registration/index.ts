@@ -56,6 +56,7 @@ interface RegistrationRequest {
   includePendant: boolean;
   pendantCount: number;
   billingFrequency: "monthly" | "annual";
+  partnerRef?: string; // Partner referral code for attribution
 }
 
 // Pricing constants (NET prices)
@@ -370,6 +371,84 @@ serve(async (req) => {
     }
 
     console.log("Payment created:", paymentData.id);
+
+    // 11. Handle partner attribution if referral code provided
+    let attributionId = null;
+    if (body.partnerRef) {
+      console.log("Processing partner attribution for ref:", body.partnerRef);
+      
+      // Find partner by referral code
+      const { data: partner, error: partnerError } = await supabase
+        .from("partners")
+        .select("id, status")
+        .eq("referral_code", body.partnerRef)
+        .eq("status", "active")
+        .single();
+
+      if (partner && !partnerError) {
+        // Check if attribution already exists (first-touch wins)
+        const { data: existingAttribution } = await supabase
+          .from("partner_attributions")
+          .select("id")
+          .eq("member_id", primaryMemberData.id)
+          .maybeSingle();
+
+        if (!existingAttribution) {
+          // Create attribution
+          const now = new Date().toISOString();
+          const { data: attribution, error: attrError } = await supabase
+            .from("partner_attributions")
+            .insert({
+              partner_id: partner.id,
+              member_id: primaryMemberData.id,
+              source: "ref_link",
+              ref_param: body.partnerRef,
+              first_touch_at: now,
+              last_touch_at: now,
+            })
+            .select()
+            .single();
+
+          if (attrError) {
+            console.error("Error creating attribution:", attrError);
+          } else {
+            attributionId = attribution.id;
+            console.log("Partner attribution created:", attributionId);
+
+            // Update any matching partner invite (by email or phone)
+            const { error: inviteError } = await supabase
+              .from("partner_invites")
+              .update({
+                status: "registered",
+                converted_member_id: primaryMemberData.id,
+              })
+              .eq("partner_id", partner.id)
+              .or(`invitee_email.eq.${body.primaryMember.email},invitee_phone.eq.${body.primaryMember.phone}`)
+              .in("status", ["sent", "draft"]);
+
+            if (inviteError) {
+              console.error("Error updating invite:", inviteError);
+            }
+
+            // Log audit event
+            await supabase.from("activity_logs").insert({
+              action: "attribution_created",
+              entity_type: "partner_attribution",
+              entity_id: attributionId,
+              new_values: {
+                partner_id: partner.id,
+                member_id: primaryMemberData.id,
+                referral_code: body.partnerRef,
+              },
+            });
+          }
+        } else {
+          console.log("Attribution already exists for member, skipping (first-touch wins)");
+        }
+      } else {
+        console.log("Partner not found or inactive for ref:", body.partnerRef);
+      }
+    }
 
     // Return all IDs needed for checkout
     return new Response(

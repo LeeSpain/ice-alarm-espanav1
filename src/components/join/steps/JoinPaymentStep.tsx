@@ -26,11 +26,16 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   
   const total = order.grandTotal;
 
+  const PARTNER_REF_KEY = "partner_ref";
+
   const handlePayWithStripe = async () => {
     setIsProcessing(true);
     setError(null);
 
     try {
+      // Get stored partner referral code if any
+      const partnerRef = localStorage.getItem(PARTNER_REF_KEY);
+
       // Step 1: Submit registration data to create DB records
       const { data: registrationResult, error: registrationError } = await supabase.functions.invoke(
         "submit-registration",
@@ -46,6 +51,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
             includePendant: data.includePendant,
             pendantCount: order.pendantCount,
             billingFrequency: data.billingFrequency,
+            partnerRef: partnerRef, // Pass partner referral code for attribution
           },
         }
       );
@@ -100,6 +106,9 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
 
       // Notify parent that payment was initiated
       onPaymentInitiated();
+
+      // Clear partner ref after successful registration (attribution is done)
+      localStorage.removeItem(PARTNER_REF_KEY);
 
       // Redirect to Stripe Checkout
       window.location.href = checkoutResult.url;
