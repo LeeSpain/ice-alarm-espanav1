@@ -15,7 +15,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { CallCentreLayout } from "@/components/layout/CallCentreLayout";
 import { ClientLayout } from "@/components/layout/ClientLayout";
-import { PartnerLayout } from "./components/layout/PartnerLayout";
+import { PartnerLayout } from "@/components/layout/PartnerLayout";
 
 // Public Pages - Lazy loaded
 const Index = lazy(() => import("./pages/Index"));
