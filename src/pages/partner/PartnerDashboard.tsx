@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Copy, Link } from "lucide-react";
 import { toast } from "sonner";
+import { generateReferralLink } from "@/lib/crmEvents";
 
 export default function PartnerDashboard() {
   const { data: partner, isLoading: partnerLoading } = usePartnerData();
   const { data: stats, isLoading: statsLoading } = usePartnerStats(partner?.id);
 
   const referralLink = partner
-    ? `${window.location.origin}/join?ref=${partner.referral_code}`
+    ? generateReferralLink(partner.referral_code)
     : "";
 
   const copyReferralLink = () => {

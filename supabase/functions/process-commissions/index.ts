@@ -153,6 +153,18 @@ Deno.serve(async (req) => {
             new_values: { approved_at: now },
           });
 
+          // Log CRM event
+          await supabase.from("crm_events").insert({
+            event_type: "commission_approved",
+            payload: {
+              commission_id: commission.id,
+              partner_id: commission.partner_id,
+              member_id: commission.member_id,
+              amount_eur: commission.amount_eur,
+              approved_at: now,
+            },
+          });
+
           approved++;
         }
       } catch (error) {

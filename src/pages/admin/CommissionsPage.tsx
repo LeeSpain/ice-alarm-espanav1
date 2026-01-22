@@ -11,6 +11,7 @@ import { DollarSign, Filter, Search, CheckCircle, RefreshCw, ChevronLeft, Chevro
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { logCommissionActivity } from "@/lib/auditLog";
+import { logCrmEvent } from "@/lib/crmEvents";
 import { Database } from "@/integrations/supabase/types";
 
 type CommissionStatus = Database["public"]["Enums"]["commission_status"];
@@ -134,6 +135,16 @@ export default function CommissionsPage() {
   const markAsPaid = useMutation({
     mutationFn: async (commissionId: string) => {
       const now = new Date().toISOString();
+      
+      // Get commission details first for CRM event
+      const { data: commission, error: fetchError } = await supabase
+        .from("partner_commissions")
+        .select("partner_id, member_id, amount_eur")
+        .eq("id", commissionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
       const { error } = await supabase
         .from("partner_commissions")
         .update({ status: "paid", paid_at: now })
@@ -142,6 +153,16 @@ export default function CommissionsPage() {
       if (error) throw error;
 
       await logCommissionActivity("commission_paid", commissionId, undefined, { paid_at: now });
+      
+      // Log CRM event
+      await logCrmEvent("commission_paid", {
+        commission_id: commissionId,
+        partner_id: commission.partner_id,
+        member_id: commission.member_id,
+        amount_eur: commission.amount_eur,
+        paid_at: now,
+      });
+      
       return commissionId;
     },
     onSuccess: () => {
