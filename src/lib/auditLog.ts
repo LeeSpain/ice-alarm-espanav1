@@ -1,7 +1,37 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type EntityType = "member" | "device" | "alert" | "subscription" | "order" | "payment" | "staff" | "settings";
-type ActionType = "create" | "update" | "delete" | "view" | "claim" | "resolve" | "escalate" | "login" | "logout";
+type EntityType = 
+  | "member" 
+  | "device" 
+  | "alert" 
+  | "subscription" 
+  | "order" 
+  | "payment" 
+  | "staff" 
+  | "settings"
+  | "partner"
+  | "partner_invite"
+  | "partner_attribution"
+  | "partner_commission";
+
+type ActionType = 
+  | "create" 
+  | "update" 
+  | "delete" 
+  | "view" 
+  | "claim" 
+  | "resolve" 
+  | "escalate" 
+  | "login" 
+  | "logout"
+  | "partner_created"
+  | "partner_status_changed"
+  | "invite_sent"
+  | "attribution_created"
+  | "commission_created"
+  | "commission_approved"
+  | "commission_paid"
+  | "commission_cancelled";
 
 interface AuditLogEntry {
   action: ActionType;
@@ -117,5 +147,59 @@ export async function logSettingsActivity(
     entityId: settingKey,
     oldValues: oldValue ? { value: oldValue } : undefined,
     newValues: newValue ? { value: newValue } : undefined,
+  });
+}
+
+/**
+ * Log a partner-related action
+ */
+export async function logPartnerActivity(
+  action: ActionType,
+  partnerId: string,
+  oldValues?: Record<string, unknown>,
+  newValues?: Record<string, unknown>
+): Promise<void> {
+  return logActivity({
+    action,
+    entityType: "partner",
+    entityId: partnerId,
+    oldValues,
+    newValues,
+  });
+}
+
+/**
+ * Log a partner invite action
+ */
+export async function logPartnerInviteActivity(
+  action: ActionType,
+  inviteId: string,
+  oldValues?: Record<string, unknown>,
+  newValues?: Record<string, unknown>
+): Promise<void> {
+  return logActivity({
+    action,
+    entityType: "partner_invite",
+    entityId: inviteId,
+    oldValues,
+    newValues,
+  });
+}
+
+/**
+ * Log a partner commission action
+ */
+export async function logCommissionActivity(
+  action: ActionType,
+  commissionId: string,
+  oldValues?: Record<string, unknown>,
+  newValues?: Record<string, unknown>
+): Promise<void> {
+  return logActivity({
+    action,
+    entityType: "partner_commission",
+    entityId: commissionId,
+    oldValues,
+    newValues,
   });
 }

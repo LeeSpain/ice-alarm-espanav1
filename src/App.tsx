@@ -47,6 +47,13 @@ import AdminTicketsPage from "./pages/admin/TicketsPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import MemberDetailPage from "./pages/admin/MemberDetailPage";
 import AddMemberWizard from "./pages/admin/AddMemberWizard";
+import PartnersPage from "./pages/admin/PartnersPage";
+import PartnerDetailPage from "./pages/admin/PartnerDetailPage";
+
+// Partner Pages
+import PartnerOnboarding from "./pages/partner/PartnerOnboarding";
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import { PartnerLayout } from "./components/layout/PartnerLayout";
 
 // Call Centre Pages
 import StaffDashboard from "./pages/call-centre/StaffDashboard";
@@ -117,6 +124,23 @@ const App = () => (
               <Route path="leads" element={<LeadsPage />} />
               <Route path="members/new" element={<AddMemberWizard />} />
               <Route path="members/:id" element={<MemberDetailPage />} />
+              <Route path="partners" element={<PartnersPage />} />
+              <Route path="partners/:id" element={<PartnerDetailPage />} />
+            </Route>
+
+            {/* Partner Onboarding (Public) */}
+            <Route path="/partner" element={<PartnerOnboarding />} />
+
+            {/* Partner Dashboard Routes - Require Partner Role */}
+            <Route
+              path="/partner-dashboard"
+              element={
+                <ProtectedRoute>
+                  <PartnerLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<PartnerDashboard />} />
             </Route>
 
             {/* Call Centre Dashboard Routes - Require Staff Role */}

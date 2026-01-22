@@ -11,13 +11,14 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
+  ChevronDown,
   Menu,
-  X,
   MessageSquare,
   CheckSquare,
-  UserPlus,
   Ticket,
-  Contact
+  Contact,
+  Wallet,
+  Handshake
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -36,6 +37,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -44,14 +50,32 @@ interface MenuItem {
   superAdminOnly?: boolean;
 }
 
-const menuItems: MenuItem[] = [
+interface MenuGroup {
+  icon: React.ElementType;
+  label: string;
+  items: MenuItem[];
+  superAdminOnly?: boolean;
+}
+
+const mainMenuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: Contact, label: "Leads", path: "/admin/leads" },
   { icon: Users, label: "Members", path: "/admin/members" },
   { icon: Smartphone, label: "Devices", path: "/admin/devices" },
-  { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-  { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
-  { icon: DollarSign, label: "Payments", path: "/admin/payments" },
+];
+
+const financeGroup: MenuGroup = {
+  icon: Wallet,
+  label: "Finance",
+  items: [
+    { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
+    { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
+    { icon: DollarSign, label: "Payments", path: "/admin/payments" },
+  ],
+};
+
+const secondaryMenuItems: MenuItem[] = [
+  { icon: Handshake, label: "Partners", path: "/admin/partners" },
   { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
   { icon: Bell, label: "Alerts", path: "/admin/alerts" },
   { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" },
@@ -64,9 +88,22 @@ const menuItems: MenuItem[] = [
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [financeOpen, setFinanceOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, staffRole } = useAuth();
+
+  // Check if any finance route is active
+  const isFinanceActive = financeGroup.items.some(
+    item => location.pathname === item.path || location.pathname.startsWith(item.path + "/")
+  );
+
+  // Auto-expand finance when a child route is active
+  useEffect(() => {
+    if (isFinanceActive) {
+      setFinanceOpen(true);
+    }
+  }, [isFinanceActive]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -78,12 +115,136 @@ export function AdminSidebar() {
     navigate("/staff/login");
   };
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (item.superAdminOnly && staffRole !== "super_admin") {
-      return false;
+  const filterByRole = (items: MenuItem[]) => 
+    items.filter(item => {
+      if (item.superAdminOnly && staffRole !== "super_admin") {
+        return false;
+      }
+      return true;
+    });
+
+  const renderMenuItem = (item: MenuItem, isMobile: boolean) => {
+    const isActive = location.pathname === item.path || 
+      (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"));
+    const Icon = item.icon;
+    
+    const linkContent = (
+      <NavLink
+        to={item.path}
+        onClick={() => isMobile && setMobileOpen(false)}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          isActive 
+            ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+            : "text-sidebar-foreground",
+          !isMobile && collapsed && "justify-center px-2"
+        )}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
+        {(isMobile || !collapsed) && <span>{item.label}</span>}
+      </NavLink>
+    );
+
+    if (!isMobile && collapsed) {
+      return (
+        <li key={item.path}>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              {linkContent}
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              {item.label}
+            </TooltipContent>
+          </Tooltip>
+        </li>
+      );
     }
-    return true;
-  });
+
+    return <li key={item.path}>{linkContent}</li>;
+  };
+
+  const renderFinanceGroup = (isMobile: boolean) => {
+    const Icon = financeGroup.icon;
+    
+    // Collapsed desktop: show single icon with tooltip
+    if (!isMobile && collapsed) {
+      return (
+        <li>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setFinanceOpen(!financeOpen)}
+                className={cn(
+                  "flex items-center justify-center w-full rounded-lg px-2 py-2.5 text-sm font-medium transition-all",
+                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  isFinanceActive 
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                    : "text-sidebar-foreground"
+                )}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              {financeGroup.label}
+            </TooltipContent>
+          </Tooltip>
+        </li>
+      );
+    }
+
+    // Expanded: show collapsible group
+    return (
+      <li>
+        <Collapsible open={financeOpen} onOpenChange={setFinanceOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                isFinanceActive 
+                  ? "text-sidebar-primary-foreground" 
+                  : "text-sidebar-foreground"
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              <span className="flex-1 text-left">{financeGroup.label}</span>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                financeOpen && "rotate-180"
+              )} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pl-4 mt-1 space-y-1">
+            {financeGroup.items.map((item) => {
+              const isActive = location.pathname === item.path || 
+                location.pathname.startsWith(item.path + "/");
+              const ItemIcon = item.icon;
+              
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => isMobile && setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isActive 
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                      : "text-sidebar-foreground"
+                  )}
+                >
+                  <ItemIcon className="h-4 w-4 shrink-0" />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
+      </li>
+    );
+  };
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
@@ -98,46 +259,14 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
-          {filteredMenuItems.map((item) => {
-            const isActive = location.pathname === item.path || 
-              (item.path !== "/admin" && location.pathname.startsWith(item.path));
-            const Icon = item.icon;
-            
-            const linkContent = (
-              <NavLink
-                to={item.path}
-                onClick={() => isMobile && setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isActive 
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-                    : "text-sidebar-foreground",
-                  !isMobile && collapsed && "justify-center px-2"
-                )}
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                {(isMobile || !collapsed) && <span>{item.label}</span>}
-              </NavLink>
-            );
-
-            if (!isMobile && collapsed) {
-              return (
-                <li key={item.path}>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      {linkContent}
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="font-medium">
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
-                </li>
-              );
-            }
-
-            return <li key={item.path}>{linkContent}</li>;
-          })}
+          {/* Main menu items */}
+          {filterByRole(mainMenuItems).map((item) => renderMenuItem(item, isMobile))}
+          
+          {/* Finance group */}
+          {renderFinanceGroup(isMobile)}
+          
+          {/* Secondary menu items */}
+          {filterByRole(secondaryMenuItems).map((item) => renderMenuItem(item, isMobile))}
         </ul>
       </nav>
 
