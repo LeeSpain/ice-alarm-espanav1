@@ -21,6 +21,8 @@ import { PartnerLayout } from "@/components/layout/PartnerLayout";
 const Index = lazy(() => import("./pages/Index"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PendantPage = lazy(() => import("./pages/PendantPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Join Flow - Lazy loaded
@@ -119,6 +121,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/pendant" element={<PendantPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/join" element={<JoinWizard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/staff/login" element={<StaffLogin />} />
