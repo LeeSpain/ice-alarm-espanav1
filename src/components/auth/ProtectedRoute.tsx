@@ -20,6 +20,9 @@ export function ProtectedRoute({
   const { user, isLoading, isStaff, staffRole, memberId, isPartner } = useAuth();
   const location = useLocation();
 
+  // Check if user is admin or super_admin
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,6 +41,11 @@ export function ProtectedRoute({
       return <Navigate to="/partner/login" state={{ from: location }} replace />;
     }
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // ADMIN OVERRIDE: Admins have access to ALL pages
+  if (isAdminRole) {
+    return <>{children}</>;
   }
 
   // Partner trying to access admin or member routes
