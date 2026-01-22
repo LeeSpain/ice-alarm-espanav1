@@ -272,26 +272,11 @@ export default function StaffDashboard() {
   };
 
   const fetchBirthdays = async () => {
-    // Get today's month and day
-    const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
+    // Use optimized database function instead of loading all members
+    const { data, error } = await supabase.rpc('get_todays_birthdays');
     
-    // Query members whose date_of_birth matches today's month and day
-    // We'll fetch all members and filter client-side since Supabase doesn't have a native way to extract month/day
-    const { data } = await supabase
-      .from('members')
-      .select('id, first_name, last_name, date_of_birth, phone')
-      .eq('status', 'active');
-
-    if (data) {
-      const birthdayMembers = data.filter((member) => {
-        if (!member.date_of_birth) return false;
-        const dob = new Date(member.date_of_birth);
-        return (dob.getMonth() + 1).toString().padStart(2, '0') === month &&
-               dob.getDate().toString().padStart(2, '0') === day;
-      });
-      setBirthdays(birthdayMembers);
+    if (!error && data) {
+      setBirthdays(data);
     }
   };
 
