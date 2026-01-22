@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { logMemberActivity } from "@/lib/auditLog";
+import { PartnerAttributionCard } from "./PartnerAttributionCard";
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -112,11 +113,15 @@ export function ProfileTab({ member, onUpdate }: ProfileTabProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Member Profile</CardTitle>
-        <CardDescription>Update member personal information and preferences.</CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      {/* Partner Attribution Card */}
+      <PartnerAttributionCard memberId={member.id} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Member Profile</CardTitle>
+          <CardDescription>Update member personal information and preferences.</CardDescription>
+        </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -361,5 +366,6 @@ export function ProfileTab({ member, onUpdate }: ProfileTabProps) {
         </Form>
       </CardContent>
     </Card>
+    </div>
   );
 }

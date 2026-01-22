@@ -34,6 +34,7 @@ const steps = [
 ];
 
 const WIZARD_STORAGE_KEY = "join_wizard_data";
+const PARTNER_REF_KEY = "partner_ref";
 
 export default function JoinWizard() {
   const navigate = useNavigate();
@@ -45,6 +46,19 @@ export default function JoinWizard() {
   
   // Progressive save hook
   const { saveDraft, clearSession, isSaving } = useRegistrationDraft();
+
+  // Capture partner referral code from URL and store in localStorage
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      // Store referral code - first-touch wins, don't overwrite existing
+      const existingRef = localStorage.getItem(PARTNER_REF_KEY);
+      if (!existingRef) {
+        localStorage.setItem(PARTNER_REF_KEY, refCode);
+        console.log("Partner referral captured:", refCode);
+      }
+    }
+  }, [searchParams]);
 
   // Handle return from Stripe checkout
   useEffect(() => {
