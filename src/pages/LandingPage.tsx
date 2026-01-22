@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck, MapPin, Zap, Radio, Battery, AlertCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useWebsiteImage } from "@/hooks/useWebsiteImage";
@@ -21,6 +22,16 @@ export default function LandingPage() {
   const { imageUrl: heroImage, isLoading: heroLoading } = useWebsiteImage("homepage_hero");
   const { imageUrl: pendantPromoImage, isLoading: promoLoading } = useWebsiteImage("homepage_pendant_promo");
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Capture partner referral code on landing
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      const utmParams = extractUtmParams(searchParams);
+      storeReferralData(refCode, utmParams);
+    }
+  }, [searchParams]);
 
   // Format phone for WhatsApp (remove spaces and + sign)
   const whatsappNumber = companySettings.emergency_phone.replace(/[\s+]/g, '');

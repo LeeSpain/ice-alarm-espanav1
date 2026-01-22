@@ -86,7 +86,7 @@ export function generateReferralLink(
     utm_campaign: referralCode,
     utm_medium: "referral",
   });
-  return `${base}/join?${params.toString()}`;
+  return `${base}/?${params.toString()}`;
 }
 
 /**
