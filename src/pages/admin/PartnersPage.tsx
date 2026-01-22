@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Users, DollarSign, Send, TrendingUp, ChevronLeft, ChevronRight, Package } from "lucide-react";
+import { Plus, Search, Users, DollarSign, Send, TrendingUp, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, isAfter } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
@@ -282,17 +282,18 @@ export default function PartnersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Partner</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Invites</TableHead>
-                  <TableHead className="text-center">Registered</TableHead>
-                  <TableHead className="text-center">Delivered</TableHead>
-                  <TableHead className="text-right">Pending</TableHead>
-                  <TableHead className="text-right">Approved</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead>Joined</TableHead>
-                </TableRow>
+                   <TableHead>Partner</TableHead>
+                   <TableHead>Code</TableHead>
+                   <TableHead>Status</TableHead>
+                   <TableHead className="text-center">Invites</TableHead>
+                   <TableHead className="text-center">Registered</TableHead>
+                   <TableHead className="text-center">Delivered</TableHead>
+                   <TableHead className="text-right">Pending</TableHead>
+                   <TableHead className="text-right">Approved</TableHead>
+                   <TableHead className="text-right">Paid</TableHead>
+                   <TableHead>Joined</TableHead>
+                   <TableHead className="w-[60px]"></TableHead>
+                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPartners?.map((partner) => {
@@ -348,6 +349,19 @@ export default function PartnersPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(partner.created_at), "dd MMM yy")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/partner-dashboard?partnerId=${partner.id}`);
+                          }}
+                          title="View Partner Dashboard"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
