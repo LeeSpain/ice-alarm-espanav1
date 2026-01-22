@@ -71,6 +71,7 @@ const financeGroup: MenuGroup = {
     { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
     { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
     { icon: DollarSign, label: "Payments", path: "/admin/payments" },
+    { icon: DollarSign, label: "Commissions", path: "/admin/commissions" },
   ],
 };
 
