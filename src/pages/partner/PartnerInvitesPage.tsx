@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +45,18 @@ El servicio incluye un colgante GPS que te conecta con un centro de respuesta de
 
 export default function PartnerInvitesPage() {
   const queryClient = useQueryClient();
-  const { data: partner, isLoading: partnerLoading } = usePartnerData();
+  const { isStaff, staffRole } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Admin view mode detection
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const partnerIdParam = searchParams.get("partnerId");
+  const isAdminViewMode = isAdminRole && !!partnerIdParam;
+
+  const { data: partner, isLoading: partnerLoading } = usePartnerData(
+    isAdminViewMode ? partnerIdParam : undefined
+  );
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     inviteeName: "",
@@ -179,149 +192,158 @@ export default function PartnerInvitesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Invites</h1>
           <p className="text-muted-foreground">
-            Share your referral link and track your invitations
+            {isAdminViewMode 
+              ? `Viewing ${partner?.contact_name}'s invites`
+              : "Share your referral link and track your invitations"
+            }
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Send Invite
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Send New Invite</DialogTitle>
-              <DialogDescription>
-                Send a personalized invitation to a potential customer
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="inviteeName">Name *</Label>
-                <Input
-                  id="inviteeName"
-                  value={formData.inviteeName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, inviteeName: e.target.value })
-                  }
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="channel">Channel *</Label>
-                  <Select
-                    value={formData.channel}
-                    onValueChange={(value: InviteChannel) =>
-                      setFormData({ ...formData, channel: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="sms">SMS</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="language">Language</Label>
-                  <Select
-                    value={formData.language}
-                    onValueChange={handleLanguageChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {formData.channel === "email" ? (
-                <div>
-                  <Label htmlFor="inviteeEmail">Email *</Label>
-                  <Input
-                    id="inviteeEmail"
-                    type="email"
-                    value={formData.inviteeEmail}
-                    onChange={(e) =>
-                      setFormData({ ...formData, inviteeEmail: e.target.value })
-                    }
-                    placeholder="john@example.com"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="inviteePhone">Phone Number *</Label>
-                  <Input
-                    id="inviteePhone"
-                    type="tel"
-                    value={formData.inviteePhone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, inviteePhone: e.target.value })
-                    }
-                    placeholder="+34 600 000 000"
-                  />
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  rows={6}
-                  value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use {"{referral_link}"} to insert your referral link
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+        {/* Only show send invite button if not in admin view mode */}
+        {!isAdminViewMode && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Send Invite
               </Button>
-              <Button
-                onClick={() => sendInviteMutation.mutate()}
-                disabled={
-                  sendInviteMutation.isPending ||
-                  !formData.inviteeName ||
-                  (formData.channel === "email" && !formData.inviteeEmail) ||
-                  (formData.channel !== "email" && !formData.inviteePhone)
-                }
-              >
-                {sendInviteMutation.isPending ? (
-                  "Sending..."
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Send New Invite</DialogTitle>
+                <DialogDescription>
+                  Send a personalized invitation to a potential customer
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="inviteeName">Name *</Label>
+                  <Input
+                    id="inviteeName"
+                    value={formData.inviteeName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, inviteeName: e.target.value })
+                    }
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="channel">Channel *</Label>
+                    <Select
+                      value={formData.channel}
+                      onValueChange={(value: InviteChannel) =>
+                        setFormData({ ...formData, channel: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="sms">SMS</SelectItem>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="language">Language</Label>
+                    <Select
+                      value={formData.language}
+                      onValueChange={handleLanguageChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {formData.channel === "email" ? (
+                  <div>
+                    <Label htmlFor="inviteeEmail">Email *</Label>
+                    <Input
+                      id="inviteeEmail"
+                      type="email"
+                      value={formData.inviteeEmail}
+                      onChange={(e) =>
+                        setFormData({ ...formData, inviteeEmail: e.target.value })
+                      }
+                      placeholder="john@example.com"
+                    />
+                  </div>
                 ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Invite
-                  </>
+                  <div>
+                    <Label htmlFor="inviteePhone">Phone Number *</Label>
+                    <Input
+                      id="inviteePhone"
+                      type="tel"
+                      value={formData.inviteePhone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, inviteePhone: e.target.value })
+                      }
+                      placeholder="+34 600 000 000"
+                    />
+                  </div>
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+                <div>
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    rows={6}
+                    value={formData.message}
+                    onChange={(e) =>
+                      setFormData({ ...formData, message: e.target.value })
+                    }
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Use {"{referral_link}"} to insert your referral link
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => sendInviteMutation.mutate()}
+                  disabled={
+                    sendInviteMutation.isPending ||
+                    !formData.inviteeName ||
+                    (formData.channel === "email" && !formData.inviteeEmail) ||
+                    (formData.channel !== "email" && !formData.inviteePhone)
+                  }
+                >
+                  {sendInviteMutation.isPending ? (
+                    "Sending..."
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Invite
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
-      {/* Referral Link Card */}
+      {/* Referral Link Card - read-only for admins */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Referral Link</CardTitle>
+          <CardTitle>Referral Link</CardTitle>
           <CardDescription>
-            Share this link to earn commissions on every successful referral
+            {isAdminViewMode 
+              ? `${partner?.contact_name}'s referral link`
+              : "Share this link to earn commissions on every successful referral"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -334,16 +356,18 @@ export default function PartnerInvitesPage() {
             </Button>
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={shareViaWhatsApp}>
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Share via WhatsApp
-            </Button>
-            <Button variant="outline" onClick={shareViaEmail}>
-              <Mail className="h-4 w-4 mr-2" />
-              Share via Email
-            </Button>
-          </div>
+          {!isAdminViewMode && (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={shareViaWhatsApp}>
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Share via WhatsApp
+              </Button>
+              <Button variant="outline" onClick={shareViaEmail}>
+                <Mail className="h-4 w-4 mr-2" />
+                Share via Email
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -351,7 +375,7 @@ export default function PartnerInvitesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Sent Invites</CardTitle>
-          <CardDescription>Track the status of your invitations</CardDescription>
+          <CardDescription>Track the status of invitations</CardDescription>
         </CardHeader>
         <CardContent>
           {invitesLoading ? (
@@ -364,7 +388,9 @@ export default function PartnerInvitesPage() {
             <div className="text-center py-8 text-muted-foreground">
               <Send className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No invites sent yet</p>
-              <p className="text-sm">Start inviting people to earn commissions!</p>
+              {!isAdminViewMode && (
+                <p className="text-sm">Start inviting people to earn commissions!</p>
+              )}
             </div>
           ) : (
             <Table>

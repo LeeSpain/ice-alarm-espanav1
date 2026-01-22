@@ -13,8 +13,10 @@ interface AuthContextType {
   memberId: string | null;
   partnerId: string | null;
   isPartner: boolean;
+  roleLoadFailed: boolean;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  retryRoleLoad: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [isPartner, setIsPartner] = useState(false);
+  const [roleLoadFailed, setRoleLoadFailed] = useState(false);
 
   const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
     return await Promise.race([
@@ -45,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMemberId(null);
     setPartnerId(null);
     setIsPartner(false);
+    setRoleLoadFailed(false);
 
     try {
       // Prefer SECURITY DEFINER RPCs to avoid RLS issues when determining role.
@@ -92,15 +96,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // User exists but is neither staff, partner, nor member yet
     } catch (error) {
       console.error("Error fetching user role:", error);
+      setRoleLoadFailed(true);
     }
   };
 
   const refreshAuth = async () => {
+    setRoleLoadFailed(false);
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
     setUser(session?.user ?? null);
     if (session?.user) {
-      await fetchUserRole(session.user.id);
+      try {
+        await withTimeout(fetchUserRole(session.user.id), 8000);
+      } catch (e) {
+        console.error("[AuthContext] Role fetch failed on refresh:", e);
+        setRoleLoadFailed(true);
+      }
+    }
+  };
+
+  const retryRoleLoad = async () => {
+    if (user) {
+      setIsLoading(true);
+      setRoleLoadFailed(false);
+      try {
+        await withTimeout(fetchUserRole(user.id), 8000);
+      } catch (e) {
+        console.error("[AuthContext] Role fetch failed on retry:", e);
+        setRoleLoadFailed(true);
+      }
+      setIsLoading(false);
     }
   };
 
@@ -122,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await withTimeout(fetchUserRole(session.user.id), 8000);
           } catch (e) {
             console.error("[AuthContext] Role fetch failed:", e);
+            if (isMounted) setRoleLoadFailed(true);
           }
         } else {
           setIsStaff(false);
@@ -153,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await withTimeout(fetchUserRole(session.user.id), 8000);
         } catch (e) {
           console.error("[AuthContext] Role fetch failed:", e);
+          if (isMounted) setRoleLoadFailed(true);
         }
       }
       
@@ -180,6 +207,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsPartner(false);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setIsStaff(false);
+    setStaffRole(null);
+    setMemberId(null);
+    setPartnerId(null);
+    setIsPartner(false);
+    setRoleLoadFailed(false);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -191,8 +230,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         memberId,
         partnerId,
         isPartner,
-        signOut,
+        roleLoadFailed,
+        signOut: handleSignOut,
         refreshAuth,
+        retryRoleLoad,
       }}
     >
       {children}

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DollarSign, Filter } from "lucide-react";
@@ -21,8 +22,18 @@ const statusColors: Record<CommissionStatus, string> = {
 };
 
 export default function PartnerCommissionsPage() {
-  const { data: partner, isLoading: partnerLoading } = usePartnerData();
+  const { isStaff, staffRole } = useAuth();
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<CommissionStatus | "all">("all");
+
+  // Admin view mode detection
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const partnerIdParam = searchParams.get("partnerId");
+  const isAdminViewMode = isAdminRole && !!partnerIdParam;
+
+  const { data: partner, isLoading: partnerLoading } = usePartnerData(
+    isAdminViewMode ? partnerIdParam : undefined
+  );
 
   const { data: commissions, isLoading: commissionsLoading } = useQuery({
     queryKey: ["partner-commissions", partner?.id, statusFilter],
@@ -69,7 +80,10 @@ export default function PartnerCommissionsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Commissions</h1>
         <p className="text-muted-foreground">
-          Track your earnings from successful referrals
+          {isAdminViewMode 
+            ? `Viewing ${partner?.contact_name}'s commissions`
+            : "Track your earnings from successful referrals"
+          }
         </p>
       </div>
 
@@ -127,7 +141,7 @@ export default function PartnerCommissionsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Commission History</CardTitle>
-              <CardDescription>All your referral commissions</CardDescription>
+              <CardDescription>All referral commissions</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -161,7 +175,7 @@ export default function PartnerCommissionsPage() {
               <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No commissions yet</p>
               <p className="text-sm">
-                Commissions are created when your referrals receive their pendant
+                Commissions are created when referrals receive their pendant
               </p>
             </div>
           ) : (
