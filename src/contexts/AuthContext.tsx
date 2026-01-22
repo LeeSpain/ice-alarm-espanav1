@@ -30,10 +30,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isPartner, setIsPartner] = useState(false);
 
   const fetchUserRole = async (userId: string) => {
+    // Clear previous role state first to avoid stale data when switching accounts
+    setIsStaff(false);
+    setStaffRole(null);
+    setMemberId(null);
+    setPartnerId(null);
+    setIsPartner(false);
+
     try {
       // Prefer SECURITY DEFINER RPCs to avoid RLS issues when determining role.
-      // NOTE: We pass the userId explicitly (instead of relying on auth.uid())
-      // because these RPCs are designed to accept a _user_id argument.
       const [isStaffRes, roleRes, isPartnerRes, partnerIdRes, memberIdRes] = await Promise.all([
         supabase.rpc("is_staff", { _user_id: userId }),
         supabase.rpc("get_staff_role", { _user_id: userId }),
@@ -47,6 +52,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isPartner = Boolean(isPartnerRes.data);
       const partnerId = (partnerIdRes.data as string | null) ?? null;
       const memberId = (memberIdRes.data as string | null) ?? null;
+
+      // Debug logging - can remove after confirming fix
+      console.log("[AuthContext] Role fetch results:", {
+        userId,
+        isStaff,
+        staffRole,
+        isPartner,
+        partnerId,
+        memberId,
+      });
 
       if (isStaff && staffRole) {
         setIsStaff(true);
@@ -76,18 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // User exists but is neither staff, partner, nor member yet
-      setIsStaff(false);
-      setStaffRole(null);
-      setMemberId(null);
-      setPartnerId(null);
-      setIsPartner(false);
     } catch (error) {
       console.error("Error fetching user role:", error);
-      setIsStaff(false);
-      setStaffRole(null);
-      setMemberId(null);
-      setPartnerId(null);
-      setIsPartner(false);
     }
   };
 
@@ -101,15 +106,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
+        console.log("[AuthContext] Auth state changed:", event);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Use setTimeout to avoid potential race conditions
-          setTimeout(() => fetchUserRole(session.user.id), 0);
+          // CRITICAL: Await role fetch before setting isLoading to false
+          await fetchUserRole(session.user.id);
         } else {
           setIsStaff(false);
           setStaffRole(null);
@@ -117,21 +127,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPartnerId(null);
           setIsPartner(false);
         }
-        setIsLoading(false);
+        
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        // CRITICAL: Await role fetch before setting isLoading to false
+        await fetchUserRole(session.user.id);
       }
-      setIsLoading(false);
-    });
+      
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
