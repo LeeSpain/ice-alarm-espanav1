@@ -29,10 +29,12 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { memberId } = useAuth();
-  const { data: profile, isLoading } = useMemberProfile();
+  const { memberId, isLoading: authLoading } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useMemberProfile();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+
+  const isLoading = authLoading || profileLoading;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -89,10 +91,18 @@ export default function ProfilePage() {
     );
   }
 
-  if (!profile) {
+  if (!profile && !isLoading) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Profile not found</p>
+        <p className="text-muted-foreground">Profile not found. Please contact support.</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

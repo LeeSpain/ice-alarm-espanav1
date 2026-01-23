@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Loader2, Plus, Send, MessageSquare, ArrowLeft,
@@ -44,10 +45,10 @@ interface Message {
 }
 
 export default function MessagesPage() {
+  const { memberId, isLoading: authLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [memberId, setMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,10 +58,8 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchMemberId();
-  }, []);
-
-  useEffect(() => {
+    if (authLoading) return;
+    
     if (memberId) {
       fetchConversations();
 
@@ -84,8 +83,11 @@ export default function MessagesPage() {
       return () => {
         supabase.removeChannel(channel);
       };
+    } else {
+      // No memberId and auth is done loading - set loading to false
+      setIsLoading(false);
     }
-  }, [memberId]);
+  }, [memberId, authLoading]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -121,21 +123,6 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const fetchMemberId = async () => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        const { data } = await supabase
-          .from("members")
-          .select("id")
-          .eq("user_id", userData.user.id)
-          .single();
-        setMemberId(data?.id || null);
-      }
-    } catch (error) {
-      console.error("Error fetching member:", error);
-    }
-  };
 
   const fetchConversations = async () => {
     if (!memberId) return;
