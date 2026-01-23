@@ -6,18 +6,19 @@ import {
   Search, 
   Plus, 
   Download, 
-  Filter, 
   MoreHorizontal,
   Eye,
   Edit,
   Trash2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Upload,
+  Contact
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -40,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -49,6 +51,8 @@ export default function MembersPage() {
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
+  const { staffRole } = useAuth();
+  const isSuperAdmin = staffRole === "super_admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-members", searchQuery, statusFilter, planFilter, page],
@@ -128,6 +132,22 @@ export default function MembersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {isSuperAdmin && (
+            <>
+              <Button variant="outline" asChild>
+                <Link to="/admin/crm-import">
+                  <Upload className="mr-2 h-4 w-4" />
+                  CRM Import
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/admin/crm-contacts">
+                  <Contact className="mr-2 h-4 w-4" />
+                  CRM Contacts
+                </Link>
+              </Button>
+            </>
+          )}
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
