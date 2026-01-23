@@ -5,11 +5,30 @@ import { ReferralPipeline } from "@/components/partner/ReferralPipeline";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Copy, Link, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Copy, Link, ArrowLeft, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { generateReferralLink } from "@/lib/crmEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
+
+// Mock data for template preview
+const MOCK_PARTNER = {
+  id: "template-preview",
+  contact_name: "Demo Partner",
+  referral_code: "DEMO2024",
+  company_name: "Demo Company Ltd",
+  email: "demo@partner.com",
+};
+
+const MOCK_STATS = {
+  totalInvitesSent: 24,
+  totalRegistrations: 12,
+  totalDelivered: 8,
+  pendingCommission: 240,
+  approvedCommission: 480,
+  paidCommission: 960,
+};
 
 export default function PartnerDashboard() {
   const { isStaff, staffRole } = useAuth();
@@ -18,43 +37,33 @@ export default function PartnerDashboard() {
 
   const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
   const partnerIdParam = searchParams.get("partnerId");
-
-  // Admin without partnerId param - show selection prompt
-  if (isAdminRole && !partnerIdParam) {
-    return (
-      <div className="flex items-center justify-center h-[50vh]">
-        <Card className="max-w-md text-center">
-          <CardHeader>
-            <CardTitle>Admin View Mode</CardTitle>
-            <CardDescription>
-              Select a partner from the Partners page to view their dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/admin/partners")}>
-              Go to Partners List
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const isTemplatePreview = isAdminRole && !partnerIdParam;
 
   const { data: partner, isLoading: partnerLoading } = usePartnerData(
     isAdminRole ? partnerIdParam : undefined
   );
-  const { data: stats, isLoading: statsLoading } = usePartnerStats(partner?.id);
+  const { data: stats, isLoading: statsLoading } = usePartnerStats(
+    isTemplatePreview ? undefined : partner?.id
+  );
 
-  const referralLink = partner
-    ? generateReferralLink(partner.referral_code)
+  // Use mock data for template preview
+  const displayPartner = isTemplatePreview ? MOCK_PARTNER : partner;
+  const displayStats = isTemplatePreview ? MOCK_STATS : stats;
+
+  const referralLink = displayPartner
+    ? generateReferralLink(displayPartner.referral_code)
     : "";
 
   const copyReferralLink = () => {
+    if (isTemplatePreview) {
+      toast.info("This is a template preview - referral link is for demo only");
+      return;
+    }
     navigator.clipboard.writeText(referralLink);
     toast.success("Referral link copied to clipboard!");
   };
 
-  if (partnerLoading) {
+  if (!isTemplatePreview && partnerLoading) {
     return (
       <div className="space-y-6">
         {/* Header skeleton */}
@@ -80,7 +89,7 @@ export default function PartnerDashboard() {
     );
   }
 
-  if (!partner) {
+  if (!isTemplatePreview && !partner) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Card className="max-w-md text-center">
@@ -97,8 +106,26 @@ export default function PartnerDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Admin viewing mode banner */}
-      {isAdminRole && partnerIdParam && (
+      {/* Template Preview Banner */}
+      {isTemplatePreview && (
+        <div className="flex items-center gap-4 p-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg">
+          <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Template Preview Mode
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              This shows the dashboard layout with demo data. Changes made here will apply to all partner dashboards.
+            </p>
+          </div>
+          <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200">
+            Demo Data
+          </Badge>
+        </div>
+      )}
+
+      {/* Admin viewing specific partner banner */}
+      {isAdminRole && partnerIdParam && partner && (
         <div className="flex items-center gap-4 p-4 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
           <Button 
             variant="outline" 
@@ -117,7 +144,7 @@ export default function PartnerDashboard() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {partner.contact_name}
+          Welcome back, {displayPartner?.contact_name}
         </p>
       </div>
 
@@ -141,16 +168,30 @@ export default function PartnerDashboard() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Referral Code: <strong>{partner.referral_code}</strong>
+            Referral Code: <strong>{displayPartner?.referral_code}</strong>
           </p>
         </CardContent>
       </Card>
 
       {/* Stats Cards */}
-      <StatsCards stats={stats} isLoading={statsLoading} />
+      <StatsCards stats={displayStats} isLoading={!isTemplatePreview && statsLoading} />
 
-      {/* Referral Pipeline */}
-      <ReferralPipeline partnerId={partner.id} />
+      {/* Referral Pipeline - show empty state for template preview */}
+      {isTemplatePreview ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Referral Pipeline</CardTitle>
+            <CardDescription>Track your referrals through each stage</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Pipeline data will appear here for actual partners</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <ReferralPipeline partnerId={partner!.id} />
+      )}
     </div>
   );
 }
