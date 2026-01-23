@@ -23,9 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImageUploadCard } from "@/components/admin/settings/ImageUploadCard";
-import { useWebsiteImages } from "@/hooks/useWebsiteImage";
-import { WEBSITE_IMAGE_CONFIGS } from "@/config/websiteImages";
+import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
 
 interface SystemSetting {
   key: string;
@@ -727,50 +725,8 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Images Tab */}
-        <ImagesTab />
+        <ImagesSettingsTab />
       </Tabs>
     </div>
-  );
-}
-
-function ImagesTab() {
-  const { images, refetch } = useWebsiteImages();
-
-  const getImageUrl = (locationKey: string) => {
-    return images.find(img => img.location_key === locationKey)?.image_url;
-  };
-
-  return (
-    <TabsContent value="images">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5" />
-              Website Images
-            </CardTitle>
-            <CardDescription>
-              Manage images displayed on public pages. Changes take effect immediately.
-              New image locations are automatically discovered from the registry.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {WEBSITE_IMAGE_CONFIGS.map((config) => (
-            <ImageUploadCard
-              key={config.locationKey}
-              locationKey={config.locationKey}
-              title={config.title}
-              description={config.description}
-              currentImageUrl={getImageUrl(config.locationKey)}
-              defaultImageUrl={config.defaultAsset}
-              onImageUpdated={refetch}
-              aspectRatio={config.aspectRatio}
-            />
-          ))}
-        </div>
-      </div>
-    </TabsContent>
   );
 }
