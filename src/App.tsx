@@ -75,6 +75,7 @@ const PartnerVerify = lazy(() => import("./pages/partner/PartnerVerify"));
 const PartnerLogin = lazy(() => import("./pages/partner/PartnerLogin"));
 const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
 const PartnerInvitesPage = lazy(() => import("./pages/partner/PartnerInvitesPage"));
+const PartnerMarketingPage = lazy(() => import("./pages/partner/PartnerMarketingPage"));
 const PartnerCommissionsPage = lazy(() => import("./pages/partner/PartnerCommissionsPage"));
 const PartnerSettingsPage = lazy(() => import("./pages/partner/PartnerSettingsPage"));
 
@@ -239,6 +240,7 @@ const App = () => (
               >
                 <Route index element={<PartnerDashboard />} />
                 <Route path="invites" element={<PartnerInvitesPage />} />
+                <Route path="marketing" element={<PartnerMarketingPage />} />
                 <Route path="commissions" element={<PartnerCommissionsPage />} />
                 <Route path="settings" element={<PartnerSettingsPage />} />
               </Route>

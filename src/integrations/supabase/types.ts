@@ -1877,6 +1877,42 @@ export type Database = {
           },
         ]
       }
+      partner_presentations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          partner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          partner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          partner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       partner_verification_tokens: {
         Row: {
           created_at: string
