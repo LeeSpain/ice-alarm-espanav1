@@ -14,6 +14,8 @@ interface UseAIChatOptions {
   agentKey?: string;
   memberId?: string | null;
   memberName?: string | null;
+  staffName?: string | null;
+  userRole?: "member" | "admin" | "public";
 }
 
 // Get time-appropriate greeting
@@ -40,7 +42,9 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
   const { 
     agentKey = "customer_service_expert", 
     memberId = null,
-    memberName = null 
+    memberName = null,
+    staffName = null,
+    userRole = "public"
   } = normalizedOptions;
 
   const { t, i18n } = useTranslation();
@@ -66,12 +70,19 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
     }
   }, [avatarUrl, imagePreloaded]);
 
-  // Create welcome message helper - personalized for members
+  // Create welcome message helper - personalized for different user roles
   const createWelcomeMessage = useCallback((): ChatMessage => {
     const greeting = getTimeGreeting(i18n.language);
     let content: string;
 
-    if (memberName) {
+    if (userRole === "admin" && staffName) {
+      // Personalized greeting for admin staff
+      if (i18n.language === "es") {
+        content = `${greeting}, ${staffName}! 👋 Soy el Main Brain, tu asistente de IA para la gestión del sistema ICE Alarm. Puedo ayudarte con análisis de datos, gestión de miembros, reportes, y coordinar las operaciones del negocio. ¿En qué puedo ayudarte hoy?`;
+      } else {
+        content = `${greeting}, ${staffName}! 👋 I'm the Main Brain, your AI assistant for managing the ICE Alarm system. I can help you with data analysis, member management, reports, and coordinating business operations. What can I help you with today?`;
+      }
+    } else if (userRole === "member" && memberName) {
       // Personalized greeting for logged-in members
       if (i18n.language === "es") {
         content = `${greeting}, ${memberName}! 👋 Soy tu asistente personal de ICE Alarm. Estoy aquí para ayudarte con cualquier cosa que necesites - tu dispositivo, tu cuenta, o cualquier pregunta. ¿En qué puedo ayudarte hoy?`;
@@ -79,7 +90,7 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
         content = `${greeting}, ${memberName}! 👋 I'm your personal ICE Alarm assistant. I'm here to help you with anything you need - your device, your account, or any questions you have. How can I help you today?`;
       }
     } else {
-      // Generic welcome for non-members (public chat)
+      // Generic welcome for public visitors
       content = t("chat.welcomeMessage");
     }
 
@@ -89,7 +100,7 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
       content,
       timestamp: new Date(),
     };
-  }, [t, i18n.language, memberName]);
+  }, [t, i18n.language, memberName, staffName, userRole]);
 
   // Reset conversation
   const resetConversation = useCallback(() => {

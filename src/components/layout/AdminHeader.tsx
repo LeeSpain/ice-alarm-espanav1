@@ -92,7 +92,7 @@ export function AdminHeader() {
         <LanguageSelector variant="icon-only" />
 
         {/* AI Main Brain Chat */}
-        <AdminHeaderChatButton />
+        <AdminHeaderChatButton staffName={staffInfo?.first_name} />
 
         {/* Notifications */}
         <NotificationBell staffId={staffId} />
