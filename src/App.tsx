@@ -77,6 +77,7 @@ const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
 const PartnerInvitesPage = lazy(() => import("./pages/partner/PartnerInvitesPage"));
 const PartnerMarketingPage = lazy(() => import("./pages/partner/PartnerMarketingPage"));
 const PartnerCommissionsPage = lazy(() => import("./pages/partner/PartnerCommissionsPage"));
+const PartnerAgreementPage = lazy(() => import("./pages/partner/PartnerAgreementPage"));
 const PartnerSettingsPage = lazy(() => import("./pages/partner/PartnerSettingsPage"));
 
 // Call Centre Pages - Lazy loaded
@@ -242,6 +243,7 @@ const App = () => (
                 <Route path="invites" element={<PartnerInvitesPage />} />
                 <Route path="marketing" element={<PartnerMarketingPage />} />
                 <Route path="commissions" element={<PartnerCommissionsPage />} />
+                <Route path="agreement" element={<PartnerAgreementPage />} />
                 <Route path="settings" element={<PartnerSettingsPage />} />
               </Route>
 

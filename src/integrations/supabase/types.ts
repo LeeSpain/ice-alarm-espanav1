@@ -1689,6 +1689,65 @@ export type Database = {
           },
         ]
       }
+      partner_agreements: {
+        Row: {
+          agreement_html: string
+          confirmed_accept: boolean
+          confirmed_read: boolean
+          confirmed_understand: boolean
+          created_at: string
+          id: string
+          ip_address: string | null
+          partner_id: string
+          signed_at: string
+          signer_id_number: string
+          signer_id_type: string
+          signer_name: string
+          user_agent: string | null
+          version: string
+        }
+        Insert: {
+          agreement_html: string
+          confirmed_accept?: boolean
+          confirmed_read?: boolean
+          confirmed_understand?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          partner_id: string
+          signed_at?: string
+          signer_id_number: string
+          signer_id_type: string
+          signer_name: string
+          user_agent?: string | null
+          version?: string
+        }
+        Update: {
+          agreement_html?: string
+          confirmed_accept?: boolean
+          confirmed_read?: boolean
+          confirmed_understand?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          partner_id?: string
+          signed_at?: string
+          signer_id_number?: string
+          signer_id_type?: string
+          signer_name?: string
+          user_agent?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_agreements_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_attributions: {
         Row: {
           created_at: string
@@ -1950,6 +2009,8 @@ export type Database = {
       }
       partners: {
         Row: {
+          agreement_signed_at: string | null
+          agreement_version: string | null
           cif: string | null
           company_name: string | null
           contact_name: string
@@ -1967,6 +2028,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          agreement_signed_at?: string | null
+          agreement_version?: string | null
           cif?: string | null
           company_name?: string | null
           contact_name: string
@@ -1984,6 +2047,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          agreement_signed_at?: string | null
+          agreement_version?: string | null
           cif?: string | null
           company_name?: string | null
           contact_name?: string
