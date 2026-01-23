@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -34,7 +35,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface Ticket {
+interface TicketType {
   id: string;
   ticket_number: string;
   title: string;
@@ -70,12 +71,13 @@ interface Member {
 }
 
 export default function TicketsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [filteredTickets, setFilteredTickets] = useState<TicketType[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
   const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -160,7 +162,7 @@ export default function TicketsPage() {
       setTickets(data || []);
     } catch (error) {
       console.error("Error fetching tickets:", error);
-      toast.error("Failed to load tickets");
+      toast.error(t("tickets.failedToLoad"));
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +222,7 @@ export default function TicketsPage() {
 
   const createTicket = async () => {
     if (!newTicket.title.trim() || !newTicket.description.trim()) {
-      toast.error("Please fill in title and description");
+      toast.error(t("tickets.fillTitleAndDescription"));
       return;
     }
 
@@ -239,13 +241,13 @@ export default function TicketsPage() {
 
       if (error) throw error;
 
-      toast.success("Ticket created successfully");
+      toast.success(t("tickets.created"));
       setIsDialogOpen(false);
       setNewTicket({ title: "", description: "", category: "pendant_help", priority: "normal", memberId: "" });
       fetchTickets();
     } catch (error) {
       console.error("Error creating ticket:", error);
-      toast.error("Failed to create ticket");
+      toast.error(t("tickets.failedToCreate"));
     } finally {
       setIsSending(false);
     }
@@ -268,7 +270,7 @@ export default function TicketsPage() {
       fetchComments(selectedTicket.id);
     } catch (error) {
       console.error("Error sending comment:", error);
-      toast.error("Failed to send comment");
+      toast.error(t("tickets.failedToComment"));
     } finally {
       setIsSending(false);
     }
@@ -277,15 +279,15 @@ export default function TicketsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-blue-500">Open</Badge>;
+        return <Badge className="bg-blue-500">{t("tickets.status.open")}</Badge>;
       case "in_progress":
-        return <Badge className="bg-orange-500">In Progress</Badge>;
+        return <Badge className="bg-orange-500">{t("tickets.status.inProgress")}</Badge>;
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t("common.pending")}</Badge>;
       case "resolved":
-        return <Badge className="bg-green-600">Resolved</Badge>;
+        return <Badge className="bg-green-600">{t("tickets.status.resolved")}</Badge>;
       case "closed":
-        return <Badge variant="outline">Closed</Badge>;
+        return <Badge variant="outline">{t("tickets.status.closed")}</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -294,9 +296,9 @@ export default function TicketsPage() {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "urgent":
-        return <Badge variant="destructive">Urgent</Badge>;
+        return <Badge variant="destructive">{t("tickets.priority.urgent")}</Badge>;
       case "high":
-        return <Badge className="bg-orange-500">High</Badge>;
+        return <Badge className="bg-orange-500">{t("tickets.priority.high")}</Badge>;
       default:
         return null;
     }
@@ -305,15 +307,15 @@ export default function TicketsPage() {
   const getCategoryLabel = (category: string) => {
     switch (category) {
       case "pendant_help":
-        return "Pendant Help";
+        return t("tickets.category.pendantHelp");
       case "technical_issue":
-        return "Technical Issue";
+        return t("tickets.category.technicalIssue");
       case "member_query":
-        return "Member Query";
+        return t("tickets.category.memberQuery");
       case "billing_question":
-        return "Billing Question";
+        return t("tickets.category.billingQuestion");
       case "general":
-        return "General";
+        return t("tickets.category.general");
       default:
         return category;
     }
@@ -344,70 +346,70 @@ export default function TicketsPage() {
       <div className="border-b p-4 bg-background/50">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">Support Tickets</h1>
-            <p className="text-muted-foreground">Raise tickets to admin for pendant help or questions</p>
+            <h1 className="text-2xl font-bold">{t("tickets.title")}</h1>
+            <p className="text-muted-foreground">{t("tickets.subtitle")}</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                New Ticket
+                {t("tickets.newTicket")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Create Support Ticket</DialogTitle>
-                <DialogDescription>Submit a ticket to admin for help or questions</DialogDescription>
+                <DialogTitle>{t("tickets.createTicket")}</DialogTitle>
+                <DialogDescription>{t("tickets.createDesc")}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Title *</label>
+                  <label className="text-sm font-medium">{t("tickets.titleField")} *</label>
                   <Input
-                    placeholder="Brief description of the issue..."
+                    placeholder={t("tickets.titlePlaceholder")}
                     value={newTicket.title}
                     onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
+                    <label className="text-sm font-medium">{t("tickets.category")}</label>
                     <Select value={newTicket.category} onValueChange={(v) => setNewTicket({ ...newTicket, category: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pendant_help">Pendant Help</SelectItem>
-                        <SelectItem value="technical_issue">Technical Issue</SelectItem>
-                        <SelectItem value="member_query">Member Query</SelectItem>
-                        <SelectItem value="billing_question">Billing Question</SelectItem>
-                        <SelectItem value="general">General</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="pendant_help">{t("tickets.category.pendantHelp")}</SelectItem>
+                        <SelectItem value="technical_issue">{t("tickets.category.technicalIssue")}</SelectItem>
+                        <SelectItem value="member_query">{t("tickets.category.memberQuery")}</SelectItem>
+                        <SelectItem value="billing_question">{t("tickets.category.billingQuestion")}</SelectItem>
+                        <SelectItem value="general">{t("tickets.category.general")}</SelectItem>
+                        <SelectItem value="other">{t("tickets.category.other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Priority</label>
+                    <label className="text-sm font-medium">{t("tickets.priorityLabel")}</label>
                     <Select value={newTicket.priority} onValueChange={(v) => setNewTicket({ ...newTicket, priority: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="low">{t("tickets.priority.low")}</SelectItem>
+                        <SelectItem value="normal">{t("tickets.priority.normal")}</SelectItem>
+                        <SelectItem value="high">{t("tickets.priority.high")}</SelectItem>
+                        <SelectItem value="urgent">{t("tickets.priority.urgent")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Related Member (Optional)</label>
+                  <label className="text-sm font-medium">{t("tickets.relatedMember")}</label>
                   <Select value={newTicket.memberId} onValueChange={(v) => setNewTicket({ ...newTicket, memberId: v })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a member..." />
+                      <SelectValue placeholder={t("tickets.selectMember")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="">{t("tickets.none")}</SelectItem>
                       {members.map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.first_name} {m.last_name} - {m.phone}
@@ -417,9 +419,9 @@ export default function TicketsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description *</label>
+                  <label className="text-sm font-medium">{t("common.description")} *</label>
                   <Textarea
-                    placeholder="Describe the issue in detail..."
+                    placeholder={t("tickets.descriptionPlaceholder")}
                     className="min-h-[120px]"
                     value={newTicket.description}
                     onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
@@ -429,7 +431,7 @@ export default function TicketsPage() {
               <DialogFooter>
                 <Button onClick={createTicket} disabled={isSending}>
                   {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Submit Ticket
+                  {t("tickets.submit")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -440,16 +442,16 @@ export default function TicketsPage() {
         <div className="flex items-center gap-4">
           <Tabs value={filter} onValueChange={setFilter} className="flex-1">
             <TabsList>
-              <TabsTrigger value="my-tickets">My Tickets</TabsTrigger>
-              <TabsTrigger value="all">All Tickets</TabsTrigger>
-              <TabsTrigger value="open">Open</TabsTrigger>
-              <TabsTrigger value="resolved">Resolved</TabsTrigger>
+              <TabsTrigger value="my-tickets">{t("tickets.myTickets")}</TabsTrigger>
+              <TabsTrigger value="all">{t("tickets.allTickets")}</TabsTrigger>
+              <TabsTrigger value="open">{t("tickets.status.open")}</TabsTrigger>
+              <TabsTrigger value="resolved">{t("tickets.status.resolved")}</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search tickets..."
+              placeholder={t("tickets.searchPlaceholder")}
               className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -466,7 +468,7 @@ export default function TicketsPage() {
             {filteredTickets.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Ticket className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p>No tickets found</p>
+                <p>{t("tickets.noTickets")}</p>
               </div>
             ) : (
               filteredTickets.map((ticket) => (
@@ -553,7 +555,7 @@ export default function TicketsPage() {
                         <Button variant="outline" size="sm" asChild>
                           <Link to={`/call-centre/members/${selectedTicket.member.id}`}>
                             <ExternalLink className="h-4 w-4 mr-1" />
-                            View CRM
+                            {t("tickets.viewCRM")}
                           </Link>
                         </Button>
                       </div>
@@ -568,7 +570,7 @@ export default function TicketsPage() {
                   {/* Original Description */}
                   <Card>
                     <CardContent className="p-4">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Description</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">{t("common.description")}</p>
                       <p className="text-sm whitespace-pre-wrap">{selectedTicket.description}</p>
                     </CardContent>
                   </Card>
@@ -576,7 +578,7 @@ export default function TicketsPage() {
                   {/* Comments */}
                   {comments.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-sm font-medium text-muted-foreground">Comments</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t("tickets.comments")}</p>
                       {comments.map((comment) => (
                         <div key={comment.id} className="flex gap-3">
                           <Avatar className="h-8 w-8">
@@ -607,7 +609,7 @@ export default function TicketsPage() {
                 <div className="p-4 border-t bg-background/50">
                   <div className="flex gap-2">
                     <Textarea
-                      placeholder="Add a comment..."
+                      placeholder={t("tickets.addComment")}
                       className="min-h-[80px] resize-none"
                       value={replyMessage}
                       onChange={(e) => setReplyMessage(e.target.value)}
@@ -633,8 +635,8 @@ export default function TicketsPage() {
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <Ticket className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="text-lg font-medium">Select a ticket</p>
-                <p className="text-sm">Choose a ticket from the list to view details</p>
+                <p className="text-lg font-medium">{t("tickets.selectTicket")}</p>
+                <p className="text-sm">{t("tickets.selectTicketDesc")}</p>
               </div>
             </div>
           )}
