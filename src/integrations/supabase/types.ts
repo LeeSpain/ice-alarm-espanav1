@@ -1425,6 +1425,78 @@ export type Database = {
           },
         ]
       }
+      notification_log: {
+        Row: {
+          admin_user_id: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          error: string | null
+          event_type: string
+          id: string
+          message: string | null
+          provider_message_id: string | null
+          status: string
+        }
+        Insert: {
+          admin_user_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error?: string | null
+          event_type: string
+          id?: string
+          message?: string | null
+          provider_message_id?: string | null
+          status?: string
+        }
+        Update: {
+          admin_user_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error?: string | null
+          event_type?: string
+          id?: string
+          message?: string | null
+          provider_message_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          whatsapp_hot_sales: boolean | null
+          whatsapp_number: string | null
+          whatsapp_paid_sales: boolean | null
+          whatsapp_partner_signup: boolean | null
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          whatsapp_hot_sales?: boolean | null
+          whatsapp_number?: string | null
+          whatsapp_paid_sales?: boolean | null
+          whatsapp_partner_signup?: boolean | null
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          whatsapp_hot_sales?: boolean | null
+          whatsapp_number?: string | null
+          whatsapp_paid_sales?: boolean | null
+          whatsapp_partner_signup?: boolean | null
+        }
+        Relationships: []
+      }
       operational_costs: {
         Row: {
           amount: number
@@ -2474,6 +2546,7 @@ export type Database = {
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_member_id: { Args: { _user_id: string }; Returns: string }
       get_partner_id: { Args: { _user_id: string }; Returns: string }
+      get_sales_command_stats: { Args: never; Returns: Json }
       get_staff_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

@@ -18,6 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
+import { SalesCommandStrip } from "@/components/admin/dashboard/SalesCommandStrip";
+import { PaidSalesFeed } from "@/components/admin/dashboard/PaidSalesFeed";
+import { AISalesDesk } from "@/components/admin/dashboard/AISalesDesk";
+import { NotificationSettings } from "@/components/admin/dashboard/NotificationSettings";
+import { NotificationLog } from "@/components/admin/dashboard/NotificationLog";
 
 interface DashboardStats {
   active_members: number;
@@ -94,6 +99,9 @@ export default function AdminDashboard() {
           <Link to="/admin/members/new">{t('adminDashboard.addMember')}</Link>
         </Button>
       </div>
+
+      {/* Sales Command Strip - Real-time sales metrics */}
+      <SalesCommandStrip />
 
       {/* Stats Grid - Now using single RPC data */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -181,6 +189,12 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground">{t('common.inNext30Days')}</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Sales Feed + AI Desk Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PaidSalesFeed />
+        <AISalesDesk />
       </div>
 
       {/* Main Content */}
@@ -278,6 +292,12 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Notification Control Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <NotificationSettings />
+        <NotificationLog />
       </div>
     </div>
   );

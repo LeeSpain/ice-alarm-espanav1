@@ -9,6 +9,7 @@ const corsHeaders = {
 // Event type to agent mapping
 const EVENT_AGENT_MAP: Record<string, string[]> = {
   "sale.created": ["main_brain"],
+  "sale.paid": ["main_brain"],
   "partner.joined": ["main_brain"],
   "ticket.created": ["main_brain"],
   "conversation.escalated": ["main_brain"],
