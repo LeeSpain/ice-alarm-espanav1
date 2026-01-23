@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -138,6 +139,7 @@ export default function ContactPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
+            <HeaderChatButton />
             <LanguageSelector />
             <Button variant="ghost" asChild>
               <Link to="/login">{t("common.signIn")}</Link>

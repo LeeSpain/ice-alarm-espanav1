@@ -8,6 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
@@ -62,6 +63,7 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
+            <HeaderChatButton />
             <LanguageSelector />
             <Button variant="ghost" asChild>
               <Link to="/login">{t("common.signIn")}</Link>

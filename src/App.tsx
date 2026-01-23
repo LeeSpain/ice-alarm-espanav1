@@ -3,24 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { AIChatWidget } from "@/components/chat/AIChatWidget";
-
-// Only show chat widget on public frontend pages
-function PublicChatWidget() {
-  const location = useLocation();
-  const publicPaths = ["/", "/pendant", "/contact", "/terms", "/privacy", "/join"];
-  const isPublicPage = publicPaths.some(path => 
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)
-  );
-  
-  if (!isPublicPage) return null;
-  return <AIChatWidget />;
-}
 
 // Auth - Not lazy loaded (critical path)
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -178,7 +165,7 @@ const App = () => (
         <AuthProvider>
           <Toaster />
           <Sonner />
-          <PublicChatWidget />
+          
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes */}
