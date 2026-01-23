@@ -51,6 +51,14 @@ export const WEBSITE_IMAGE_CONFIGS: WebsiteImageConfig[] = [
     aspectRatio: "square",
     usedIn: ["LandingPage"],
   },
+  {
+    locationKey: "chat_avatar",
+    title: "AI Chat Assistant Avatar",
+    description: "Avatar image for the AI chat widget. Recommended: 80x80px (square). Used in the customer support chat bubble.",
+    defaultAsset: pendantHeroDefault,
+    aspectRatio: "square",
+    usedIn: ["ChatWidget"],
+  },
 ];
 
 /**

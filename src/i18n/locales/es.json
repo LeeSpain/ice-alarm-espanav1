@@ -1497,5 +1497,16 @@
       "callUsAt": "Llámenos al",
       "orEmail": "o escriba a"
     }
+  },
+  "chat": {
+    "openChat": "Abrir chat",
+    "closeChat": "Cerrar chat",
+    "assistantName": "Asistente ICE Alarm",
+    "available": "Disponible 24/7",
+    "placeholder": "Escribe tu mensaje...",
+    "send": "Enviar",
+    "welcomeMessage": "¡Hola! 👋 Soy tu asistente virtual de ICE Alarm. ¿En qué puedo ayudarte hoy? Puedo responder preguntas sobre nuestros servicios, precios, o ayudarte a comenzar.",
+    "errorMessage": "Lo siento, hubo un problema al conectar. Por favor, intenta de nuevo más tarde.",
+    "fallbackMessage": "Lo siento, no pude procesar tu mensaje. Por favor, intenta de nuevo."
   }
 }
