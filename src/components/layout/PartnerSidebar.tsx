@@ -136,7 +136,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
         "flex items-center border-b border-sidebar-border h-16 px-4",
         !isMobileView && collapsed && "justify-center px-2"
       )}>
-        <Logo variant="white" size="sm" showText={isMobileView || !collapsed} />
+        <Logo variant="sidebar" size="sm" showText={isMobileView || !collapsed} />
       </div>
 
       {/* Admin View Mode - Back to Admin */}
@@ -205,7 +205,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
     <>
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-        <Logo variant="white" size="sm" />
+        <Logo variant="sidebar" size="sm" />
         <Button
           variant="ghost"
           size="icon"
