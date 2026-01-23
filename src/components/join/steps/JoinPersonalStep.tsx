@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Users, Info } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { User, Users, Info, MessageCircle, Phone, Mail, Clock } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface JoinPersonalStepProps {
   data: JoinWizardData;
@@ -14,7 +16,7 @@ interface JoinPersonalStepProps {
 export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
   const { t } = useTranslation();
   
-  const updatePrimaryMember = (field: keyof MemberDetails, value: string) => {
+  const updatePrimaryMember = (field: keyof MemberDetails, value: string | undefined) => {
     onUpdate({
       primaryMember: {
         ...data.primaryMember,
@@ -23,7 +25,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
     });
   };
 
-  const updatePartnerMember = (field: keyof MemberDetails, value: string) => {
+  const updatePartnerMember = (field: keyof MemberDetails, value: string | undefined) => {
     onUpdate({
       partnerMember: {
         firstName: data.partnerMember?.firstName || "",
@@ -33,6 +35,9 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
         dateOfBirth: data.partnerMember?.dateOfBirth || "",
         nieDni: data.partnerMember?.nieDni || "",
         preferredLanguage: data.partnerMember?.preferredLanguage || "es",
+        preferredContactMethod: data.partnerMember?.preferredContactMethod,
+        preferredContactTime: data.partnerMember?.preferredContactTime,
+        specialInstructions: data.partnerMember?.specialInstructions,
         [field]: value,
       },
     });
@@ -43,11 +48,13 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
     icon: Icon,
     values,
     onChange,
+    isPrimary = false,
   }: {
     title: string;
     icon: React.ElementType;
     values: MemberDetails;
-    onChange: (field: keyof MemberDetails, value: string) => void;
+    onChange: (field: keyof MemberDetails, value: string | undefined) => void;
+    isPrimary?: boolean;
   }) => (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
@@ -136,6 +143,100 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           </Select>
         </div>
       </div>
+
+      {/* Contact Preferences - only show for primary member */}
+      {isPrimary && (
+        <div className="space-y-4 pt-4 border-t">
+          <h4 className="font-medium text-sm text-muted-foreground">
+            {t("joinWizard.personal.contactPreferences", "Contact Preferences")} ({t("common.optional", "Optional")})
+          </h4>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{t("joinWizard.personal.preferredContactMethod", "Preferred Contact Method")}</Label>
+              <RadioGroup
+                value={values.preferredContactMethod || ""}
+                onValueChange={(value) => onChange("preferredContactMethod", value as "whatsapp" | "phone" | "email")}
+                className="flex flex-wrap gap-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="whatsapp" id={`${title}-whatsapp`} />
+                  <Label htmlFor={`${title}-whatsapp`} className="flex items-center gap-1.5 cursor-pointer font-normal">
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    WhatsApp
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="phone" id={`${title}-phone-pref`} />
+                  <Label htmlFor={`${title}-phone-pref`} className="flex items-center gap-1.5 cursor-pointer font-normal">
+                    <Phone className="h-4 w-4" />
+                    {t("joinWizard.personal.phone", "Phone")}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="email" id={`${title}-email-pref`} />
+                  <Label htmlFor={`${title}-email-pref`} className="flex items-center gap-1.5 cursor-pointer font-normal">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("joinWizard.personal.bestTimeToContact", "Best Time to Contact")}</Label>
+              <Select
+                value={values.preferredContactTime || ""}
+                onValueChange={(value) => onChange("preferredContactTime", value as "morning" | "afternoon" | "evening" | "anytime")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("joinWizard.personal.selectTime", "Select time")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="morning">
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {t("joinWizard.personal.morning", "Morning")} (9:00-12:00)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="afternoon">
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {t("joinWizard.personal.afternoon", "Afternoon")} (12:00-18:00)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="evening">
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {t("joinWizard.personal.evening", "Evening")} (18:00-21:00)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="anytime">
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {t("joinWizard.personal.anytime", "Anytime")}
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`${title}-instructions`}>
+              {t("joinWizard.personal.specialInstructions", "Special Instructions")}
+            </Label>
+            <Textarea
+              id={`${title}-instructions`}
+              value={values.specialInstructions || ""}
+              onChange={(e) => onChange("specialInstructions", e.target.value)}
+              placeholder={t("joinWizard.personal.specialInstructionsPlaceholder", "Any special instructions for contacting you or providing service (e.g., 'I use a hearing aid', 'Prefer morning calls', 'Gate code 1234')")}
+              rows={2}
+              className="resize-none"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -166,6 +267,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           icon={User}
           values={data.primaryMember}
           onChange={updatePrimaryMember}
+          isPrimary={true}
         />
       ) : (
         <Tabs defaultValue="primary" className="w-full">
@@ -185,6 +287,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
               icon={User}
               values={data.primaryMember}
               onChange={updatePrimaryMember}
+              isPrimary={true}
             />
           </TabsContent>
           <TabsContent value="partner" className="mt-6">
@@ -200,9 +303,13 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
                   dateOfBirth: "",
                   nieDni: "",
                   preferredLanguage: "es",
+                  preferredContactMethod: undefined,
+                  preferredContactTime: undefined,
+                  specialInstructions: undefined,
                 }
               }
               onChange={updatePartnerMember}
+              isPrimary={false}
             />
           </TabsContent>
         </Tabs>

@@ -1319,6 +1319,8 @@ export type Database = {
           phone: string
           photo_url: string | null
           postal_code: string
+          preferred_contact_method: string | null
+          preferred_contact_time: string | null
           preferred_language:
             | Database["public"]["Enums"]["preferred_language"]
             | null
@@ -1343,6 +1345,8 @@ export type Database = {
           phone: string
           photo_url?: string | null
           postal_code: string
+          preferred_contact_method?: string | null
+          preferred_contact_time?: string | null
           preferred_language?:
             | Database["public"]["Enums"]["preferred_language"]
             | null
@@ -1367,6 +1371,8 @@ export type Database = {
           phone?: string
           photo_url?: string | null
           postal_code?: string
+          preferred_contact_method?: string | null
+          preferred_contact_time?: string | null
           preferred_language?:
             | Database["public"]["Enums"]["preferred_language"]
             | null
@@ -2568,6 +2574,8 @@ export type Database = {
           phone: string
           photo_url: string | null
           postal_code: string
+          preferred_contact_method: string | null
+          preferred_contact_time: string | null
           preferred_language:
             | Database["public"]["Enums"]["preferred_language"]
             | null
