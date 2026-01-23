@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,7 @@ const statusColors: Record<CommissionStatus, string> = {
 };
 
 export default function PartnerCommissionsPage() {
+  const { t } = useTranslation();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<CommissionStatus | "all">("all");
@@ -105,11 +107,11 @@ export default function PartnerCommissionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Commissions</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("partner.commissions")}</h1>
         <p className="text-muted-foreground">
           {isAdminViewMode 
-            ? `Viewing ${partner?.contact_name}'s commissions`
-            : "Track your earnings from successful referrals"
+            ? t("partner.viewingCommissions", { name: partner?.contact_name })
+            : t("partner.commissionsDesc")
           }
         </p>
       </div>
@@ -118,7 +120,7 @@ export default function PartnerCommissionsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Release</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("partner.pendingRelease")}</CardTitle>
             <DollarSign className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -126,14 +128,14 @@ export default function PartnerCommissionsPage() {
               €{totals.pending.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              7-day hold after device delivery
+              {t("partner.pendingReleaseDesc")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("partner.approved")}</CardTitle>
             <DollarSign className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -141,14 +143,14 @@ export default function PartnerCommissionsPage() {
               €{totals.approved.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Ready for payout
+              {t("partner.approvedDesc")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("partner.totalPaid")}</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -156,7 +158,7 @@ export default function PartnerCommissionsPage() {
               €{totals.paid.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Lifetime earnings
+              {t("partner.lifetimeEarnings")}
             </p>
           </CardContent>
         </Card>
@@ -167,8 +169,8 @@ export default function PartnerCommissionsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Commission History</CardTitle>
-              <CardDescription>All referral commissions</CardDescription>
+              <CardTitle>{t("partner.commissionHistory")}</CardTitle>
+              <CardDescription>{t("partner.allCommissions")}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -177,14 +179,14 @@ export default function PartnerCommissionsPage() {
                 onValueChange={(value) => setStatusFilter(value as CommissionStatus | "all")}
               >
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={t("partner.filterByStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending_release">Pending Release</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">{t("partner.allStatus")}</SelectItem>
+                  <SelectItem value="pending_release">{t("partner.pendingRelease")}</SelectItem>
+                  <SelectItem value="approved">{t("partner.approved")}</SelectItem>
+                  <SelectItem value="paid">{t("partner.paid")}</SelectItem>
+                  <SelectItem value="cancelled">{t("common.cancelled")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -200,21 +202,21 @@ export default function PartnerCommissionsPage() {
           ) : commissions?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No commissions yet</p>
+              <p>{t("partner.noCommissions")}</p>
               <p className="text-sm">
-                Commissions are created when referrals receive their pendant
+                {t("partner.noCommissionsDesc")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Trigger Event</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Triggered</TableHead>
-                  <TableHead>Release Date</TableHead>
-                  <TableHead>Paid</TableHead>
+                  <TableHead>{t("common.amount")}</TableHead>
+                  <TableHead>{t("partner.triggerEvent")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead>{t("partner.triggered")}</TableHead>
+                  <TableHead>{t("partner.releaseDate")}</TableHead>
+                  <TableHead>{t("partner.paid")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

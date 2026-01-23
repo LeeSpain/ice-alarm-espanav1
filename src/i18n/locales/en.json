@@ -137,6 +137,24 @@
       "passwordMismatch": "Passwords do not match",
       "accessDenied": "Access denied. This login is for staff only.",
       "accountDeactivated": "Your account has been deactivated. Please contact an administrator."
+    },
+    "unauthorized": {
+      "title": "Access Denied",
+      "description": "You don't have permission to access this page.",
+      "contactAdmin": "If you believe this is an error, please contact your administrator or try logging in with a different account.",
+      "goHome": "Go to Home",
+      "backToLogin": "Back to Login"
+    },
+    "register": {
+      "title": "Create Your Account",
+      "subtitle": "Start your ICE Alarm protection today",
+      "emailPlaceholder": "your@email.com",
+      "passwordMin8": "Password must be at least 8 characters",
+      "creating": "Creating account...",
+      "createAccount": "Create Account",
+      "hasAccount": "Already have an account?",
+      "accountCreated": "Account created! Please complete your registration.",
+      "termsAgreement": "By creating an account, you agree to our"
     }
   },
   "navigation": {
@@ -411,6 +429,8 @@
     "notSpecified": "Not specified"
   },
   "subscription": {
+    "title": "Subscription & Billing",
+    "subtitle": "Manage your plan and payments",
     "currentPlan": "Current Plan",
     "planType": "Plan Type",
     "billing": "Billing",
@@ -419,12 +439,16 @@
     "startDate": "Start Date",
     "nextRenewal": "Next Renewal",
     "upgradeOptions": "Upgrade Options",
+    "upgradeDesc": "Save money by switching to annual billing",
+    "upgrade": "Upgrade",
     "switchToAnnual": "Switch to Annual",
     "savePerYear": "Save €{{amount}} per year!",
     "paymentMethod": "Payment Method",
     "updatePaymentMethod": "Update Payment Method",
     "paymentHistory": "Payment History",
     "noPaymentHistory": "No payment history available",
+    "noActiveSubscription": "No Active Subscription",
+    "contactSupport": "Please contact support for subscription information.",
     "date": "Date",
     "type": "Type",
     "status": "Status",
@@ -432,6 +456,10 @@
     "paid": "Paid",
     "failed": "Failed",
     "refunded": "Refunded",
+    "mo": "mo",
+    "yr": "yr",
+    "cardEnding": "Visa ending in ****4242",
+    "expires": "Expires 12/26",
     "changePlanNote": "To change between Single and Couple plans, please contact our support team."
   },
   "support": {
@@ -771,7 +799,9 @@
     "forbidden": "Forbidden",
     "networkError": "Network error. Please check your connection.",
     "sessionExpired": "Your session has expired. Please log in again.",
-    "unexpectedError": "An unexpected error occurred"
+    "unexpectedError": "An unexpected error occurred",
+    "pageNotFound": "Oops! Page not found",
+    "returnHome": "Return to Home"
   },
   "time": {
     "justNow": "just now",
@@ -944,9 +974,25 @@
     "iban": "IBAN",
     "language": "Preferred Language",
     "commissions": "Commissions",
+    "commissionsDesc": "Track your earnings from successful referrals",
+    "viewingCommissions": "Viewing {{name}}'s commissions",
     "pending": "Pending",
     "approved": "Approved",
+    "approvedDesc": "Ready for payout",
     "paid": "Paid",
+    "totalPaid": "Total Paid",
+    "lifetimeEarnings": "Lifetime earnings",
+    "pendingRelease": "Pending Release",
+    "pendingReleaseDesc": "7-day hold after device delivery",
+    "commissionHistory": "Commission History",
+    "allCommissions": "All referral commissions",
+    "filterByStatus": "Filter by status",
+    "allStatus": "All Status",
+    "noCommissions": "No commissions yet",
+    "noCommissionsDesc": "Commissions are created when referrals receive their pendant",
+    "triggerEvent": "Trigger Event",
+    "triggered": "Triggered",
+    "releaseDate": "Release Date",
     "invites": "Invites",
     "sendInvite": "Send Invite",
     "invitesSent": "Invites Sent",

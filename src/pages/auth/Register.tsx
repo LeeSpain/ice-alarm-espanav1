@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,20 +13,21 @@ import { Logo } from "@/components/ui/logo";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const registerSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
-
 export default function Register() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const registerSchema = z.object({
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(8, t("auth.register.passwordMin8")),
+    confirmPassword: z.string(),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: t("auth.errors.passwordMismatch"),
+    path: ["confirmPassword"],
+  });
+
+  type RegisterFormValues = z.infer<typeof registerSchema>;
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -53,11 +55,11 @@ export default function Register() {
       }
 
       if (data.user) {
-        toast.success("Account created! Please complete your registration.");
+        toast.success(t("auth.register.accountCreated"));
         navigate("/complete-registration");
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t("errors.unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +76,9 @@ export default function Register() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create Your Account</CardTitle>
+            <CardTitle className="text-2xl">{t("auth.register.title")}</CardTitle>
             <CardDescription>
-              Start your ICE Alarm protection today
+              {t("auth.register.subtitle")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -87,11 +89,11 @@ export default function Register() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t("auth.email")}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="your@email.com"
+                          placeholder={t("auth.register.emailPlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -105,7 +107,7 @@ export default function Register() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("auth.password")}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
@@ -123,7 +125,7 @@ export default function Register() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel>{t("auth.confirmPassword")}</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
@@ -140,10 +142,10 @@ export default function Register() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      {t("auth.register.creating")}
                     </>
                   ) : (
-                    "Create Account"
+                    t("auth.register.createAccount")
                   )}
                 </Button>
               </form>
@@ -151,9 +153,9 @@ export default function Register() {
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
-                Already have an account?{" "}
+                {t("auth.register.hasAccount")}{" "}
                 <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in
+                  {t("auth.login")}
                 </Link>
               </p>
             </div>
@@ -164,20 +166,20 @@ export default function Register() {
                 className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to home
+                {t("auth.backToHome")}
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
-          By creating an account, you agree to our{" "}
+          {t("auth.register.termsAgreement")}{" "}
           <Link to="/terms" className="text-primary hover:underline">
-            Terms of Service
+            {t("landing.termsOfService")}
           </Link>{" "}
-          and{" "}
+          {t("common.and")}{" "}
           <Link to="/privacy" className="text-primary hover:underline">
-            Privacy Policy
+            {t("landing.privacyPolicy")}
           </Link>
         </p>
       </div>

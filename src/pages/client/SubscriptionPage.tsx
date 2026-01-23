@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMemberSubscription, useMemberPayments } from "@/hooks/useMemberProfile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
 import { format } from "date-fns";
 
 export default function SubscriptionPage() {
+  const { t } = useTranslation();
   const { data: subscription, isLoading: subLoading } = useMemberSubscription();
   const { data: payments, isLoading: paymentsLoading } = useMemberPayments();
 
@@ -41,14 +43,14 @@ export default function SubscriptionPage() {
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Subscription & Billing</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("subscription.title")}</h1>
         </div>
         <Card>
           <CardContent className="py-12 text-center">
             <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No Active Subscription</h3>
+            <h3 className="font-semibold text-lg mb-2">{t("subscription.noActiveSubscription")}</h3>
             <p className="text-muted-foreground">
-              Please contact support for subscription information.
+              {t("subscription.contactSupport")}
             </p>
           </CardContent>
         </Card>
@@ -56,8 +58,12 @@ export default function SubscriptionPage() {
     );
   }
 
-  const planLabel = subscription.plan_type === "single" ? "Single Person" : "Couple";
-  const billingLabel = subscription.billing_frequency === "monthly" ? "Monthly" : "Annual";
+  const planLabel = subscription.plan_type === "single" 
+    ? t("membership.single") 
+    : t("membership.couple");
+  const billingLabel = subscription.billing_frequency === "monthly" 
+    ? t("membership.monthly") 
+    : t("membership.annual");
   const statusColor = subscription.status === "active" 
     ? "bg-alert-resolved text-alert-resolved-foreground" 
     : "bg-muted";
@@ -65,20 +71,20 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Subscription & Billing</h1>
-        <p className="text-muted-foreground mt-1">Manage your plan and payments</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("subscription.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("subscription.subtitle")}</p>
       </div>
 
       {/* Current Plan */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Current Plan</CardTitle>
+            <CardTitle className="text-lg">{t("subscription.currentPlan")}</CardTitle>
             <Badge className={statusColor}>
               {subscription.status === "active" ? (
                 <>
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Active
+                  {t("common.active")}
                 </>
               ) : (
                 subscription.status
@@ -89,38 +95,38 @@ export default function SubscriptionPage() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground">Plan Type</p>
+              <p className="text-sm text-muted-foreground">{t("subscription.planType")}</p>
               <p className="text-xl font-semibold">{planLabel}</p>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground">Billing</p>
+              <p className="text-sm text-muted-foreground">{t("subscription.billing")}</p>
               <p className="text-xl font-semibold">{billingLabel}</p>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground">Service Type</p>
+              <p className="text-sm text-muted-foreground">{t("subscription.serviceType")}</p>
               <div className="flex items-center gap-2 mt-1">
                 {subscription.has_pendant ? (
                   <>
                     <Smartphone className="h-5 w-5 text-alert-resolved" />
-                    <span className="font-semibold">Pendant + Membership</span>
+                    <span className="font-semibold">{t("membership.pendantService")}</span>
                   </>
                 ) : (
                   <>
                     <CreditCard className="h-5 w-5 text-alert-battery" />
-                    <span className="font-semibold">Phone Only</span>
+                    <span className="font-semibold">{t("membership.phoneOnlyService")}</span>
                   </>
                 )}
               </div>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground">Amount</p>
+              <p className="text-sm text-muted-foreground">{t("subscription.amount")}</p>
               <p className="text-xl font-semibold">
                 €{subscription.amount.toFixed(2)}
                 <span className="text-sm font-normal text-muted-foreground">
-                  /{subscription.billing_frequency === "monthly" ? "mo" : "yr"}
+                  /{subscription.billing_frequency === "monthly" ? t("subscription.mo") : t("subscription.yr")}
                 </span>
               </p>
             </div>
@@ -130,7 +136,7 @@ export default function SubscriptionPage() {
             <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Start Date</p>
+                <p className="text-sm text-muted-foreground">{t("subscription.startDate")}</p>
                 <p className="font-medium">
                   {format(new Date(subscription.start_date), "dd MMM yyyy")}
                 </p>
@@ -139,7 +145,7 @@ export default function SubscriptionPage() {
             <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10">
               <Clock className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">Next Renewal</p>
+                <p className="text-sm text-muted-foreground">{t("subscription.nextRenewal")}</p>
                 <p className="font-medium text-primary">
                   {format(new Date(subscription.renewal_date), "dd MMM yyyy")}
                 </p>
@@ -152,9 +158,9 @@ export default function SubscriptionPage() {
       {/* Upgrade Options */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Upgrade Options</CardTitle>
+          <CardTitle className="text-lg">{t("subscription.upgradeOptions")}</CardTitle>
           <CardDescription>
-            Save money by switching to annual billing
+            {t("subscription.upgradeDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -162,13 +168,13 @@ export default function SubscriptionPage() {
             <div className="p-4 rounded-lg border border-primary/30 bg-primary/5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold">Switch to Annual</h4>
+                  <h4 className="font-semibold">{t("subscription.switchToAnnual")}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Save €{subscription.plan_type === "single" ? "54.99" : "76.99"} per year!
+                    {t("subscription.savePerYear", { amount: subscription.plan_type === "single" ? "54.99" : "76.99" })}
                   </p>
                 </div>
                 <Button>
-                  Upgrade
+                  {t("subscription.upgrade")}
                   <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -176,7 +182,7 @@ export default function SubscriptionPage() {
           )}
 
           <p className="text-sm text-muted-foreground">
-            To change between Single and Couple plans, please contact our support team.
+            {t("subscription.changePlanNote")}
           </p>
         </CardContent>
       </Card>
@@ -184,7 +190,7 @@ export default function SubscriptionPage() {
       {/* Payment Method */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Payment Method</CardTitle>
+          <CardTitle className="text-lg">{t("subscription.paymentMethod")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
@@ -193,12 +199,12 @@ export default function SubscriptionPage() {
                 VISA
               </div>
               <div>
-                <p className="font-medium">Visa ending in ****4242</p>
-                <p className="text-sm text-muted-foreground">Expires 12/26</p>
+                <p className="font-medium">{t("subscription.cardEnding")}</p>
+                <p className="text-sm text-muted-foreground">{t("subscription.expires")}</p>
               </div>
             </div>
             <Button variant="outline">
-              Update
+              {t("common.update")}
             </Button>
           </div>
         </CardContent>
@@ -207,18 +213,18 @@ export default function SubscriptionPage() {
       {/* Payment History */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Payment History</CardTitle>
+          <CardTitle className="text-lg">{t("subscription.paymentHistory")}</CardTitle>
         </CardHeader>
         <CardContent>
           {payments && payments.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Invoice</TableHead>
+                  <TableHead>{t("subscription.date")}</TableHead>
+                  <TableHead>{t("subscription.type")}</TableHead>
+                  <TableHead>{t("subscription.amount")}</TableHead>
+                  <TableHead>{t("subscription.status")}</TableHead>
+                  <TableHead className="text-right">{t("subscription.invoice")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -239,12 +245,12 @@ export default function SubscriptionPage() {
                         {payment.status === "completed" ? (
                           <>
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Paid
+                            {t("subscription.paid")}
                           </>
                         ) : payment.status === "pending" ? (
                           <>
                             <Clock className="h-3 w-3 mr-1" />
-                            Pending
+                            {t("common.pending")}
                           </>
                         ) : (
                           <>
@@ -267,7 +273,7 @@ export default function SubscriptionPage() {
             </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No payment history available
+              {t("subscription.noPaymentHistory")}
             </div>
           )}
         </CardContent>

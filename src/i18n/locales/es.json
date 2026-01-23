@@ -113,6 +113,24 @@
       "passwordMismatch": "Las contraseñas no coinciden",
       "accessDenied": "Acceso denegado. Este acceso es solo para empleados.",
       "accountDeactivated": "Su cuenta ha sido desactivada. Contacte con un administrador."
+    },
+    "unauthorized": {
+      "title": "Acceso Denegado",
+      "description": "No tiene permiso para acceder a esta página.",
+      "contactAdmin": "Si cree que esto es un error, contacte con su administrador o intente iniciar sesión con otra cuenta.",
+      "goHome": "Ir al Inicio",
+      "backToLogin": "Volver al Login"
+    },
+    "register": {
+      "title": "Crear Su Cuenta",
+      "subtitle": "Comience su protección ICE Alarm hoy",
+      "emailPlaceholder": "su@email.com",
+      "passwordMin8": "La contraseña debe tener al menos 8 caracteres",
+      "creating": "Creando cuenta...",
+      "createAccount": "Crear Cuenta",
+      "hasAccount": "¿Ya tiene cuenta?",
+      "accountCreated": "¡Cuenta creada! Complete su registro.",
+      "termsAgreement": "Al crear una cuenta, acepta nuestros"
     }
   },
   "navigation": {
@@ -747,7 +765,9 @@
     "forbidden": "Prohibido",
     "networkError": "Error de red. Por favor compruebe su conexión.",
     "sessionExpired": "Su sesión ha expirado. Por favor inicie sesión de nuevo.",
-    "unexpectedError": "Ha ocurrido un error inesperado"
+    "unexpectedError": "Ha ocurrido un error inesperado",
+    "pageNotFound": "¡Ups! Página no encontrada",
+    "returnHome": "Volver al inicio"
   },
   "time": {
     "justNow": "ahora mismo",
