@@ -8,6 +8,9 @@ export interface MemberDetails {
   dateOfBirth: string;
   nieDni: string;
   preferredLanguage: "en" | "es";
+  preferredContactMethod?: "whatsapp" | "phone" | "email";
+  preferredContactTime?: "morning" | "afternoon" | "evening" | "anytime";
+  specialInstructions?: string;
 }
 
 export interface AddressDetails {
@@ -84,6 +87,9 @@ export const initialJoinWizardData: JoinWizardData = {
     dateOfBirth: "",
     nieDni: "",
     preferredLanguage: "es",
+    preferredContactMethod: undefined,
+    preferredContactTime: undefined,
+    specialInstructions: undefined,
   },
   address: {
     addressLine1: "",

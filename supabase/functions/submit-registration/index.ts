@@ -14,6 +14,9 @@ interface MemberDetails {
   dateOfBirth: string;
   nieDni: string;
   preferredLanguage: "en" | "es";
+  preferredContactMethod?: "whatsapp" | "phone" | "email";
+  preferredContactTime?: "morning" | "afternoon" | "evening" | "anytime";
+  specialInstructions?: string;
 }
 
 interface AddressDetails {
@@ -78,6 +81,84 @@ const PRICING = {
   shipping: 14.99,                // IVA included
 };
 
+// Helper function to create CRM profile for a member
+// deno-lint-ignore no-explicit-any
+async function createCrmProfile(
+  supabase: any,
+  memberId: string,
+  membershipType: "single" | "couple",
+  language: "en" | "es",
+  includePendant: boolean,
+  pendantCount: number,
+  hasPartnerAttribution: boolean
+) {
+  // Build tags array
+  const tags: string[] = [];
+  tags.push(membershipType === "couple" ? "membership_couple" : "membership_single");
+  tags.push(language === "en" ? "language_en" : "language_es");
+  tags.push(includePendant ? "pendant_yes" : "pendant_no");
+  if (includePendant && pendantCount > 0) {
+    tags.push(`pendant_qty_${pendantCount}`);
+  }
+  if (hasPartnerAttribution) {
+    tags.push("partner_referred");
+  }
+
+  // Determine referral source
+  const referralSource = hasPartnerAttribution ? "Partner" : "icealarm.es";
+
+  try {
+    // First check if profile exists
+    const { data: existing } = await supabase
+      .from("crm_profiles")
+      .select("member_id")
+      .eq("member_id", memberId)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing
+      const { error } = await supabase
+        .from("crm_profiles")
+        .update({
+          stage: "New Member",
+          status: "Website Signup",
+          referral_source: referralSource,
+          tags: tags,
+          groups: [],
+          updated_at: new Date().toISOString(),
+        })
+        .eq("member_id", memberId);
+
+      if (error) {
+        console.error("Error updating CRM profile:", error);
+      } else {
+        console.log("CRM profile updated for member:", memberId, "with tags:", tags);
+      }
+    } else {
+      // Insert new
+      const { error } = await supabase
+        .from("crm_profiles")
+        .insert({
+          member_id: memberId,
+          stage: "New Member",
+          status: "Website Signup",
+          referral_source: referralSource,
+          tags: tags,
+          groups: [],
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error("Error creating CRM profile:", error);
+      } else {
+        console.log("CRM profile created for member:", memberId, "with tags:", tags);
+      }
+    }
+  } catch (err) {
+    console.error("Exception creating CRM profile:", err);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -118,10 +199,23 @@ serve(async (req) => {
     const subscriptionTax = subscriptionNet * PRICING.subscriptionTaxRate;
     const subscriptionFinal = subscriptionNet + subscriptionTax;
     
-    // Pendant: net price + 21% IVA - use provided count or default based on membership
-    const pendantCount = body.includePendant 
-      ? (body.pendantCount || (body.membershipType === "couple" ? 2 : 1))
-      : 0;
+    // FIXED: Respect user's pendantCount (1-4), with validation
+    // Only apply defaults if pendantCount is not provided or invalid
+    let pendantCount = 0;
+    if (body.includePendant) {
+      const requestedCount = body.pendantCount;
+      
+      // Validate: pendantCount must be between 1 and 4
+      if (typeof requestedCount === 'number' && requestedCount >= 1 && requestedCount <= 4) {
+        pendantCount = Math.floor(requestedCount); // Ensure integer
+      } else {
+        // Apply defaults only if invalid or missing
+        pendantCount = body.membershipType === "couple" ? 2 : 1;
+      }
+      
+      console.log(`Pendant count: requested=${requestedCount}, validated=${pendantCount}`);
+    }
+    
     const pendantNet = pendantCount * PRICING.pendantNet;
     const pendantTax = pendantNet * PRICING.pendantTaxRate;
     const pendantFinal = pendantNet + pendantTax;
@@ -139,7 +233,7 @@ serve(async (req) => {
     // Totals
     const total = subscriptionFinal + pendantFinal + registrationFee + shipping;
 
-    // 1. Create primary member
+    // 1. Create primary member (with new contact preference fields)
     const { data: primaryMemberData, error: memberError } = await supabase
       .from("members")
       .insert({
@@ -150,6 +244,9 @@ serve(async (req) => {
         date_of_birth: body.primaryMember.dateOfBirth,
         nie_dni: body.primaryMember.nieDni || null,
         preferred_language: body.primaryMember.preferredLanguage,
+        preferred_contact_method: body.primaryMember.preferredContactMethod || null,
+        preferred_contact_time: body.primaryMember.preferredContactTime || null,
+        special_instructions: body.primaryMember.specialInstructions || null,
         address_line_1: body.address.addressLine1,
         address_line_2: body.address.addressLine2 || null,
         city: body.address.city,
@@ -181,6 +278,9 @@ serve(async (req) => {
           date_of_birth: body.partnerMember.dateOfBirth,
           nie_dni: body.partnerMember.nieDni || null,
           preferred_language: body.partnerMember.preferredLanguage,
+          preferred_contact_method: body.partnerMember.preferredContactMethod || null,
+          preferred_contact_time: body.partnerMember.preferredContactTime || null,
+          special_instructions: body.partnerMember.specialInstructions || null,
           address_line_1: body.address.addressLine1,
           address_line_2: body.address.addressLine2 || null,
           city: body.address.city,
@@ -344,7 +444,7 @@ serve(async (req) => {
       total_price: subscriptionFinal,
     });
 
-    // Pendant items
+    // Pendant items - with correct quantity from user selection
     if (pendantCount > 0) {
       orderItems.push({
         order_id: orderData.id,
@@ -403,6 +503,9 @@ serve(async (req) => {
 
     // 11. Handle partner attribution if referral code provided
     let attributionId = null;
+    let hasPartnerAttribution = false;
+    let attributedPartnerId: string | undefined = undefined;
+    
     if (body.partnerRef) {
       console.log("Processing partner attribution for ref:", body.partnerRef);
       
@@ -415,6 +518,8 @@ serve(async (req) => {
         .single();
 
       if (partner && !partnerError) {
+        attributedPartnerId = partner.id;
+        
         // Check if attribution already exists (first-touch wins)
         const { data: existingAttribution } = await supabase
           .from("partner_attributions")
@@ -452,6 +557,7 @@ serve(async (req) => {
             console.error("Error creating attribution:", attrError);
           } else {
             attributionId = attribution.id;
+            hasPartnerAttribution = true;
             console.log("Partner attribution created:", attributionId);
 
             // Update any matching partner invite (by email or phone)
@@ -491,16 +597,43 @@ serve(async (req) => {
                 email: body.primaryMember.email,
                 membership_type: body.membershipType,
                 has_pendant: body.includePendant,
+                pendant_count: pendantCount,
                 utm_params: body.utmParams || null,
               },
             });
           }
         } else {
           console.log("Attribution already exists for member, skipping (first-touch wins)");
+          hasPartnerAttribution = true; // Still mark as partner-referred for CRM
         }
       } else {
         console.log("Partner not found or inactive for ref:", body.partnerRef);
       }
+    }
+
+    // 12. CREATE CRM PROFILES for all created members
+    // Primary member CRM profile
+    await createCrmProfile(
+      supabase,
+      primaryMemberData.id,
+      body.membershipType,
+      body.primaryMember.preferredLanguage,
+      body.includePendant,
+      pendantCount,
+      hasPartnerAttribution
+    );
+
+    // Partner member CRM profile (if couple)
+    if (partnerMemberData) {
+      await createCrmProfile(
+        supabase,
+        partnerMemberData.id,
+        body.membershipType,
+        body.partnerMember?.preferredLanguage || "es",
+        body.includePendant,
+        pendantCount,
+        hasPartnerAttribution
+      );
     }
 
     // Return all IDs needed for checkout
