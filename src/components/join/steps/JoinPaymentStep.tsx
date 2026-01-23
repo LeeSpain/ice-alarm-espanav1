@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { JoinWizardData } from "@/types/wizard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, Loader2, Lock, Shield, ExternalLink, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, Loader2, Lock, Shield, ExternalLink, AlertCircle, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateOrder, formatPrice } from "@/config/pricing";
 import { getStoredReferralData, clearReferralData } from "@/lib/crmEvents";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 interface JoinPaymentStepProps {
   data: JoinWizardData;
@@ -18,8 +20,16 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { registrationFeeEnabled, registrationFeeDiscount } = usePricingSettings();
 
-  const order = calculateOrder({ membershipType: data.membershipType, billingFrequency: data.billingFrequency, includePendant: data.includePendant, includeShipping: data.includePendant });
+  const order = calculateOrder({ 
+    membershipType: data.membershipType, 
+    billingFrequency: data.billingFrequency, 
+    includePendant: data.includePendant, 
+    includeShipping: data.includePendant,
+    registrationFeeEnabled,
+    registrationFeeDiscount
+  });
   const total = order.grandTotal;
 
   const handlePayWithStripe = async () => {
@@ -53,7 +63,31 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
         <div className="flex justify-between"><span className="text-muted-foreground">{data.membershipType === "couple" ? "Couple" : "Individual"} Membership{data.billingFrequency === "annual" && " (Annual)"}</span><span>{formatPrice(order.subscriptionFinal)}</span></div>
         {order.pendantCount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">GPS Safety Pendant {order.pendantCount > 1 && `(×${order.pendantCount})`}</span><span>{formatPrice(order.pendantFinal)}</span></div>}
         {order.shipping > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("joinWizard.summary.shipping")}</span><span>{formatPrice(order.shipping)}</span></div>}
-        <div className="flex justify-between"><span className="text-muted-foreground">{t("joinWizard.payment.registrationFee")}</span><span>{formatPrice(order.registrationFee)}</span></div>
+        {/* Registration Fee - with discount display */}
+        {order.registrationFeeEnabled && (
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground flex items-center gap-2">
+              {t("joinWizard.payment.registrationFee")}
+              {order.registrationFeeDiscount === 100 && (
+                <Badge className="bg-status-active/20 text-status-active border-0 gap-1 text-xs">
+                  <Gift className="h-3 w-3" />
+                  {t("common.free") || "FREE"}
+                </Badge>
+              )}
+              {order.registrationFeeDiscount > 0 && order.registrationFeeDiscount < 100 && (
+                <Badge className="bg-status-active/20 text-status-active border-0 text-xs">
+                  {order.registrationFeeDiscount}% {t("common.off") || "off"}
+                </Badge>
+              )}
+            </span>
+            <span className="flex items-center gap-2">
+              {order.registrationFeeDiscount > 0 && (
+                <span className="text-sm text-muted-foreground line-through">{formatPrice(order.registrationFeeOriginal)}</span>
+              )}
+              <span>{order.registrationFeeDiscount === 100 ? (t("common.free") || "FREE") : formatPrice(order.registrationFee)}</span>
+            </span>
+          </div>
+        )}
         <div className="border-t pt-3 mt-3"><div className="flex justify-between text-lg font-bold"><span>{t("joinWizard.payment.totalDueToday")}</span><span className="text-primary">{formatPrice(total)}</span></div></div>
       </CardContent></Card>
       {error && <Card className="border-destructive bg-destructive/10"><CardContent className="pt-6 flex items-start gap-3"><AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" /><div><p className="font-medium text-destructive">{t("joinWizard.payment.paymentError")}</p><p className="text-sm text-muted-foreground">{error}</p></div></CardContent></Card>}

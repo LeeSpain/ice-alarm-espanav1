@@ -92,6 +92,20 @@ serve(async (req) => {
     const body: RegistrationRequest = await req.json();
     console.log("Processing registration for:", body.primaryMember.email);
 
+    // Fetch registration fee settings from database
+    const { data: settingsData } = await supabase
+      .from("system_settings")
+      .select("key, value")
+      .in("key", ["registration_fee_enabled", "registration_fee_discount"]);
+
+    const settingsMap = (settingsData || []).reduce((acc, s) => {
+      acc[s.key] = s.value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const registrationFeeEnabled = settingsMap.registration_fee_enabled !== "false";
+    const registrationFeeDiscount = parseFloat(settingsMap.registration_fee_discount || "0");
+
     // Calculate pricing with correct IVA rates
     const monthlyNetPrice = body.membershipType === "single" 
       ? PRICING.single.monthlyNet 
@@ -112,8 +126,12 @@ serve(async (req) => {
     const pendantTax = pendantNet * PRICING.pendantTaxRate;
     const pendantFinal = pendantNet + pendantTax;
     
-    // Registration: no IVA
-    const registrationFee = PRICING.registrationFee;
+    // Registration: apply enabled/discount settings
+    let registrationFee = 0;
+    const registrationFeeOriginal = PRICING.registrationFee;
+    if (registrationFeeEnabled) {
+      registrationFee = registrationFeeOriginal * (1 - registrationFeeDiscount / 100);
+    }
     
     // Shipping: IVA included (only if pendant ordered)
     const shipping = pendantCount > 0 ? PRICING.shipping : 0;
@@ -340,17 +358,21 @@ serve(async (req) => {
       });
     }
 
-    // Registration fee (no IVA)
-    orderItems.push({
-      order_id: orderData.id,
-      item_type: "registration_fee",
-      description: "One-time Registration Fee",
-      quantity: 1,
-      unit_price: registrationFee,
-      tax_rate: 0,
-      tax_amount: 0,
-      total_price: registrationFee,
-    });
+    // Registration fee (only if enabled and amount > 0)
+    if (registrationFeeEnabled && registrationFee > 0) {
+      orderItems.push({
+        order_id: orderData.id,
+        item_type: "registration_fee",
+        description: registrationFeeDiscount > 0 
+          ? `One-time Registration Fee (${registrationFeeDiscount}% discount applied)`
+          : "One-time Registration Fee",
+        quantity: 1,
+        unit_price: registrationFee,
+        tax_rate: 0,
+        tax_amount: 0,
+        total_price: registrationFee,
+      });
+    }
 
     for (const item of orderItems) {
       const { error: itemError } = await supabase.from("order_items").insert(item);
@@ -503,11 +525,13 @@ serve(async (req) => {
             amount: pendantFinal / pendantCount,
             quantity: pendantCount,
           }] : []),
-          {
-            name: "Registration Fee",
+          ...(registrationFeeEnabled && registrationFee > 0 ? [{
+            name: registrationFeeDiscount > 0 
+              ? `Registration Fee (${registrationFeeDiscount}% off)` 
+              : "Registration Fee",
             amount: registrationFee,
             quantity: 1,
-          },
+          }] : []),
         ],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

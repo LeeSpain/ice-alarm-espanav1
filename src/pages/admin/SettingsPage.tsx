@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { 
   Building2,
   CreditCard,
@@ -18,12 +20,15 @@ import {
   Loader2,
   AlertCircle,
   Map,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Percent,
+  Tag
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
+import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
   key: string;
@@ -52,6 +57,12 @@ export default function SettingsPage() {
     registration_fee: "59.99",
     pendant_price: "151.25",
     shipping: "14.99"
+  });
+
+  // Registration fee settings state
+  const [registrationFeeSettings, setRegistrationFeeSettings] = useState({
+    enabled: true,
+    discount: 0
   });
 
   // Integration keys state
@@ -129,6 +140,12 @@ export default function SettingsPage() {
       });
 
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
+
+      // Registration fee settings
+      setRegistrationFeeSettings({
+        enabled: settingsMap.registration_fee_enabled !== "false",
+        discount: parseFloat(settingsMap.registration_fee_discount || "0")
+      });
     }
   }, [settings]);
 
@@ -169,6 +186,13 @@ export default function SettingsPage() {
 
   const handleSavePricing = () => {
     saveMutation.mutate(pricingSettings);
+  };
+
+  const handleSaveRegistrationFee = () => {
+    saveMutation.mutate({
+      registration_fee_enabled: registrationFeeSettings.enabled.toString(),
+      registration_fee_discount: registrationFeeSettings.discount.toString()
+    });
   };
 
   const handleSaveStripe = () => {
@@ -408,6 +432,129 @@ export default function SettingsPage() {
                     <Save className="h-4 w-4 mr-2" />
                   )}
                   Save Pricing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Registration Fee Settings Card */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Registration Fee Settings
+              </CardTitle>
+              <CardDescription>
+                Toggle the registration fee on/off and apply discounts for promotions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Enable/Disable Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Enable Registration Fee</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Base Price: €{PRICING.registration.amount.toFixed(2)}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={registrationFeeSettings.enabled}
+                    onCheckedChange={(checked) => 
+                      setRegistrationFeeSettings(prev => ({ ...prev, enabled: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Discount Slider - Only visible when enabled */}
+                {registrationFeeSettings.enabled && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex items-center gap-2">
+                        <Percent className="h-4 w-4" />
+                        Discount
+                      </Label>
+                      <span className="text-lg font-semibold">
+                        {registrationFeeSettings.discount}%
+                      </span>
+                    </div>
+                    
+                    <Slider
+                      value={[registrationFeeSettings.discount]}
+                      onValueChange={(value) => 
+                        setRegistrationFeeSettings(prev => ({ ...prev, discount: value[0] }))
+                      }
+                      max={100}
+                      step={5}
+                      className="py-4"
+                    />
+
+                    {/* Quick preset buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      {[0, 25, 50, 75, 100].map((preset) => (
+                        <Button
+                          key={preset}
+                          variant={registrationFeeSettings.discount === preset ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setRegistrationFeeSettings(prev => ({ ...prev, discount: preset }))}
+                        >
+                          {preset}%{preset === 100 && " (FREE)"}
+                        </Button>
+                      ))}
+                    </div>
+
+                    {/* Preview */}
+                    <div className="p-4 rounded-lg border bg-card">
+                      <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+                      <div className="flex items-center gap-3">
+                        {registrationFeeSettings.discount > 0 ? (
+                          <>
+                            <span className="text-muted-foreground line-through">
+                              €{PRICING.registration.amount.toFixed(2)}
+                            </span>
+                            <span className="text-xl font-bold text-primary">
+                              {registrationFeeSettings.discount === 100 
+                                ? "FREE" 
+                                : `€${(PRICING.registration.amount * (1 - registrationFeeSettings.discount / 100)).toFixed(2)}`
+                              }
+                            </span>
+                            {registrationFeeSettings.discount < 100 && (
+                              <Badge variant="secondary" className="bg-status-active/20 text-status-active border-0">
+                                {registrationFeeSettings.discount}% off
+                              </Badge>
+                            )}
+                            {registrationFeeSettings.discount === 100 && (
+                              <Badge variant="secondary" className="bg-status-active/20 text-status-active border-0">
+                                🎉 Free Promotion
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-xl font-bold">
+                            €{PRICING.registration.amount.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!registrationFeeSettings.enabled && (
+                  <div className="p-4 rounded-lg border bg-muted/50 text-center">
+                    <p className="text-muted-foreground">
+                      Registration fee is currently <span className="font-semibold text-foreground">disabled</span>.
+                      New members will not be charged a registration fee.
+                    </p>
+                  </div>
+                )}
+
+                <Button onClick={handleSaveRegistrationFee} disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Registration Fee Settings
                 </Button>
               </div>
             </CardContent>
