@@ -123,11 +123,15 @@ serve(async (req) => {
       const conversationHistory = context?.conversationHistory || [];
       const currentMessage = context?.currentMessage || "";
 
-      // Build messages array for chat
+      // Build messages array for chat with explicit language instruction
+      const languageInstruction = userLanguage === "es" 
+        ? "\n\n**IMPORTANTE**: El usuario está comunicándose en ESPAÑOL. DEBES responder completamente en español. Usa terminología española natural y un tono amigable."
+        : "\n\n**IMPORTANT**: The user is communicating in ENGLISH. You MUST respond entirely in English. Use natural English terminology and a friendly tone.";
+
       const messages = [
         { 
           role: "system", 
-          content: CUSTOMER_SERVICE_CHAT_PROMPT + `\n\nIMPORTANT: The user is communicating in ${userLanguage === "es" ? "Spanish" : "English"}. Respond in the same language.`
+          content: CUSTOMER_SERVICE_CHAT_PROMPT + languageInstruction
         },
         ...conversationHistory.map((msg: { role: string; content: string }) => ({
           role: msg.role,

@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { X, Send, Loader2, Bot } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { X, Send, Loader2, Bot, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,19 +18,44 @@ interface Message {
 
 const AGENT_KEY = "customer_service_expert";
 
+
 export function AIChatWidget() {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId] = useState(() => crypto.randomUUID());
+  const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
   // Fetch the customer service agent to get its avatar
   const { data: csAgent, isLoading: agentLoading } = useAIAgent(AGENT_KEY);
   const avatarUrl = csAgent?.avatar_url;
+
+  // Create welcome message helper - uses t() for proper i18n
+  const createWelcomeMessage = useCallback((): Message => ({
+    id: crypto.randomUUID(),
+    role: "assistant",
+    content: t("chat.welcomeMessage"),
+    timestamp: new Date(),
+  }), [t]);
+
+  // Reset conversation when language changes
+  const resetConversation = useCallback(() => {
+    setConversationId(crypto.randomUUID());
+    setMessages([createWelcomeMessage()]);
+    setCurrentLanguage(i18n.language);
+  }, [i18n.language, createWelcomeMessage]);
+
+  // Detect language changes and reset conversation
+  useEffect(() => {
+    if (i18n.language !== currentLanguage) {
+      // Language changed - reset the conversation
+      resetConversation();
+    }
+  }, [i18n.language, currentLanguage, resetConversation]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -49,17 +74,10 @@ export function AIChatWidget() {
   // Add welcome message when chat opens for the first time
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: i18n.language === "es" 
-          ? "¡Hola! 👋 Soy tu asistente virtual de ICE Alarm. ¿En qué puedo ayudarte hoy? Puedo responder preguntas sobre nuestros servicios, precios, o ayudarte a comenzar."
-          : "Hello! 👋 I'm your ICE Alarm virtual assistant. How can I help you today? I can answer questions about our services, pricing, or help you get started.",
-        timestamp: new Date(),
-      };
-      setMessages([welcomeMessage]);
+      setMessages([createWelcomeMessage()]);
+      setCurrentLanguage(i18n.language);
     }
-  }, [isOpen, messages.length, i18n.language]);
+  }, [isOpen, messages.length, i18n.language, createWelcomeMessage]);
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -99,9 +117,7 @@ export function AIChatWidget() {
       if (error) throw error;
 
       // Extract the response from the AI output
-      let responseText = i18n.language === "es"
-        ? "Lo siento, no pude procesar tu mensaje. Por favor, intenta de nuevo."
-        : "Sorry, I couldn't process your message. Please try again.";
+      let responseText = t("chat.fallbackMessage");
 
       if (data?.output) {
         if (typeof data.output === "string") {
@@ -128,9 +144,7 @@ export function AIChatWidget() {
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: i18n.language === "es"
-          ? "Lo siento, hubo un problema al conectar. Por favor, intenta de nuevo más tarde."
-          : "Sorry, there was a connection issue. Please try again later.",
+        content: t("chat.errorMessage"),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -206,15 +220,27 @@ export function AIChatWidget() {
               {t("chat.available", "Available 24/7")}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
-            onClick={() => setIsOpen(false)}
-            aria-label={t("chat.closeChat", "Close chat")}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={resetConversation}
+              aria-label={t("chat.newChat", "New chat")}
+              title={t("chat.newChat", "New chat")}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={() => setIsOpen(false)}
+              aria-label={t("chat.closeChat", "Close chat")}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
