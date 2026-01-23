@@ -11,6 +11,7 @@ import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { 
   Phone, 
   Mail, 
@@ -26,6 +27,7 @@ import {
 
 export default function ContactPage() {
   const { t } = useTranslation();
+  const { settings: companySettings } = useCompanySettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -103,7 +105,7 @@ export default function ContactPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" asChild className="w-full">
-                  <a href="tel:+34900123456">
+                  <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
                     <Phone className="h-4 w-4 mr-2" />
                     Call Us Now
                   </a>
@@ -172,8 +174,11 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold mb-1">Call Us</h3>
                       <p className="text-muted-foreground text-sm mb-2">Speak directly with our team</p>
-                      <a href="tel:+34900123456" className="text-primary font-medium hover:underline">
-                        +34 900 123 456
+                      <a 
+                        href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} 
+                        className="text-primary font-medium hover:underline"
+                      >
+                        {companySettings.emergency_phone}
                       </a>
                     </div>
                   </div>
@@ -189,8 +194,11 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold mb-1">Email Us</h3>
                       <p className="text-muted-foreground text-sm mb-2">We'll respond within 24 hours</p>
-                      <a href="mailto:info@icealarm.es" className="text-primary font-medium hover:underline">
-                        info@icealarm.es
+                      <a 
+                        href={`mailto:${companySettings.support_email}`} 
+                        className="text-primary font-medium hover:underline"
+                      >
+                        {companySettings.support_email}
                       </a>
                     </div>
                   </div>
@@ -222,9 +230,8 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold mb-1">Visit Us</h3>
                       <p className="text-muted-foreground text-sm">
-                        ICE Alarm España<br />
-                        Calle Principal 123<br />
-                        03001 Alicante, Spain
+                        {companySettings.company_name}<br />
+                        {companySettings.address}
                       </p>
                     </div>
                   </div>
@@ -400,7 +407,7 @@ export default function ContactPage() {
         <div className="container mx-auto text-center">
           <Logo size="sm" />
           <p className="text-sm text-muted-foreground mt-4">
-            © {new Date().getFullYear()} ICE Alarm España. All rights reserved.
+            © {new Date().getFullYear()} {companySettings.company_name}. All rights reserved.
           </p>
         </div>
       </footer>

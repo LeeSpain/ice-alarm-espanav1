@@ -106,12 +106,12 @@ export default function SettingsPage() {
         return acc;
       }, {} as Record<string, string>);
 
-      // Company
+      // Company - keys are stored with 'settings_' prefix
       setCompanySettings(prev => ({
-        company_name: settingsMap.company_name || prev.company_name,
-        emergency_phone: settingsMap.emergency_phone || prev.emergency_phone,
-        support_email: settingsMap.support_email || prev.support_email,
-        address: settingsMap.address || prev.address
+        company_name: settingsMap.settings_company_name || prev.company_name,
+        emergency_phone: settingsMap.settings_emergency_phone || prev.emergency_phone,
+        support_email: settingsMap.settings_support_email || prev.support_email,
+        address: settingsMap.settings_address || prev.address
       }));
 
       // Pricing
@@ -141,10 +141,10 @@ export default function SettingsPage() {
 
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
 
-      // Registration fee settings
+      // Registration fee settings - keys are stored with 'settings_' prefix
       setRegistrationFeeSettings({
-        enabled: settingsMap.registration_fee_enabled !== "false",
-        discount: parseFloat(settingsMap.registration_fee_discount || "0")
+        enabled: settingsMap.settings_registration_fee_enabled !== "false",
+        discount: parseFloat(settingsMap.settings_registration_fee_discount || "0")
       });
     }
   }, [settings]);
@@ -166,6 +166,8 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["pricing-settings"] });
       toast({
         title: "Settings saved",
         description: "Your changes have been saved successfully."
