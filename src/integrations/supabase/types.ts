@@ -1971,6 +1971,87 @@ export type Database = {
           },
         ]
       }
+      website_events: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country_code: string | null
+          country_name: string | null
+          created_at: string | null
+          device_type: string | null
+          event_type: string
+          id: string
+          language: string | null
+          metadata: Json | null
+          operating_system: string | null
+          page_path: string | null
+          page_title: string | null
+          referrer: string | null
+          region: string | null
+          screen_resolution: string | null
+          session_id: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country_code?: string | null
+          country_name?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type: string
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          operating_system?: string | null
+          page_path?: string | null
+          page_title?: string | null
+          referrer?: string | null
+          region?: string | null
+          screen_resolution?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country_code?: string | null
+          country_name?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type?: string
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          operating_system?: string | null
+          page_path?: string | null
+          page_title?: string | null
+          referrer?: string | null
+          region?: string | null
+          screen_resolution?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       website_images: {
         Row: {
           alt_text: string | null
