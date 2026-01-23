@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { JoinWizardData, MedicalDetails } from "@/types/wizard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Plus, User, Users, AlertTriangle, Heart, Info } from "lucide-react";
+import { X, Plus, User, Users, AlertTriangle, Heart } from "lucide-react";
 
 interface JoinMedicalStepProps {
   data: JoinWizardData;
@@ -17,6 +18,7 @@ interface JoinMedicalStepProps {
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
 
 export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
+  const { t } = useTranslation();
   const [newAllergy, setNewAllergy] = useState("");
   const [newMedication, setNewMedication] = useState("");
   const [newCondition, setNewCondition] = useState("");
@@ -88,13 +90,13 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
     <div className="space-y-6">
       {/* Blood Type */}
       <div className="space-y-2">
-        <Label>Blood Type</Label>
+        <Label>{t("joinWizard.medical.bloodType")}</Label>
         <Select
           value={values.bloodType}
           onValueChange={(value) => onChange("bloodType", value)}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select blood type" />
+            <SelectValue placeholder={t("joinWizard.medical.selectBloodType")} />
           </SelectTrigger>
           <SelectContent>
             {bloodTypes.map((type) => (
@@ -110,13 +112,13 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" />
-          Allergies
+          {t("joinWizard.medical.allergies")}
         </Label>
         <div className="flex gap-2">
           <Input
             value={newAllergy}
             onChange={(e) => setNewAllergy(e.target.value)}
-            placeholder="Enter allergy (e.g., Penicillin)"
+            placeholder={t("joinWizard.medical.allergiesPlaceholder")}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -155,12 +157,12 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
 
       {/* Medications */}
       <div className="space-y-2">
-        <Label>Current Medications</Label>
+        <Label>{t("joinWizard.medical.medications")}</Label>
         <div className="flex gap-2">
           <Input
             value={newMedication}
             onChange={(e) => setNewMedication(e.target.value)}
-            placeholder="Enter medication name"
+            placeholder={t("joinWizard.medical.medicationsPlaceholder")}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -198,12 +200,12 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
 
       {/* Medical Conditions */}
       <div className="space-y-2">
-        <Label>Medical Conditions</Label>
+        <Label>{t("joinWizard.medical.conditions")}</Label>
         <div className="flex gap-2">
           <Input
             value={newCondition}
             onChange={(e) => setNewCondition(e.target.value)}
-            placeholder="Enter condition (e.g., Diabetes)"
+            placeholder={t("joinWizard.medical.conditionsPlaceholder")}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -242,7 +244,7 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
       {/* Doctor Information */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Doctor's Name</Label>
+          <Label>{t("joinWizard.medical.doctorName")}</Label>
           <Input
             value={values.doctorName}
             onChange={(e) => onChange("doctorName", e.target.value)}
@@ -250,7 +252,7 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Doctor's Phone</Label>
+          <Label>{t("joinWizard.medical.doctorPhone")}</Label>
           <Input
             value={values.doctorPhone}
             onChange={(e) => onChange("doctorPhone", e.target.value)}
@@ -261,21 +263,21 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
 
       {/* Hospital Preference */}
       <div className="space-y-2">
-        <Label>Preferred Hospital</Label>
+        <Label>{t("joinWizard.medical.preferredHospital")}</Label>
         <Input
           value={values.hospitalPreference}
           onChange={(e) => onChange("hospitalPreference", e.target.value)}
-          placeholder="Hospital name"
+          placeholder={t("joinWizard.medical.hospitalPlaceholder")}
         />
       </div>
 
       {/* Additional Notes */}
       <div className="space-y-2">
-        <Label>Additional Medical Notes</Label>
+        <Label>{t("joinWizard.medical.additionalNotes")}</Label>
         <Textarea
           value={values.additionalNotes}
           onChange={(e) => onChange("additionalNotes", e.target.value)}
-          placeholder="Any other important medical information..."
+          placeholder={t("joinWizard.medical.additionalNotesPlaceholder")}
           rows={3}
         />
       </div>
@@ -285,9 +287,9 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Medical Information</h2>
+        <h2 className="text-2xl font-bold">{t("joinWizard.medical.title")}</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          This information helps emergency responders provide the best possible care.
+          {t("joinWizard.medical.subtitle")}
         </p>
       </div>
 
@@ -295,10 +297,9 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
       <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
         <Heart className="h-5 w-5 text-primary mt-0.5 shrink-0" />
         <div>
-          <p className="font-medium text-sm">Optional but Recommended</p>
+          <p className="font-medium text-sm">{t("joinWizard.medical.optionalTitle")}</p>
           <p className="text-xs text-muted-foreground">
-            Medical information is shared with emergency services when needed. 
-            You can update this information at any time from your dashboard.
+            {t("joinWizard.medical.optionalDesc")}
           </p>
         </div>
       </div>
@@ -310,11 +311,11 @@ export function JoinMedicalStep({ data, onUpdate }: JoinMedicalStepProps) {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="primary" className="gap-2">
               <User className="h-4 w-4" />
-              Primary Member
+              {t("joinWizard.medical.primaryMember")}
             </TabsTrigger>
             <TabsTrigger value="partner" className="gap-2">
               <Users className="h-4 w-4" />
-              Partner
+              {t("joinWizard.medical.partner")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="primary" className="mt-6">

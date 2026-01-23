@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { JoinWizardData } from "@/types/wizard";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -12,39 +13,40 @@ interface JoinMembershipStepProps {
 }
 
 export function JoinMembershipStep({ data, onUpdate }: JoinMembershipStepProps) {
+  const { t } = useTranslation();
+  
   const plans = [
     {
       value: "single" as const,
-      title: "Individual Plan",
-      description: "Perfect for one person living independently",
+      titleKey: "joinWizard.membership.individualPlan",
+      descriptionKey: "joinWizard.membership.individualDesc",
       price: formatPrice(getSubscriptionMonthlyFinal('single')),
-      priceNote: "/month",
+      priceNoteKey: "joinWizard.membership.perMonth",
       icon: User,
     },
     {
       value: "couple" as const,
-      title: "Couple Plan",
-      description: "Ideal for couples living together",
+      titleKey: "joinWizard.membership.couplePlan",
+      descriptionKey: "joinWizard.membership.coupleDesc",
       price: formatPrice(getSubscriptionMonthlyFinal('couple')),
-      priceNote: "/month",
+      priceNoteKey: "joinWizard.membership.perMonth",
       icon: Users,
     },
   ];
 
   const features = [
-    { icon: Shield, text: "24/7 Emergency Response Center" },
-    { icon: Phone, text: "Two-Way Voice Communication" },
-    { icon: MapPin, text: "Real-Time GPS Location" },
-    { icon: Bell, text: "Automatic Fall Detection" },
+    { icon: Shield, textKey: "joinWizard.membership.feature24_7" },
+    { icon: Phone, textKey: "joinWizard.membership.featureVoice" },
+    { icon: MapPin, textKey: "joinWizard.membership.featureGps" },
+    { icon: Bell, textKey: "joinWizard.membership.featureFall" },
   ];
 
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Choose Your Membership Plan</h2>
+        <h2 className="text-2xl font-bold">{t("joinWizard.membership.title")}</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Select the plan that best fits your needs. Both plans include all our 
-          premium safety features.
+          {t("joinWizard.membership.subtitle")}
         </p>
       </div>
 
@@ -83,15 +85,15 @@ export function JoinMembershipStep({ data, onUpdate }: JoinMembershipStepProps) 
                       <Icon className="h-7 w-7" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{plan.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{plan.description}</p>
+                      <CardTitle className="text-lg">{t(plan.titleKey)}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{t(plan.descriptionKey)}</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-4">
                     <span className="text-3xl font-bold text-primary">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.priceNote}</span>
+                    <span className="text-muted-foreground">{t(plan.priceNoteKey)}</span>
                   </div>
                   <RadioGroupItem value={plan.value} id={plan.value} className="sr-only" />
                 </CardContent>
@@ -104,16 +106,16 @@ export function JoinMembershipStep({ data, onUpdate }: JoinMembershipStepProps) 
       {/* What's Included */}
       <Card className="bg-muted/30">
         <CardHeader>
-          <CardTitle className="text-base text-center">What's Included</CardTitle>
+          <CardTitle className="text-base text-center">{t("joinWizard.membership.whatsIncluded")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             {features.map((feature) => (
-              <div key={feature.text} className="flex items-center gap-3">
+              <div key={feature.textKey} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <feature.icon className="h-4 w-4 text-primary" />
                 </div>
-                <span className="text-sm">{feature.text}</span>
+                <span className="text-sm">{t(feature.textKey)}</span>
               </div>
             ))}
           </div>

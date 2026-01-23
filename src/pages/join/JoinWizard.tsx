@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,21 +24,22 @@ import { JoinPaymentStep } from "@/components/join/steps/JoinPaymentStep";
 import { JoinConfirmationStep } from "@/components/join/steps/JoinConfirmationStep";
 
 const steps = [
-  { id: 1, title: "Plan", icon: Users, shortTitle: "Plan" },
-  { id: 2, title: "Personal", icon: User, shortTitle: "Personal" },
-  { id: 3, title: "Address", icon: MapPin, shortTitle: "Address" },
-  { id: 4, title: "Medical", icon: Heart, shortTitle: "Medical" },
-  { id: 5, title: "Contacts", icon: Phone, shortTitle: "Contacts" },
-  { id: 6, title: "Device", icon: Smartphone, shortTitle: "Device" },
-  { id: 7, title: "Review", icon: FileText, shortTitle: "Review" },
-  { id: 8, title: "Payment", icon: CreditCard, shortTitle: "Pay" },
-  { id: 9, title: "Complete", icon: PartyPopper, shortTitle: "Done" },
+  { id: 1, titleKey: "joinWizard.steps.plan", icon: Users, shortTitleKey: "joinWizard.steps.plan" },
+  { id: 2, titleKey: "joinWizard.steps.personal", icon: User, shortTitleKey: "joinWizard.steps.personal" },
+  { id: 3, titleKey: "joinWizard.steps.address", icon: MapPin, shortTitleKey: "joinWizard.steps.address" },
+  { id: 4, titleKey: "joinWizard.steps.medical", icon: Heart, shortTitleKey: "joinWizard.steps.medical" },
+  { id: 5, titleKey: "joinWizard.steps.contacts", icon: Phone, shortTitleKey: "joinWizard.steps.contacts" },
+  { id: 6, titleKey: "joinWizard.steps.device", icon: Smartphone, shortTitleKey: "joinWizard.steps.device" },
+  { id: 7, titleKey: "joinWizard.steps.review", icon: FileText, shortTitleKey: "joinWizard.steps.review" },
+  { id: 8, titleKey: "joinWizard.steps.payment", icon: CreditCard, shortTitleKey: "joinWizard.steps.payment" },
+  { id: 9, titleKey: "joinWizard.steps.complete", icon: PartyPopper, shortTitleKey: "joinWizard.steps.complete" },
 ];
 
 const WIZARD_STORAGE_KEY = "join_wizard_data";
 const PARTNER_REF_KEY = "partner_ref";
 
 export default function JoinWizard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -309,7 +311,7 @@ export default function JoinWizard() {
           </Link>
           {currentStep < 9 && (
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-              Exit
+              {t("joinWizard.exit")}
             </Link>
           )}
         </div>
@@ -361,7 +363,7 @@ export default function JoinWizard() {
                         !isCurrent && "text-muted-foreground"
                       )}
                     >
-                      {step.shortTitle}
+                      {t(step.shortTitleKey)}
                     </span>
                   </button>
                 );
@@ -387,7 +389,7 @@ export default function JoinWizard() {
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              {t("joinWizard.back")}
             </Button>
 
             <Button 
@@ -396,10 +398,10 @@ export default function JoinWizard() {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <>Processing...</>
+                <>{t("joinWizard.processing")}</>
               ) : (
                 <>
-                  Continue
+                  {t("joinWizard.continue")}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -416,7 +418,7 @@ export default function JoinWizard() {
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Review
+              {t("joinWizard.backToReview")}
             </Button>
           </div>
         )}
@@ -426,13 +428,13 @@ export default function JoinWizard() {
       <footer className="border-t py-6 mt-auto">
         <div className="container max-w-4xl text-center text-sm text-muted-foreground">
           <p>
-            Need help?{" "}
+            {t("joinWizard.needHelp")}{" "}
             <a href="tel:+34900000000" className="text-primary hover:underline">
-              Call +34 900 000 000
+              {t("joinWizard.callUs")} +34 900 000 000
             </a>{" "}
-            or{" "}
+            {t("common.or")}{" "}
             <a href="mailto:support@icealarm.es" className="text-primary hover:underline">
-              email us
+              {t("joinWizard.emailUs")}
             </a>
           </p>
         </div>

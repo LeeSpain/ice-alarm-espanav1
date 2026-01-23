@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { JoinWizardData, MemberDetails } from "@/types/wizard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,8 @@ interface JoinPersonalStepProps {
 }
 
 export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
+  const { t } = useTranslation();
+  
   const updatePrimaryMember = (field: keyof MemberDetails, value: string) => {
     onUpdate({
       primaryMember: {
@@ -56,28 +59,28 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`${title}-firstName`}>First Name *</Label>
+          <Label htmlFor={`${title}-firstName`}>{t("joinWizard.personal.firstName")} *</Label>
           <Input
             id={`${title}-firstName`}
             value={values.firstName}
             onChange={(e) => onChange("firstName", e.target.value)}
-            placeholder="Enter first name"
+            placeholder={t("joinWizard.personal.enterFirstName")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${title}-lastName`}>Last Name *</Label>
+          <Label htmlFor={`${title}-lastName`}>{t("joinWizard.personal.lastName")} *</Label>
           <Input
             id={`${title}-lastName`}
             value={values.lastName}
             onChange={(e) => onChange("lastName", e.target.value)}
-            placeholder="Enter last name"
+            placeholder={t("joinWizard.personal.enterLastName")}
           />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`${title}-email`}>Email Address *</Label>
+          <Label htmlFor={`${title}-email`}>{t("joinWizard.personal.emailAddress")} *</Label>
           <Input
             id={`${title}-email`}
             type="email"
@@ -87,7 +90,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${title}-phone`}>Phone Number *</Label>
+          <Label htmlFor={`${title}-phone`}>{t("joinWizard.personal.phoneNumber")} *</Label>
           <Input
             id={`${title}-phone`}
             type="tel"
@@ -100,7 +103,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor={`${title}-dob`}>Date of Birth *</Label>
+          <Label htmlFor={`${title}-dob`}>{t("joinWizard.personal.dateOfBirth")} *</Label>
           <Input
             id={`${title}-dob`}
             type="date"
@@ -109,7 +112,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${title}-nieDni`}>NIE/DNI</Label>
+          <Label htmlFor={`${title}-nieDni`}>{t("joinWizard.personal.nieDni")}</Label>
           <Input
             id={`${title}-nieDni`}
             value={values.nieDni}
@@ -118,7 +121,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${title}-language`}>Preferred Language</Label>
+          <Label htmlFor={`${title}-language`}>{t("joinWizard.personal.preferredLanguage")}</Label>
           <Select
             value={values.preferredLanguage}
             onValueChange={(value) => onChange("preferredLanguage", value as "en" | "es")}
@@ -139,9 +142,13 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Personal Details</h2>
+        <h2 className="text-2xl font-bold">{t("joinWizard.personal.title")}</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Enter the details of {data.membershipType === "couple" ? "both members" : "the member"} who will use the service.
+          {t("joinWizard.personal.subtitle", { 
+            memberType: data.membershipType === "couple" 
+              ? t("joinWizard.personal.bothMembers") 
+              : t("joinWizard.personal.theMember") 
+          })}
         </p>
       </div>
 
@@ -149,14 +156,13 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
       <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
         <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
         <p className="text-sm text-muted-foreground">
-          We use this information to provide emergency services with accurate details. 
-          Please ensure all information is correct.
+          {t("joinWizard.personal.infoNote")}
         </p>
       </div>
 
       {data.membershipType === "single" ? (
         <PersonForm
-          title="Your Details"
+          title={t("joinWizard.personal.yourDetails")}
           icon={User}
           values={data.primaryMember}
           onChange={updatePrimaryMember}
@@ -166,16 +172,16 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="primary" className="gap-2">
               <User className="h-4 w-4" />
-              Primary Member
+              {t("joinWizard.personal.primaryMember")}
             </TabsTrigger>
             <TabsTrigger value="partner" className="gap-2">
               <Users className="h-4 w-4" />
-              Partner
+              {t("joinWizard.personal.partner")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="primary" className="mt-6">
             <PersonForm
-              title="Primary Member"
+              title={t("joinWizard.personal.primaryMember")}
               icon={User}
               values={data.primaryMember}
               onChange={updatePrimaryMember}
@@ -183,7 +189,7 @@ export function JoinPersonalStep({ data, onUpdate }: JoinPersonalStepProps) {
           </TabsContent>
           <TabsContent value="partner" className="mt-6">
             <PersonForm
-              title="Partner"
+              title={t("joinWizard.personal.partner")}
               icon={Users}
               values={
                 data.partnerMember || {

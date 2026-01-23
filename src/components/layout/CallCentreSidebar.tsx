@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   LayoutDashboard, 
   AlertTriangle, 
@@ -33,20 +34,20 @@ import {
 
 interface MenuItem {
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
   path: string;
   badgeKey?: "alerts" | "messages";
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/call-centre" },
-  { icon: AlertTriangle, label: "Alerts", path: "/call-centre/alerts", badgeKey: "alerts" },
-  { icon: UserPlus, label: "Leads", path: "/call-centre/leads" },
-  { icon: Users, label: "Members", path: "/call-centre/members" },
-  { icon: MessageSquare, label: "Messages", path: "/call-centre/messages", badgeKey: "messages" },
-  { icon: CheckSquare, label: "Tasks", path: "/call-centre/tasks" },
-  { icon: Ticket, label: "Tickets", path: "/call-centre/tickets" },
-  { icon: FileText, label: "Shift Notes", path: "/call-centre/shift-notes" },
+  { icon: LayoutDashboard, labelKey: "sidebar.dashboard", path: "/call-centre" },
+  { icon: AlertTriangle, labelKey: "sidebar.alerts", path: "/call-centre/alerts", badgeKey: "alerts" },
+  { icon: UserPlus, labelKey: "sidebar.leads", path: "/call-centre/leads" },
+  { icon: Users, labelKey: "sidebar.members", path: "/call-centre/members" },
+  { icon: MessageSquare, labelKey: "sidebar.messages", path: "/call-centre/messages", badgeKey: "messages" },
+  { icon: CheckSquare, labelKey: "sidebar.tasks", path: "/call-centre/tasks" },
+  { icon: Ticket, labelKey: "sidebar.staffTickets", path: "/call-centre/tickets" },
+  { icon: FileText, labelKey: "sidebar.shiftNotes", path: "/call-centre/shift-notes" },
 ];
 
 interface CallCentreSidebarProps {
@@ -54,6 +55,7 @@ interface CallCentreSidebarProps {
 }
 
 export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps = {}) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
   // Notify parent of collapse state changes
@@ -119,6 +121,7 @@ export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps 
     const active = isActive(item.path);
     const Icon = item.icon;
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+    const label = t(item.labelKey);
 
     const linkContent = (
       <NavLink
@@ -135,7 +138,7 @@ export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps 
       >
         <Icon className="h-5 w-5 shrink-0" />
         {(isMobile || !collapsed) && (
-          <span className="flex-1">{item.label}</span>
+          <span className="flex-1">{label}</span>
         )}
         {badgeCount > 0 && (isMobile || !collapsed) && (
           <Badge 
@@ -159,7 +162,7 @@ export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps 
               {linkContent}
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium flex items-center gap-2">
-              {item.label}
+              {label}
               {badgeCount > 0 && (
                 <Badge variant="destructive" className="h-5 px-1.5 text-xs">
                   {badgeCount}
@@ -204,12 +207,12 @@ export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps 
               )}
             >
               <LogOut className="h-5 w-5" />
-              {(isMobile || !collapsed) && <span>End Shift</span>}
+              {(isMobile || !collapsed) && <span>{t("sidebar.endShift")}</span>}
             </Button>
           </TooltipTrigger>
           {!isMobile && collapsed && (
             <TooltipContent side="right" className="font-medium">
-              End Shift
+              {t("sidebar.endShift")}
             </TooltipContent>
           )}
         </Tooltip>

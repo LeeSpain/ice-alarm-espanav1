@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { JoinWizardData, EmergencyContact } from "@/types/wizard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,7 @@ const emptyContact: EmergencyContact = {
 };
 
 export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [contactForm, setContactForm] = useState<EmergencyContact>(emptyContact);
@@ -85,9 +87,9 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Emergency Contacts</h2>
+        <h2 className="text-2xl font-bold">{t("joinWizard.contacts.title")}</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Who should we contact in case of an emergency? Add at least one trusted contact.
+          {t("joinWizard.contacts.subtitle")}
         </p>
       </div>
 
@@ -95,10 +97,9 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
       <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 flex items-start gap-3">
         <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
         <div>
-          <p className="font-medium text-sm text-destructive">Important</p>
+          <p className="font-medium text-sm text-destructive">{t("joinWizard.contacts.important")}</p>
           <p className="text-xs text-muted-foreground">
-            Your emergency contacts will be called if we cannot reach you after an alert. 
-            Please ensure they are aware and available to respond.
+            {t("joinWizard.contacts.importantDesc")}
           </p>
         </div>
       </div>
@@ -120,7 +121,7 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
                     <span>{contact.contactName}</span>
                     {index === 0 && (
                       <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                        Primary
+                        {t("joinWizard.contacts.primary")}
                       </span>
                     )}
                   </div>
@@ -149,7 +150,7 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <span>{contact.relationship}</span>
                   {contact.speaksSpanish && (
-                    <span className="bg-muted px-2 py-0.5 rounded text-xs">Speaks Spanish</span>
+                    <span className="bg-muted px-2 py-0.5 rounded text-xs">{t("joinWizard.contacts.speaksSpanish")}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -172,30 +173,30 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
           <DialogTrigger asChild>
             <Button variant="outline" onClick={openAddDialog} className="w-full gap-2 h-12">
               <Plus className="h-5 w-5" />
-              Add Emergency Contact ({data.emergencyContacts.length}/3)
+              {t("joinWizard.contacts.addContact")} ({data.emergencyContacts.length}/3)
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {editIndex !== null ? "Edit Contact" : "Add Emergency Contact"}
+                {editIndex !== null ? t("joinWizard.contacts.editContact") : t("joinWizard.contacts.addContact")}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="contactName">Full Name *</Label>
+                  <Label htmlFor="contactName">{t("joinWizard.contacts.fullName")} *</Label>
                   <Input
                     id="contactName"
                     value={contactForm.contactName}
                     onChange={(e) =>
                       setContactForm({ ...contactForm, contactName: e.target.value })
                     }
-                    placeholder="Contact's full name"
+                    placeholder={t("joinWizard.contacts.fullNamePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="relationship">Relationship *</Label>
+                  <Label htmlFor="relationship">{t("joinWizard.contacts.relationship")} *</Label>
                   <Select
                     value={contactForm.relationship}
                     onValueChange={(value) =>
@@ -203,7 +204,7 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
                     }
                   >
                     <SelectTrigger id="relationship">
-                      <SelectValue placeholder="Select relationship" />
+                      <SelectValue placeholder={t("joinWizard.contacts.selectRelationship")} />
                     </SelectTrigger>
                     <SelectContent>
                       {relationships.map((rel) => (
@@ -218,7 +219,7 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t("joinWizard.contacts.phoneNumber")} *</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -230,7 +231,7 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email (optional)</Label>
+                  <Label htmlFor="email">{t("joinWizard.contacts.emailOptional")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -251,42 +252,42 @@ export function JoinContactsStep({ data, onUpdate }: JoinContactsStepProps) {
                     setContactForm({ ...contactForm, speaksSpanish: checked })
                   }
                 />
-                <Label htmlFor="speaksSpanish">Speaks Spanish</Label>
+                <Label htmlFor="speaksSpanish">{t("joinWizard.contacts.speaksSpanish")}</Label>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes (optional)</Label>
+                <Label htmlFor="notes">{t("joinWizard.contacts.notes")}</Label>
                 <Textarea
                   id="notes"
                   value={contactForm.notes}
                   onChange={(e) =>
                     setContactForm({ ...contactForm, notes: e.target.value })
                   }
-                  placeholder="Any special instructions for contacting this person..."
+                  placeholder={t("joinWizard.contacts.notesPlaceholder")}
                   rows={2}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t("joinWizard.contacts.cancel")}
               </Button>
               <Button onClick={saveContact}>
-                {editIndex !== null ? "Save Changes" : "Add Contact"}
+                {editIndex !== null ? t("joinWizard.contacts.saveChanges") : t("joinWizard.contacts.addContactButton")}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       ) : (
         <p className="text-center text-sm text-muted-foreground">
-          Maximum of 3 emergency contacts reached
+          {t("joinWizard.contacts.maxReached")}
         </p>
       )}
 
       {/* Minimum requirement note */}
       {data.emergencyContacts.length === 0 && (
         <p className="text-center text-sm text-destructive">
-          Please add at least one emergency contact to continue
+          {t("joinWizard.contacts.minimumRequired")}
         </p>
       )}
     </div>
