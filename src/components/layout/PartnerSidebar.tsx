@@ -12,7 +12,8 @@ import {
   LogOut,
   ArrowLeft,
   ChevronLeft,
-  Menu
+  Menu,
+  Megaphone
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -42,6 +43,7 @@ interface MenuItem {
 const navItems: MenuItem[] = [
   { labelKey: "sidebar.dashboard", icon: LayoutDashboard, path: "/partner-dashboard" },
   { labelKey: "sidebar.invites", icon: Send, path: "/partner-dashboard/invites" },
+  { labelKey: "sidebar.marketing", icon: Megaphone, path: "/partner-dashboard/marketing" },
   { labelKey: "sidebar.commissions", icon: DollarSign, path: "/partner-dashboard/commissions" },
   { labelKey: "sidebar.settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
