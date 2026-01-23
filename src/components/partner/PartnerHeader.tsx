@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { User, LogOut, Settings, Eye, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +26,7 @@ interface PartnerHeaderProps {
 export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: PartnerHeaderProps) {
   const { user, signOut, staffRole } = useAuth();
   const navigate = useNavigate();
+  const [staffId, setStaffId] = useState<string | null>(null);
 
   // Fetch partner data (for display) - use same queryKey as usePartnerData for cache sharing
   const { data: partner } = useQuery({
@@ -53,13 +56,13 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
     enabled: isAdminViewMode ? !!partnerIdParam : !!user?.id,
   });
 
-  // Fetch admin info when in admin view mode
+  // Fetch admin info when in admin view mode (also used for NotificationBell)
   const { data: adminInfo } = useQuery({
     queryKey: ["admin-info-header", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff")
-        .select("first_name, last_name, email")
+        .select("id, first_name, last_name, email")
         .eq("user_id", user?.id)
         .single();
       if (error) throw error;
@@ -67,6 +70,13 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
     },
     enabled: isAdminViewMode && !!user?.id,
   });
+
+  // Set staffId for NotificationBell when admin info is loaded
+  useEffect(() => {
+    if (adminInfo?.id) {
+      setStaffId(adminInfo.id);
+    }
+  }, [adminInfo?.id]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -123,6 +133,9 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
         )}
 
         <LanguageSelector variant="icon-only" />
+
+        {/* Notification Bell - only show when admin is viewing */}
+        {isAdminViewMode && <NotificationBell staffId={staffId} />}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
   User, 
@@ -16,7 +20,8 @@ import {
   Menu,
   MessageSquare,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  Search
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -46,7 +51,30 @@ export function ClientLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user, memberId } = useAuth();
+
+  // Fetch member data for display
+  const { data: memberInfo } = useQuery({
+    queryKey: ["member-info", memberId],
+    queryFn: async () => {
+      if (!memberId) return null;
+      const { data, error } = await supabase
+        .from("members")
+        .select("first_name, last_name, email")
+        .eq("id", memberId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!memberId,
+  });
+
+  const displayName = memberInfo 
+    ? `${memberInfo.first_name} ${memberInfo.last_name}` 
+    : user?.email?.split('@')[0] || "Member";
+
+  const displayEmail = memberInfo?.email || user?.email || "";
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -205,7 +233,7 @@ export function ClientLayout() {
       {/* Desktop Sidebar */}
       <aside className={cn(
         "hidden md:flex fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 flex-col",
-        collapsed ? "w-20" : "w-64"
+        collapsed ? "w-16" : "w-64"
       )}>
         <SidebarContent />
         
@@ -227,10 +255,22 @@ export function ClientLayout() {
       {/* Main Content */}
       <div className={cn(
         "pt-16 md:pt-0 transition-all duration-300",
-        collapsed ? "md:ml-20" : "md:ml-64"
+        collapsed ? "md:ml-16" : "md:ml-64"
       )}>
         {/* Desktop Header */}
-        <header className="hidden md:flex sticky top-0 z-30 h-16 items-center justify-end border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+        <header className="hidden md:flex sticky top-0 z-30 h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+          {/* Left side - Search */}
+          <div className="flex items-center gap-4">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t("common.search") || "Search..."}
+                className="pl-10 bg-secondary/50 border-0 focus-visible:ring-1"
+              />
+            </div>
+          </div>
+
+          {/* Right side */}
           <div className="flex items-center gap-2">
             {/* Language Selector */}
             <LanguageSelector variant="icon-only" />
@@ -242,14 +282,17 @@ export function ClientLayout() {
                   <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                     <User className="h-4 w-4 text-primary-foreground" />
                   </div>
-                  <span>María García</span>
+                  <span>{displayName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span className="font-medium">María García</span>
-                    <span className="text-xs text-muted-foreground">maria.garcia@email.com</span>
+                    <span className="font-medium">{displayName}</span>
+                    <span className="text-xs text-muted-foreground">{displayEmail}</span>
+                    <Badge variant="secondary" className="w-fit mt-1 text-xs">
+                      {t("common.member") || "Member"}
+                    </Badge>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -264,7 +307,7 @@ export function ClientLayout() {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-4 md:p-6">
           <Outlet />
         </main>
       </div>
