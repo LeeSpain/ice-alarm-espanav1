@@ -3,6 +3,7 @@ import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldChec
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
+import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import { Link, useSearchParams } from "react-router-dom";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
@@ -142,15 +143,13 @@ export default function LandingPage() {
             {/* Right Image */}
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 aspect-[4/3] bg-muted">
-                {heroImage.imageUrl && (
-                  <img 
-                    src={heroImage.imageUrl} 
-                    alt={heroImage.altText || "Happy multigenerational family enjoying peace of mind with ICE Alarm protection"}
-                    className="w-full h-full object-cover object-center"
-                    loading="eager"
-                    decoding="async"
-                  />
-                )}
+                <ImageWithPlaceholder
+                  imageUrl={heroImage.imageUrl}
+                  altText={heroImage.altText || "Happy multigenerational family enjoying peace of mind with ICE Alarm protection"}
+                  placeholderText="Hero Image"
+                  placeholderSubtext="Coming Soon"
+                  loading="eager"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
 
@@ -359,7 +358,7 @@ export default function LandingPage() {
                   <div className="md:col-span-2 bg-gradient-to-br from-muted/50 to-muted p-8 flex items-center justify-center">
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl scale-75"></div>
-                      {pendantPromoImage.imageUrl && (
+                      {pendantPromoImage.imageUrl ? (
                         <img 
                           src={pendantPromoImage.imageUrl} 
                           alt={pendantPromoImage.altText || "ICE Alarm GPS Pendant"}
@@ -367,6 +366,12 @@ export default function LandingPage() {
                           loading="lazy"
                           decoding="async"
                         />
+                      ) : (
+                        <div className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-muted/80 flex flex-col items-center justify-center text-muted-foreground">
+                          <MapPin className="h-12 w-12 mb-2 opacity-40" />
+                          <p className="text-sm font-medium opacity-60">Product Image</p>
+                          <p className="text-xs opacity-50">Coming Soon</p>
+                        </div>
                       )}
                     </div>
                   </div>
