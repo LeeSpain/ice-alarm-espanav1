@@ -19,7 +19,8 @@ import {
   Briefcase,
   ShoppingCart,
   CreditCard,
-  DollarSign
+  DollarSign,
+  PieChart,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -112,6 +113,7 @@ const menuGroups: MenuGroup[] = [
     icon: Briefcase,
     label: "Business",
     items: [
+      { icon: PieChart, label: "Finance Dashboard", path: "/admin/finance" },
       { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
       { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
       { icon: DollarSign, label: "Payments", path: "/admin/payments" },

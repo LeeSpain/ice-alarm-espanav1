@@ -60,6 +60,7 @@ const CRMImportPage = lazy(() => import("./pages/admin/CRMImportPage"));
 const CRMContactsPage = lazy(() => import("./pages/admin/CRMContactsPage"));
 const CRMContactDetailPage = lazy(() => import("./pages/admin/CRMContactDetailPage"));
 const ImportBatchesPage = lazy(() => import("./pages/admin/ImportBatchesPage"));
+const FinanceDashboard = lazy(() => import("./pages/admin/FinanceDashboard"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -142,6 +143,7 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="members" element={<MembersPage />} />
                 <Route path="devices" element={<DevicesPage />} />
+                <Route path="finance" element={<FinanceDashboard />} />
                 <Route path="orders" element={<OrdersPage />} />
                 <Route path="subscriptions" element={<SubscriptionsPage />} />
                 <Route path="payments" element={<PaymentsPage />} />
