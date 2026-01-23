@@ -3,33 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function usePartnerData(overridePartnerId?: string | null) {
-  const { user } = useAuth();
+  const { partnerId: authPartnerId } = useAuth();
+
+  // Use override for admin view, or partnerId from AuthContext for regular partners
+  const effectivePartnerId = overridePartnerId || authPartnerId;
 
   return useQuery({
-    queryKey: ["my-partner-data", overridePartnerId || user?.id],
+    queryKey: ["my-partner-data", effectivePartnerId],
     queryFn: async () => {
-      if (overridePartnerId) {
-        // Admin viewing specific partner by ID
-        const { data, error } = await supabase
-          .from("partners")
-          .select("*")
-          .eq("id", overridePartnerId)
-          .maybeSingle();
+      if (!effectivePartnerId) return null;
 
-        if (error) throw error;
-        return data;
-      }
-
-      // Regular partner viewing their own data
+      // Always query by ID (works for both admin override and regular partner)
       const { data, error } = await supabase
         .from("partners")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("id", effectivePartnerId)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!(overridePartnerId || user?.id),
+    enabled: !!effectivePartnerId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - partner data rarely changes
   });
 }
