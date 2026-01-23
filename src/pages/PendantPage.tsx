@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
+import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import {
   Accordion,
   AccordionContent,
@@ -167,8 +168,13 @@ export default function PendantPage() {
         </div>
       </header>
 
+      {/* AI Chat Widget - Below Header */}
+      <div className="fixed top-16 left-0 right-0 z-40">
+        <AIChatWidget />
+      </div>
+
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-b from-primary/5 via-background to-background">
+      <section className="pt-32 pb-16 bg-gradient-to-b from-primary/5 via-background to-background">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Product Image */}

@@ -8,7 +8,6 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { AIChatWidget } from "@/components/chat/AIChatWidget";
 
 // Auth - Not lazy loaded (critical path)
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -166,7 +165,6 @@ const App = () => (
         <AuthProvider>
           <Toaster />
           <Sonner />
-          <AIChatWidget />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes */}
