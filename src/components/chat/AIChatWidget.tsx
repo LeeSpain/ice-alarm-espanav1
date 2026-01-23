@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, ChevronDown, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,7 +38,7 @@ export function AIChatWidget() {
   // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      inputRef.current.focus();
     }
   }, [isOpen]);
 
@@ -72,6 +72,7 @@ export function AIChatWidget() {
     setIsLoading(true);
 
     try {
+      // Build conversation history for context
       const conversationHistory = messages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -93,6 +94,7 @@ export function AIChatWidget() {
 
       if (error) throw error;
 
+      // Extract the response from the AI output
       let responseText = i18n.language === "es"
         ? "Lo siento, no pude procesar tu mensaje. Por favor, intenta de nuevo."
         : "Sorry, I couldn't process your message. Please try again.";
@@ -141,171 +143,136 @@ export function AIChatWidget() {
   };
 
   return (
-    <div className="w-full">
-      {/* Chat Toggle Bar - Below Header */}
-      <div 
+    <>
+      {/* Chat Toggle Button */}
+      <Button
+        onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground",
-          "border-b border-primary/20 shadow-sm",
-          "transition-all duration-300"
+          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300",
+          "bg-primary hover:bg-primary/90 text-primary-foreground",
+          isOpen && "scale-0 opacity-0"
         )}
+        size="icon"
+        aria-label={t("chat.openChat", "Open chat")}
       >
-        <div className="container mx-auto px-4">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              "w-full flex items-center justify-between py-3",
-              "hover:opacity-90 transition-opacity"
-            )}
-            aria-label={isOpen ? t("chat.closeChat", "Close chat") : t("chat.openChat", "Open chat")}
-          >
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="h-10 w-10 border-2 border-primary-foreground/30 shadow-md">
-                  {!avatarLoading && avatarUrl ? (
-                    <AvatarImage src={avatarUrl} alt="AI Assistant" className="object-cover" />
-                  ) : null}
-                  <AvatarFallback className="bg-primary-foreground/20">
-                    <Bot className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 border-2 border-primary rounded-full" />
-              </div>
-              <div className="text-left">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">
-                    {t("chat.assistantName", "ICE Alarm Assistant")}
-                  </span>
-                  <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
-                </div>
-                <p className="text-xs opacity-80">
-                  {t("chat.available", "Available 24/7")} • {i18n.language === "es" ? "Haz clic para chatear" : "Click to chat"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="hidden sm:inline text-xs bg-primary-foreground/20 px-2 py-1 rounded-full">
-                {i18n.language === "es" ? "Soporte en vivo" : "Live Support"}
-              </span>
-              <ChevronDown 
-                className={cn(
-                  "h-5 w-5 transition-transform duration-300",
-                  isOpen && "rotate-180"
-                )} 
-              />
-            </div>
-          </button>
-        </div>
-      </div>
+        <MessageCircle className="h-6 w-6" />
+      </Button>
 
-      {/* Expandable Chat Panel */}
+      {/* Chat Window */}
       <div
         className={cn(
-          "w-full bg-background border-b border-border shadow-lg overflow-hidden",
-          "transition-all duration-300 ease-in-out",
-          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          "fixed bottom-6 right-6 z-50 flex flex-col",
+          "w-[380px] max-w-[calc(100vw-48px)] h-[520px] max-h-[calc(100vh-100px)]",
+          "bg-background border border-border rounded-2xl shadow-2xl",
+          "transition-all duration-300 origin-bottom-right",
+          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col h-[460px] py-4">
-            {/* Messages Area */}
-            <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex gap-3",
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    {message.role === "assistant" && (
-                      <Avatar className="h-9 w-9 shrink-0 shadow-sm">
-                        {!avatarLoading && avatarUrl ? (
-                          <AvatarImage src={avatarUrl} alt="Assistant" className="object-cover" />
-                        ) : null}
-                        <AvatarFallback className="bg-primary/10">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={cn(
-                        "max-w-[70%] px-4 py-3 text-sm leading-relaxed",
-                        message.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md shadow-md"
-                          : "bg-muted text-foreground rounded-2xl rounded-bl-md border border-border"
-                      )}
-                    >
-                      {message.content}
-                    </div>
-                    {message.role === "user" && (
-                      <Avatar className="h-9 w-9 shrink-0 shadow-sm">
-                        <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-medium">
-                          {i18n.language === "es" ? "Tú" : "You"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-3 justify-start">
-                    <Avatar className="h-9 w-9 shrink-0">
-                      {!avatarLoading && avatarUrl ? (
-                        <AvatarImage src={avatarUrl} alt="Assistant" className="object-cover" />
-                      ) : null}
-                      <AvatarFallback className="bg-primary/10">
-                        <Bot className="h-4 w-4 text-primary" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md border border-border">
-                      <div className="flex gap-1">
-                        <span className="h-2 w-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="h-2 w-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="h-2 w-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b bg-primary text-primary-foreground rounded-t-2xl">
+          <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
+            {!avatarLoading && avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt="Assistant" />
+            ) : null}
+            <AvatarFallback className="bg-primary-foreground/20">
+              <Bot className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h3 className="font-semibold text-sm">
+              {t("chat.assistantName", "ICE Alarm Assistant")}
+            </h3>
+            <p className="text-xs opacity-80">
+              {t("chat.available", "Available 24/7")}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
+            onClick={() => setIsOpen(false)}
+            aria-label={t("chat.closeChat", "Close chat")}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-            {/* Input Area */}
-            <div className="pt-4 border-t mt-4">
-              <div className="flex gap-3">
-                <Input
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={t("chat.placeholder", "Type your message...")}
-                  disabled={isLoading}
-                  className="flex-1 h-12 rounded-full px-5 text-sm border-2 focus-visible:ring-primary/20"
-                />
-                <Button
-                  onClick={sendMessage}
-                  disabled={!inputValue.trim() || isLoading}
-                  size="lg"
-                  className="rounded-full h-12 w-12 shrink-0 shadow-md"
-                  aria-label={t("chat.send", "Send")}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
+        {/* Messages */}
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex gap-2",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                {message.role === "assistant" && (
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {!avatarLoading && avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt="Assistant" />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={cn(
+                    "max-w-[80%] px-4 py-2 rounded-2xl text-sm",
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted text-foreground rounded-bl-md"
                   )}
-                </Button>
+                >
+                  {message.content}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                {i18n.language === "es" 
-                  ? "Respuestas generadas por IA • Disponible 24/7"
-                  : "AI-powered responses • Available 24/7"
-                }
-              </p>
-            </div>
+            ))}
+            {isLoading && (
+              <div className="flex gap-2 justify-start">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarFallback className="bg-primary/10">
+                    <Bot className="h-4 w-4 text-primary" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-muted px-4 py-2 rounded-2xl rounded-bl-md">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Input */}
+        <div className="p-4 border-t">
+          <div className="flex gap-2">
+            <Input
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={t("chat.placeholder", "Type your message...")}
+              disabled={isLoading}
+              className="flex-1 rounded-full"
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!inputValue.trim() || isLoading}
+              size="icon"
+              className="rounded-full shrink-0"
+              aria-label={t("chat.send", "Send")}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

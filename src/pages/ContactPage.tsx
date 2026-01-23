@@ -12,7 +12,6 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { 
   Phone, 
   Mail, 
@@ -150,13 +149,8 @@ export default function ContactPage() {
         </div>
       </header>
 
-      {/* AI Chat Widget - Below Header */}
-      <div className="fixed top-16 left-0 right-0 z-40">
-        <AIChatWidget />
-      </div>
-
       {/* Hero Section */}
-      <section className="pt-32 pb-12 bg-gradient-to-b from-primary/5 to-background">
+      <section className="pt-24 pb-12 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Get in Touch</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
