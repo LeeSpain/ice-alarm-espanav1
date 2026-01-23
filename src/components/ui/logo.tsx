@@ -2,7 +2,7 @@ import { Heart, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
-  variant?: "default" | "white" | "dark";
+  variant?: "default" | "white" | "dark" | "sidebar";
   size?: "sm" | "md" | "lg";
   showText?: boolean;
   className?: string;
@@ -46,6 +46,11 @@ export function Logo({
     dark: {
       icon: "text-primary",
       text: "text-slate-900",
+      accent: "text-primary",
+    },
+    sidebar: {
+      icon: "text-primary",
+      text: "text-white",
       accent: "text-primary",
     },
   };
