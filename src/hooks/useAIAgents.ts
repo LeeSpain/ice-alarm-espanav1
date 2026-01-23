@@ -9,6 +9,7 @@ export interface AIAgent {
   enabled: boolean;
   mode: "advise_only" | "draft_only" | "auto_act";
   instance_count: number;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 }

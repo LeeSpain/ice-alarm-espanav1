@@ -28,6 +28,7 @@ import { AIMemoryTab } from "@/components/admin/ai/AIMemoryTab";
 import { AITrainingTab } from "@/components/admin/ai/AITrainingTab";
 import { AISimulatorTab } from "@/components/admin/ai/AISimulatorTab";
 import { AIAuditTab } from "@/components/admin/ai/AIAuditTab";
+import { AIAvatarUpload } from "@/components/admin/ai/AIAvatarUpload";
 
 export default function AIAgentDetail() {
   const { agentKey } = useParams<{ agentKey: string }>();
@@ -97,7 +98,7 @@ export default function AIAgentDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
@@ -106,7 +107,7 @@ export default function AIAgentDetail() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{agent.name}</h1>
               <Badge 
@@ -123,24 +124,29 @@ export default function AIAgentDetail() {
               {agent.description}
             </p>
           </div>
+          <Button
+            variant={agent.enabled ? "destructive" : "default"}
+            onClick={handleToggleEnabled}
+            disabled={updateAgent.isPending}
+          >
+            {agent.enabled ? (
+              <>
+                <PowerOff className="h-4 w-4 mr-2" />
+                {t("ai.pauseAgent")}
+              </>
+            ) : (
+              <>
+                <Power className="h-4 w-4 mr-2" />
+                {t("ai.enableAgent")}
+              </>
+            )}
+          </Button>
         </div>
-        <Button
-          variant={agent.enabled ? "destructive" : "default"}
-          onClick={handleToggleEnabled}
-          disabled={updateAgent.isPending}
-        >
-          {agent.enabled ? (
-            <>
-              <PowerOff className="h-4 w-4 mr-2" />
-              {t("ai.pauseAgent")}
-            </>
-          ) : (
-            <>
-              <Power className="h-4 w-4 mr-2" />
-              {t("ai.enableAgent")}
-            </>
-          )}
-        </Button>
+        
+        {/* Avatar Upload Section */}
+        <div className="ml-12 p-4 rounded-lg border bg-card">
+          <AIAvatarUpload agent={agent} />
+        </div>
       </div>
 
       {/* Tabs */}

@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
+import { X, Send, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { useWebsiteImage } from "@/hooks/useWebsiteImage";
+import { useAIAgent } from "@/hooks/useAIAgents";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -15,6 +15,8 @@ interface Message {
   content: string;
   timestamp: Date;
 }
+
+const AGENT_KEY = "customer_service_expert";
 
 export function AIChatWidget() {
   const { t, i18n } = useTranslation();
@@ -26,7 +28,9 @@ export function AIChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const { imageUrl: avatarUrl, isLoading: avatarLoading } = useWebsiteImage("chat_avatar");
+  // Fetch the customer service agent to get its avatar
+  const { data: csAgent, isLoading: agentLoading } = useAIAgent(AGENT_KEY);
+  const avatarUrl = csAgent?.avatar_url;
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -81,7 +85,7 @@ export function AIChatWidget() {
 
       const { data, error } = await supabase.functions.invoke("ai-run", {
         body: {
-          agentKey: "customer_service_expert",
+          agentKey: AGENT_KEY,
           context: {
             conversationId,
             userLanguage: i18n.language,
@@ -155,7 +159,7 @@ export function AIChatWidget() {
         )}
         aria-label={t("chat.openChat", "Open chat")}
       >
-        {!avatarLoading && avatarUrl ? (
+        {!agentLoading && avatarUrl ? (
           <img 
             src={avatarUrl} 
             alt="Chat Assistant" 
@@ -183,7 +187,7 @@ export function AIChatWidget() {
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b bg-primary text-primary-foreground rounded-t-2xl">
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
-            {!avatarLoading && avatarUrl ? (
+            {!agentLoading && avatarUrl ? (
               <AvatarImage src={avatarUrl} alt="Assistant" />
             ) : null}
             <AvatarFallback className="bg-primary-foreground/20">
@@ -223,7 +227,7 @@ export function AIChatWidget() {
               >
                 {message.role === "assistant" && (
                   <Avatar className="h-8 w-8 shrink-0">
-                    {!avatarLoading && avatarUrl ? (
+                    {!agentLoading && avatarUrl ? (
                       <AvatarImage src={avatarUrl} alt="Assistant" />
                     ) : null}
                     <AvatarFallback className="bg-primary/10">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAIAgents, useAIAgentStats } from "@/hooks/useAIAgents";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,9 +45,18 @@ function AgentCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${agent?.enabled ? "bg-primary/10" : "bg-muted"}`}>
-              <Icon className={`h-6 w-6 ${agent?.enabled ? "text-primary" : "text-muted-foreground"}`} />
-            </div>
+            {agent?.avatar_url ? (
+              <Avatar className="h-12 w-12 border-2 border-border">
+                <AvatarImage src={agent.avatar_url} alt={agent.name} />
+                <AvatarFallback className={agent?.enabled ? "bg-primary/10" : "bg-muted"}>
+                  <Icon className={`h-6 w-6 ${agent?.enabled ? "text-primary" : "text-muted-foreground"}`} />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className={`p-2 rounded-lg ${agent?.enabled ? "bg-primary/10" : "bg-muted"}`}>
+                <Icon className={`h-6 w-6 ${agent?.enabled ? "text-primary" : "text-muted-foreground"}`} />
+              </div>
+            )}
             <div>
               <CardTitle className="text-lg">{agent?.name}</CardTitle>
               <CardDescription className="text-sm mt-0.5">
