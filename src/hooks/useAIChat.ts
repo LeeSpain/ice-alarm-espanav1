@@ -10,9 +10,7 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-const AGENT_KEY = "customer_service_expert";
-
-export function useAIChat() {
+export function useAIChat(agentKey: string = "customer_service_expert", memberId?: string | null) {
   const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -23,9 +21,9 @@ export function useAIChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch the customer service agent to get its avatar
-  const { data: csAgent, isLoading: agentLoading } = useAIAgent(AGENT_KEY);
-  const avatarUrl = csAgent?.avatar_url;
+  // Fetch the agent to get its avatar
+  const { data: currentAgent, isLoading: agentLoading } = useAIAgent(agentKey);
+  const avatarUrl = currentAgent?.avatar_url;
 
   // Preload avatar image for instant display
   useEffect(() => {
@@ -97,13 +95,14 @@ export function useAIChat() {
 
       const { data, error } = await supabase.functions.invoke("ai-run", {
         body: {
-          agentKey: AGENT_KEY,
+          agentKey,
           context: {
             conversationId,
             userLanguage: i18n.language,
             conversationHistory,
             currentMessage: userMessage.content,
             source: "chat_widget",
+            memberId: memberId || undefined,
           },
         },
       });

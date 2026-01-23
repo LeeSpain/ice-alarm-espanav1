@@ -51,6 +51,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { MemberChatButton } from "@/components/chat/MemberChatButton";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -447,6 +448,9 @@ export function ClientLayout() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {/* AI Chat Button */}
+            <MemberChatButton memberId={memberId} />
+
             {/* Language Selector */}
             <LanguageSelector variant="icon-only" />
 
