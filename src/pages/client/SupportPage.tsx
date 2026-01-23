@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -46,39 +47,6 @@ import { InlineAIChat } from "@/components/chat/InlineAIChat";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const FAQ_ITEMS = [
-  {
-    id: "test-pendant",
-    question: "How do I test my pendant?",
-    answer: "Press and hold the SOS button for 3 seconds. Our team will answer and confirm your device is working correctly. We recommend testing your pendant once a month."
-  },
-  {
-    id: "sos-button",
-    question: "What happens when I press the SOS button?",
-    answer: "When you press and hold the SOS button for 3 seconds, an alert is sent to our 24/7 monitoring center. A trained operator will immediately speak to you through your pendant and coordinate any necessary assistance."
-  },
-  {
-    id: "fall-detection",
-    question: "How does fall detection work?",
-    answer: "Your pendant contains sensors that can detect sudden movements consistent with a fall. If a fall is detected, an automatic alert is sent to our team. We'll call through your pendant to check on you, and if there's no response, we'll follow your emergency protocol."
-  },
-  {
-    id: "geo-fencing",
-    question: "What is geo-fencing?",
-    answer: "Geo-fencing creates a virtual boundary around a location (like your home). If you travel outside this boundary, an alert can be sent to designated contacts. This is useful for added peace of mind for you and your family."
-  },
-  {
-    id: "update-medical",
-    question: "How do I update my medical information?",
-    answer: "Go to the 'Medical Info' section in your dashboard. Click 'Request Update' and describe the changes you'd like to make. Our team will review and update your records within 24-48 hours."
-  },
-  {
-    id: "add-contacts",
-    question: "How do I add emergency contacts?",
-    answer: "Go to 'Emergency Contacts' in your dashboard. You can add up to 3 emergency contacts. These are the people we'll call if we can't reach you during an emergency."
-  },
-];
-
 interface Conversation {
   id: string;
   subject: string | null;
@@ -100,9 +68,44 @@ interface Message {
 }
 
 export default function SupportPage() {
+  const { t } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
   const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
   const { memberId, isLoading: authLoading } = useAuth();
+  
+  // FAQ items with translations
+  const FAQ_ITEMS = [
+    {
+      id: "test-pendant",
+      question: t("support.faq.testPendant"),
+      answer: t("support.faq.testPendantAnswer")
+    },
+    {
+      id: "sos-button",
+      question: t("support.faq.sosButton"),
+      answer: t("support.faq.sosButtonAnswer")
+    },
+    {
+      id: "fall-detection",
+      question: t("support.faq.fallDetection"),
+      answer: t("support.faq.fallDetectionAnswer")
+    },
+    {
+      id: "geo-fencing",
+      question: t("support.faq.geoFencing"),
+      answer: t("support.faq.geoFencingAnswer")
+    },
+    {
+      id: "update-medical",
+      question: t("support.faq.updateMedical"),
+      answer: t("support.faq.updateMedicalAnswer")
+    },
+    {
+      id: "add-contacts",
+      question: t("support.faq.addContacts"),
+      answer: t("support.faq.addContactsAnswer")
+    },
+  ];
   
   // Messaging state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -245,7 +248,7 @@ export default function SupportPage() {
       setMessages(
         data?.map(m => ({
           ...m,
-          staff_name: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || "Support" : undefined,
+          staff_name: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || t("support.support") : undefined,
         })) || []
       );
 
@@ -257,7 +260,7 @@ export default function SupportPage() {
 
   const createConversation = async () => {
     if (!newSubject.trim() || !newMessage.trim() || !memberId) {
-      toast.error("Please enter a subject and message");
+      toast.error(t("support.enterSubjectAndMessage"));
       return;
     }
 
@@ -287,7 +290,7 @@ export default function SupportPage() {
 
       if (msgError) throw msgError;
 
-      toast.success("Message sent to our support team!");
+      toast.success(t("support.messageSent"));
       setIsDialogOpen(false);
       setNewSubject("");
       setNewMessage("");
@@ -295,7 +298,7 @@ export default function SupportPage() {
       setSelectedConversation(convData);
     } catch (error) {
       console.error("Error creating conversation:", error);
-      toast.error("Failed to send message");
+      toast.error(t("support.failedToSend"));
     } finally {
       setIsSending(false);
     }
@@ -327,7 +330,7 @@ export default function SupportPage() {
       fetchMessages(selectedConversation.id);
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error(t("support.failedToSend"));
     } finally {
       setIsSending(false);
     }
@@ -336,13 +339,13 @@ export default function SupportPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-blue-500">Open</Badge>;
+        return <Badge className="bg-blue-500">{t("support.status.open")}</Badge>;
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t("common.pending")}</Badge>;
       case "resolved":
-        return <Badge className="bg-green-600">Resolved</Badge>;
+        return <Badge className="bg-green-600">{t("support.status.resolved")}</Badge>;
       case "closed":
-        return <Badge variant="outline">Closed</Badge>;
+        return <Badge variant="outline">{t("support.status.closed")}</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -359,16 +362,16 @@ export default function SupportPage() {
           onClick={() => setSelectedConversation(null)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Support
+          {t("support.backToSupport")}
         </Button>
 
         <Card>
           <CardHeader className="border-b">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>{selectedConversation.subject || "Conversation"}</CardTitle>
+                <CardTitle>{selectedConversation.subject || t("support.conversation")}</CardTitle>
                 <CardDescription>
-                  Started {formatDistanceToNow(new Date(selectedConversation.created_at), { addSuffix: true })}
+                  {t("support.started")} {formatDistanceToNow(new Date(selectedConversation.created_at), { addSuffix: true })}
                 </CardDescription>
               </div>
               {getStatusBadge(selectedConversation.status)}
@@ -399,7 +402,7 @@ export default function SupportPage() {
                           {msg.sender_type === "staff" && msg.staff_name
                             ? `${msg.staff_name} • `
                             : msg.sender_type === "member"
-                            ? "You • "
+                            ? `${t("support.you")} • `
                             : ""}
                           {format(new Date(msg.created_at), "h:mm a")}
                         </span>
@@ -417,7 +420,7 @@ export default function SupportPage() {
             <div className="p-4 border-t">
               <div className="flex gap-2">
                 <Textarea
-                  placeholder="Type your message..."
+                  placeholder={t("support.typeMessage")}
                   className="min-h-[60px] resize-none flex-1"
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
@@ -453,8 +456,8 @@ export default function SupportPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Help & Support</h1>
-          <p className="text-muted-foreground mt-1">We're here to help you 24/7</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("support.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("support.subtitle")}</p>
         </div>
       </div>
 
@@ -467,12 +470,12 @@ export default function SupportPage() {
               <Smartphone className="h-10 w-10" />
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-xl font-bold mb-2">For Emergencies</h2>
+              <h2 className="text-xl font-bold mb-2">{t("support.forEmergencies")}</h2>
               <p className="text-primary-foreground/80 mb-1">
-                Press and hold your pendant's SOS button for 3 seconds
+                {t("support.pressSosButton")}
               </p>
               <p className="text-primary-foreground/80 text-sm">
-                Our team will be with you immediately
+                {t("support.teamWithYou")}
               </p>
             </div>
             <div className="flex flex-col gap-2">
@@ -493,13 +496,13 @@ export default function SupportPage() {
         <TabsList className="grid w-full grid-cols-3 h-auto p-1">
           <TabsTrigger value="chat" className="flex items-center gap-2 py-3">
             <Bot className="h-4 w-4" />
-            <span className="hidden sm:inline">AI Assistant</span>
+            <span className="hidden sm:inline">{t("support.aiAssistant")}</span>
             <span className="sm:hidden">AI</span>
           </TabsTrigger>
           <TabsTrigger value="messages" className="flex items-center gap-2 py-3 relative">
             <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Messages</span>
-            <span className="sm:hidden">Chat</span>
+            <span className="hidden sm:inline">{t("navigation.messages")}</span>
+            <span className="sm:hidden">{t("support.chat")}</span>
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
                 {unreadCount}
@@ -508,7 +511,7 @@ export default function SupportPage() {
           </TabsTrigger>
           <TabsTrigger value="help" className="flex items-center gap-2 py-3">
             <HelpCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Help Center</span>
+            <span className="hidden sm:inline">{t("support.helpCenter")}</span>
             <span className="sm:hidden">FAQ</span>
           </TabsTrigger>
         </TabsList>
@@ -524,27 +527,27 @@ export default function SupportPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Bot className="h-5 w-5 text-primary" />
-                    AI Assistant
+                    {t("support.aiAssistant")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-3">
-                  <p>Our AI assistant can help you with:</p>
+                  <p>{t("support.aiCanHelp")}</p>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>Device setup and troubleshooting</span>
+                      <span>{t("support.aiHelp.device")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Heart className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>Account and billing questions</span>
+                      <span>{t("support.aiHelp.billing")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Users className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>Service information</span>
+                      <span>{t("support.aiHelp.service")}</span>
                     </li>
                   </ul>
                   <p className="pt-2 text-xs">
-                    For complex issues, the AI can connect you with our support team.
+                    {t("support.aiConnectSupport")}
                   </p>
                 </CardContent>
               </Card>
@@ -552,7 +555,7 @@ export default function SupportPage() {
               <Card className="bg-muted/50">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground">
-                    Need to speak with a person? Switch to the <strong>Messages</strong> tab to chat directly with our support team.
+                    {t("support.needPerson")}
                   </p>
                 </CardContent>
               </Card>
@@ -564,36 +567,36 @@ export default function SupportPage() {
         <TabsContent value="messages" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Support Conversations</h2>
-              <p className="text-sm text-muted-foreground">Chat directly with our support team</p>
+              <h2 className="text-lg font-semibold">{t("support.conversations")}</h2>
+              <p className="text-sm text-muted-foreground">{t("support.chatWithTeam")}</p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  New Message
+                  {t("support.newMessage")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Send a Message</DialogTitle>
+                  <DialogTitle>{t("support.sendMessage")}</DialogTitle>
                   <DialogDescription>
-                    Our support team will respond as soon as possible
+                    {t("support.teamWillRespond")}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Subject</label>
+                    <label className="text-sm font-medium">{t("support.subject")}</label>
                     <Input
-                      placeholder="What is your message about?"
+                      placeholder={t("support.subjectPlaceholder")}
                       value={newSubject}
                       onChange={(e) => setNewSubject(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Message</label>
+                    <label className="text-sm font-medium">{t("support.message")}</label>
                     <Textarea
-                      placeholder="Write your message here..."
+                      placeholder={t("support.messagePlaceholder")}
                       className="min-h-[120px]"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
@@ -603,7 +606,7 @@ export default function SupportPage() {
                 <DialogFooter>
                   <Button onClick={createConversation} disabled={isSending} className="w-full">
                     {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Send Message
+                    {t("support.sendMessage")}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -618,13 +621,13 @@ export default function SupportPage() {
             <Card className="py-12">
               <CardContent className="text-center">
                 <Headphones className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                <p className="font-medium">No messages yet</p>
+                <p className="font-medium">{t("support.noMessages")}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Start a conversation with our support team
+                  {t("support.startConversation")}
                 </p>
                 <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Send Your First Message
+                  {t("support.sendFirstMessage")}
                 </Button>
               </CardContent>
             </Card>
@@ -650,7 +653,7 @@ export default function SupportPage() {
                             "font-medium truncate",
                             conv.has_unread && "font-semibold"
                           )}>
-                            {conv.subject || "Conversation"}
+                            {conv.subject || t("support.conversation")}
                           </h3>
                         </div>
                         {conv.last_message_preview && (
@@ -682,10 +685,10 @@ export default function SupportPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <HelpCircle className="h-5 w-5" />
-                    Frequently Asked Questions
+                    {t("support.faqTitle")}
                   </CardTitle>
                   <CardDescription>
-                    Find quick answers to common questions
+                    {t("support.faqSubtitle")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -708,7 +711,7 @@ export default function SupportPage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Contact Options</CardTitle>
+                  <CardTitle className="text-base">{t("support.contactOptions")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <a 
@@ -719,7 +722,7 @@ export default function SupportPage() {
                       <Phone className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">Call Us</p>
+                      <p className="font-medium text-sm">{t("support.callUs")}</p>
                       <p className="text-primary text-sm">{companySettings.emergency_phone}</p>
                     </div>
                   </a>
@@ -735,7 +738,7 @@ export default function SupportPage() {
                     </div>
                     <div>
                       <p className="font-medium text-sm">WhatsApp</p>
-                      <p className="text-[#25D366] text-sm">Chat with us</p>
+                      <p className="text-[#25D366] text-sm">{t("support.chatWithUs")}</p>
                     </div>
                   </a>
                 </CardContent>
@@ -743,9 +746,9 @@ export default function SupportPage() {
 
               <Card className="bg-muted/50">
                 <CardContent className="p-4">
-                  <p className="text-sm font-medium mb-2">Can't find your answer?</p>
+                  <p className="text-sm font-medium mb-2">{t("support.cantFindAnswer")}</p>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Our AI assistant and support team are ready to help.
+                    {t("support.aiAndTeamReady")}
                   </p>
                   <Button 
                     variant="outline" 
@@ -754,7 +757,7 @@ export default function SupportPage() {
                     onClick={() => setIsDialogOpen(true)}
                   >
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    Contact Support
+                    {t("support.contactSupport")}
                   </Button>
                 </CardContent>
               </Card>
