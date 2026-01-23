@@ -16,8 +16,6 @@ import {
   Contact,
   Handshake,
   ClipboardCheck,
-  Upload,
-  Target,
   Briefcase,
   ShoppingCart,
   CreditCard,
@@ -77,18 +75,9 @@ const menuGroups: MenuGroup[] = [
     label: "People",
     items: [
       { icon: Users, label: "Members", path: "/admin/members" },
+      { icon: Contact, label: "Leads", path: "/admin/leads" },
       { icon: Smartphone, label: "Devices", path: "/admin/devices" },
       { icon: Bell, label: "Alerts", path: "/admin/alerts" }
-    ]
-  },
-  {
-    id: "pipeline",
-    icon: Target,
-    label: "Pipeline",
-    items: [
-      { icon: Contact, label: "Leads", path: "/admin/leads" },
-      { icon: Upload, label: "CRM Import", path: "/admin/crm-import", superAdminOnly: true },
-      { icon: Contact, label: "CRM Contacts", path: "/admin/crm-contacts", superAdminOnly: true }
     ]
   },
   {
@@ -313,11 +302,11 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
                 "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 isActive 
-                  ? "text-sidebar-primary-foreground" 
+                  ? "bg-sidebar-primary/20 text-sidebar-primary" 
                   : "text-sidebar-foreground/70"
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
               <span className="flex-1 text-left truncate">{group.label}</span>
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform duration-200 shrink-0",
@@ -354,23 +343,20 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
           {/* People */}
           {renderMenuGroup(menuGroups[1], isMobile, true)}
           
-          {/* Pipeline */}
+          {/* Partners */}
           {renderMenuGroup(menuGroups[2], isMobile, true)}
           
-          {/* Partners */}
+          {/* Staff Operations */}
           {renderMenuGroup(menuGroups[3], isMobile, true)}
           
-          {/* Staff Operations */}
+          {/* Communications */}
           {renderMenuGroup(menuGroups[4], isMobile, true)}
           
-          {/* Communications */}
+          {/* Business */}
           {renderMenuGroup(menuGroups[5], isMobile, true)}
           
-          {/* Business */}
-          {renderMenuGroup(menuGroups[6], isMobile, true)}
-          
           {/* System */}
-          {renderMenuGroup(menuGroups[7], isMobile, true)}
+          {renderMenuGroup(menuGroups[6], isMobile, true)}
         </div>
       </nav>
 
