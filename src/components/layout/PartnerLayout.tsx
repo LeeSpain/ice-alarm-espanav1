@@ -43,16 +43,6 @@ export function PartnerLayout() {
     );
   }
 
-  // Show agreement modal if not signed (blocking)
-  if (showAgreementModal && partner) {
-    return (
-      <AgreementRequiredModal 
-        partnerId={partner.id} 
-        partnerName={partner.contact_name} 
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <PartnerSidebar 
@@ -82,6 +72,14 @@ export function PartnerLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Agreement modal appears ON TOP of dashboard */}
+      {showAgreementModal && partner && (
+        <AgreementRequiredModal 
+          partnerId={partner.id} 
+          partnerName={partner.contact_name} 
+        />
+      )}
     </div>
   );
 }
