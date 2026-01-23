@@ -384,112 +384,59 @@ export default function PendantPage() {
         </div>
       </section>
 
-      {/* Comparison */}
-      <section className="py-20 px-4">
+      {/* Pricing */}
+      <section id="pricing" className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("pendant.comparison.title")}</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.pricing.title")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t("pendant.comparison.subtitle")}
+              {t("pendant.pricing.subtitle")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Phone Only */}
+            {/* Single */}
             <Card>
-              <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-2">{t("pendant.comparison.phoneOnly.title")}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t("pendant.comparison.phoneOnly.subtitle")}</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold">€27.49</span>
-                  <span className="text-muted-foreground">{t("pendant.comparison.phoneOnly.perMonth")}</span>
+              <CardContent className="p-8 text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.phoneOnly.feature1")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.phoneOnly.feature2")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.phoneOnly.feature3")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <X className="h-4 w-4" />
-                    {t("pendant.comparison.phoneOnly.noGps")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <X className="h-4 w-4" />
-                    {t("pendant.comparison.phoneOnly.noFall")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <X className="h-4 w-4" />
-                    {t("pendant.comparison.phoneOnly.noSos")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <X className="h-4 w-4" />
-                    {t("pendant.comparison.phoneOnly.noGeo")}
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link to="/join">{t("pendant.comparison.phoneOnly.cta")}</Link>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.pricing.single.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-6">{t("pendant.pricing.single.subtitle")}</p>
+                <div className="space-y-2 mb-6">
+                  <div>
+                    <span className="text-2xl font-bold">€27.49</span>
+                    <span className="text-muted-foreground">{t("pendant.pricing.single.perMonth")}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    or <span className="font-medium text-foreground">€274.89{t("pendant.pricing.single.perYear")}</span>
+                    <Badge variant="secondary" className="ml-2">{t("pendant.pricing.single.save")}</Badge>
+                  </div>
+                </div>
+                <Button className="w-full" asChild>
+                  <Link to="/join">{t("pendant.pricing.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            {/* With Pendant - Recommended */}
-            <Card className="border-primary shadow-lg relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground">
-                  {t("pendant.comparison.pendant.recommended")}
-                </Badge>
-              </div>
-              <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-2">{t("pendant.comparison.pendant.title")}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t("pendant.comparison.pendant.subtitle")}</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold">€27.49</span>
-                  <span className="text-muted-foreground">{t("pendant.comparison.pendant.perMonth")}</span>
-                  <p className="text-sm text-muted-foreground mt-1">{t("pendant.comparison.pendant.pendantOneTime")}</p>
+            {/* Couple */}
+            <Card className="border-primary">
+              <CardContent className="p-8 text-center">
+                <Badge className="bg-primary text-primary-foreground mb-4">{t("pendant.pricing.couple.mostPopular")}</Badge>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.pricing.couple.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-6">{t("pendant.pricing.couple.subtitle")}</p>
+                <div className="space-y-2 mb-6">
+                  <div>
+                    <span className="text-2xl font-bold">€38.49</span>
+                    <span className="text-muted-foreground">{t("pendant.pricing.couple.perMonth")}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    or <span className="font-medium text-foreground">€384.89{t("pendant.pricing.couple.perYear")}</span>
+                    <Badge variant="secondary" className="ml-2">{t("pendant.pricing.couple.save")}</Badge>
+                  </div>
                 </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.feature1")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.feature2")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.feature3")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm font-medium">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.gps")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm font-medium">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.fall")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm font-medium">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.sos")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm font-medium">
-                    <Check className="h-4 w-4 text-status-active" />
-                    {t("pendant.comparison.pendant.geo")}
-                  </li>
-                </ul>
                 <Button className="w-full" asChild>
-                  <Link to="/join">
-                    {t("pendant.comparison.pendant.cta")}
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Link>
+                  <Link to="/join">{t("pendant.pricing.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
