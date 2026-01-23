@@ -12,8 +12,10 @@ import {
   Tablet,
   TrendingUp,
   TrendingDown,
-  RefreshCw
+  RefreshCw,
+  Radio
 } from "lucide-react";
+import { LiveVisitorsCard } from "@/components/analytics/LiveVisitorsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -198,8 +200,11 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards - now 5 columns with Live visitors */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {/* Live Visitors Card - Prominent position */}
+        <LiveVisitorsCard />
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
