@@ -33,7 +33,17 @@
     "signUp": "Registrarse",
     "joinNow": "Únase ahora",
     "configured": "Configurado",
-    "notConfigured": "No configurado"
+    "notConfigured": "No configurado",
+    "member": "Socio",
+    "plan": "Plan",
+    "amount": "Importe",
+    "contacts": "Contactos",
+    "primary": "Principal",
+    "ordinalSuffix": "º",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "online": "En línea",
+    "offline": "Desconectado"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -73,6 +83,11 @@
   "navigation": {
     "home": "Inicio",
     "dashboard": "Panel",
+    "myAccount": "Mi Cuenta",
+    "services": "Servicios",
+    "billing": "Facturación",
+    "support": "Soporte",
+    "messages": "Mensajes",
     "profile": "Mi perfil",
     "medicalInfo": "Información médica",
     "emergencyContacts": "Contactos de emergencia",
@@ -397,7 +412,7 @@
     "addressEmergencyNote": "Se utiliza para respuesta de emergencia"
   },
   "dashboard": {
-    "welcomeBack": "Bienvenido/a, {{name}}",
+    "welcomeBack": "Bienvenido/a",
     "needHelp": "¿Necesita ayuda?",
     "emergencyTeamReady": "Nuestro equipo de respuesta de emergencia 24/7 siempre está listo para ayudar",
     "callIceAlarm": "Llamar a ICE Alarm",
@@ -409,7 +424,16 @@
     "updateContacts": "Actualizar contactos",
     "announcement": "Anuncio de servicio",
     "deviceWorking": "Su colgante está funcionando correctamente",
-    "contactIceAlarm": "Contactar ICE Alarm"
+    "contactIceAlarm": "Contactar ICE Alarm",
+    "noDeviceAssigned": "Sin dispositivo asignado",
+    "contactSupportDevice": "Por favor contacte con soporte para configurar su dispositivo.",
+    "noActiveSubscription": "Sin suscripción activa",
+    "noEmergencyContacts": "Sin contactos de emergencia añadidos",
+    "alertsLast30Days": "Alertas (30 días)",
+    "batteryLevel": "Batería",
+    "deviceStatus": "Dispositivo",
+    "serviceAnnouncement": "Anuncio de servicio",
+    "announcementText": "¡Hemos mejorado nuestro sistema de respuesta! Sus alertas ahora llegan a nuestro equipo un 30% más rápido. Gracias por confiar en ICE Alarm España para su seguridad."
   },
   "phoneOnly": {
     "yourCurrentService": "Su servicio actual",

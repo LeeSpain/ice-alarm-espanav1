@@ -33,7 +33,17 @@
     "signUp": "Sign Up",
     "joinNow": "Join Now",
     "configured": "Configured",
-    "notConfigured": "Not Configured"
+    "notConfigured": "Not Configured",
+    "member": "Member",
+    "plan": "Plan",
+    "amount": "Amount",
+    "contacts": "Contacts",
+    "primary": "Primary",
+    "ordinalSuffix": "nd",
+    "active": "Active",
+    "inactive": "Inactive",
+    "online": "Online",
+    "offline": "Offline"
   },
   "auth": {
     "login": "Login",
@@ -73,6 +83,11 @@
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
+    "myAccount": "My Account",
+    "services": "Services",
+    "billing": "Billing",
+    "support": "Support",
+    "messages": "Messages",
     "profile": "My Profile",
     "medicalInfo": "Medical Info",
     "emergencyContacts": "Emergency Contacts",
@@ -397,7 +412,7 @@
     "addressEmergencyNote": "This is used for emergency response"
   },
   "dashboard": {
-    "welcomeBack": "Welcome back, {{name}}",
+    "welcomeBack": "Welcome back",
     "needHelp": "Need Help?",
     "emergencyTeamReady": "Our 24/7 emergency response team is always ready to help",
     "callIceAlarm": "Call ICE Alarm",
@@ -409,7 +424,16 @@
     "updateContacts": "Update Contacts",
     "announcement": "Service Announcement",
     "deviceWorking": "Your pendant is working properly",
-    "contactIceAlarm": "Contact ICE Alarm"
+    "contactIceAlarm": "Contact ICE Alarm",
+    "noDeviceAssigned": "No device assigned",
+    "contactSupportDevice": "Please contact support to get your device set up.",
+    "noActiveSubscription": "No active subscription",
+    "noEmergencyContacts": "No emergency contacts added",
+    "alertsLast30Days": "Alerts (30 days)",
+    "batteryLevel": "Battery",
+    "deviceStatus": "Device",
+    "serviceAnnouncement": "Service Announcement",
+    "announcementText": "We've upgraded our response system! Your alerts now reach our team 30% faster. Thank you for trusting ICE Alarm España with your safety."
   },
   "phoneOnly": {
     "yourCurrentService": "Your Current Service",

@@ -131,7 +131,7 @@ export default function ClientDashboard() {
           <Skeleton className="h-8 w-64" />
         ) : (
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            {t("dashboard.welcomeBack") || "Welcome back"}, {memberName}
+            {t("dashboard.welcomeBack")}, {memberName}
           </h1>
         )}
         <p className="text-muted-foreground text-sm">{currentDate}</p>
