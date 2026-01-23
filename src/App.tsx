@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
+import { PageTracker } from "@/components/analytics/PageTracker";
 
 // Auth - Not lazy loaded (critical path)
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -61,6 +62,7 @@ const CRMContactsPage = lazy(() => import("./pages/admin/CRMContactsPage"));
 const CRMContactDetailPage = lazy(() => import("./pages/admin/CRMContactDetailPage"));
 const ImportBatchesPage = lazy(() => import("./pages/admin/ImportBatchesPage"));
 const FinanceDashboard = lazy(() => import("./pages/admin/FinanceDashboard"));
+const AnalyticsPage = lazy(() => import("./pages/admin/AnalyticsPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -112,6 +114,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <ScrollToTop />
+      <PageTracker />
       <TooltipProvider>
         <AuthProvider>
           <Toaster />
@@ -150,6 +153,7 @@ const App = () => (
                 <Route path="alerts" element={<AlertsPage />} />
                 <Route path="staff" element={<StaffPage />} />
                 <Route path="reports" element={<ReportsPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="messages" element={<MessagesPage />} />
                 <Route path="tasks" element={<TasksPage />} />
