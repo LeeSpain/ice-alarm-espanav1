@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { AdminHeaderChatButton } from "@/components/chat/AdminHeaderChatButton";
 
 export function AdminHeader() {
   const { t } = useTranslation();
@@ -89,6 +90,9 @@ export function AdminHeader() {
       <div className="flex items-center gap-2">
         {/* Language Selector */}
         <LanguageSelector variant="icon-only" />
+
+        {/* AI Main Brain Chat */}
+        <AdminHeaderChatButton />
 
         {/* Notifications */}
         <NotificationBell staffId={staffId} />
