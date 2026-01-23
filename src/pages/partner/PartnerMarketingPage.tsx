@@ -31,6 +31,9 @@ const formatFileSize = (bytes: number | null) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const MAX_PRESENTATION_SIZE_MB = 50;
+const MAX_PRESENTATION_SIZE_BYTES = MAX_PRESENTATION_SIZE_MB * 1024 * 1024;
+
 export default function PartnerMarketingPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -130,8 +133,8 @@ export default function PartnerMarketingPage() {
       return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size
+    if (file.size > MAX_PRESENTATION_SIZE_BYTES) {
       toast.error(t("partner.fileTooLarge"));
       return;
     }
