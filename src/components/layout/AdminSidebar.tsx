@@ -82,7 +82,8 @@ const menuGroups: MenuGroup[] = [
       { icon: Users, labelKey: "sidebar.members", path: "/admin/members" },
       { icon: Contact, labelKey: "sidebar.leads", path: "/admin/leads" },
       { icon: Smartphone, labelKey: "sidebar.devices", path: "/admin/devices" },
-      { icon: Bell, labelKey: "sidebar.alerts", path: "/admin/alerts" }
+      { icon: Bell, labelKey: "sidebar.alerts", path: "/admin/alerts" },
+      { icon: LayoutDashboard, labelKey: "sidebar.memberDashboard", path: "/dashboard" }
     ]
   },
   {
