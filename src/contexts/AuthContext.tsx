@@ -83,8 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsStaff(true);
         setStaffRole(roleInfo.staff_role);
         setMemberId(null);
-        setPartnerId(null);
-        setIsPartner(false);
+        // Preserve partner data if user holds both staff AND partner roles
+        if (roleInfo.is_partner && roleInfo.partner_id) {
+          setPartnerId(roleInfo.partner_id);
+          setIsPartner(true);
+        } else {
+          setPartnerId(null);
+          setIsPartner(false);
+        }
         return;
       }
 
