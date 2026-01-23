@@ -149,6 +149,8 @@ export default function LandingPage() {
                   placeholderText="Hero Image"
                   placeholderSubtext="Coming Soon"
                   priority={true}
+                  width={800}
+                  height={600}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
