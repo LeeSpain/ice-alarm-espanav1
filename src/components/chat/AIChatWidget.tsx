@@ -18,7 +18,6 @@ interface Message {
 
 const AGENT_KEY = "customer_service_expert";
 
-
 export function AIChatWidget() {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -27,12 +26,22 @@ export function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [imagePreloaded, setImagePreloaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
   // Fetch the customer service agent to get its avatar
   const { data: csAgent, isLoading: agentLoading } = useAIAgent(AGENT_KEY);
   const avatarUrl = csAgent?.avatar_url;
+
+  // Preload avatar image for instant display
+  useEffect(() => {
+    if (avatarUrl && !imagePreloaded) {
+      const img = new Image();
+      img.src = avatarUrl;
+      img.onload = () => setImagePreloaded(true);
+    }
+  }, [avatarUrl, imagePreloaded]);
 
   // Create welcome message helper - uses t() for proper i18n
   const createWelcomeMessage = useCallback((): Message => ({
@@ -174,14 +183,21 @@ export function AIChatWidget() {
         style={{ height: "72px", width: "72px" }}
         aria-label={t("chat.openChat", "Open chat")}
       >
-        {!agentLoading && avatarUrl ? (
+        {avatarUrl ? (
           <img 
             src={avatarUrl} 
             alt="Chat Assistant" 
-            className="h-full w-full object-cover"
+            className={cn(
+              "h-full w-full object-cover transition-opacity duration-200",
+              imagePreloaded ? "opacity-100" : "opacity-0"
+            )}
+            loading="eager"
+            fetchPriority="high"
           />
-        ) : (
-          <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+        ) : null}
+        {/* Fallback shown while loading or if no avatar */}
+        {(!avatarUrl || !imagePreloaded) && (
+          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
             <Bot className="h-8 w-8 text-primary" />
           </div>
         )}
