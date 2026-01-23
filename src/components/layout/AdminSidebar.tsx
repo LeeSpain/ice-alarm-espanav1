@@ -23,6 +23,7 @@ import {
   PieChart,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ import { Separator } from "@/components/ui/separator";
 
 interface MenuItem {
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
   path: string;
   superAdminOnly?: boolean;
 }
@@ -56,7 +57,7 @@ interface MenuItem {
 interface MenuGroup {
   id: string;
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
   items: MenuItem[];
   superAdminOnly?: boolean;
 }
@@ -65,69 +66,69 @@ const menuGroups: MenuGroup[] = [
   {
     id: "dashboard",
     icon: LayoutDashboard,
-    label: "Dashboard",
+    labelKey: "sidebar.dashboard",
     items: [
-      { icon: LayoutDashboard, label: "Dashboard", path: "/admin" }
+      { icon: LayoutDashboard, labelKey: "sidebar.dashboard", path: "/admin" }
     ]
   },
   {
     id: "people",
     icon: Users,
-    label: "People",
+    labelKey: "sidebar.people",
     items: [
-      { icon: Users, label: "Members", path: "/admin/members" },
-      { icon: Contact, label: "Leads", path: "/admin/leads" },
-      { icon: Smartphone, label: "Devices", path: "/admin/devices" },
-      { icon: Bell, label: "Alerts", path: "/admin/alerts" }
+      { icon: Users, labelKey: "sidebar.members", path: "/admin/members" },
+      { icon: Contact, labelKey: "sidebar.leads", path: "/admin/leads" },
+      { icon: Smartphone, labelKey: "sidebar.devices", path: "/admin/devices" },
+      { icon: Bell, labelKey: "sidebar.alerts", path: "/admin/alerts" }
     ]
   },
   {
     id: "partners",
     icon: Handshake,
-    label: "Partners",
+    labelKey: "sidebar.partners",
     items: [
-      { icon: Handshake, label: "Partners", path: "/admin/partners" },
-      { icon: ClipboardCheck, label: "Partners QA", path: "/admin/partners-qa", superAdminOnly: true }
+      { icon: Handshake, labelKey: "sidebar.partners", path: "/admin/partners" },
+      { icon: ClipboardCheck, labelKey: "sidebar.partnersQa", path: "/admin/partners-qa", superAdminOnly: true }
     ]
   },
   {
     id: "staff-ops",
     icon: UserCog,
-    label: "Staff Operations",
+    labelKey: "sidebar.staffOperations",
     items: [
-      { icon: UserCog, label: "Staff", path: "/admin/staff", superAdminOnly: true },
-      { icon: Ticket, label: "Staff Tickets", path: "/admin/tickets" },
-      { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" }
+      { icon: UserCog, labelKey: "sidebar.staff", path: "/admin/staff", superAdminOnly: true },
+      { icon: Ticket, labelKey: "sidebar.staffTickets", path: "/admin/tickets" },
+      { icon: CheckSquare, labelKey: "sidebar.tasks", path: "/admin/tasks" }
     ]
   },
   {
     id: "communications",
     icon: MessageSquare,
-    label: "Communications",
+    labelKey: "sidebar.communications",
     items: [
-      { icon: MessageSquare, label: "Messages", path: "/admin/messages" }
+      { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" }
     ]
   },
   {
     id: "business",
     icon: Briefcase,
-    label: "Business",
+    labelKey: "sidebar.business",
     items: [
-      { icon: PieChart, label: "Finance Dashboard", path: "/admin/finance" },
-      { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-      { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
-      { icon: DollarSign, label: "Payments", path: "/admin/payments" },
-      { icon: DollarSign, label: "Commissions", path: "/admin/commissions" },
-      { icon: BarChart3, label: "Reports", path: "/admin/reports" }
+      { icon: PieChart, labelKey: "sidebar.financeDashboard", path: "/admin/finance" },
+      { icon: ShoppingCart, labelKey: "sidebar.orders", path: "/admin/orders" },
+      { icon: CreditCard, labelKey: "sidebar.subscriptions", path: "/admin/subscriptions" },
+      { icon: DollarSign, labelKey: "sidebar.payments", path: "/admin/payments" },
+      { icon: DollarSign, labelKey: "sidebar.commissions", path: "/admin/commissions" },
+      { icon: BarChart3, labelKey: "sidebar.reports", path: "/admin/reports" }
     ]
   },
   {
     id: "system",
     icon: Settings,
-    label: "System",
+    labelKey: "sidebar.system",
     superAdminOnly: true,
     items: [
-      { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true }
+      { icon: Settings, labelKey: "sidebar.settings", path: "/admin/settings", superAdminOnly: true }
     ]
   }
 ];
@@ -137,6 +138,7 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
@@ -204,6 +206,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
     const isActive = location.pathname === item.path || 
       (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"));
     const Icon = item.icon;
+    const label = t(item.labelKey);
     
     const linkContent = (
       <NavLink
@@ -220,7 +223,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
         )}
       >
         <Icon className="h-4 w-4 shrink-0" />
-        {(isMobile || !collapsed) && <span className="truncate">{item.label}</span>}
+        {(isMobile || !collapsed) && <span className="truncate">{label}</span>}
       </NavLink>
     );
 
@@ -232,7 +235,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               {linkContent}
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              {item.label}
+              {label}
             </TooltipContent>
           </Tooltip>
         </li>
@@ -249,6 +252,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
     const isOpen = openGroups[group.id] || false;
     const isActive = isGroupActive(group);
     const visibleItems = filterByRole(group.items);
+    const label = t(group.labelKey);
 
     // For single-item groups like Dashboard, render as a direct link
     if (visibleItems.length === 1 && group.id === "dashboard") {
@@ -286,7 +290,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              {group.label}
+              {label}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -309,7 +313,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               )}
             >
               <Icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
-              <span className="flex-1 text-left truncate">{group.label}</span>
+              <span className="flex-1 text-left truncate">{label}</span>
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform duration-200 shrink-0",
                 isOpen && "rotate-180"
@@ -375,12 +379,12 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               )}
             >
               <LogOut className="h-5 w-5" />
-              {(isMobile || !collapsed) && <span>Sign Out</span>}
+              {(isMobile || !collapsed) && <span>{t("sidebar.signOut")}</span>}
             </Button>
           </TooltipTrigger>
           {!isMobile && collapsed && (
             <TooltipContent side="right" className="font-medium">
-              Sign Out
+              {t("sidebar.signOut")}
             </TooltipContent>
           )}
         </Tooltip>

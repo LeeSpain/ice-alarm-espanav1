@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
@@ -34,15 +35,15 @@ interface PartnerSidebarProps {
 
 interface MenuItem {
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
   path: string;
 }
 
 const navItems: MenuItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/partner-dashboard" },
-  { label: "Invites", icon: Send, path: "/partner-dashboard/invites" },
-  { label: "Commissions", icon: DollarSign, path: "/partner-dashboard/commissions" },
-  { label: "Settings", icon: Settings, path: "/partner-dashboard/settings" },
+  { labelKey: "sidebar.dashboard", icon: LayoutDashboard, path: "/partner-dashboard" },
+  { labelKey: "sidebar.invites", icon: Send, path: "/partner-dashboard/invites" },
+  { labelKey: "sidebar.commissions", icon: DollarSign, path: "/partner-dashboard/commissions" },
+  { labelKey: "sidebar.settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
 
 interface ExtendedPartnerSidebarProps extends PartnerSidebarProps {
@@ -50,6 +51,7 @@ interface ExtendedPartnerSidebarProps extends PartnerSidebarProps {
 }
 
 export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, partnerIdParam, onCollapsedChange }: ExtendedPartnerSidebarProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
   // Notify parent of collapse state changes
@@ -92,6 +94,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
     const href = getHref(item.path);
     const active = isActive(item.path);
     const Icon = item.icon;
+    const label = t(item.labelKey);
     
     const linkContent = (
       <NavLink
@@ -107,7 +110,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
         )}
       >
         <Icon className="h-5 w-5 shrink-0" />
-        {(isMobileView || !collapsed) && <span>{item.label}</span>}
+        {(isMobileView || !collapsed) && <span>{label}</span>}
       </NavLink>
     );
 
@@ -119,7 +122,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
               {linkContent}
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              {item.label}
+              {label}
             </TooltipContent>
           </Tooltip>
         </li>
@@ -152,7 +155,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
             onClick={() => navigate("/admin/partners")}
           >
             <ArrowLeft className="h-4 w-4" />
-            {(isMobileView || !collapsed) && <span>Back to Partners</span>}
+            {(isMobileView || !collapsed) && <span>{t("sidebar.backToPartners")}</span>}
           </Button>
         </div>
       )}
@@ -178,12 +181,12 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
                 )}
               >
                 <LogOut className="h-5 w-5" />
-                {(isMobileView || !collapsed) && <span>Sign Out</span>}
+                {(isMobileView || !collapsed) && <span>{t("sidebar.signOut")}</span>}
               </Button>
             </TooltipTrigger>
             {!isMobileView && collapsed && (
               <TooltipContent side="right" className="font-medium">
-                Sign Out
+                {t("sidebar.signOut")}
               </TooltipContent>
             )}
           </Tooltip>
