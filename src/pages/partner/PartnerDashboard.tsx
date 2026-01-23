@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { usePartnerStats } from "@/hooks/usePartnerStats";
 import { StatsCards } from "@/components/partner/StatsCards";
@@ -11,6 +12,14 @@ import { toast } from "sonner";
 import { generateReferralLink } from "@/lib/crmEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Mock data for template preview
 const MOCK_PARTNER = {
@@ -34,6 +43,7 @@ export default function PartnerDashboard() {
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
 
   const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
   const partnerIdParam = searchParams.get("partnerId");
@@ -71,9 +81,6 @@ export default function PartnerDashboard() {
           <Skeleton className="h-9 w-40" />
           <Skeleton className="h-5 w-56" />
         </div>
-        
-        {/* Referral link card skeleton */}
-        <Skeleton className="h-36" />
         
         {/* Stats cards skeleton */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -141,37 +148,49 @@ export default function PartnerDashboard() {
         </div>
       )}
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {displayPartner?.contact_name}
-        </p>
-      </div>
-
-      {/* Referral Link Card */}
-      <Card className="bg-primary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Link className="h-5 w-5" />
-            Your Referral Link
-          </CardTitle>
-          <CardDescription>Share this link to earn commissions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <code className="flex-1 rounded bg-background px-3 py-2 text-sm border truncate">
-              {referralLink}
-            </code>
-            <Button onClick={copyReferralLink}>
-              <Copy className="h-4 w-4 mr-2" />
-              Copy
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Referral Code: <strong>{displayPartner?.referral_code}</strong>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {displayPartner?.contact_name}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Referral Link Dialog */}
+        <Dialog open={referralDialogOpen} onOpenChange={setReferralDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Link className="h-4 w-4" />
+              Your Referral Link
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Link className="h-5 w-5" />
+                Your Referral Link
+              </DialogTitle>
+              <DialogDescription>
+                Share this link to earn commissions on every signup
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="flex gap-2">
+                <code className="flex-1 rounded bg-muted px-3 py-2 text-sm border truncate">
+                  {referralLink}
+                </code>
+                <Button onClick={copyReferralLink}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Referral Code: <strong>{displayPartner?.referral_code}</strong>
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Stats Cards */}
       <StatsCards stats={displayStats} isLoading={!isTemplatePreview && statsLoading} />
