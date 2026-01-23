@@ -1,9 +1,9 @@
-import { Phone, MessageCircle, ArrowRight, Calendar, CreditCard, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Phone, MessageCircle, ArrowRight, Calendar, CreditCard, AlertTriangle, CheckCircle2, Eye, ArrowLeft } from "lucide-react";
 import { DeviceStatusCard } from "@/components/dashboard/DeviceStatusCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,95 +11,137 @@ import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
+// Mock data for template preview mode
+const MOCK_MEMBER = {
+  first_name: "Demo",
+  last_name: "Member",
+};
+
+const MOCK_DEVICE = {
+  id: "demo-device",
+  status: "active",
+  battery_level: 85,
+  last_checkin_at: new Date().toISOString(),
+  last_location_address: "Calle Demo 123, Madrid",
+};
+
+const MOCK_SUBSCRIPTION = {
+  plan_type: "single",
+  status: "active",
+  renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  amount: 24.95,
+  billing_frequency: "monthly",
+};
+
+const MOCK_CONTACTS = [
+  { id: "1", contact_name: "Maria Garcia", relationship: "Daughter" },
+  { id: "2", contact_name: "Carlos Garcia", relationship: "Son" },
+];
+
 export default function ClientDashboard() {
-  const { memberId } = useAuth();
+  const { memberId: authMemberId, isStaff, staffRole } = useAuth();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Determine if admin is viewing
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const memberIdParam = searchParams.get("memberId");
+  const isTemplatePreview = isAdminRole && !memberIdParam;
+  const effectiveMemberId = isAdminRole ? memberIdParam : authMemberId;
 
   // Fetch member data
   const { data: member, isLoading: memberLoading } = useQuery({
-    queryKey: ["member-dashboard", memberId],
+    queryKey: ["member-dashboard", effectiveMemberId],
     queryFn: async () => {
-      if (!memberId) return null;
+      if (!effectiveMemberId) return null;
       const { data, error } = await supabase
         .from("members")
         .select("first_name, last_name")
-        .eq("id", memberId)
+        .eq("id", effectiveMemberId)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!memberId,
+    enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
   // Fetch device data
   const { data: device, isLoading: deviceLoading } = useQuery({
-    queryKey: ["member-device", memberId],
+    queryKey: ["member-device", effectiveMemberId],
     queryFn: async () => {
-      if (!memberId) return null;
+      if (!effectiveMemberId) return null;
       const { data, error } = await supabase
         .from("devices")
         .select("*")
-        .eq("member_id", memberId)
+        .eq("member_id", effectiveMemberId)
         .eq("status", "active")
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!memberId,
+    enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
   // Fetch subscription data
   const { data: subscription, isLoading: subLoading } = useQuery({
-    queryKey: ["member-subscription", memberId],
+    queryKey: ["member-subscription", effectiveMemberId],
     queryFn: async () => {
-      if (!memberId) return null;
+      if (!effectiveMemberId) return null;
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("member_id", memberId)
+        .eq("member_id", effectiveMemberId)
         .eq("status", "active")
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!memberId,
+    enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
   // Fetch emergency contacts
   const { data: contacts, isLoading: contactsLoading } = useQuery({
-    queryKey: ["member-emergency-contacts", memberId],
+    queryKey: ["member-emergency-contacts", effectiveMemberId],
     queryFn: async () => {
-      if (!memberId) return [];
+      if (!effectiveMemberId) return [];
       const { data, error } = await supabase
         .from("emergency_contacts")
         .select("*")
-        .eq("member_id", memberId)
+        .eq("member_id", effectiveMemberId)
         .order("priority_order", { ascending: true })
         .limit(3);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!memberId,
+    enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
   // Fetch recent alerts count
   const { data: alertsCount } = useQuery({
-    queryKey: ["member-alerts-count", memberId],
+    queryKey: ["member-alerts-count", effectiveMemberId],
     queryFn: async () => {
-      if (!memberId) return 0;
+      if (!effectiveMemberId) return 0;
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const { count, error } = await supabase
         .from("alerts")
         .select("*", { count: "exact", head: true })
-        .eq("member_id", memberId)
+        .eq("member_id", effectiveMemberId)
         .gte("received_at", thirtyDaysAgo.toISOString());
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!memberId,
+    enabled: !!effectiveMemberId && !isTemplatePreview,
   });
+
+  // Use mock data in template preview mode
+  const displayMember = isTemplatePreview ? MOCK_MEMBER : member;
+  const displayDevice = isTemplatePreview ? MOCK_DEVICE : device;
+  const displaySubscription = isTemplatePreview ? MOCK_SUBSCRIPTION : subscription;
+  const displayContacts = isTemplatePreview ? MOCK_CONTACTS : contacts;
+  const displayAlertsCount = isTemplatePreview ? 2 : alertsCount;
 
   const currentDate = new Date().toLocaleDateString('en-GB', { 
     weekday: 'long', 
@@ -108,7 +150,7 @@ export default function ClientDashboard() {
     day: 'numeric' 
   });
 
-  const memberName = member?.first_name || t("common.member") || "Member";
+  const memberName = displayMember?.first_name || t("common.member") || "Member";
 
   const formatPlanType = (type: string) => {
     return type === "single" ? "Single Person" : type === "couple" ? "Couple" : type;
@@ -125,9 +167,41 @@ export default function ClientDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Template Preview Banner */}
+      {isTemplatePreview && (
+        <div className="flex items-center gap-4 p-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg">
+          <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Template Preview Mode
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              This shows the member dashboard layout with demo data. 
+              Changes made here will apply to all member dashboards.
+            </p>
+          </div>
+          <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-800">
+            Demo Data
+          </Badge>
+        </div>
+      )}
+
+      {/* Admin Viewing Banner */}
+      {isAdminRole && memberIdParam && displayMember && (
+        <div className="flex items-center gap-4 p-4 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/members")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Members
+          </Button>
+          <span className="text-sm text-amber-800 dark:text-amber-200">
+            Viewing as Admin: <strong>{displayMember.first_name} {displayMember.last_name}</strong>'s dashboard
+          </span>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <div className="space-y-1">
-        {memberLoading ? (
+        {memberLoading && !isTemplatePreview ? (
           <Skeleton className="h-8 w-64" />
         ) : (
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
@@ -138,18 +212,18 @@ export default function ClientDashboard() {
       </div>
 
       {/* Device Status */}
-      {deviceLoading ? (
+      {deviceLoading && !isTemplatePreview ? (
         <Card>
           <CardContent className="p-6">
             <Skeleton className="h-24 w-full" />
           </CardContent>
         </Card>
-      ) : device ? (
+      ) : displayDevice ? (
         <DeviceStatusCard
-          batteryLevel={device.battery_level || 0}
-          isConnected={device.status === "active"}
-          lastCheckIn={device.last_checkin_at ? new Date(device.last_checkin_at) : undefined}
-          location={device.last_location_address || undefined}
+          batteryLevel={displayDevice.battery_level || 0}
+          isConnected={displayDevice.status === "active"}
+          lastCheckIn={displayDevice.last_checkin_at ? new Date(displayDevice.last_checkin_at) : undefined}
+          location={displayDevice.last_location_address || undefined}
         />
       ) : (
         <Card className="border-alert-battery/30 bg-alert-battery/5">
@@ -203,9 +277,9 @@ export default function ClientDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">{t("navigation.subscription") || "Subscription"}</CardTitle>
-              {subLoading ? (
+              {subLoading && !isTemplatePreview ? (
                 <Skeleton className="h-5 w-16" />
-              ) : subscription ? (
+              ) : displaySubscription ? (
                 <Badge variant="outline" className="bg-alert-resolved/10 text-alert-resolved border-alert-resolved/30 text-xs">
                   <CheckCircle2 className="mr-1 h-3 w-3" />
                   {t("common.active") || "Active"}
@@ -218,28 +292,28 @@ export default function ClientDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {subLoading ? (
+            {subLoading && !isTemplatePreview ? (
               <>
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
               </>
-            ) : subscription ? (
+            ) : displaySubscription ? (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("common.plan") || "Plan"}</span>
-                  <span className="font-medium">{formatPlanType(subscription.plan_type)}</span>
+                  <span className="font-medium">{formatPlanType(displaySubscription.plan_type)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("dashboard.nextPayment") || "Next Payment"}</span>
                   <span className="font-medium flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {format(new Date(subscription.renewal_date), "dd MMM yyyy")}
+                    {format(new Date(displaySubscription.renewal_date), "dd MMM yyyy")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("common.amount") || "Amount"}</span>
-                  <span className="font-medium">€{subscription.amount}{formatBillingFrequency(subscription.billing_frequency)}</span>
+                  <span className="font-medium">€{displaySubscription.amount}{formatBillingFrequency(displaySubscription.billing_frequency)}</span>
                 </div>
               </>
             ) : (
@@ -260,20 +334,20 @@ export default function ClientDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">{t("navigation.emergencyContacts") || "Emergency Contacts"}</CardTitle>
-              {!contactsLoading && contacts && contacts.length > 0 && (
-                <Badge variant="secondary" className="text-xs">{contacts.length} {t("common.contacts") || "contacts"}</Badge>
+              {(isTemplatePreview || (!contactsLoading && displayContacts && displayContacts.length > 0)) && (
+                <Badge variant="secondary" className="text-xs">{displayContacts?.length || 0} {t("common.contacts") || "contacts"}</Badge>
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {contactsLoading ? (
+            {contactsLoading && !isTemplatePreview ? (
               <>
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </>
-            ) : contacts && contacts.length > 0 ? (
+            ) : displayContacts && displayContacts.length > 0 ? (
               <div className="space-y-2">
-                {contacts.slice(0, 2).map((contact, index) => (
+                {displayContacts.slice(0, 2).map((contact, index) => (
                   <div key={contact.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                     <div>
                       <span className="font-medium text-sm block">{contact.contact_name}</span>
@@ -307,27 +381,27 @@ export default function ClientDashboard() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{alertsCount || 0}</p>
+            <p className="text-2xl font-bold text-primary">{displayAlertsCount || 0}</p>
             <p className="text-xs text-muted-foreground">{t("dashboard.alertsLast30Days") || "Alerts (30 days)"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-alert-resolved">{contacts?.length || 0}</p>
+            <p className="text-2xl font-bold text-alert-resolved">{displayContacts?.length || 0}</p>
             <p className="text-xs text-muted-foreground">{t("common.contacts") || "Contacts"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{device?.battery_level || 0}%</p>
+            <p className="text-2xl font-bold">{displayDevice?.battery_level || 0}%</p>
             <p className="text-xs text-muted-foreground">{t("dashboard.batteryLevel") || "Battery"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-1">
-              <div className={`h-2 w-2 rounded-full ${device?.status === "active" ? "bg-alert-resolved" : "bg-muted-foreground"}`} />
-              <p className="text-sm font-medium">{device?.status === "active" ? t("common.online") || "Online" : t("common.offline") || "Offline"}</p>
+              <div className={`h-2 w-2 rounded-full ${displayDevice?.status === "active" ? "bg-alert-resolved" : "bg-muted-foreground"}`} />
+              <p className="text-sm font-medium">{displayDevice?.status === "active" ? t("common.online") || "Online" : t("common.offline") || "Offline"}</p>
             </div>
             <p className="text-xs text-muted-foreground">{t("dashboard.deviceStatus") || "Device"}</p>
           </CardContent>
