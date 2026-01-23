@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [isPartner, setIsPartner] = useState(false);
   const [roleLoadFailed, setRoleLoadFailed] = useState(false);
+  
+  // Prevent duplicate role fetches
+  const fetchInProgress = useRef(false);
+  const lastFetchedUserId = useRef<string | null>(null);
 
   // Reduced timeout from 8s to 4s for faster perceived performance
   const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
@@ -45,6 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ROLE_FETCH_TIMEOUT = 4000; // 4 seconds (reduced from 8s)
 
   const fetchUserRole = async (userId: string) => {
+    // Prevent duplicate fetches for the same user
+    if (fetchInProgress.current && lastFetchedUserId.current === userId) {
+      return;
+    }
+    
     // Clear previous role state first to avoid stale data when switching accounts
     setIsStaff(false);
     setStaffRole(null);
@@ -52,6 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPartnerId(null);
     setIsPartner(false);
     setRoleLoadFailed(false);
+    
+    fetchInProgress.current = true;
+    lastFetchedUserId.current = userId;
 
     try {
       // Single RPC call to get all role info - replaces 5 separate calls
@@ -98,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error fetching user role:", error);
       setRoleLoadFailed(true);
+    } finally {
+      fetchInProgress.current = false;
     }
   };
 

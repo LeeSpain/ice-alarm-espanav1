@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
+import { supabase } from "@/integrations/supabase/client";
 
 // Auth - Not lazy loaded (critical path)
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -109,6 +110,33 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true, // Refetch when connection is restored
     },
   },
+});
+
+// Prefetch company settings immediately for faster page loads
+queryClient.prefetchQuery({
+  queryKey: ["company-settings"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("key, value")
+      .in("key", ["settings_company_name", "settings_emergency_phone", "settings_support_email", "settings_address"]);
+    
+    if (error) throw error;
+    
+    const settingsMap = (data || []).reduce((acc, setting) => {
+      const normalizedKey = setting.key.replace(/^settings_/, '');
+      acc[normalizedKey] = setting.value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    return {
+      company_name: settingsMap.company_name || "ICE Alarm España",
+      emergency_phone: settingsMap.emergency_phone || "+34 900 123 456",
+      support_email: settingsMap.support_email || "info@icealarm.es",
+      address: settingsMap.address || "Calle Principal 1, Albox, 04800 Almería"
+    };
+  },
+  staleTime: 1000 * 60 * 30, // 30 minutes
 });
 
 const App = () => (

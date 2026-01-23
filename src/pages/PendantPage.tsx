@@ -182,6 +182,8 @@ export default function PendantPage() {
                     placeholderText="Product Image"
                     placeholderSubtext="Coming Soon"
                     priority={true}
+                    width={500}
+                    height={500}
                   />
                 </div>
                 {/* Trust Badge */}
