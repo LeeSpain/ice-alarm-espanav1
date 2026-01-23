@@ -8,9 +8,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
 import { useAIChat } from "@/hooks/useAIChat";
 import { cn } from "@/lib/utils";
+import { useMemberProfile } from "@/hooks/useMemberProfile";
+import { useAuth } from "@/contexts/AuthContext";
 
-export function InlineAIChat() {
+interface InlineAIChatProps {
+  /** Use member_specialist agent with personalization when in member context */
+  memberContext?: boolean;
+}
+
+export function InlineAIChat({ memberContext = false }: InlineAIChatProps) {
   const { t } = useTranslation();
+  const { memberId } = useAuth();
+  const { data: memberProfile } = useMemberProfile();
+  
+  // Use member specialist agent if in member context and has member ID
+  const agentKey = memberContext && memberId ? "member_specialist" : "customer_service_expert";
+  const memberName = memberContext && memberProfile?.first_name ? memberProfile.first_name : null;
+
   const {
     messages,
     inputValue,
@@ -24,7 +38,7 @@ export function InlineAIChat() {
     inputRef,
     avatarUrl,
     agentLoading,
-  } = useAIChat();
+  } = useAIChat({ agentKey, memberId: memberContext ? memberId : null, memberName });
 
   // Initialize chat on mount
   useEffect(() => {

@@ -13,13 +13,15 @@ interface AIChatWidgetProps {
   onClose?: () => void;
   agentKey?: string;
   memberId?: string | null;
+  memberName?: string | null;
 }
 
 export function AIChatWidget({ 
   defaultOpen = false, 
   onClose, 
   agentKey = "customer_service_expert",
-  memberId 
+  memberId,
+  memberName
 }: AIChatWidgetProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -41,7 +43,7 @@ export function AIChatWidget({
     avatarUrl,
     agentLoading,
     imagePreloaded,
-  } = useAIChat(agentKey, memberId);
+  } = useAIChat({ agentKey, memberId, memberName });
 
   // Focus input when chat opens
   useEffect(() => {

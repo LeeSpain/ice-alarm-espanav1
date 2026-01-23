@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { AIChatWidget } from "./AIChatWidget";
 import { useAIAgent } from "@/hooks/useAIAgents";
+import { useMemberProfile } from "@/hooks/useMemberProfile";
 
 const AGENT_KEY = "member_specialist";
 const AVATAR_AGENT_KEY = "customer_service_expert"; // Use same avatar as frontend
@@ -21,6 +22,10 @@ export function MemberChatButton({ className, memberId }: MemberChatButtonProps)
   // Fetch the customer service agent for avatar (matches frontend widget)
   const { data: avatarAgent } = useAIAgent(AVATAR_AGENT_KEY);
   const avatarUrl = avatarAgent?.avatar_url;
+
+  // Fetch member profile for personalization
+  const { data: memberProfile } = useMemberProfile();
+  const memberName = memberProfile?.first_name || null;
 
   // Preload avatar image for instant display
   useEffect(() => {
@@ -66,6 +71,7 @@ export function MemberChatButton({ className, memberId }: MemberChatButtonProps)
           onClose={() => setIsOpen(false)}
           agentKey={AGENT_KEY}
           memberId={memberId}
+          memberName={memberName}
         />
       )}
     </>

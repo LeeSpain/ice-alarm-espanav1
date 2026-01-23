@@ -10,7 +10,39 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export function useAIChat(agentKey: string = "customer_service_expert", memberId?: string | null) {
+interface UseAIChatOptions {
+  agentKey?: string;
+  memberId?: string | null;
+  memberName?: string | null;
+}
+
+// Get time-appropriate greeting
+function getTimeGreeting(language: string): string {
+  const hour = new Date().getHours();
+  
+  if (language === "es") {
+    if (hour >= 5 && hour < 12) return "¡Buenos días";
+    if (hour >= 12 && hour < 19) return "¡Buenas tardes";
+    return "¡Buenas noches";
+  }
+  
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+export function useAIChat(options: UseAIChatOptions | string = {}) {
+  // Support legacy string parameter for agentKey
+  const normalizedOptions: UseAIChatOptions = typeof options === "string" 
+    ? { agentKey: options } 
+    : options;
+  
+  const { 
+    agentKey = "customer_service_expert", 
+    memberId = null,
+    memberName = null 
+  } = normalizedOptions;
+
   const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -34,13 +66,30 @@ export function useAIChat(agentKey: string = "customer_service_expert", memberId
     }
   }, [avatarUrl, imagePreloaded]);
 
-  // Create welcome message helper
-  const createWelcomeMessage = useCallback((): ChatMessage => ({
-    id: crypto.randomUUID(),
-    role: "assistant",
-    content: t("chat.welcomeMessage"),
-    timestamp: new Date(),
-  }), [t]);
+  // Create welcome message helper - personalized for members
+  const createWelcomeMessage = useCallback((): ChatMessage => {
+    const greeting = getTimeGreeting(i18n.language);
+    let content: string;
+
+    if (memberName) {
+      // Personalized greeting for logged-in members
+      if (i18n.language === "es") {
+        content = `${greeting}, ${memberName}! 👋 Soy tu asistente personal de ICE Alarm. Estoy aquí para ayudarte con cualquier cosa que necesites - tu dispositivo, tu cuenta, o cualquier pregunta. ¿En qué puedo ayudarte hoy?`;
+      } else {
+        content = `${greeting}, ${memberName}! 👋 I'm your personal ICE Alarm assistant. I'm here to help you with anything you need - your device, your account, or any questions you have. How can I help you today?`;
+      }
+    } else {
+      // Generic welcome for non-members (public chat)
+      content = t("chat.welcomeMessage");
+    }
+
+    return {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content,
+      timestamp: new Date(),
+    };
+  }, [t, i18n.language, memberName]);
 
   // Reset conversation
   const resetConversation = useCallback(() => {
