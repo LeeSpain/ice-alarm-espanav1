@@ -144,27 +144,39 @@ export function AIChatWidget() {
 
   return (
     <>
-      {/* Chat Toggle Button */}
-      <Button
+      {/* Chat Toggle Button - Shows Avatar */}
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300",
-          "bg-primary hover:bg-primary/90 text-primary-foreground",
+          "fixed top-20 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300",
+          "bg-background border-2 border-primary/20 hover:border-primary/40 hover:shadow-xl",
+          "flex items-center justify-center overflow-hidden",
           isOpen && "scale-0 opacity-0"
         )}
-        size="icon"
         aria-label={t("chat.openChat", "Open chat")}
       >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
+        {!avatarLoading && avatarUrl ? (
+          <img 
+            src={avatarUrl} 
+            alt="Chat Assistant" 
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+            <Bot className="h-7 w-7 text-primary" />
+          </div>
+        )}
+        {/* Online indicator */}
+        <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+      </button>
 
       {/* Chat Window */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex flex-col",
-          "w-[380px] max-w-[calc(100vw-48px)] h-[520px] max-h-[calc(100vh-100px)]",
+          "fixed top-20 right-6 z-50 flex flex-col",
+          "w-[380px] max-w-[calc(100vw-48px)] h-[520px] max-h-[calc(100vh-120px)]",
           "bg-background border border-border rounded-2xl shadow-2xl",
-          "transition-all duration-300 origin-bottom-right",
+          "transition-all duration-300 origin-top-right",
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
@@ -182,7 +194,8 @@ export function AIChatWidget() {
             <h3 className="font-semibold text-sm">
               {t("chat.assistantName", "ICE Alarm Assistant")}
             </h3>
-            <p className="text-xs opacity-80">
+            <p className="text-xs opacity-80 flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-green-400 inline-block" />
               {t("chat.available", "Available 24/7")}
             </p>
           </div>
