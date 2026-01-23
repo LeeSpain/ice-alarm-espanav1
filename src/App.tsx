@@ -139,6 +139,21 @@ queryClient.prefetchQuery({
   staleTime: 1000 * 60 * 30, // 30 minutes
 });
 
+// Prefetch website images for hero sections immediately
+queryClient.prefetchQuery({
+  queryKey: ["website-images-batch", ["homepage_hero", "homepage_pendant_promo", "pendant_hero", "pendant_specs"]],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("website_images")
+      .select("id, location_key, image_url, alt_text, updated_at")
+      .in("location_key", ["homepage_hero", "homepage_pendant_promo", "pendant_hero", "pendant_specs"]);
+    
+    if (error) throw error;
+    return data || [];
+  },
+  staleTime: 1000 * 60 * 30, // 30 minutes
+});
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>

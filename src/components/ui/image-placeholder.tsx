@@ -16,6 +16,8 @@ interface ImageWithPlaceholderProps {
   width?: number;
   /** Explicit height to prevent layout shift */
   height?: number;
+  /** Show skeleton loader while URL is being fetched from database */
+  isLoadingUrl?: boolean;
 }
 
 export function ImageWithPlaceholder({
@@ -29,8 +31,21 @@ export function ImageWithPlaceholder({
   priority = false,
   width,
   height,
+  isLoadingUrl = false,
 }: ImageWithPlaceholderProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Show skeleton when loading URL from database
+  if (isLoadingUrl) {
+    return (
+      <div 
+        className={cn("relative w-full h-full", className)}
+        style={{ aspectRatio: width && height ? `${width}/${height}` : undefined }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse rounded-inherit" />
+      </div>
+    );
+  }
 
   if (imageUrl) {
     return (

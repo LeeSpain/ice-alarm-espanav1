@@ -22,7 +22,7 @@ export default function LandingPage() {
   const { settings: companySettings } = useCompanySettings();
   
   // Batch fetch all images in a single query
-  const { getImage } = useWebsiteImagesBatch(["homepage_hero", "homepage_pendant_promo"]);
+  const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch(["homepage_hero", "homepage_pendant_promo"]);
   const heroImage = getImage("homepage_hero");
   const pendantPromoImage = getImage("homepage_pendant_promo");
   
@@ -151,6 +151,7 @@ export default function LandingPage() {
                   priority={true}
                   width={800}
                   height={600}
+                  isLoadingUrl={imagesLoading}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
