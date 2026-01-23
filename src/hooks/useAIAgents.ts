@@ -116,6 +116,8 @@ export function useAIAgent(agentKey: string) {
       return data as AIAgent;
     },
     enabled: !!agentKey,
+    staleTime: 1000 * 60 * 30, // 30 minutes - agent data rarely changes
+    gcTime: 1000 * 60 * 60, // 1 hour garbage collection
   });
 }
 
