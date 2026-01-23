@@ -152,11 +152,12 @@ export function AIChatWidget() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed top-20 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300",
-          "bg-background border-2 border-primary/20 hover:border-primary/40 hover:shadow-xl",
+          "fixed top-20 right-6 z-50 h-18 w-18 rounded-full shadow-lg transition-all duration-300",
+          "bg-background border-2 border-primary/30 hover:border-primary/50 hover:shadow-xl hover:scale-105",
           "flex items-center justify-center overflow-hidden",
           isOpen && "scale-0 opacity-0"
         )}
+        style={{ height: "72px", width: "72px" }}
         aria-label={t("chat.openChat", "Open chat")}
       >
         {!agentLoading && avatarUrl ? (
@@ -167,11 +168,13 @@ export function AIChatWidget() {
           />
         ) : (
           <div className="h-full w-full bg-primary/10 flex items-center justify-center">
-            <Bot className="h-7 w-7 text-primary" />
+            <Bot className="h-8 w-8 text-primary" />
           </div>
         )}
-        {/* Online indicator */}
-        <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+        {/* Pulsing online indicator */}
+        <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-green-500 border-2 border-background">
+          <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
+        </span>
       </button>
 
       {/* Chat Window */}
