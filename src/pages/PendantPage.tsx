@@ -144,15 +144,9 @@ export default function PendantPage() {
             <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
               {t("pendant.nav.home")}
             </Link>
-            <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("pendant.nav.features")}
-            </a>
             <Link to="/pendant" className="text-sm font-medium text-primary">
               {t("navigation.pendant")}
             </Link>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("pendant.nav.pricing")}
-            </a>
             <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
               {t("pendant.nav.contact")}
             </Link>
