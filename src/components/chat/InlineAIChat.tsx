@@ -32,7 +32,7 @@ export function InlineAIChat() {
   }, [initializeChat]);
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="flex flex-col overflow-hidden">
       {/* Header */}
       <CardHeader className="flex-row items-center gap-3 p-4 bg-primary text-primary-foreground rounded-t-lg space-y-0">
         <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">

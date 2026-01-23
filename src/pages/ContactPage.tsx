@@ -162,7 +162,7 @@ export default function ContactPage() {
       {/* Main Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto items-start">
             {/* Contact Info Cards - Left Column */}
             <div className="space-y-6">
               <Card>
