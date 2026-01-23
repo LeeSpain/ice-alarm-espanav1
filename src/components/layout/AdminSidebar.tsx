@@ -23,6 +23,7 @@ import {
   PieChart,
   Activity,
   Package,
+  Brain,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -124,6 +125,14 @@ const menuGroups: MenuGroup[] = [
       { icon: Package, labelKey: "sidebar.products", path: "/admin/products" },
       { icon: Activity, labelKey: "sidebar.analytics", path: "/admin/analytics" },
       { icon: BarChart3, labelKey: "sidebar.reports", path: "/admin/reports" }
+    ]
+  },
+  {
+    id: "ai",
+    icon: Brain,
+    labelKey: "sidebar.aiCommandCentre",
+    items: [
+      { icon: Brain, labelKey: "sidebar.aiOverview", path: "/admin/ai" }
     ]
   },
   {
@@ -365,8 +374,11 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
           {/* Business */}
           {renderMenuGroup(menuGroups[5], isMobile, true)}
           
-          {/* System */}
+          {/* AI Command Centre */}
           {renderMenuGroup(menuGroups[6], isMobile, true)}
+          
+          {/* System */}
+          {renderMenuGroup(menuGroups[7], isMobile, true)}
         </div>
       </nav>
 
