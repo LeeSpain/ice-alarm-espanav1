@@ -21,7 +21,8 @@ import {
   MessageSquare,
   LogOut,
   ChevronLeft,
-  Search
+  Search,
+  ChevronDown
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -42,16 +43,84 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+}
+
+interface MenuGroup {
+  id: string;
+  icon: React.ElementType;
+  label: string;
+  items: MenuItem[];
+}
 
 export function ClientLayout() {
   const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user, memberId } = useAuth();
+
+  // Menu structure matching Admin sidebar pattern
+  const menuGroups: MenuGroup[] = [
+    {
+      id: "dashboard",
+      icon: Home,
+      label: t("navigation.home") || "Dashboard",
+      items: [
+        { icon: Home, label: t("navigation.home") || "Dashboard", path: "/dashboard" }
+      ]
+    },
+    {
+      id: "profile",
+      icon: User,
+      label: t("navigation.myAccount") || "My Account",
+      items: [
+        { icon: User, label: t("navigation.profile") || "Profile", path: "/dashboard/profile" },
+        { icon: Heart, label: t("navigation.medicalInfo") || "Medical Info", path: "/dashboard/medical" },
+        { icon: Phone, label: t("navigation.emergencyContacts") || "Emergency Contacts", path: "/dashboard/contacts" }
+      ]
+    },
+    {
+      id: "services",
+      icon: Smartphone,
+      label: t("navigation.services") || "Services",
+      items: [
+        { icon: Smartphone, label: t("navigation.myDevice") || "My Device", path: "/dashboard/device" },
+        { icon: Bell, label: t("navigation.alertHistory") || "Alert History", path: "/dashboard/alerts" },
+        { icon: MessageSquare, label: t("navigation.messages") || "Messages", path: "/dashboard/messages" }
+      ]
+    },
+    {
+      id: "billing",
+      icon: CreditCard,
+      label: t("navigation.billing") || "Billing",
+      items: [
+        { icon: CreditCard, label: t("navigation.subscription") || "Subscription", path: "/dashboard/subscription" }
+      ]
+    },
+    {
+      id: "support",
+      icon: Headphones,
+      label: t("navigation.support") || "Support",
+      items: [
+        { icon: Headphones, label: t("navigation.contactSupport") || "Contact Support", path: "/dashboard/support" }
+      ]
+    }
+  ];
 
   // Fetch member data for display
   const { data: memberInfo } = useQuery({
@@ -76,6 +145,19 @@ export function ClientLayout() {
 
   const displayEmail = memberInfo?.email || user?.email || "";
 
+  // Find group containing active route and auto-expand it
+  useEffect(() => {
+    const activeGroup = menuGroups.find(group =>
+      group.items.some(item =>
+        location.pathname === item.path ||
+        (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"))
+      )
+    );
+    if (activeGroup) {
+      setOpenGroups(prev => ({ ...prev, [activeGroup.id]: true }));
+    }
+  }, [location.pathname]);
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -86,17 +168,16 @@ export function ClientLayout() {
     navigate("/login");
   };
 
-  const menuItems = [
-    { icon: Home, label: t("navigation.home"), path: "/dashboard" },
-    { icon: User, label: t("navigation.profile"), path: "/dashboard/profile" },
-    { icon: Heart, label: t("navigation.medicalInfo"), path: "/dashboard/medical" },
-    { icon: Phone, label: t("navigation.emergencyContacts"), path: "/dashboard/contacts" },
-    { icon: Smartphone, label: t("navigation.myDevice"), path: "/dashboard/device" },
-    { icon: MessageSquare, label: t("navigation.messages") || "Messages", path: "/dashboard/messages" },
-    { icon: CreditCard, label: t("navigation.subscription"), path: "/dashboard/subscription" },
-    { icon: Bell, label: t("navigation.alertHistory"), path: "/dashboard/alerts" },
-    { icon: Headphones, label: t("navigation.contactSupport"), path: "/dashboard/support" },
-  ];
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const isGroupActive = (group: MenuGroup) => {
+    return group.items.some(item =>
+      location.pathname === item.path ||
+      (item.path !== "/dashboard" && location.pathname.startsWith(item.path + "/"))
+    );
+  };
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -105,7 +186,7 @@ export function ClientLayout() {
     return location.pathname.startsWith(path);
   };
 
-  const renderMenuItem = (item: typeof menuItems[0], isMobile: boolean) => {
+  const renderMenuItem = (item: MenuItem, isMobile: boolean, isNested: boolean = false) => {
     const active = isActive(item.path);
     const Icon = item.icon;
     
@@ -114,17 +195,17 @@ export function ClientLayout() {
         to={item.path}
         onClick={() => isMobile && setMobileMenuOpen(false)}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-4 py-4 text-lg font-medium transition-all touch-target",
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
           "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-          "min-h-[56px]", // Large touch target for elderly users
           active 
             ? "bg-sidebar-primary text-sidebar-primary-foreground" 
             : "text-sidebar-foreground",
-          !isMobile && collapsed && "justify-center px-3"
+          !isMobile && collapsed && "justify-center px-2",
+          isNested && !collapsed && "pl-9"
         )}
       >
-        <Icon className="h-6 w-6 shrink-0" />
-        {(isMobile || !collapsed) && <span>{item.label}</span>}
+        <Icon className="h-4 w-4 shrink-0" />
+        {(isMobile || !collapsed) && <span className="truncate">{item.label}</span>}
       </NavLink>
     );
 
@@ -135,7 +216,7 @@ export function ClientLayout() {
             <TooltipTrigger asChild>
               {linkContent}
             </TooltipTrigger>
-            <TooltipContent side="right" className="font-medium text-base">
+            <TooltipContent side="right" className="font-medium">
               {item.label}
             </TooltipContent>
           </Tooltip>
@@ -144,6 +225,87 @@ export function ClientLayout() {
     }
 
     return <li key={item.path}>{linkContent}</li>;
+  };
+
+  const renderMenuGroup = (group: MenuGroup, isMobile: boolean, showDivider: boolean = false) => {
+    const Icon = group.icon;
+    const isOpen = openGroups[group.id] || false;
+    const active = isGroupActive(group);
+
+    // For single-item groups like Dashboard, render as a direct link
+    if (group.items.length === 1 && group.id === "dashboard") {
+      return (
+        <div key={group.id}>
+          {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
+          <ul className="space-y-1">
+            {renderMenuItem(group.items[0], isMobile)}
+          </ul>
+        </div>
+      );
+    }
+
+    // Collapsed desktop: show single icon with tooltip
+    if (!isMobile && collapsed) {
+      return (
+        <div key={group.id}>
+          {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => {
+                  setCollapsed(false);
+                  setOpenGroups(prev => ({ ...prev, [group.id]: true }));
+                }}
+                className={cn(
+                  "flex items-center justify-center w-full rounded-lg px-2 py-2.5 text-sm font-medium transition-all",
+                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  active 
+                    ? "bg-sidebar-primary/20 text-sidebar-primary" 
+                    : "text-sidebar-foreground"
+                )}
+              >
+                <Icon className={cn("h-5 w-5 shrink-0", active && "text-sidebar-primary")} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              {group.label}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
+    }
+
+    // Expanded: show collapsible group
+    return (
+      <div key={group.id}>
+        {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
+        <Collapsible open={isOpen} onOpenChange={() => toggleGroup(group.id)}>
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
+                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                active 
+                  ? "bg-sidebar-primary/20 text-sidebar-primary" 
+                  : "text-sidebar-foreground/70"
+              )}
+            >
+              <Icon className={cn("h-5 w-5 shrink-0", active && "text-sidebar-primary")} />
+              <span className="flex-1 text-left truncate">{group.label}</span>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform duration-200 shrink-0",
+                isOpen && "rotate-180"
+              )} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-1 space-y-1">
+            <ul className="space-y-1">
+              {group.items.map((item) => renderMenuItem(item, isMobile, true))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
   };
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -158,22 +320,35 @@ export function ClientLayout() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
-        <ul className="space-y-2">
-          {menuItems.map((item) => renderMenuItem(item, isMobile))}
-        </ul>
+        <div className="space-y-1">
+          {/* Dashboard - standalone */}
+          {renderMenuGroup(menuGroups[0], isMobile)}
+          
+          {/* My Account */}
+          {renderMenuGroup(menuGroups[1], isMobile, true)}
+          
+          {/* Services */}
+          {renderMenuGroup(menuGroups[2], isMobile, true)}
+          
+          {/* Billing */}
+          {renderMenuGroup(menuGroups[3], isMobile, true)}
+          
+          {/* Support */}
+          {renderMenuGroup(menuGroups[4], isMobile, true)}
+        </div>
       </nav>
 
-      {/* Emergency Button - Large touch target */}
-      <div className="p-4 border-t border-sidebar-border">
+      {/* Emergency Button */}
+      <div className="p-3 border-t border-sidebar-border">
         <Button 
           size="lg" 
           className={cn(
-            "w-full h-16 font-bold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground shadow-lg",
-            collapsed && !isMobile ? "text-lg" : "text-xl"
+            "w-full font-semibold bg-alert-sos hover:bg-alert-sos/90 text-alert-sos-foreground shadow-lg",
+            collapsed && !isMobile ? "h-10 px-2" : "h-12"
           )}
         >
-          <Phone className={cn("shrink-0", collapsed && !isMobile ? "h-6 w-6" : "mr-3 h-7 w-7")} />
-          {(isMobile || !collapsed) && t("dashboard.contactIceAlarm")}
+          <Phone className={cn("shrink-0 h-5 w-5", !collapsed && !isMobile && "mr-2")} />
+          {(isMobile || !collapsed) && <span className="text-sm">{t("dashboard.contactIceAlarm") || "Call ICE Alarm"}</span>}
         </Button>
       </div>
 
@@ -185,17 +360,17 @@ export function ClientLayout() {
               variant="ghost" 
               onClick={handleSignOut}
               className={cn(
-                "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground min-h-[48px]",
+                "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 !isMobile && collapsed && "justify-center px-2"
               )}
             >
               <LogOut className="h-5 w-5" />
-              {(isMobile || !collapsed) && <span>{t("auth.signOut")}</span>}
+              {(isMobile || !collapsed) && <span>{t("auth.signOut") || "Sign Out"}</span>}
             </Button>
           </TooltipTrigger>
           {!isMobile && collapsed && (
             <TooltipContent side="right" className="font-medium">
-              {t("auth.signOut")}
+              {t("auth.signOut") || "Sign Out"}
             </TooltipContent>
           )}
         </Tooltip>
@@ -282,7 +457,7 @@ export function ClientLayout() {
                   <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                     <User className="h-4 w-4 text-primary-foreground" />
                   </div>
-                  <span>{displayName}</span>
+                  <span className="hidden lg:inline">{displayName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -296,11 +471,13 @@ export function ClientLayout() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>{t("auth.accountSettings")}</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <NavLink to="/dashboard/profile">{t("auth.accountSettings") || "Account Settings"}</NavLink>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  {t("auth.signOut")}
+                  {t("auth.signOut") || "Sign Out"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
