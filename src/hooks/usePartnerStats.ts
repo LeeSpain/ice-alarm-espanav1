@@ -60,5 +60,6 @@ export function usePartnerStats(partnerId: string | undefined) {
       };
     },
     enabled: !!partnerId,
+    staleTime: 2 * 60 * 1000, // 2 minutes - stats can be slightly stale
   });
 }
