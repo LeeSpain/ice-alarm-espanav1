@@ -3,18 +3,12 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 import en from "./locales/en.json";
+import es from "./locales/es.json";
 
-// Default resources - only English loaded initially
+// Load both languages immediately for instant switching
 const resources = {
   en: { translation: en },
-};
-
-// Lazy load Spanish translations when needed
-const loadSpanishTranslations = async () => {
-  if (!i18n.hasResourceBundle("es", "translation")) {
-    const es = await import("./locales/es.json");
-    i18n.addResourceBundle("es", "translation", es.default, true, true);
-  }
+  es: { translation: es },
 };
 
 i18n
@@ -33,18 +27,5 @@ i18n
       lookupLocalStorage: "i18nextLng",
     },
   });
-
-// Pre-load Spanish if it's the detected language
-const currentLng = i18n.language;
-if (currentLng === "es" || currentLng?.startsWith("es-")) {
-  loadSpanishTranslations();
-}
-
-// Load Spanish translations when language changes
-i18n.on("languageChanged", (lng) => {
-  if (lng === "es" || lng?.startsWith("es-")) {
-    loadSpanishTranslations();
-  }
-});
 
 export default i18n;

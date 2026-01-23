@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ interface LeadsWidgetProps {
 }
 
 export function LeadsWidget({ variant = 'admin' }: LeadsWidgetProps) {
+  const { t } = useTranslation();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [newCount, setNewCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,11 @@ export function LeadsWidget({ variant = 'admin' }: LeadsWidgetProps) {
 
   const getEnquiryLabel = (type: string) => {
     const labels: Record<string, string> = {
-      general: 'General',
-      pricing: 'Pricing',
-      demo: 'Demo',
-      partnership: 'Partner',
-      support: 'Support'
+      general: t('leadsWidget.general'),
+      pricing: t('leadsWidget.pricing'),
+      demo: t('leadsWidget.demo'),
+      partnership: t('leadsWidget.partnership'),
+      support: t('leadsWidget.support')
     };
     return labels[type] || type;
   };
@@ -79,25 +81,25 @@ export function LeadsWidget({ variant = 'admin' }: LeadsWidgetProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <UserPlus className={`h-5 w-5 ${newCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
-            New Leads
+            {t('leadsWidget.newLeads')}
             {newCount > 0 && (
               <Badge className="bg-blue-500 text-white ml-2">{newCount}</Badge>
             )}
           </CardTitle>
           <Button variant="ghost" size="sm" asChild>
             <Link to={linkPath}>
-              View All <ArrowRight className="h-4 w-4 ml-1" />
+              {t('leadsWidget.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {loading ? (
-          <div className="text-center py-4 text-muted-foreground text-sm">Loading...</div>
+          <div className="text-center py-4 text-muted-foreground text-sm">{t('common.loading')}</div>
         ) : leads.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-20" />
-            <p className="text-sm">No new leads</p>
+            <p className="text-sm">{t('leadsWidget.noNewLeads')}</p>
           </div>
         ) : (
           leads.map((lead) => (

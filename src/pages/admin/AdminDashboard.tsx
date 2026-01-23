@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -30,6 +31,8 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
+
   // Single RPC call replaces 7 separate queries
   const { data: stats } = useQuery({
     queryKey: ["admin-dashboard-stats"],
@@ -82,13 +85,13 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('adminDashboard.title')}</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's an overview of ICE Alarm España.
+            {t('adminDashboard.welcome')}
           </p>
         </div>
         <Button asChild>
-          <Link to="/admin/members/new">Add Member</Link>
+          <Link to="/admin/members/new">{t('adminDashboard.addMember')}</Link>
         </Button>
       </div>
 
@@ -96,7 +99,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.activeMembers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -105,10 +108,10 @@ export default function AdminDashboard() {
               {stats?.new_members_30d ? (
                 <>
                   <TrendingUp className="h-3 w-3 text-alert-resolved" />
-                  <span className="text-alert-resolved">+{stats.new_members_30d}</span> this month
+                  <span className="text-alert-resolved">+{stats.new_members_30d}</span> {t('common.thisMonth')}
                 </>
               ) : (
-                "No new members this month"
+                t('common.noNewMembersThisMonth')
               )}
             </p>
           </CardContent>
@@ -116,7 +119,7 @@ export default function AdminDashboard() {
 
         <Card className={stats?.active_alerts ? "border-alert-sos/50 bg-alert-sos/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.activeAlerts')}</CardTitle>
             <Bell className={`h-4 w-4 ${stats?.active_alerts ? "text-alert-sos" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
@@ -124,58 +127,58 @@ export default function AdminDashboard() {
               {stats?.active_alerts || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats?.active_alerts ? "Require attention" : "No active alerts"}
+              {stats?.active_alerts ? t('common.requireAttention') : t('common.noActiveAlerts')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Devices</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.devices')}</CardTitle>
             <Smartphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats?.devices_in_stock || 0} / {stats?.devices_assigned || 0}
             </div>
-            <p className="text-xs text-muted-foreground">In Stock / Assigned</p>
+            <p className="text-xs text-muted-foreground">{t('common.inStockAssigned')}</p>
           </CardContent>
         </Card>
 
         <Card className={stats?.pending_orders ? "border-amber-500/50 bg-amber-500/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.pendingOrders')}</CardTitle>
             <ShoppingCart className={`h-4 w-4 ${stats?.pending_orders ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${stats?.pending_orders ? "text-amber-500" : ""}`}>
               {stats?.pending_orders || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Need processing</p>
+            <p className="text-xs text-muted-foreground">{t('common.needProcessing')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.revenue')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">€{(stats?.monthly_revenue || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">This month</p>
+            <p className="text-xs text-muted-foreground">{t('common.thisMonth')}</p>
           </CardContent>
         </Card>
 
         <Card className={stats?.expiring_subscriptions ? "border-amber-500/50 bg-amber-500/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('adminDashboard.expiringSoon')}</CardTitle>
             <Calendar className={`h-4 w-4 ${stats?.expiring_subscriptions ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${stats?.expiring_subscriptions ? "text-amber-500" : ""}`}>
               {stats?.expiring_subscriptions || 0}
             </div>
-            <p className="text-xs text-muted-foreground">In next 30 days</p>
+            <p className="text-xs text-muted-foreground">{t('common.inNext30Days')}</p>
           </CardContent>
         </Card>
       </div>
@@ -189,11 +192,11 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Active Alerts</CardTitle>
-              <CardDescription>Alerts requiring attention</CardDescription>
+              <CardTitle>{t('adminDashboard.activeAlerts')}</CardTitle>
+              <CardDescription>{t('adminDashboard.alertsRequiringAttention')}</CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/admin/alerts">View All</Link>
+              <Link to="/admin/alerts">{t('common.viewAll')}</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -222,7 +225,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <Badge variant={alert.status === "incoming" ? "destructive" : "secondary"}>
-                      {alert.status}
+                      {alert.status === "incoming" ? t('common.incoming') : t('common.inProgress')}
                     </Badge>
                   </div>
                 ))}
@@ -230,7 +233,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Bell className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                <p>No active alerts</p>
+                <p>{t('common.noActiveAlerts')}</p>
               </div>
             )}
           </CardContent>
@@ -239,8 +242,8 @@ export default function AdminDashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions by staff members</CardDescription>
+            <CardTitle>{t('adminDashboard.recentActivity')}</CardTitle>
+            <CardDescription>{t('adminDashboard.latestActions')}</CardDescription>
           </CardHeader>
           <CardContent>
             {activityData && activityData.length > 0 ? (
@@ -270,7 +273,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Package className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                <p>No recent activity</p>
+                <p>{t('common.noRecentActivity')}</p>
               </div>
             )}
           </CardContent>

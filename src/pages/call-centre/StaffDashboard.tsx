@@ -327,10 +327,10 @@ export default function StaffDashboard() {
   const getAlertLabel = (type: string) => {
     switch (type) {
       case 'sos_button': return 'SOS';
-      case 'fall_detected': return 'Fall';
-      case 'low_battery': return 'Battery';
-      case 'geo_fence': return 'Geo-fence';
-      case 'check_in': return 'Check-in';
+      case 'fall_detected': return t('alerts.fallDetected');
+      case 'low_battery': return t('alerts.lowBattery');
+      case 'geo_fence': return t('alerts.geoFenceAlert');
+      case 'check_in': return t('alerts.checkIn');
       default: return type;
     }
   };
@@ -347,7 +347,7 @@ export default function StaffDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.incoming}</p>
-                <p className="text-xs text-muted-foreground">Incoming Alerts</p>
+                <p className="text-xs text-muted-foreground">{t('staffDashboard.incomingAlerts')}</p>
               </div>
             </div>
           </CardContent>
@@ -361,7 +361,7 @@ export default function StaffDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.inProgress}</p>
-                <p className="text-xs text-muted-foreground">In Progress</p>
+                <p className="text-xs text-muted-foreground">{t('staffDashboard.inProgress')}</p>
               </div>
             </div>
           </CardContent>
@@ -375,7 +375,7 @@ export default function StaffDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{unreadMessages}</p>
-                <p className="text-xs text-muted-foreground">Unread Messages</p>
+                <p className="text-xs text-muted-foreground">{t('staffDashboard.unreadMessages')}</p>
               </div>
             </div>
           </CardContent>
@@ -389,7 +389,7 @@ export default function StaffDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.resolvedToday}</p>
-                <p className="text-xs text-muted-foreground">Resolved Today</p>
+                <p className="text-xs text-muted-foreground">{t('staffDashboard.resolvedToday')}</p>
               </div>
             </div>
           </CardContent>
@@ -403,7 +403,7 @@ export default function StaffDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{myTasksCount}</p>
-                <p className="text-xs text-muted-foreground">My Tasks Due</p>
+                <p className="text-xs text-muted-foreground">{t('staffDashboard.myTasksDue')}</p>
               </div>
             </div>
           </CardContent>
@@ -416,10 +416,10 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Active Alerts</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.activeAlerts')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/alerts">
-                  View Queue <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewQueue')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
             </div>
@@ -428,7 +428,7 @@ export default function StaffDashboard() {
             {activeAlerts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
-                <p>No active alerts</p>
+                <p>{t('staffDashboard.noActiveAlerts')}</p>
               </div>
             ) : (
               activeAlerts.map((alert) => (
@@ -440,13 +440,13 @@ export default function StaffDashboard() {
                         {getAlertLabel(alert.alert_type)} - {alert.member?.first_name} {alert.member?.last_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(alert.received_at), 'HH:mm')} • {alert.status === 'incoming' ? 'Incoming' : 'In Progress'}
+                        {format(new Date(alert.received_at), 'HH:mm')} • {alert.status === 'incoming' ? t('common.incoming') : t('common.inProgress')}
                       </p>
                     </div>
                   </div>
                   {alert.status === 'incoming' && (
                     <Button size="sm" onClick={() => handleClaimAlert(alert.id)}>
-                      Claim
+                      {t('staffDashboard.claim')}
                     </Button>
                   )}
                 </div>
@@ -459,10 +459,10 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Quick Member Search</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.quickMemberSearch')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/members">
-                  Browse All <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.browseAll')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
             </div>
@@ -471,7 +471,7 @@ export default function StaffDashboard() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, phone, email..."
+                placeholder={t('staffDashboard.searchPlaceholder')}
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -504,7 +504,7 @@ export default function StaffDashboard() {
             )}
 
             {searchQuery.length >= 2 && searchResults.length === 0 && !isSearching && (
-              <p className="text-center text-muted-foreground py-4">No members found</p>
+              <p className="text-center text-muted-foreground py-4">{t('staffDashboard.noMembersFound')}</p>
             )}
           </CardContent>
         </Card>
@@ -513,10 +513,10 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">My Tasks (Due Today)</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.myTasksDueToday')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/tasks">
-                  View All <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
             </div>
@@ -525,7 +525,7 @@ export default function StaffDashboard() {
             {myTasks.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
-                <p>No tasks due today</p>
+                <p>{t('staffDashboard.noTasksDueToday')}</p>
               </div>
             ) : (
               myTasks.map((task) => (
@@ -554,10 +554,10 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recent Messages</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.recentMessages')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/messages">
-                  View All <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
             </div>
@@ -566,7 +566,7 @@ export default function StaffDashboard() {
             {recentMessages.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                <p>No unread messages</p>
+                <p>{t('staffDashboard.noUnreadMessages')}</p>
               </div>
             ) : (
               recentMessages.map((message) => (
@@ -601,11 +601,11 @@ export default function StaffDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Cake className="h-5 w-5 text-pink-500" />
-                Today's Birthdays
+                {t('staffDashboard.todaysBirthdays')}
               </CardTitle>
               {birthdays.length > 0 && (
                 <Badge className="bg-pink-500/20 text-pink-600 border-pink-500/30">
-                  {birthdays.length} {birthdays.length === 1 ? 'birthday' : 'birthdays'}
+                  {birthdays.length} {birthdays.length === 1 ? t('staffDashboard.birthday') : t('staffDashboard.birthdays')}
                 </Badge>
               )}
             </div>
@@ -614,7 +614,7 @@ export default function StaffDashboard() {
             {birthdays.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
                 <Cake className="h-8 w-8 mx-auto mb-2" />
-                <p>No birthdays today</p>
+                <p>{t('staffDashboard.noBirthdaysToday')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -634,7 +634,7 @@ export default function StaffDashboard() {
                         <div>
                           <p className="font-medium">{member.first_name} {member.last_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            Turning {age} today! 🎉
+                            {t('staffDashboard.turningXToday', { age })}
                           </p>
                         </div>
                       </div>
@@ -642,7 +642,7 @@ export default function StaffDashboard() {
                         variant="ghost" 
                         size="icon"
                         onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}
-                        title="Call to wish happy birthday"
+                        title={t('staffDashboard.callToWishHappyBirthday')}
                       >
                         <Phone className="h-4 w-4" />
                       </Button>
@@ -658,10 +658,10 @@ export default function StaffDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Today's Shift Notes</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.todaysShiftNotes')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/shift-notes">
-                  <Plus className="h-4 w-4 mr-1" /> Add Note
+                  <Plus className="h-4 w-4 mr-1" /> {t('staffDashboard.addNote')}
                 </Link>
               </Button>
             </div>
@@ -670,7 +670,7 @@ export default function StaffDashboard() {
             {shiftNotes.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
                 <FileText className="h-8 w-8 mx-auto mb-2" />
-                <p>No shift notes yet today</p>
+                <p>{t('staffDashboard.noShiftNotesYetToday')}</p>
               </div>
             ) : (
               <div className="space-y-3">
