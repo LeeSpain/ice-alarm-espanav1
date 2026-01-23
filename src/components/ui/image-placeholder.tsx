@@ -18,10 +18,6 @@ interface ImageWithPlaceholderProps {
   height?: number;
   /** Show skeleton loader while URL is being fetched from database */
   isLoadingUrl?: boolean;
-  /** Low-quality blur placeholder (base64 data URL) for blur-up effect */
-  blurPlaceholder?: string | null;
-  /** Dominant color for initial background before blur placeholder loads */
-  dominantColor?: string | null;
 }
 
 export function ImageWithPlaceholder({
@@ -36,17 +32,14 @@ export function ImageWithPlaceholder({
   width,
   height,
   isLoadingUrl = false,
-  blurPlaceholder,
-  dominantColor,
 }: ImageWithPlaceholderProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [blurLoaded, setBlurLoaded] = useState(false);
 
   // Show skeleton when loading URL from database
   if (isLoadingUrl) {
     return (
       <div 
-        className={cn("relative w-full h-full overflow-hidden", className)}
+        className={cn("relative w-full h-full", className)}
         style={{ aspectRatio: width && height ? `${width}/${height}` : undefined }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse rounded-inherit" />
@@ -56,44 +49,19 @@ export function ImageWithPlaceholder({
 
   if (imageUrl) {
     return (
-      <div 
-        className={cn("relative w-full h-full overflow-hidden", className)}
-        style={{ 
-          aspectRatio: width && height ? `${width}/${height}` : undefined,
-          backgroundColor: dominantColor || undefined,
-        }}
-      >
-        {/* Blur placeholder layer - shows immediately with blur */}
-        {blurPlaceholder && !isLoaded && (
-          <img
-            src={blurPlaceholder}
-            alt=""
-            aria-hidden="true"
-            className={cn(
-              "absolute inset-0 w-full h-full object-cover object-center scale-110",
-              "transition-opacity duration-500",
-              blurLoaded ? "opacity-100" : "opacity-0"
-            )}
-            style={{ filter: "blur(20px)" }}
-            onLoad={() => setBlurLoaded(true)}
-          />
-        )}
-        
-        {/* Skeleton fallback if no blur placeholder */}
-        {!blurPlaceholder && !isLoaded && (
+      <div className={cn("relative w-full h-full", className)}>
+        {/* Skeleton loader while image loads */}
+        {!isLoaded && (
           <div 
             className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse"
             style={{ aspectRatio: width && height ? `${width}/${height}` : undefined }}
           />
         )}
-
-        {/* Main image - transitions in over blur */}
         <img
           src={imageUrl}
           alt={altText}
           className={cn(
-            "w-full h-full object-cover object-center",
-            "transition-opacity duration-700 ease-out",
+            "w-full h-full object-cover object-center transition-opacity duration-300",
             isLoaded ? "opacity-100" : "opacity-0",
             imgClassName
           )}

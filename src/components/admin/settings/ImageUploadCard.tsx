@@ -3,11 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, Image as ImageIcon, RotateCcw, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { optimizeImage } from "@/lib/imageOptimization";
 
 interface ImageUploadCardProps {
   locationKey: string;
@@ -34,7 +34,6 @@ export function ImageUploadCard({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
 
   const displayUrl = previewUrl || currentImageUrl || defaultImageUrl;
   const hasCustomImage = !!currentImageUrl;
@@ -73,21 +72,14 @@ export function ImageUploadCard({
 
     setIsUploading(true);
     try {
-      // Optimize image: convert to WebP and generate blur placeholder
-      const optimization = await optimizeImage(selectedFile);
-
-      // Generate filename with .webp extension if converted
-      const isWebP = optimization.optimizedBlob.type === "image/webp";
-      const extension = isWebP ? "webp" : selectedFile.name.split(".").pop();
+      // Generate unique filename
+      const extension = selectedFile.name.split(".").pop();
       const filename = `${locationKey}_${Date.now()}.${extension}`;
 
-      // Upload optimized image to storage
+      // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("website-images")
-        .upload(filename, optimization.optimizedBlob, { 
-          upsert: true,
-          contentType: optimization.optimizedBlob.type,
-        });
+        .upload(filename, selectedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -103,18 +95,14 @@ export function ImageUploadCard({
         .eq("location_key", locationKey)
         .maybeSingle();
 
-      const imageData = {
-        image_url: urlData.publicUrl,
-        blur_placeholder: optimization.blurPlaceholder,
-        dominant_color: optimization.dominantColor,
-        updated_at: new Date().toISOString(),
-      };
-
       if (existing) {
         // Update existing entry
         const { error: updateError } = await supabase
           .from("website_images")
-          .update(imageData)
+          .update({
+            image_url: urlData.publicUrl,
+            updated_at: new Date().toISOString(),
+          })
           .eq("location_key", locationKey);
 
         if (updateError) throw updateError;
@@ -124,8 +112,8 @@ export function ImageUploadCard({
           .from("website_images")
           .insert({
             location_key: locationKey,
+            image_url: urlData.publicUrl,
             alt_text: title,
-            ...imageData,
           });
 
         if (insertError) throw insertError;
@@ -134,15 +122,10 @@ export function ImageUploadCard({
       // Invalidate all image-related caches so public pages refresh immediately
       queryClient.invalidateQueries({ queryKey: ["website-image", locationKey] });
       queryClient.invalidateQueries({ queryKey: ["website-images"] });
-      queryClient.invalidateQueries({ queryKey: ["website-images-batch"] });
-
-      const savingsMessage = optimization.savedPercentage > 0 
-        ? ` (${optimization.savedPercentage}% smaller with WebP)`
-        : "";
 
       toast({
-        title: "Image optimized & uploaded",
-        description: `${title} has been updated successfully${savingsMessage}.`,
+        title: "Image updated",
+        description: `${title} has been updated successfully.`,
       });
 
       setSelectedFile(null);

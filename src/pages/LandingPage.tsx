@@ -152,8 +152,6 @@ export default function LandingPage() {
                   width={800}
                   height={600}
                   isLoadingUrl={imagesLoading}
-                  blurPlaceholder={heroImage.blurPlaceholder}
-                  dominantColor={heroImage.dominantColor}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>

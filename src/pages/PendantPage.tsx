@@ -185,8 +185,6 @@ export default function PendantPage() {
                     width={500}
                     height={500}
                     isLoadingUrl={imagesLoading}
-                    blurPlaceholder={pendantHeroImage.blurPlaceholder}
-                    dominantColor={pendantHeroImage.dominantColor}
                   />
                 </div>
                 {/* Trust Badge */}
@@ -382,8 +380,6 @@ export default function PendantPage() {
                   altText={pendantSpecsImage.altText || "ICE Alarm Pendant Specifications"}
                   placeholderText="Specifications Image"
                   placeholderSubtext="Coming Soon"
-                  blurPlaceholder={pendantSpecsImage.blurPlaceholder}
-                  dominantColor={pendantSpecsImage.dominantColor}
                 />
               </div>
             </div>

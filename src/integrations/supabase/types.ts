@@ -2152,9 +2152,7 @@ export type Database = {
       website_images: {
         Row: {
           alt_text: string | null
-          blur_placeholder: string | null
           created_at: string
-          dominant_color: string | null
           id: string
           image_url: string
           location_key: string
@@ -2163,9 +2161,7 @@ export type Database = {
         }
         Insert: {
           alt_text?: string | null
-          blur_placeholder?: string | null
           created_at?: string
-          dominant_color?: string | null
           id?: string
           image_url: string
           location_key: string
@@ -2174,9 +2170,7 @@ export type Database = {
         }
         Update: {
           alt_text?: string | null
-          blur_placeholder?: string | null
           created_at?: string
-          dominant_color?: string | null
           id?: string
           image_url?: string
           location_key?: string
