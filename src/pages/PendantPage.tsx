@@ -446,28 +446,51 @@ export default function PendantPage() {
 
 
       {/* Testimonials */}
-      <section className="py-20 px-4 bg-primary text-primary-foreground">
+      <section className="py-24 px-4 bg-gradient-to-b from-background to-muted/50">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-4">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-6 w-6 fill-current" />
-              ))}
+          <div className="text-center mb-16">
+            <Badge variant="secondary" className="mb-4">
+              {t("pendant.testimonials.badge", "Trusted by Thousands")}
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("pendant.testimonials.title")}</h2>
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <span className="font-medium text-foreground">4.9/5</span>
+              <span>•</span>
+              <span>{t("pendant.testimonials.reviewCount", "2,000+ verified reviews")}</span>
             </div>
-            <h2 className="text-3xl font-bold mb-4">{t("pendant.testimonials.title")}</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.authorKey} className="bg-primary-foreground/10 border-primary-foreground/20">
-                <CardContent className="p-6">
-                  <blockquote className="text-lg mb-4">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {testimonials.map((testimonial, index) => (
+              <Card 
+                key={testimonial.authorKey} 
+                className="bg-card border shadow-sm hover:shadow-md transition-shadow duration-300"
+              >
+                <CardContent className="p-8">
+                  <div className="flex mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <blockquote className="text-foreground leading-relaxed mb-6">
                     "{t(testimonial.quoteKey)}"
                   </blockquote>
-                  <cite className="block">
-                    <span className="font-medium">— {t(testimonial.authorKey)}</span>
-                    <span className="text-primary-foreground/70">, {t(testimonial.locationKey)}</span>
-                  </cite>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-semibold text-sm">
+                        {t(testimonial.authorKey).charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t(testimonial.authorKey)}</p>
+                      <p className="text-sm text-muted-foreground">{t(testimonial.locationKey)}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
