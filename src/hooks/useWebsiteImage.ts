@@ -25,7 +25,8 @@ export function useWebsiteImage(locationKey: string) {
       if (error) throw error;
       return data as WebsiteImage | null;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 30, // 30 minutes cache
+    gcTime: 1000 * 60 * 60, // 1 hour garbage collection
   });
 
   return {
@@ -59,7 +60,8 @@ export function useWebsiteImagesBatch(locationKeys: string[]) {
       });
       return imageMap;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 30, // 30 minutes cache
+    gcTime: 1000 * 60 * 60, // 1 hour garbage collection
     enabled: locationKeys.length > 0,
   });
 
@@ -96,7 +98,8 @@ export function useWebsiteImages() {
       if (error) throw error;
       return (data || []) as WebsiteImage[];
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60 * 30, // 30 minutes cache
+    gcTime: 1000 * 60 * 60, // 1 hour garbage collection
   });
 
   return {
