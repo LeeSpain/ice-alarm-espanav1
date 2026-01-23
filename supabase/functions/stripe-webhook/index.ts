@@ -89,9 +89,33 @@ serve(async (req) => {
           // Check if this member has partner attribution
           const { data: attribution } = await supabase
             .from("partner_attributions")
-            .select("partner_id")
+            .select("partner_id, partners(contact_name, company_name)")
             .eq("member_id", session.metadata.member_id)
             .maybeSingle();
+
+          // Fetch order details for notification
+          const { data: orderData } = await supabase
+            .from("orders")
+            .select(`
+              *,
+              members!inner (first_name, last_name, email, preferred_language)
+            `)
+            .eq("id", session.metadata.order_id)
+            .single();
+
+          // Get order items for products summary
+          const { data: orderItems } = await supabase
+            .from("order_items")
+            .select("description, quantity")
+            .eq("order_id", session.metadata.order_id);
+
+          const productsSummary = orderItems
+            ?.map((i: any) => `${i.quantity}x ${i.description}`)
+            .join(", ") || "N/A";
+
+          const partnerData = attribution?.partners as any;
+          const partnerName = partnerData?.contact_name || partnerData?.company_name || null;
+          const memberData = orderData?.members as any;
 
           await supabase.from("crm_events").insert({
             event_type: "order_paid",
@@ -104,6 +128,56 @@ serve(async (req) => {
               has_attribution: !!attribution,
             },
           });
+
+          // Create sale.paid AI event
+          await supabase.from("ai_events").insert({
+            event_type: "sale.paid",
+            entity_type: "order",
+            entity_id: session.metadata.order_id,
+            payload: {
+              order_id: session.metadata.order_id,
+              member_id: session.metadata.member_id,
+              customer_name: memberData ? `${memberData.first_name} ${memberData.last_name}` : "Unknown",
+              email: memberData?.email || null,
+              language: memberData?.preferred_language || "ES",
+              amount: session.amount_total ? session.amount_total / 100 : 0,
+              products_summary: productsSummary,
+              partner_id: attribution?.partner_id || null,
+              partner_name: partnerName,
+              source: attribution ? "partner" : "direct",
+            },
+          });
+
+          // Call notify-admin function for WhatsApp notification
+          try {
+            const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+            const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            
+            await fetch(`${SUPABASE_URL}/functions/v1/notify-admin`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                event_type: "sale.paid",
+                entity_type: "order",
+                entity_id: session.metadata.order_id,
+                payload: {
+                  customer_name: memberData ? `${memberData.first_name} ${memberData.last_name}` : "Unknown",
+                  language: memberData?.preferred_language || "ES",
+                  amount: session.amount_total ? session.amount_total / 100 : 0,
+                  products_summary: productsSummary,
+                  source: attribution ? "partner" : "direct",
+                  partner_name: partnerName,
+                  order_id: session.metadata.order_id,
+                },
+              }),
+            });
+            console.log("notify-admin called for sale.paid");
+          } catch (notifyError) {
+            console.error("Failed to call notify-admin:", notifyError);
+          }
         }
         break;
       }
