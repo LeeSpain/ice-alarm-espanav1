@@ -43,113 +43,92 @@ export default function PendantPage() {
   const features = [
     {
       icon: MapPin,
-      title: "GPS Location Tracking",
-      description: "When you press the SOS button, your exact location is instantly sent to our call centre. No need to explain where you are - we already know and can send help directly to you.",
+      titleKey: "pendant.features.gps.title",
+      descriptionKey: "pendant.features.gps.description",
       bullets: [
-        "Works anywhere in Spain with mobile coverage",
-        "Accurate to within a few meters",
-        "Location shared with emergency services when needed"
+        "pendant.features.gps.bullet1",
+        "pendant.features.gps.bullet2",
+        "pendant.features.gps.bullet3"
       ]
     },
     {
       icon: Mic,
-      title: "Two-Way Voice Communication",
-      description: "Speak directly with our team through the pendant's built-in speaker and microphone. No phone needed - just press and talk.",
+      titleKey: "pendant.features.voice.title",
+      descriptionKey: "pendant.features.voice.description",
       bullets: [
-        "Crystal clear audio quality",
-        "Loud speaker for those hard of hearing",
-        "English and Spanish speaking operators"
+        "pendant.features.voice.bullet1",
+        "pendant.features.voice.bullet2",
+        "pendant.features.voice.bullet3"
       ]
     },
     {
       icon: AlertTriangle,
-      title: "Automatic Fall Detection",
-      description: "Built-in sensors detect when you've fallen and automatically alert our call centre - even if you can't press the button.",
+      titleKey: "pendant.features.fall.title",
+      descriptionKey: "pendant.features.fall.description",
       bullets: [
-        "Detects hard falls automatically",
-        "Alert sent even if you're unconscious",
-        "Peace of mind for you and your family"
+        "pendant.features.fall.bullet1",
+        "pendant.features.fall.bullet2",
+        "pendant.features.fall.bullet3"
       ]
     },
     {
       icon: Navigation,
-      title: "Geo-Fencing Alerts",
-      description: "Set up a safe zone around your home. If the pendant leaves this area, we're notified immediately. Perfect for peace of mind.",
+      titleKey: "pendant.features.geofence.title",
+      descriptionKey: "pendant.features.geofence.description",
       bullets: [
-        "Customizable boundary radius",
-        "Ideal for dementia care",
-        "Family members can be notified"
+        "pendant.features.geofence.bullet1",
+        "pendant.features.geofence.bullet2",
+        "pendant.features.geofence.bullet3"
       ]
     },
     {
       icon: Battery,
-      title: "Long Battery Life",
-      description: "The pendant lasts for days on a single charge. We monitor battery levels and alert you when it's time to recharge.",
+      titleKey: "pendant.features.battery.title",
+      descriptionKey: "pendant.features.battery.description",
       bullets: [
-        "Up to 5 days standby time",
-        "Low battery alerts sent to you and our team",
-        "Easy magnetic charging cable included"
+        "pendant.features.battery.bullet1",
+        "pendant.features.battery.bullet2",
+        "pendant.features.battery.bullet3"
       ]
     }
   ];
 
   const specs = [
-    { label: "Size", value: "45mm x 40mm x 15mm" },
-    { label: "Weight", value: "35 grams" },
-    { label: "Water Resistant", value: "IP67 rated" },
-    { label: "Battery", value: "Up to 5 days standby" },
-    { label: "Connectivity", value: "4G LTE + GPS" },
-    { label: "SOS Button", value: "Large, easy to press" },
-    { label: "Wearing", value: "Lanyard or belt clip" }
+    { labelKey: "pendant.specs.size", valueKey: "pendant.specs.sizeValue" },
+    { labelKey: "pendant.specs.weight", valueKey: "pendant.specs.weightValue" },
+    { labelKey: "pendant.specs.waterResistant", valueKey: "pendant.specs.waterResistantValue" },
+    { labelKey: "pendant.specs.batteryLabel", valueKey: "pendant.specs.batteryValue" },
+    { labelKey: "pendant.specs.connectivity", valueKey: "pendant.specs.connectivityValue" },
+    { labelKey: "pendant.specs.sosButton", valueKey: "pendant.specs.sosButtonValue" },
+    { labelKey: "pendant.specs.wearing", valueKey: "pendant.specs.wearingValue" }
   ];
 
   const testimonials = [
     {
-      quote: "ICE Alarm gave me back my independence. I feel safe knowing help is just one button press away.",
-      author: "Margaret",
-      location: "Alicante"
+      quoteKey: "pendant.testimonials.quote1",
+      authorKey: "pendant.testimonials.author1",
+      locationKey: "pendant.testimonials.location1"
     },
     {
-      quote: "When my father fell, the pendant automatically called for help. The team was amazing and spoke to him in English. They saved his life.",
-      author: "David",
-      location: "Son of ICE Alarm member"
+      quoteKey: "pendant.testimonials.quote2",
+      authorKey: "pendant.testimonials.author2",
+      locationKey: "pendant.testimonials.location2"
     },
     {
-      quote: "The peace of mind this gives our family is priceless. Mum can live independently knowing we'll be called if anything happens.",
-      author: "Sarah",
-      location: "Málaga"
+      quoteKey: "pendant.testimonials.quote3",
+      authorKey: "pendant.testimonials.author3",
+      locationKey: "pendant.testimonials.location3"
     }
   ];
 
   const faqs = [
-    {
-      question: "How do I use the pendant?",
-      answer: "Simply press and hold the SOS button for 3 seconds. Our call centre will answer and speak to you through the pendant."
-    },
-    {
-      question: "Does it work everywhere in Spain?",
-      answer: "Yes! The pendant works anywhere with mobile phone coverage across Spain."
-    },
-    {
-      question: "What happens if I fall and can't press the button?",
-      answer: "The pendant has automatic fall detection. If it detects a fall, it will alert our call centre even if you don't press the button."
-    },
-    {
-      question: "Can I speak English with your call centre?",
-      answer: "Absolutely! All our operators speak both English and Spanish fluently."
-    },
-    {
-      question: "What if I don't want a pendant?",
-      answer: "You can join with just a membership and use your phone to call us. However, you won't have GPS tracking, fall detection, or the SOS button features."
-    },
-    {
-      question: "How long does the battery last?",
-      answer: "Up to 5 days on standby. We monitor battery levels and will alert you when it needs charging."
-    },
-    {
-      question: "Is there a contract?",
-      answer: "No long-term contracts! You can cancel anytime. We offer monthly and annual billing options."
-    }
+    { questionKey: "pendant.faq.q1", answerKey: "pendant.faq.a1" },
+    { questionKey: "pendant.faq.q2", answerKey: "pendant.faq.a2" },
+    { questionKey: "pendant.faq.q3", answerKey: "pendant.faq.a3" },
+    { questionKey: "pendant.faq.q4", answerKey: "pendant.faq.a4" },
+    { questionKey: "pendant.faq.q5", answerKey: "pendant.faq.a5" },
+    { questionKey: "pendant.faq.q6", answerKey: "pendant.faq.a6" },
+    { questionKey: "pendant.faq.q7", answerKey: "pendant.faq.a7" }
   ];
 
   return (
@@ -162,28 +141,28 @@ export default function PendantPage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
-              Home
+              {t("pendant.nav.home")}
             </Link>
             <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              Features
+              {t("pendant.nav.features")}
             </a>
             <Link to="/pendant" className="text-sm font-medium text-primary">
-              Pendant
+              {t("navigation.pendant")}
             </Link>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              Pricing
+              {t("pendant.nav.pricing")}
             </a>
             <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contact
+              {t("pendant.nav.contact")}
             </Link>
           </nav>
           <div className="flex items-center gap-2">
             <LanguageSelector />
             <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
+              <Link to="/login">{t("pendant.nav.signIn")}</Link>
             </Button>
             <Button asChild>
-              <Link to="/join">Join Now</Link>
+              <Link to="/join">{t("pendant.nav.joinNow")}</Link>
             </Button>
           </div>
         </div>
@@ -215,8 +194,8 @@ export default function PendantPage() {
                       <Shield className="h-5 w-5 text-status-active" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold">IP67 Rated</p>
-                      <p className="text-xs text-muted-foreground">Water Resistant</p>
+                      <p className="text-sm font-bold">IP67</p>
+                      <p className="text-xs text-muted-foreground">{t("pendant.hero.waterResistant")}</p>
                     </div>
                   </div>
                 </div>
@@ -226,23 +205,23 @@ export default function PendantPage() {
             {/* Content */}
             <div className="space-y-6 order-1 lg:order-2">
               <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10">
-                🇪🇸 Designed for Expats in Spain
+                🇪🇸 {t("pendant.hero.badge")}
               </Badge>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Your Lifeline in Spain
+                {t("pendant.hero.title")}
               </h1>
               
               <p className="text-xl text-muted-foreground">
-                The ICE Alarm GPS Personal Pendant gives you and your loved ones peace of mind, wherever you are in Spain.
+                {t("pendant.hero.subtitle")}
               </p>
 
               <ul className="space-y-3">
                 {[
-                  "24/7 English & Spanish Support",
-                  "GPS Location Tracking",
-                  "Automatic Fall Detection",
-                  "Two-Way Communication"
+                  t("pendant.hero.feature1"),
+                  t("pendant.hero.feature2"),
+                  t("pendant.hero.feature3"),
+                  t("pendant.hero.feature4")
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3">
                     <div className="h-6 w-6 rounded-full bg-status-active/20 flex items-center justify-center shrink-0">
@@ -256,7 +235,7 @@ export default function PendantPage() {
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button size="lg" className="h-14 px-8 text-lg shadow-lg" asChild>
                   <Link to="/join">
-                    Join ICE Alarm Today
+                    {t("pendant.hero.cta")}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -269,7 +248,7 @@ export default function PendantPage() {
               </div>
 
               <p className="text-muted-foreground">
-                Starting from <span className="font-bold text-foreground">€27.49/month</span> + pendant
+                {t("pendant.hero.startingFrom")} <span className="font-bold text-foreground">€27.49{t("pendant.hero.perMonth")}</span> {t("pendant.hero.plusPendant")}
               </p>
             </div>
           </div>
@@ -280,9 +259,9 @@ export default function PendantPage() {
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.howItWorks.title")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Getting help has never been easier. Just three simple steps.
+              {t("pendant.howItWorks.subtitle")}
             </p>
           </div>
 
@@ -291,20 +270,20 @@ export default function PendantPage() {
               {
                 step: 1,
                 icon: "👆",
-                title: "Press the SOS Button",
-                description: "One press is all it takes to alert our call centre. The button is large and easy to press, even in an emergency."
+                titleKey: "pendant.howItWorks.step1Title",
+                descKey: "pendant.howItWorks.step1Desc"
               },
               {
                 step: 2,
                 icon: "📞",
-                title: "We Answer Immediately",
-                description: "Our bilingual team responds 24/7/365 to help. We'll speak to you through the pendant to assess the situation."
+                titleKey: "pendant.howItWorks.step2Title",
+                descKey: "pendant.howItWorks.step2Desc"
               },
               {
                 step: 3,
                 icon: "🚑",
-                title: "Help Arrives When Needed",
-                description: "We coordinate with emergency services and your family. Your GPS location helps us send help directly to you."
+                titleKey: "pendant.howItWorks.step3Title",
+                descKey: "pendant.howItWorks.step3Desc"
               }
             ].map((item) => (
               <div key={item.step} className="text-center">
@@ -316,8 +295,8 @@ export default function PendantPage() {
                     {item.step}
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
+                <h3 className="text-xl font-semibold mb-3">{t(item.titleKey)}</h3>
+                <p className="text-muted-foreground">{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -328,9 +307,9 @@ export default function PendantPage() {
       <section id="features" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Pendant Features</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.features.title")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              The ICE Alarm pendant is packed with life-saving technology.
+              {t("pendant.features.subtitle")}
             </p>
           </div>
 
@@ -338,20 +317,20 @@ export default function PendantPage() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={feature.title} className={index % 2 === 0 ? "bg-muted/30" : ""}>
+                <Card key={feature.titleKey} className={index % 2 === 0 ? "bg-muted/30" : ""}>
                   <CardContent className="p-6 md:p-8">
                     <div className="flex items-start gap-6">
                       <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                         <Icon className="h-7 w-7 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                        <p className="text-muted-foreground mb-4">{feature.description}</p>
+                        <h3 className="text-xl font-semibold mb-3">{t(feature.titleKey)}</h3>
+                        <p className="text-muted-foreground mb-4">{t(feature.descriptionKey)}</p>
                         <ul className="space-y-2">
-                          {feature.bullets.map((bullet) => (
-                            <li key={bullet} className="flex items-center gap-2 text-sm">
+                          {feature.bullets.map((bulletKey) => (
+                            <li key={bulletKey} className="flex items-center gap-2 text-sm">
                               <Check className="h-4 w-4 text-status-active shrink-0" />
-                              {bullet}
+                              {t(bulletKey)}
                             </li>
                           ))}
                         </ul>
@@ -370,27 +349,27 @@ export default function PendantPage() {
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Technical Specifications</h2>
+              <h2 className="text-3xl font-bold mb-6">{t("pendant.specs.title")}</h2>
               <div className="grid gap-4">
                 {specs.map((spec) => (
-                  <div key={spec.label} className="flex justify-between items-center py-3 border-b">
-                    <span className="font-medium">{spec.label}</span>
-                    <span className="text-muted-foreground">{spec.value}</span>
+                  <div key={spec.labelKey} className="flex justify-between items-center py-3 border-b">
+                    <span className="font-medium">{t(spec.labelKey)}</span>
+                    <span className="text-muted-foreground">{t(spec.valueKey)}</span>
                   </div>
                 ))}
               </div>
               <div className="flex gap-4 mt-6">
                 <Badge variant="outline" className="gap-1">
                   <Droplets className="h-3 w-3" />
-                  Water Resistant
+                  {t("pendant.specs.badges.waterResistant")}
                 </Badge>
                 <Badge variant="outline" className="gap-1">
                   <Signal className="h-3 w-3" />
-                  4G LTE
+                  {t("pendant.specs.badges.lte")}
                 </Badge>
                 <Badge variant="outline" className="gap-1">
                   <Zap className="h-3 w-3" />
-                  Fast Charging
+                  {t("pendant.specs.badges.fastCharging")}
                 </Badge>
               </div>
             </div>
@@ -415,9 +394,9 @@ export default function PendantPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Choose Your Service</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.comparison.title")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Both options include our 24/7 bilingual call centre support.
+              {t("pendant.comparison.subtitle")}
             </p>
           </div>
 
@@ -425,44 +404,44 @@ export default function PendantPage() {
             {/* Phone Only */}
             <Card>
               <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-2">Phone Only Service</h3>
-                <p className="text-sm text-muted-foreground mb-4">Use your existing phone</p>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.comparison.phoneOnly.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("pendant.comparison.phoneOnly.subtitle")}</p>
                 <div className="mb-6">
                   <span className="text-3xl font-bold">€27.49</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-muted-foreground">{t("pendant.comparison.phoneOnly.perMonth")}</span>
                 </div>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    24/7 Call Centre
+                    {t("pendant.comparison.phoneOnly.feature1")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    English & Spanish
+                    {t("pendant.comparison.phoneOnly.feature2")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    Emergency Response
+                    {t("pendant.comparison.phoneOnly.feature3")}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="h-4 w-4" />
-                    No GPS Tracking
+                    {t("pendant.comparison.phoneOnly.noGps")}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="h-4 w-4" />
-                    No Fall Detection
+                    {t("pendant.comparison.phoneOnly.noFall")}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="h-4 w-4" />
-                    No SOS Button
+                    {t("pendant.comparison.phoneOnly.noSos")}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="h-4 w-4" />
-                    No Geo-Fencing
+                    {t("pendant.comparison.phoneOnly.noGeo")}
                   </li>
                 </ul>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to="/join">Select Phone Only</Link>
+                  <Link to="/join">{t("pendant.comparison.phoneOnly.cta")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -471,50 +450,50 @@ export default function PendantPage() {
             <Card className="border-primary shadow-lg relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground">
-                  Recommended
+                  {t("pendant.comparison.pendant.recommended")}
                 </Badge>
               </div>
               <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-2">Pendant + Membership</h3>
-                <p className="text-sm text-muted-foreground mb-4">Full protection package</p>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.comparison.pendant.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("pendant.comparison.pendant.subtitle")}</p>
                 <div className="mb-6">
                   <span className="text-3xl font-bold">€27.49</span>
-                  <span className="text-muted-foreground">/month</span>
-                  <p className="text-sm text-muted-foreground mt-1">+ €151.25 pendant (one-time)</p>
+                  <span className="text-muted-foreground">{t("pendant.comparison.pendant.perMonth")}</span>
+                  <p className="text-sm text-muted-foreground mt-1">{t("pendant.comparison.pendant.pendantOneTime")}</p>
                 </div>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    24/7 Call Centre
+                    {t("pendant.comparison.pendant.feature1")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    English & Spanish
+                    {t("pendant.comparison.pendant.feature2")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-status-active" />
-                    Emergency Response
+                    {t("pendant.comparison.pendant.feature3")}
                   </li>
                   <li className="flex items-center gap-2 text-sm font-medium">
                     <Check className="h-4 w-4 text-status-active" />
-                    GPS Location Tracking
+                    {t("pendant.comparison.pendant.gps")}
                   </li>
                   <li className="flex items-center gap-2 text-sm font-medium">
                     <Check className="h-4 w-4 text-status-active" />
-                    Automatic Fall Detection
+                    {t("pendant.comparison.pendant.fall")}
                   </li>
                   <li className="flex items-center gap-2 text-sm font-medium">
                     <Check className="h-4 w-4 text-status-active" />
-                    SOS Button
+                    {t("pendant.comparison.pendant.sos")}
                   </li>
                   <li className="flex items-center gap-2 text-sm font-medium">
                     <Check className="h-4 w-4 text-status-active" />
-                    Geo-Fencing Alerts
+                    {t("pendant.comparison.pendant.geo")}
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
                   <Link to="/join">
-                    Select with Pendant
+                    {t("pendant.comparison.pendant.cta")}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </Button>
@@ -528,9 +507,9 @@ export default function PendantPage() {
       <section id="pricing" className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Simple, Transparent Pricing</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.pricing.title")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              All prices include IVA. No hidden fees.
+              {t("pendant.pricing.subtitle")}
             </p>
           </div>
 
@@ -541,20 +520,20 @@ export default function PendantPage() {
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Single Membership</h3>
-                <p className="text-sm text-muted-foreground mb-6">For one person</p>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.pricing.single.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-6">{t("pendant.pricing.single.subtitle")}</p>
                 <div className="space-y-2 mb-6">
                   <div>
                     <span className="text-2xl font-bold">€27.49</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground">{t("pendant.pricing.single.perMonth")}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    or <span className="font-medium text-foreground">€274.89/year</span>
-                    <Badge variant="secondary" className="ml-2">Save €54.99!</Badge>
+                    or <span className="font-medium text-foreground">€274.89{t("pendant.pricing.single.perYear")}</span>
+                    <Badge variant="secondary" className="ml-2">{t("pendant.pricing.single.save")}</Badge>
                   </div>
                 </div>
                 <Button className="w-full" asChild>
-                  <Link to="/join">Get Started</Link>
+                  <Link to="/join">{t("pendant.pricing.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -562,21 +541,21 @@ export default function PendantPage() {
             {/* Couple */}
             <Card className="border-primary">
               <CardContent className="p-8 text-center">
-                <Badge className="bg-primary text-primary-foreground mb-4">Most Popular</Badge>
-                <h3 className="text-xl font-semibold mb-2">Couple Membership</h3>
-                <p className="text-sm text-muted-foreground mb-6">For two people (same address)</p>
+                <Badge className="bg-primary text-primary-foreground mb-4">{t("pendant.pricing.couple.mostPopular")}</Badge>
+                <h3 className="text-xl font-semibold mb-2">{t("pendant.pricing.couple.title")}</h3>
+                <p className="text-sm text-muted-foreground mb-6">{t("pendant.pricing.couple.subtitle")}</p>
                 <div className="space-y-2 mb-6">
                   <div>
                     <span className="text-2xl font-bold">€38.49</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground">{t("pendant.pricing.couple.perMonth")}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    or <span className="font-medium text-foreground">€384.89/year</span>
-                    <Badge variant="secondary" className="ml-2">Save €76.99!</Badge>
+                    or <span className="font-medium text-foreground">€384.89{t("pendant.pricing.couple.perYear")}</span>
+                    <Badge variant="secondary" className="ml-2">{t("pendant.pricing.couple.save")}</Badge>
                   </div>
                 </div>
                 <Button className="w-full" asChild>
-                  <Link to="/join">Get Started</Link>
+                  <Link to="/join">{t("pendant.pricing.getStarted")}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -585,18 +564,18 @@ export default function PendantPage() {
           {/* One-time fees */}
           <Card className="max-w-2xl mx-auto">
             <CardContent className="p-6">
-              <h4 className="font-semibold mb-4">One-Time Fees</h4>
+              <h4 className="font-semibold mb-4">{t("pendant.pricing.oneTimeFees")}</h4>
               <div className="grid gap-3">
                 <div className="flex justify-between items-center">
-                  <span>Registration Fee</span>
+                  <span>{t("pendant.pricing.registrationFee")}</span>
                   <span className="font-medium">€59.99</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>GPS Pendant (optional but recommended)</span>
+                  <span>{t("pendant.pricing.gpsPendant")}</span>
                   <span className="font-medium">€151.25</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Shipping (if ordering pendant)</span>
+                  <span>{t("pendant.pricing.shipping")}</span>
                   <span className="font-medium">€14.99</span>
                 </div>
               </div>
@@ -614,19 +593,19 @@ export default function PendantPage() {
                 <Star key={i} className="h-6 w-6 fill-current" />
               ))}
             </div>
-            <h2 className="text-3xl font-bold mb-4">What Our Members Say</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.testimonials.title")}</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial) => (
-              <Card key={testimonial.author} className="bg-primary-foreground/10 border-primary-foreground/20">
+              <Card key={testimonial.authorKey} className="bg-primary-foreground/10 border-primary-foreground/20">
                 <CardContent className="p-6">
                   <blockquote className="text-lg mb-4">
-                    "{testimonial.quote}"
+                    "{t(testimonial.quoteKey)}"
                   </blockquote>
                   <cite className="block">
-                    <span className="font-medium">— {testimonial.author}</span>
-                    <span className="text-primary-foreground/70">, {testimonial.location}</span>
+                    <span className="font-medium">— {t(testimonial.authorKey)}</span>
+                    <span className="text-primary-foreground/70">, {t(testimonial.locationKey)}</span>
                   </cite>
                 </CardContent>
               </Card>
@@ -639,17 +618,17 @@ export default function PendantPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-3xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pendant.faq.title")}</h2>
           </div>
 
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-left">
-                  {faq.question}
+                  {t(faq.questionKey)}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
+                  {t(faq.answerKey)}
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -660,14 +639,14 @@ export default function PendantPage() {
       {/* CTA Footer */}
       <section className="py-20 px-4 bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="container mx-auto text-center max-w-2xl">
-          <h2 className="text-3xl font-bold mb-4">Ready to Join the ICE Alarm Family?</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("pendant.cta.title")}</h2>
           <p className="text-muted-foreground mb-8">
-            Get 24/7 peace of mind for you and your loved ones. Join thousands of families across Spain who trust ICE Alarm.
+            {t("pendant.cta.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="h-14 px-8 text-lg" asChild>
               <Link to="/join">
-                Join ICE Alarm Today
+                {t("pendant.cta.button")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -679,7 +658,7 @@ export default function PendantPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
-            Or WhatsApp us anytime
+            {t("pendant.cta.whatsapp")}
           </p>
         </div>
       </section>
@@ -691,37 +670,37 @@ export default function PendantPage() {
             <div>
               <Logo variant="white" size="sm" className="mb-4" />
               <p className="text-sm text-sidebar-foreground/70">
-                Your lifeline in Spain. 24/7 emergency response for expats and residents.
+                {t("pendant.footer.description")}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
+              <h4 className="font-semibold mb-4">{t("pendant.footer.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
                 <li>+34 950 473 199</li>
                 <li>info@icealarm.es</li>
-                <li>WhatsApp Available</li>
+                <li>{t("pendant.footer.whatsappAvailable")}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <h4 className="font-semibold mb-4">{t("pendant.footer.quickLinks")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li><Link to="/" className="hover:text-sidebar-foreground">Home</Link></li>
-                <li><Link to="/pendant" className="hover:text-sidebar-foreground">Pendant</Link></li>
-                <li><Link to="/contact" className="hover:text-sidebar-foreground">Contact</Link></li>
-                <li><Link to="/join" className="hover:text-sidebar-foreground">Join Now</Link></li>
+                <li><Link to="/" className="hover:text-sidebar-foreground">{t("pendant.footer.home")}</Link></li>
+                <li><Link to="/pendant" className="hover:text-sidebar-foreground">{t("pendant.footer.pendant")}</Link></li>
+                <li><Link to="/contact" className="hover:text-sidebar-foreground">{t("pendant.footer.contact")}</Link></li>
+                <li><Link to="/join" className="hover:text-sidebar-foreground">{t("pendant.footer.joinNow")}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">{t("pendant.footer.legal")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li><Link to="/terms" className="hover:text-sidebar-foreground">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="hover:text-sidebar-foreground">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-sidebar-foreground">{t("pendant.footer.termsOfService")}</Link></li>
+                <li><Link to="/privacy" className="hover:text-sidebar-foreground">{t("pendant.footer.privacyPolicy")}</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-sidebar-border pt-8 text-center text-sm text-sidebar-foreground/60">
-            <p>ICE Alarm España S.L. • CIF: B24731531</p>
-            <p className="mt-1">© {new Date().getFullYear()} ICE Alarm España. All rights reserved.</p>
+            <p>{t("pendant.footer.companyInfo")}</p>
+            <p className="mt-1">© {new Date().getFullYear()} ICE Alarm España. {t("pendant.footer.allRightsReserved")}</p>
           </div>
         </div>
       </footer>

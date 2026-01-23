@@ -142,7 +142,8 @@
     "commissions": "Comisiones",
     "crm": "CRM",
     "tasks": "Tareas",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "pendant": "Colgante"
   },
   "landing": {
     "emergencyResponse": "Respuesta de emergencia 24/7 en España",
@@ -202,7 +203,42 @@
     "callUsAnytime": "Llámenos en cualquier momento al",
     "allRightsReserved": "Todos los derechos reservados.",
     "privacyPolicy": "Política de privacidad",
-    "termsOfService": "Términos de servicio"
+    "termsOfService": "Términos de servicio",
+    "twoWayAudio": "Audio Bidireccional",
+    "waterproof": "Resistente al agua",
+    "learnMore": "Más información sobre nuestro colgante",
+    "pricing": {
+      "pendant": {
+        "recommended": "Muy Recomendado",
+        "subtitle": "Su compañero de seguridad personal - se lleva como colgante o pulsera",
+        "title": "Colgante GPS ICE Alarm"
+      }
+    },
+    "testimonials": {
+      "title": "Lo Que Dicen Nuestros Miembros",
+      "subtitle": "Miles de familias en España confían en nosotros",
+      "quote1": "La tranquilidad que este servicio da a nuestra familia no tiene precio. Cuando mamá tuvo una caída el mes pasado, la ayuda llegó en minutos. Recomiendo ICE Alarm sin reservas.",
+      "quote2": "Viviendo solo a los 78 años, me preocupaban las emergencias. El colgante GPS me da independencia mientras mantiene tranquilos a mis hijos. El soporte bilingüe es excelente.",
+      "quote3": "Después del derrame de mi marido, necesitábamos apoyo de emergencia fiable. ICE Alarm respondió en menos de 30 segundos durante una emergencia real. Realmente le salvaron la vida.",
+      "author1": "Margaret Thompson",
+      "location1": "Expatriada Británica, Alicante",
+      "author2": "Robert Harrison",
+      "location2": "Profesor Jubilado, Málaga",
+      "author3": "Susan y Peter Williams",
+      "location3": "Pareja, Costa Blanca",
+      "trustBadge": "Valorado 4.9/5 por más de 2,000 miembros verificados"
+    },
+    "contactDialog": {
+      "title": "¿Cómo le gustaría contactarnos?",
+      "available": "Disponible 24/7",
+      "phoneCall": "Llamada telefónica",
+      "whatsapp": "WhatsApp",
+      "voiceOnly": "Solo llamadas de voz - sin vídeo"
+    },
+    "footer": {
+      "links": "Enlaces",
+      "legal": "Legal"
+    }
   },
   "membership": {
     "single": "Individual",
@@ -922,5 +958,206 @@
     "billing": "Facturación",
     "general": "General",
     "urgent": "Urgente"
+  },
+  "pendant": {
+    "nav": {
+      "home": "Inicio",
+      "features": "Características",
+      "pricing": "Precios",
+      "contact": "Contacto",
+      "signIn": "Iniciar sesión",
+      "joinNow": "Únase ahora"
+    },
+    "hero": {
+      "badge": "Diseñado para expatriados en España",
+      "title": "Su salvavidas en España",
+      "subtitle": "El colgante GPS personal de ICE Alarm le da a usted y a sus seres queridos tranquilidad, donde quiera que esté en España.",
+      "feature1": "Soporte 24/7 en inglés y español",
+      "feature2": "Rastreo de ubicación GPS",
+      "feature3": "Detección automática de caídas",
+      "feature4": "Comunicación bidireccional",
+      "cta": "Únase a ICE Alarm hoy",
+      "startingFrom": "Desde",
+      "perMonth": "/mes",
+      "plusPendant": "+ colgante",
+      "waterResistant": "Resistente al agua"
+    },
+    "howItWorks": {
+      "title": "Cómo funciona",
+      "subtitle": "Obtener ayuda nunca ha sido tan fácil. Solo tres sencillos pasos.",
+      "step1Title": "Pulse el botón SOS",
+      "step1Desc": "Una sola pulsación es todo lo que necesita para alertar a nuestro centro de llamadas. El botón es grande y fácil de presionar, incluso en una emergencia.",
+      "step2Title": "Respondemos inmediatamente",
+      "step2Desc": "Nuestro equipo bilingüe responde 24/7/365 para ayudarle. Le hablaremos a través del colgante para evaluar la situación.",
+      "step3Title": "La ayuda llega cuando la necesita",
+      "step3Desc": "Coordinamos con los servicios de emergencia y su familia. Su ubicación GPS nos ayuda a enviar ayuda directamente hacia usted."
+    },
+    "features": {
+      "title": "Características del colgante",
+      "subtitle": "El colgante ICE Alarm está lleno de tecnología salvavidas.",
+      "gps": {
+        "title": "Rastreo de ubicación GPS",
+        "description": "Cuando pulsa el botón SOS, su ubicación exacta se envía instantáneamente a nuestro centro de llamadas. No necesita explicar dónde está - ya lo sabemos y podemos enviar ayuda directamente hacia usted.",
+        "bullet1": "Funciona en cualquier lugar de España con cobertura móvil",
+        "bullet2": "Precisión de pocos metros",
+        "bullet3": "Ubicación compartida con servicios de emergencia cuando sea necesario"
+      },
+      "voice": {
+        "title": "Comunicación de voz bidireccional",
+        "description": "Hable directamente con nuestro equipo a través del altavoz y micrófono integrados del colgante. No necesita teléfono - solo pulse y hable.",
+        "bullet1": "Calidad de audio cristalina",
+        "bullet2": "Altavoz potente para personas con dificultades auditivas",
+        "bullet3": "Operadores que hablan inglés y español"
+      },
+      "fall": {
+        "title": "Detección automática de caídas",
+        "description": "Los sensores integrados detectan cuando se ha caído y alertan automáticamente a nuestro centro de llamadas - incluso si no puede pulsar el botón.",
+        "bullet1": "Detecta caídas fuertes automáticamente",
+        "bullet2": "Alerta enviada incluso si está inconsciente",
+        "bullet3": "Tranquilidad para usted y su familia"
+      },
+      "geofence": {
+        "title": "Alertas de geo-cercado",
+        "description": "Configure una zona segura alrededor de su hogar. Si el colgante sale de esta área, somos notificados inmediatamente. Perfecto para tranquilidad.",
+        "bullet1": "Radio de límite personalizable",
+        "bullet2": "Ideal para cuidado de demencia",
+        "bullet3": "Los familiares pueden ser notificados"
+      },
+      "battery": {
+        "title": "Batería de larga duración",
+        "description": "El colgante dura días con una sola carga. Monitoreamos los niveles de batería y le alertamos cuando es hora de recargar.",
+        "bullet1": "Hasta 5 días en espera",
+        "bullet2": "Alertas de batería baja enviadas a usted y nuestro equipo",
+        "bullet3": "Cable de carga magnético fácil incluido"
+      }
+    },
+    "specs": {
+      "title": "Especificaciones técnicas",
+      "size": "Tamaño",
+      "sizeValue": "45mm x 40mm x 15mm",
+      "weight": "Peso",
+      "weightValue": "35 gramos",
+      "waterResistant": "Resistente al agua",
+      "waterResistantValue": "Clasificación IP67",
+      "batteryLabel": "Batería",
+      "batteryValue": "Hasta 5 días en espera",
+      "connectivity": "Conectividad",
+      "connectivityValue": "4G LTE + GPS",
+      "sosButton": "Botón SOS",
+      "sosButtonValue": "Grande, fácil de presionar",
+      "wearing": "Uso",
+      "wearingValue": "Cordón o clip de cinturón",
+      "badges": {
+        "waterResistant": "Resistente al agua",
+        "lte": "4G LTE",
+        "fastCharging": "Carga rápida"
+      }
+    },
+    "comparison": {
+      "title": "Elija su servicio",
+      "subtitle": "Ambas opciones incluyen nuestro soporte de centro de llamadas bilingüe 24/7.",
+      "phoneOnly": {
+        "title": "Servicio solo teléfono",
+        "subtitle": "Use su teléfono existente",
+        "perMonth": "/mes",
+        "feature1": "Centro de llamadas 24/7",
+        "feature2": "Inglés y español",
+        "feature3": "Respuesta de emergencia",
+        "noGps": "Sin rastreo GPS",
+        "noFall": "Sin detección de caídas",
+        "noSos": "Sin botón SOS",
+        "noGeo": "Sin geo-cercado",
+        "cta": "Seleccionar solo teléfono"
+      },
+      "pendant": {
+        "title": "Colgante + Membresía",
+        "subtitle": "Paquete de protección completa",
+        "recommended": "Recomendado",
+        "perMonth": "/mes",
+        "pendantOneTime": "+ €151.25 colgante (único pago)",
+        "feature1": "Centro de llamadas 24/7",
+        "feature2": "Inglés y español",
+        "feature3": "Respuesta de emergencia",
+        "gps": "Rastreo de ubicación GPS",
+        "fall": "Detección automática de caídas",
+        "sos": "Botón SOS",
+        "geo": "Alertas de geo-cercado",
+        "cta": "Seleccionar con colgante"
+      }
+    },
+    "pricing": {
+      "title": "Precios simples y transparentes",
+      "subtitle": "Todos los precios incluyen IVA. Sin cargos ocultos.",
+      "single": {
+        "title": "Membresía individual",
+        "subtitle": "Para una persona",
+        "perMonth": "/mes",
+        "perYear": "/año",
+        "save": "¡Ahorre €54.99!"
+      },
+      "couple": {
+        "title": "Membresía pareja",
+        "subtitle": "Para dos personas (misma dirección)",
+        "mostPopular": "Más popular",
+        "perMonth": "/mes",
+        "perYear": "/año",
+        "save": "¡Ahorre €76.99!"
+      },
+      "getStarted": "Comenzar",
+      "oneTimeFees": "Cuotas únicas",
+      "registrationFee": "Cuota de inscripción",
+      "gpsPendant": "Colgante GPS (opcional pero recomendado)",
+      "shipping": "Envío (si pide colgante)"
+    },
+    "testimonials": {
+      "title": "Lo que dicen nuestros miembros",
+      "quote1": "ICE Alarm me devolvió mi independencia. Me siento seguro/a sabiendo que la ayuda está a solo un botón de distancia.",
+      "author1": "Margaret",
+      "location1": "Alicante",
+      "quote2": "Cuando mi padre se cayó, el colgante llamó automáticamente por ayuda. El equipo fue increíble y le habló en inglés. Le salvaron la vida.",
+      "author2": "David",
+      "location2": "Hijo de miembro de ICE Alarm",
+      "quote3": "La tranquilidad que esto da a nuestra familia no tiene precio. Mamá puede vivir independientemente sabiendo que nos llamarán si pasa algo.",
+      "author3": "Sarah",
+      "location3": "Málaga"
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "q1": "¿Cómo uso el colgante?",
+      "a1": "Simplemente mantenga presionado el botón SOS durante 3 segundos. Nuestro centro de llamadas contestará y le hablará a través del colgante.",
+      "q2": "¿Funciona en toda España?",
+      "a2": "¡Sí! El colgante funciona en cualquier lugar con cobertura de teléfono móvil en España.",
+      "q3": "¿Qué pasa si me caigo y no puedo pulsar el botón?",
+      "a3": "El colgante tiene detección automática de caídas. Si detecta una caída, alertará a nuestro centro de llamadas incluso si no pulsa el botón.",
+      "q4": "¿Puedo hablar en inglés con su centro de llamadas?",
+      "a4": "¡Por supuesto! Todos nuestros operadores hablan inglés y español con fluidez.",
+      "q5": "¿Qué pasa si no quiero un colgante?",
+      "a5": "Puede unirse con solo una membresía y usar su teléfono para llamarnos. Sin embargo, no tendrá rastreo GPS, detección de caídas ni las funciones del botón SOS.",
+      "q6": "¿Cuánto dura la batería?",
+      "a6": "Hasta 5 días en espera. Monitoreamos los niveles de batería y le alertaremos cuando necesite cargarlo.",
+      "q7": "¿Hay contrato?",
+      "a7": "¡Sin contratos a largo plazo! Puede cancelar en cualquier momento. Ofrecemos opciones de facturación mensual y anual."
+    },
+    "cta": {
+      "title": "¿Listo para unirse a la familia ICE Alarm?",
+      "subtitle": "Obtenga tranquilidad 24/7 para usted y sus seres queridos. Únase a miles de familias en España que confían en ICE Alarm.",
+      "button": "Únase a ICE Alarm hoy",
+      "whatsapp": "O escríbanos por WhatsApp en cualquier momento"
+    },
+    "footer": {
+      "description": "Su salvavidas en España. Respuesta de emergencia 24/7 para expatriados y residentes.",
+      "contact": "Contacto",
+      "whatsappAvailable": "WhatsApp disponible",
+      "quickLinks": "Enlaces rápidos",
+      "home": "Inicio",
+      "pendant": "Colgante",
+      "contact": "Contacto",
+      "joinNow": "Únase ahora",
+      "legal": "Legal",
+      "termsOfService": "Términos de servicio",
+      "privacyPolicy": "Política de privacidad",
+      "companyInfo": "ICE Alarm España S.L. • CIF: B24731531",
+      "allRightsReserved": "Todos los derechos reservados."
+    }
   }
 }

@@ -166,7 +166,8 @@
     "commissions": "Commissions",
     "crm": "CRM",
     "tasks": "Tasks",
-    "tickets": "Tickets"
+    "tickets": "Tickets",
+    "pendant": "Pendant"
   },
   "landing": {
     "emergencyResponse": "24/7 Emergency Response in Spain",
@@ -226,7 +227,42 @@
     "callUsAnytime": "Call us anytime at",
     "allRightsReserved": "All rights reserved.",
     "privacyPolicy": "Privacy Policy",
-    "termsOfService": "Terms of Service"
+    "termsOfService": "Terms of Service",
+    "twoWayAudio": "2-Way Audio",
+    "waterproof": "Waterproof",
+    "learnMore": "Learn More About Our Pendant",
+    "pricing": {
+      "pendant": {
+        "recommended": "Highly Recommended",
+        "subtitle": "Your personal safety companion - worn as a pendant or wristband",
+        "title": "ICE Alarm GPS Pendant"
+      }
+    },
+    "testimonials": {
+      "title": "What Our Members Say",
+      "subtitle": "Trusted by thousands of families across Spain",
+      "quote1": "The peace of mind this service gives our family is priceless. When Mum had a fall last month, help arrived within minutes. I can't recommend ICE Alarm enough.",
+      "quote2": "Living alone at 78, I was worried about emergencies. The GPS pendant gives me independence while keeping my children reassured. The bilingual support is excellent.",
+      "quote3": "After my husband's stroke, we needed reliable emergency support. ICE Alarm responded in under 30 seconds during a real emergency. They truly saved his life.",
+      "author1": "Margaret Thompson",
+      "location1": "British Expat, Alicante",
+      "author2": "Robert Harrison",
+      "location2": "Retired Teacher, Málaga",
+      "author3": "Susan & Peter Williams",
+      "location3": "Couple, Costa Blanca",
+      "trustBadge": "Rated 4.9/5 by over 2,000 verified members"
+    },
+    "contactDialog": {
+      "title": "How would you like to contact us?",
+      "available": "Available 24/7",
+      "phoneCall": "Phone Call",
+      "whatsapp": "WhatsApp",
+      "voiceOnly": "Voice calls only - no video"
+    },
+    "footer": {
+      "links": "Links",
+      "legal": "Legal"
+    }
   },
   "membership": {
     "single": "Single Person",
@@ -946,5 +982,206 @@
     "billing": "Billing",
     "general": "General",
     "urgent": "Urgent"
+  },
+  "pendant": {
+    "nav": {
+      "home": "Home",
+      "features": "Features",
+      "pricing": "Pricing",
+      "contact": "Contact",
+      "signIn": "Sign In",
+      "joinNow": "Join Now"
+    },
+    "hero": {
+      "badge": "Designed for Expats in Spain",
+      "title": "Your Lifeline in Spain",
+      "subtitle": "The ICE Alarm GPS Personal Pendant gives you and your loved ones peace of mind, wherever you are in Spain.",
+      "feature1": "24/7 English & Spanish Support",
+      "feature2": "GPS Location Tracking",
+      "feature3": "Automatic Fall Detection",
+      "feature4": "Two-Way Communication",
+      "cta": "Join ICE Alarm Today",
+      "startingFrom": "Starting from",
+      "perMonth": "/month",
+      "plusPendant": "+ pendant",
+      "waterResistant": "Water Resistant"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Getting help has never been easier. Just three simple steps.",
+      "step1Title": "Press the SOS Button",
+      "step1Desc": "One press is all it takes to alert our call centre. The button is large and easy to press, even in an emergency.",
+      "step2Title": "We Answer Immediately",
+      "step2Desc": "Our bilingual team responds 24/7/365 to help. We'll speak to you through the pendant to assess the situation.",
+      "step3Title": "Help Arrives When Needed",
+      "step3Desc": "We coordinate with emergency services and your family. Your GPS location helps us send help directly to you."
+    },
+    "features": {
+      "title": "Pendant Features",
+      "subtitle": "The ICE Alarm pendant is packed with life-saving technology.",
+      "gps": {
+        "title": "GPS Location Tracking",
+        "description": "When you press the SOS button, your exact location is instantly sent to our call centre. No need to explain where you are - we already know and can send help directly to you.",
+        "bullet1": "Works anywhere in Spain with mobile coverage",
+        "bullet2": "Accurate to within a few meters",
+        "bullet3": "Location shared with emergency services when needed"
+      },
+      "voice": {
+        "title": "Two-Way Voice Communication",
+        "description": "Speak directly with our team through the pendant's built-in speaker and microphone. No phone needed - just press and talk.",
+        "bullet1": "Crystal clear audio quality",
+        "bullet2": "Loud speaker for those hard of hearing",
+        "bullet3": "English and Spanish speaking operators"
+      },
+      "fall": {
+        "title": "Automatic Fall Detection",
+        "description": "Built-in sensors detect when you've fallen and automatically alert our call centre - even if you can't press the button.",
+        "bullet1": "Detects hard falls automatically",
+        "bullet2": "Alert sent even if you're unconscious",
+        "bullet3": "Peace of mind for you and your family"
+      },
+      "geofence": {
+        "title": "Geo-Fencing Alerts",
+        "description": "Set up a safe zone around your home. If the pendant leaves this area, we're notified immediately. Perfect for peace of mind.",
+        "bullet1": "Customizable boundary radius",
+        "bullet2": "Ideal for dementia care",
+        "bullet3": "Family members can be notified"
+      },
+      "battery": {
+        "title": "Long Battery Life",
+        "description": "The pendant lasts for days on a single charge. We monitor battery levels and alert you when it's time to recharge.",
+        "bullet1": "Up to 5 days standby time",
+        "bullet2": "Low battery alerts sent to you and our team",
+        "bullet3": "Easy magnetic charging cable included"
+      }
+    },
+    "specs": {
+      "title": "Technical Specifications",
+      "size": "Size",
+      "sizeValue": "45mm x 40mm x 15mm",
+      "weight": "Weight",
+      "weightValue": "35 grams",
+      "waterResistant": "Water Resistant",
+      "waterResistantValue": "IP67 rated",
+      "batteryLabel": "Battery",
+      "batteryValue": "Up to 5 days standby",
+      "connectivity": "Connectivity",
+      "connectivityValue": "4G LTE + GPS",
+      "sosButton": "SOS Button",
+      "sosButtonValue": "Large, easy to press",
+      "wearing": "Wearing",
+      "wearingValue": "Lanyard or belt clip",
+      "badges": {
+        "waterResistant": "Water Resistant",
+        "lte": "4G LTE",
+        "fastCharging": "Fast Charging"
+      }
+    },
+    "comparison": {
+      "title": "Choose Your Service",
+      "subtitle": "Both options include our 24/7 bilingual call centre support.",
+      "phoneOnly": {
+        "title": "Phone Only Service",
+        "subtitle": "Use your existing phone",
+        "perMonth": "/month",
+        "feature1": "24/7 Call Centre",
+        "feature2": "English & Spanish",
+        "feature3": "Emergency Response",
+        "noGps": "No GPS Tracking",
+        "noFall": "No Fall Detection",
+        "noSos": "No SOS Button",
+        "noGeo": "No Geo-Fencing",
+        "cta": "Select Phone Only"
+      },
+      "pendant": {
+        "title": "Pendant + Membership",
+        "subtitle": "Full protection package",
+        "recommended": "Recommended",
+        "perMonth": "/month",
+        "pendantOneTime": "+ €151.25 pendant (one-time)",
+        "feature1": "24/7 Call Centre",
+        "feature2": "English & Spanish",
+        "feature3": "Emergency Response",
+        "gps": "GPS Location Tracking",
+        "fall": "Automatic Fall Detection",
+        "sos": "SOS Button",
+        "geo": "Geo-Fencing Alerts",
+        "cta": "Select with Pendant"
+      }
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "All prices include IVA. No hidden fees.",
+      "single": {
+        "title": "Single Membership",
+        "subtitle": "For one person",
+        "perMonth": "/month",
+        "perYear": "/year",
+        "save": "Save €54.99!"
+      },
+      "couple": {
+        "title": "Couple Membership",
+        "subtitle": "For two people (same address)",
+        "mostPopular": "Most Popular",
+        "perMonth": "/month",
+        "perYear": "/year",
+        "save": "Save €76.99!"
+      },
+      "getStarted": "Get Started",
+      "oneTimeFees": "One-Time Fees",
+      "registrationFee": "Registration Fee",
+      "gpsPendant": "GPS Pendant (optional but recommended)",
+      "shipping": "Shipping (if ordering pendant)"
+    },
+    "testimonials": {
+      "title": "What Our Members Say",
+      "quote1": "ICE Alarm gave me back my independence. I feel safe knowing help is just one button press away.",
+      "author1": "Margaret",
+      "location1": "Alicante",
+      "quote2": "When my father fell, the pendant automatically called for help. The team was amazing and spoke to him in English. They saved his life.",
+      "author2": "David",
+      "location2": "Son of ICE Alarm member",
+      "quote3": "The peace of mind this gives our family is priceless. Mum can live independently knowing we'll be called if anything happens.",
+      "author3": "Sarah",
+      "location3": "Málaga"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "How do I use the pendant?",
+      "a1": "Simply press and hold the SOS button for 3 seconds. Our call centre will answer and speak to you through the pendant.",
+      "q2": "Does it work everywhere in Spain?",
+      "a2": "Yes! The pendant works anywhere with mobile phone coverage across Spain.",
+      "q3": "What happens if I fall and can't press the button?",
+      "a3": "The pendant has automatic fall detection. If it detects a fall, it will alert our call centre even if you don't press the button.",
+      "q4": "Can I speak English with your call centre?",
+      "a4": "Absolutely! All our operators speak both English and Spanish fluently.",
+      "q5": "What if I don't want a pendant?",
+      "a5": "You can join with just a membership and use your phone to call us. However, you won't have GPS tracking, fall detection, or the SOS button features.",
+      "q6": "How long does the battery last?",
+      "a6": "Up to 5 days on standby. We monitor battery levels and will alert you when it needs charging.",
+      "q7": "Is there a contract?",
+      "a7": "No long-term contracts! You can cancel anytime. We offer monthly and annual billing options."
+    },
+    "cta": {
+      "title": "Ready to Join the ICE Alarm Family?",
+      "subtitle": "Get 24/7 peace of mind for you and your loved ones. Join thousands of families across Spain who trust ICE Alarm.",
+      "button": "Join ICE Alarm Today",
+      "whatsapp": "Or WhatsApp us anytime"
+    },
+    "footer": {
+      "description": "Your lifeline in Spain. 24/7 emergency response for expats and residents.",
+      "contact": "Contact",
+      "whatsappAvailable": "WhatsApp Available",
+      "quickLinks": "Quick Links",
+      "home": "Home",
+      "pendant": "Pendant",
+      "contact": "Contact",
+      "joinNow": "Join Now",
+      "legal": "Legal",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "companyInfo": "ICE Alarm España S.L. • CIF: B24731531",
+      "allRightsReserved": "All rights reserved."
+    }
   }
 }

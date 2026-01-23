@@ -51,7 +51,7 @@ export default function LandingPage() {
               {t("navigation.features")}
             </a>
             <Link to="/pendant" className="text-sm font-medium hover:text-primary transition-colors">
-              Pendant
+              {t("navigation.pendant")}
             </Link>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pricing")}
@@ -375,7 +375,7 @@ export default function LandingPage() {
                   <div className="md:col-span-3 p-8 flex flex-col justify-center">
                     <div className="mb-6">
                       <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        ICE Alarm GPS Pendant
+                        {t('landing.pricing.pendant.title')}
                       </h3>
                       <p className="text-muted-foreground">
                         {t('landing.pricing.pendant.subtitle', 'Your personal safety companion - worn as a pendant or wristband')}
@@ -566,7 +566,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Links</h4>
+              <h4 className="font-semibold mb-4">{t("landing.footer.links")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
                 <li><a href="#features" className="hover:text-sidebar-foreground transition-colors">{t("navigation.features")}</a></li>
                 <li><a href="#pricing" className="hover:text-sidebar-foreground transition-colors">{t("navigation.pricing")}</a></li>
@@ -574,7 +574,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">{t("landing.footer.legal")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
                 <li><Link to="/terms" className="hover:text-sidebar-foreground transition-colors">{t("landing.termsOfService")}</Link></li>
                 <li><Link to="/privacy" className="hover:text-sidebar-foreground transition-colors">{t("landing.privacyPolicy")}</Link></li>
