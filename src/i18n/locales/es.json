@@ -1274,7 +1274,18 @@
     "status": "Estado",
     "tokens": "Tokens",
     "duration": "Duración",
-    "actionType": "Tipo de Acción"
+    "actionType": "Tipo de Acción",
+    "avatar": "Avatar del Agente",
+    "uploadAvatar": "Subir Avatar",
+    "avatarDescription": "Esta imagen aparece en el widget de chat",
+    "avatarUploaded": "Avatar subido",
+    "avatarUploadedDescription": "El avatar del agente ha sido actualizado",
+    "avatarRemoved": "Avatar eliminado",
+    "avatarRemovedDescription": "El avatar del agente ha sido eliminado",
+    "avatarInvalidType": "Por favor suba una imagen JPG, PNG o WebP",
+    "avatarTooLarge": "La imagen debe ser menor de 5MB",
+    "avatarUploadError": "Error al subir el avatar",
+    "avatarRemoveError": "Error al eliminar el avatar"
   },
   "joinWizard": {
     "steps": {

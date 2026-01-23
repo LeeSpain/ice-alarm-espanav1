@@ -161,6 +161,7 @@ export type Database = {
       ai_agents: {
         Row: {
           agent_key: string
+          avatar_url: string | null
           created_at: string | null
           description: string | null
           enabled: boolean | null
@@ -172,6 +173,7 @@ export type Database = {
         }
         Insert: {
           agent_key: string
+          avatar_url?: string | null
           created_at?: string | null
           description?: string | null
           enabled?: boolean | null
@@ -183,6 +185,7 @@ export type Database = {
         }
         Update: {
           agent_key?: string
+          avatar_url?: string | null
           created_at?: string | null
           description?: string | null
           enabled?: boolean | null

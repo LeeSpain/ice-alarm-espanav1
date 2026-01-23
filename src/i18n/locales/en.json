@@ -1298,7 +1298,18 @@
     "status": "Status",
     "tokens": "Tokens",
     "duration": "Duration",
-    "actionType": "Action Type"
+    "actionType": "Action Type",
+    "avatar": "Agent Avatar",
+    "uploadAvatar": "Upload Avatar",
+    "avatarDescription": "This image appears in the chat widget",
+    "avatarUploaded": "Avatar uploaded",
+    "avatarUploadedDescription": "Agent avatar has been updated",
+    "avatarRemoved": "Avatar removed",
+    "avatarRemovedDescription": "Agent avatar has been removed",
+    "avatarInvalidType": "Please upload a JPG, PNG, or WebP image",
+    "avatarTooLarge": "Image must be less than 5MB",
+    "avatarUploadError": "Failed to upload avatar",
+    "avatarRemoveError": "Failed to remove avatar"
   },
   "joinWizard": {
     "steps": {
