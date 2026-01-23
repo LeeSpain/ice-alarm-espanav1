@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Copy, Mail, MessageCircle, Plus, Send, Share2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Copy, Mail, MessageCircle, Plus, Send, Share2, QrCode, FileText, Image, File } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
@@ -23,12 +24,26 @@ import { generateReferralLink } from "@/lib/crmEvents";
 type InviteStatus = Database["public"]["Enums"]["invite_status"];
 type InviteChannel = Database["public"]["Enums"]["invite_channel"];
 
+interface Presentation {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string | null;
+}
+
 const statusColors: Record<InviteStatus, string> = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
   sent: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   registered: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   converted: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   expired: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+};
+
+const getFileIcon = (fileType: string | null) => {
+  if (!fileType) return File;
+  if (fileType.includes("pdf")) return FileText;
+  if (fileType.includes("image")) return Image;
+  return File;
 };
 
 const defaultMessages = {
@@ -66,6 +81,8 @@ export default function PartnerInvitesPage() {
     channel: "email" as InviteChannel,
     language: "en" as "en" | "es",
     message: defaultMessages.en,
+    includeQrCode: false,
+    selectedPresentations: [] as string[],
   });
 
   const referralLink = partner
@@ -87,8 +104,29 @@ export default function PartnerInvitesPage() {
     enabled: !!partner?.id,
   });
 
+  // Fetch partner presentations for attachment selection
+  const { data: presentations } = useQuery({
+    queryKey: ["partner-presentations", partner?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partner_presentations")
+        .select("id, file_name, file_url, file_type")
+        .eq("partner_id", partner!.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Presentation[];
+    },
+    enabled: !!partner?.id,
+  });
+
   const sendInviteMutation = useMutation({
     mutationFn: async () => {
+      // Get selected presentation URLs
+      const selectedPresentationUrls = presentations
+        ?.filter(p => formData.selectedPresentations.includes(p.id))
+        .map(p => ({ name: p.file_name, url: p.file_url })) || [];
+
       // Create invite record
       const { data: invite, error: inviteError } = await supabase
         .from("partner_invites")
@@ -100,7 +138,12 @@ export default function PartnerInvitesPage() {
           channel: formData.channel,
           status: "sent",
           sent_at: new Date().toISOString(),
-          metadata: { language: formData.language, message: formData.message },
+          metadata: { 
+            language: formData.language, 
+            message: formData.message,
+            includedQrCode: formData.includeQrCode,
+            attachedPresentations: formData.selectedPresentations,
+          },
         })
         .select()
         .single();
@@ -115,6 +158,10 @@ export default function PartnerInvitesPage() {
           recipient: formData.channel === "email" ? formData.inviteeEmail : formData.inviteePhone,
           message: formData.message.replace("{referral_link}", referralLink),
           language: formData.language,
+          includeQrCode: formData.includeQrCode,
+          presentations: selectedPresentationUrls,
+          referralCode: partner!.referral_code,
+          referralLink: referralLink,
         },
       });
 
@@ -148,7 +195,18 @@ export default function PartnerInvitesPage() {
       channel: "email",
       language: "en",
       message: defaultMessages.en,
+      includeQrCode: false,
+      selectedPresentations: [],
     });
+  };
+
+  const togglePresentation = (presentationId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedPresentations: prev.selectedPresentations.includes(presentationId)
+        ? prev.selectedPresentations.filter(id => id !== presentationId)
+        : [...prev.selectedPresentations, presentationId],
+    }));
   };
 
   const copyReferralLink = () => {
@@ -333,7 +391,7 @@ export default function PartnerInvitesPage() {
                   <Label htmlFor="message">Message</Label>
                   <Textarea
                     id="message"
-                    rows={6}
+                    rows={5}
                     value={formData.message}
                     onChange={(e) =>
                       setFormData({ ...formData, message: e.target.value })
@@ -343,6 +401,69 @@ export default function PartnerInvitesPage() {
                   <p className="text-xs text-muted-foreground mt-1">
                     Use {"{referral_link}"} to insert your referral link
                   </p>
+                </div>
+
+                {/* Attachments Section */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-sm">Attachments</h4>
+                    <Badge variant="outline" className="text-xs">Optional</Badge>
+                  </div>
+
+                  {/* QR Code Toggle */}
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="includeQrCode"
+                      checked={formData.includeQrCode}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, includeQrCode: checked as boolean })
+                      }
+                    />
+                    <div className="flex items-center gap-2">
+                      <QrCode className="h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="includeQrCode" className="text-sm font-normal cursor-pointer">
+                        Include QR Code
+                      </Label>
+                    </div>
+                  </div>
+
+                  {/* Presentations Selection */}
+                  {presentations && presentations.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">
+                        Select Presentations to Include:
+                      </Label>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {presentations.map((presentation) => {
+                          const FileIcon = getFileIcon(presentation.file_type);
+                          return (
+                            <div key={presentation.id} className="flex items-center space-x-3">
+                              <Checkbox
+                                id={`presentation-${presentation.id}`}
+                                checked={formData.selectedPresentations.includes(presentation.id)}
+                                onCheckedChange={() => togglePresentation(presentation.id)}
+                              />
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <Label 
+                                  htmlFor={`presentation-${presentation.id}`} 
+                                  className="text-sm font-normal cursor-pointer truncate"
+                                >
+                                  {presentation.file_name}
+                                </Label>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!presentations || presentations.length === 0) && (
+                    <p className="text-xs text-muted-foreground">
+                      No presentations uploaded yet. Add them in Marketing Tools.
+                    </p>
+                  )}
                 </div>
               </div>
               <DialogFooter>

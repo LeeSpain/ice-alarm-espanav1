@@ -6,12 +6,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface PresentationAttachment {
+  name: string;
+  url: string;
+}
+
 interface InviteRequest {
   inviteId: string;
   channel: "email" | "sms" | "whatsapp";
   recipient: string;
   message: string;
   language: "en" | "es";
+  includeQrCode?: boolean;
+  presentations?: PresentationAttachment[];
+  referralCode?: string;
+  referralLink?: string;
+}
+
+// Generate QR code URL using a reliable external service
+function getQrCodeUrl(data: string, size: number = 200): string {
+  const encodedData = encodeURIComponent(data);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedData}&format=png`;
 }
 
 serve(async (req) => {
@@ -50,7 +65,16 @@ serve(async (req) => {
       throw new Error("User is not an active partner");
     }
 
-    const { inviteId, channel, recipient, message, language }: InviteRequest = await req.json();
+    const { 
+      inviteId, 
+      channel, 
+      recipient, 
+      message, 
+      language,
+      includeQrCode = false,
+      presentations = [],
+      referralLink = "",
+    }: InviteRequest = await req.json();
 
     if (!inviteId || !channel || !recipient || !message) {
       throw new Error("Missing required fields");
@@ -67,8 +91,10 @@ serve(async (req) => {
       throw new Error("Invite not found or unauthorized");
     }
 
+    // Generate QR code URL if requested
+    const qrCodeUrl = includeQrCode && referralLink ? getQrCodeUrl(referralLink, 180) : "";
+
     let success = false;
-    let errorMessage = "";
 
     if (channel === "email") {
       // Send via Resend
@@ -80,6 +106,38 @@ serve(async (req) => {
       const subject = language === "es" 
         ? "Invitación a ICE Alarm España" 
         : "Invitation to ICE Alarm Spain";
+
+      // Build presentations HTML section
+      let presentationsHtml = "";
+      if (presentations.length > 0) {
+        const linksHtml = presentations.map(p => 
+          `<li style="margin: 8px 0;"><a href="${p.url}" style="color: #2563eb; text-decoration: none;">${p.name}</a></li>`
+        ).join("");
+        
+        presentationsHtml = `
+          <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">
+              ${language === "es" ? "📎 Materiales Informativos" : "📎 Learn More"}
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+              ${linksHtml}
+            </ul>
+          </div>
+        `;
+      }
+
+      // Build QR code HTML section
+      let qrCodeHtml = "";
+      if (qrCodeUrl) {
+        qrCodeHtml = `
+          <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
+            <img src="${qrCodeUrl}" alt="QR Code" style="max-width: 180px; margin-bottom: 10px;" />
+            <p style="margin: 0; font-size: 14px; color: #666;">
+              ${language === "es" ? "Escanea para registrarte" : "Scan to sign up"}
+            </p>
+          </div>
+        `;
+      }
 
       const emailRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -97,6 +155,8 @@ serve(async (req) => {
               <div style="white-space: pre-wrap; line-height: 1.6; color: #555;">
                 ${message.replace(/\n/g, "<br>")}
               </div>
+              ${qrCodeHtml}
+              ${presentationsHtml}
               <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
               <p style="font-size: 12px; color: #999;">
                 ${language === "es" 
@@ -115,6 +175,18 @@ serve(async (req) => {
 
       success = true;
     } else if (channel === "sms" || channel === "whatsapp") {
+      // Build message with additional content for SMS/WhatsApp
+      let fullMessage = message;
+
+      // Add presentations as links
+      if (presentations.length > 0) {
+        const presentationLinks = presentations.map(p => `📎 ${p.name}: ${p.url}`).join("\n");
+        fullMessage += `\n\n${language === "es" ? "Más información:" : "Learn more:"}\n${presentationLinks}`;
+      }
+
+      // Note: For SMS/WhatsApp, QR codes cannot be embedded directly
+      // But we include the referral link which is already in the message
+
       // Send via Twilio
       const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
       const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
@@ -145,7 +217,7 @@ serve(async (req) => {
             body: new URLSearchParams({
               From: from || "",
               To: to,
-              Body: message,
+              Body: fullMessage,
             }),
           }
         );
@@ -170,6 +242,8 @@ serve(async (req) => {
         channel,
         recipient,
         language,
+        included_qr_code: includeQrCode,
+        attached_presentations: presentations.length,
       },
     });
 
