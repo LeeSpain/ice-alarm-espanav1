@@ -181,7 +181,7 @@ export default function PendantPage() {
                     altText={pendantHeroImage.altText || "ICE Alarm GPS Personal Pendant"}
                     placeholderText="Product Image"
                     placeholderSubtext="Coming Soon"
-                    loading="eager"
+                    priority={true}
                   />
                 </div>
                 {/* Trust Badge */}

@@ -40,7 +40,8 @@ export function useCompanySettings() {
         address: settingsMap.address || DEFAULT_SETTINGS.address
       } as CompanySettings;
     },
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes (increased from 5)
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    gcTime: 60 * 60 * 1000, // Keep in garbage collection for 1 hour
   });
 
   return {

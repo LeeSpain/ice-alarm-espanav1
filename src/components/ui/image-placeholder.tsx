@@ -1,5 +1,6 @@
 import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface ImageWithPlaceholderProps {
   imageUrl: string | null;
@@ -9,6 +10,12 @@ interface ImageWithPlaceholderProps {
   className?: string;
   imgClassName?: string;
   loading?: "eager" | "lazy";
+  /** Set to true for above-the-fold images to prioritize loading */
+  priority?: boolean;
+  /** Explicit width to prevent layout shift */
+  width?: number;
+  /** Explicit height to prevent layout shift */
+  height?: number;
 }
 
 export function ImageWithPlaceholder({
@@ -19,16 +26,38 @@ export function ImageWithPlaceholder({
   className,
   imgClassName,
   loading = "lazy",
+  priority = false,
+  width,
+  height,
 }: ImageWithPlaceholderProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   if (imageUrl) {
     return (
-      <img
-        src={imageUrl}
-        alt={altText}
-        className={cn("w-full h-full object-cover object-center", imgClassName)}
-        loading={loading}
-        decoding="async"
-      />
+      <div className={cn("relative w-full h-full", className)}>
+        {/* Skeleton loader while image loads */}
+        {!isLoaded && (
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse"
+            style={{ aspectRatio: width && height ? `${width}/${height}` : undefined }}
+          />
+        )}
+        <img
+          src={imageUrl}
+          alt={altText}
+          className={cn(
+            "w-full h-full object-cover object-center transition-opacity duration-300",
+            isLoaded ? "opacity-100" : "opacity-0",
+            imgClassName
+          )}
+          loading={priority ? "eager" : loading}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          width={width}
+          height={height}
+          onLoad={() => setIsLoaded(true)}
+        />
+      </div>
     );
   }
 

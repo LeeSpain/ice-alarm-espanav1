@@ -148,7 +148,7 @@ export default function LandingPage() {
                   altText={heroImage.altText || "Happy multigenerational family enjoying peace of mind with ICE Alarm protection"}
                   placeholderText="Hero Image"
                   placeholderSubtext="Coming Soon"
-                  loading="eager"
+                  priority={true}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
