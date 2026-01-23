@@ -2,9 +2,6 @@ import {
   LayoutDashboard, 
   Users, 
   Smartphone, 
-  ShoppingCart,
-  CreditCard, 
-  DollarSign, 
   Bell, 
   UserCog, 
   BarChart3, 
@@ -17,10 +14,14 @@ import {
   CheckSquare,
   Ticket,
   Contact,
-  Wallet,
   Handshake,
   ClipboardCheck,
-  Upload
+  Upload,
+  Target,
+  Briefcase,
+  ShoppingCart,
+  CreditCard,
+  DollarSign
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
@@ -44,6 +45,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -53,42 +55,90 @@ interface MenuItem {
 }
 
 interface MenuGroup {
+  id: string;
   icon: React.ElementType;
   label: string;
   items: MenuItem[];
   superAdminOnly?: boolean;
 }
 
-const mainMenuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Contact, label: "Leads", path: "/admin/leads" },
-  { icon: Users, label: "Members", path: "/admin/members" },
-  { icon: Smartphone, label: "Devices", path: "/admin/devices" },
-];
-
-const financeGroup: MenuGroup = {
-  icon: Wallet,
-  label: "Finance",
-  items: [
-    { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-    { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
-    { icon: DollarSign, label: "Payments", path: "/admin/payments" },
-    { icon: DollarSign, label: "Commissions", path: "/admin/commissions" },
-  ],
-};
-
-const secondaryMenuItems: MenuItem[] = [
-  { icon: Handshake, label: "Partners", path: "/admin/partners" },
-  { icon: ClipboardCheck, label: "Partners QA", path: "/admin/partners-qa", superAdminOnly: true },
-  { icon: Upload, label: "CRM Import", path: "/admin/crm-import", superAdminOnly: true },
-  { icon: Contact, label: "CRM Contacts", path: "/admin/crm-contacts", superAdminOnly: true },
-  { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
-  { icon: Bell, label: "Alerts", path: "/admin/alerts" },
-  { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" },
-  { icon: Ticket, label: "Staff Tickets", path: "/admin/tickets" },
-  { icon: UserCog, label: "Staff", path: "/admin/staff", superAdminOnly: true },
-  { icon: BarChart3, label: "Reports", path: "/admin/reports" },
-  { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true },
+const menuGroups: MenuGroup[] = [
+  {
+    id: "dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/admin" }
+    ]
+  },
+  {
+    id: "people",
+    icon: Users,
+    label: "People",
+    items: [
+      { icon: Users, label: "Members", path: "/admin/members" },
+      { icon: Smartphone, label: "Devices", path: "/admin/devices" },
+      { icon: Bell, label: "Alerts", path: "/admin/alerts" }
+    ]
+  },
+  {
+    id: "pipeline",
+    icon: Target,
+    label: "Pipeline",
+    items: [
+      { icon: Contact, label: "Leads", path: "/admin/leads" },
+      { icon: Upload, label: "CRM Import", path: "/admin/crm-import", superAdminOnly: true },
+      { icon: Contact, label: "CRM Contacts", path: "/admin/crm-contacts", superAdminOnly: true }
+    ]
+  },
+  {
+    id: "partners",
+    icon: Handshake,
+    label: "Partners",
+    items: [
+      { icon: Handshake, label: "Partners", path: "/admin/partners" },
+      { icon: ClipboardCheck, label: "Partners QA", path: "/admin/partners-qa", superAdminOnly: true }
+    ]
+  },
+  {
+    id: "staff-ops",
+    icon: UserCog,
+    label: "Staff Operations",
+    items: [
+      { icon: UserCog, label: "Staff", path: "/admin/staff", superAdminOnly: true },
+      { icon: Ticket, label: "Staff Tickets", path: "/admin/tickets" },
+      { icon: CheckSquare, label: "Tasks", path: "/admin/tasks" }
+    ]
+  },
+  {
+    id: "communications",
+    icon: MessageSquare,
+    label: "Communications",
+    items: [
+      { icon: MessageSquare, label: "Messages", path: "/admin/messages" }
+    ]
+  },
+  {
+    id: "business",
+    icon: Briefcase,
+    label: "Business",
+    items: [
+      { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
+      { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
+      { icon: DollarSign, label: "Payments", path: "/admin/payments" },
+      { icon: DollarSign, label: "Commissions", path: "/admin/commissions" },
+      { icon: BarChart3, label: "Reports", path: "/admin/reports" }
+    ]
+  },
+  {
+    id: "system",
+    icon: Settings,
+    label: "System",
+    superAdminOnly: true,
+    items: [
+      { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true }
+    ]
+  }
 ];
 
 interface AdminSidebarProps {
@@ -97,29 +147,30 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, staffRole } = useAuth();
 
   // Notify parent of collapse state changes
   const handleCollapse = (value: boolean) => {
     setCollapsed(value);
     onCollapsedChange?.(value);
   };
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [financeOpen, setFinanceOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { signOut, staffRole } = useAuth();
 
-  // Check if any finance route is active
-  const isFinanceActive = financeGroup.items.some(
-    item => location.pathname === item.path || location.pathname.startsWith(item.path + "/")
-  );
-
-  // Auto-expand finance when a child route is active
+  // Find group containing active route and auto-expand it
   useEffect(() => {
-    if (isFinanceActive) {
-      setFinanceOpen(true);
+    const activeGroup = menuGroups.find(group =>
+      group.items.some(item =>
+        location.pathname === item.path ||
+        (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"))
+      )
+    );
+    if (activeGroup) {
+      setOpenGroups(prev => ({ ...prev, [activeGroup.id]: true }));
     }
-  }, [isFinanceActive]);
+  }, [location.pathname]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -131,6 +182,10 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
     navigate("/staff/login");
   };
 
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
   const filterByRole = (items: MenuItem[]) => 
     items.filter(item => {
       if (item.superAdminOnly && staffRole !== "super_admin") {
@@ -139,7 +194,22 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
       return true;
     });
 
-  const renderMenuItem = (item: MenuItem, isMobile: boolean) => {
+  const shouldShowGroup = (group: MenuGroup) => {
+    if (group.superAdminOnly && staffRole !== "super_admin") {
+      return false;
+    }
+    const visibleItems = filterByRole(group.items);
+    return visibleItems.length > 0;
+  };
+
+  const isGroupActive = (group: MenuGroup) => {
+    return group.items.some(item =>
+      location.pathname === item.path ||
+      (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"))
+    );
+  };
+
+  const renderMenuItem = (item: MenuItem, isMobile: boolean, isNested: boolean = false) => {
     const isActive = location.pathname === item.path || 
       (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"));
     const Icon = item.icon;
@@ -149,16 +219,17 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
         to={item.path}
         onClick={() => isMobile && setMobileOpen(false)}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
           "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive 
             ? "bg-sidebar-primary text-sidebar-primary-foreground" 
             : "text-sidebar-foreground",
-          !isMobile && collapsed && "justify-center px-2"
+          !isMobile && collapsed && "justify-center px-2",
+          isNested && !collapsed && "pl-9"
         )}
       >
-        <Icon className="h-5 w-5 shrink-0" />
-        {(isMobile || !collapsed) && <span>{item.label}</span>}
+        <Icon className="h-4 w-4 shrink-0" />
+        {(isMobile || !collapsed) && <span className="truncate">{item.label}</span>}
       </NavLink>
     );
 
@@ -180,22 +251,43 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
     return <li key={item.path}>{linkContent}</li>;
   };
 
-  const renderFinanceGroup = (isMobile: boolean) => {
-    const Icon = financeGroup.icon;
-    
+  const renderMenuGroup = (group: MenuGroup, isMobile: boolean, showDivider: boolean = false) => {
+    if (!shouldShowGroup(group)) return null;
+
+    const Icon = group.icon;
+    const isOpen = openGroups[group.id] || false;
+    const isActive = isGroupActive(group);
+    const visibleItems = filterByRole(group.items);
+
+    // For single-item groups like Dashboard, render as a direct link
+    if (visibleItems.length === 1 && group.id === "dashboard") {
+      return (
+        <div key={group.id}>
+          {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
+          <ul className="space-y-1">
+            {renderMenuItem(visibleItems[0], isMobile)}
+          </ul>
+        </div>
+      );
+    }
+
     // Collapsed desktop: show single icon with tooltip
     if (!isMobile && collapsed) {
       return (
-        <li>
+        <div key={group.id}>
+          {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button
-                onClick={() => setFinanceOpen(!financeOpen)}
+                onClick={() => {
+                  handleCollapse(false);
+                  setOpenGroups(prev => ({ ...prev, [group.id]: true }));
+                }}
                 className={cn(
                   "flex items-center justify-center w-full rounded-lg px-2 py-2.5 text-sm font-medium transition-all",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isFinanceActive 
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                  isActive 
+                    ? "bg-sidebar-primary/20 text-sidebar-primary-foreground" 
                     : "text-sidebar-foreground"
                 )}
               >
@@ -203,62 +295,43 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              {financeGroup.label}
+              {group.label}
             </TooltipContent>
           </Tooltip>
-        </li>
+        </div>
       );
     }
 
     // Expanded: show collapsible group
     return (
-      <li>
-        <Collapsible open={financeOpen} onOpenChange={setFinanceOpen}>
+      <div key={group.id}>
+        {showDivider && <Separator className="my-2 bg-sidebar-border/50" />}
+        <Collapsible open={isOpen} onOpenChange={() => toggleGroup(group.id)}>
           <CollapsibleTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isFinanceActive 
+                isActive 
                   ? "text-sidebar-primary-foreground" 
-                  : "text-sidebar-foreground"
+                  : "text-sidebar-foreground/70"
               )}
             >
               <Icon className="h-5 w-5 shrink-0" />
-              <span className="flex-1 text-left">{financeGroup.label}</span>
+              <span className="flex-1 text-left truncate">{group.label}</span>
               <ChevronDown className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                financeOpen && "rotate-180"
+                "h-4 w-4 transition-transform duration-200 shrink-0",
+                isOpen && "rotate-180"
               )} />
             </button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="pl-4 mt-1 space-y-1">
-            {financeGroup.items.map((item) => {
-              const isActive = location.pathname === item.path || 
-                location.pathname.startsWith(item.path + "/");
-              const ItemIcon = item.icon;
-              
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => isMobile && setMobileOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    isActive 
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-                      : "text-sidebar-foreground"
-                  )}
-                >
-                  <ItemIcon className="h-4 w-4 shrink-0" />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
+          <CollapsibleContent className="mt-1 space-y-1">
+            <ul className="space-y-1">
+              {visibleItems.map((item) => renderMenuItem(item, isMobile, true))}
+            </ul>
           </CollapsibleContent>
         </Collapsible>
-      </li>
+      </div>
     );
   };
 
@@ -274,16 +347,31 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
-        <ul className="space-y-1">
-          {/* Main menu items */}
-          {filterByRole(mainMenuItems).map((item) => renderMenuItem(item, isMobile))}
+        <div className="space-y-1">
+          {/* Dashboard - standalone */}
+          {renderMenuGroup(menuGroups[0], isMobile)}
           
-          {/* Finance group */}
-          {renderFinanceGroup(isMobile)}
+          {/* People */}
+          {renderMenuGroup(menuGroups[1], isMobile, true)}
           
-          {/* Secondary menu items */}
-          {filterByRole(secondaryMenuItems).map((item) => renderMenuItem(item, isMobile))}
-        </ul>
+          {/* Pipeline */}
+          {renderMenuGroup(menuGroups[2], isMobile, true)}
+          
+          {/* Partners */}
+          {renderMenuGroup(menuGroups[3], isMobile, true)}
+          
+          {/* Staff Operations */}
+          {renderMenuGroup(menuGroups[4], isMobile, true)}
+          
+          {/* Communications */}
+          {renderMenuGroup(menuGroups[5], isMobile, true)}
+          
+          {/* Business */}
+          {renderMenuGroup(menuGroups[6], isMobile, true)}
+          
+          {/* System */}
+          {renderMenuGroup(menuGroups[7], isMobile, true)}
+        </div>
       </nav>
 
       {/* Footer */}
