@@ -1,8 +1,8 @@
 import { useMemberAlerts } from "@/hooks/useMemberProfile";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Loader2, 
+  Loader2,
   Bell, 
   AlertTriangle, 
   Activity, 
@@ -53,10 +53,13 @@ export default function AlertHistoryPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Alert History</h1>
-        <p className="text-muted-foreground mt-1">Your past alerts and responses</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Alert History</h1>
+          <p className="text-muted-foreground mt-1">Your past alerts and responses</p>
+        </div>
       </div>
 
       {!alerts || alerts.length === 0 ? (
@@ -70,7 +73,7 @@ export default function AlertHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {alerts.map((alert) => {
             const config = ALERT_CONFIG[alert.alert_type as keyof typeof ALERT_CONFIG] 
               || ALERT_CONFIG.check_in;
@@ -81,11 +84,11 @@ export default function AlertHistoryPage() {
               <Card key={alert.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${config.color}`}>
-                      <Icon className="h-5 w-5" />
+                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 ${config.color}`}>
+                      <Icon className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 mb-2">
                         <h4 className="font-semibold">{config.label}</h4>
                         <Badge 
                           variant={isResolved ? "default" : "secondary"}
@@ -104,17 +107,17 @@ export default function AlertHistoryPage() {
                           )}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-muted-foreground">
                         {format(new Date(alert.received_at), "EEEE, dd MMMM yyyy 'at' HH:mm")}
                       </p>
                       {alert.location_address && (
-                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {alert.location_address}
+                        <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{alert.location_address}</span>
                         </p>
                       )}
                       {isResolved && alert.resolved_at && (
-                        <p className="text-sm text-alert-resolved mt-2">
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-2">
                           Resolved at {format(new Date(alert.resolved_at), "HH:mm")}
                         </p>
                       )}

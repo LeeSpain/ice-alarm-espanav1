@@ -92,146 +92,158 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Contact Support</h1>
-        <p className="text-muted-foreground mt-1">We're here to help 24/7</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Contact Support</h1>
+          <p className="text-muted-foreground mt-1">We're here to help 24/7</p>
+        </div>
       </div>
 
-      {/* Emergency Contact */}
+      {/* Emergency Contact - Full Width */}
       <Card className="bg-primary text-primary-foreground border-0">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            For Emergencies
-          </CardTitle>
-          <CardDescription className="text-primary-foreground/80">
-            If you have an emergency, press your pendant button!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center">
-            <div className="h-32 w-32 bg-white/10 rounded-2xl flex items-center justify-center">
-              <Smartphone className="h-16 w-16" />
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="h-24 w-24 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Smartphone className="h-12 w-12" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-xl font-bold mb-2">For Emergencies</h2>
+              <p className="text-primary-foreground/80 mb-2">
+                If you have an emergency, press your pendant button!
+              </p>
+              <p className="text-primary-foreground/80">
+                Hold the SOS button for 3 seconds and we'll be right there.
+              </p>
             </div>
           </div>
-          <p className="text-center mt-4 text-primary-foreground/80">
-            Hold the SOS button for 3 seconds
-          </p>
         </CardContent>
       </Card>
 
-      {/* General Support */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">General Support</CardTitle>
-          <CardDescription>
-            Contact us for non-emergency questions or assistance
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Phone */}
-          <a 
-            href="tel:+34950473199"
-            className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-          >
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Phone className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Call Us</p>
-              <p className="text-xl font-bold text-primary">+34 950 473 199</p>
-            </div>
-          </a>
+      {/* Main Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Contact Options */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* General Support */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">General Support</CardTitle>
+              <CardDescription>
+                Contact us for non-emergency questions or assistance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Phone */}
+                <a 
+                  href="tel:+34950473199"
+                  className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                >
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Call Us</p>
+                    <p className="text-lg font-bold text-primary">+34 950 473 199</p>
+                  </div>
+                </a>
 
-          {/* WhatsApp */}
-          <a 
-            href="https://wa.me/34950473199"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-4 p-4 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-          >
-            <div className="h-12 w-12 rounded-full bg-[#25D366]/20 flex items-center justify-center">
-              <MessageCircle className="h-6 w-6 text-[#25D366]" />
-            </div>
-            <div>
-              <p className="font-medium">WhatsApp</p>
-              <p className="text-[#25D366] font-medium">Chat with us on WhatsApp</p>
-            </div>
-          </a>
-        </CardContent>
-      </Card>
+                {/* WhatsApp */}
+                <a 
+                  href="https://wa.me/34950473199"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                >
+                  <div className="h-12 w-12 rounded-full bg-[#25D366]/20 flex items-center justify-center">
+                    <MessageCircle className="h-6 w-6 text-[#25D366]" />
+                  </div>
+                  <div>
+                    <p className="font-medium">WhatsApp</p>
+                    <p className="text-[#25D366] font-medium">Chat with us</p>
+                  </div>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Contact Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Send Us a Message
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input
-                id="subject"
-                value={contactForm.subject}
-                onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
-                placeholder="What can we help you with?"
-                className="touch-target"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                value={contactForm.message}
-                onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                placeholder="Please describe your question or issue..."
-                rows={5}
-              />
-            </div>
-            <Button type="submit" disabled={isSending} className="w-full touch-target">
-              {isSending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Message
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          {/* FAQ */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <HelpCircle className="h-5 w-5" />
+                Frequently Asked Questions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {FAQ_ITEMS.map((item) => (
+                  <AccordionItem key={item.id} value={item.id}>
+                    <AccordionTrigger className="text-left">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* FAQ */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <HelpCircle className="h-5 w-5" />
-            Frequently Asked Questions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            {FAQ_ITEMS.map((item) => (
-              <AccordionItem key={item.id} value={item.id}>
-                <AccordionTrigger className="text-left">
-                  {item.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
+        {/* Right Column - Contact Form (Sticky) */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Send Us a Message
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                      id="subject"
+                      value={contactForm.subject}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                      placeholder="What can we help you with?"
+                      className="touch-target"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea
+                      id="message"
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                      placeholder="Please describe your question or issue..."
+                      rows={5}
+                    />
+                  </div>
+                  <Button type="submit" disabled={isSending} className="w-full touch-target">
+                    {isSending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Message
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
