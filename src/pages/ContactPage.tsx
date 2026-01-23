@@ -12,17 +12,17 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { InlineAIChat } from "@/components/chat/InlineAIChat";
 import { 
   Phone, 
   Mail, 
-  MapPin, 
-  Clock, 
   Send, 
   CheckCircle,
   ArrowLeft,
   MessageSquare,
   Shield,
-  Users
+  Users,
+  Clock
 } from "lucide-react";
 
 export default function ContactPage() {
@@ -162,8 +162,8 @@ export default function ContactPage() {
       {/* Main Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Contact Info Cards */}
+          <div className="grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {/* Contact Info Cards - Left Column */}
             <div className="space-y-6">
               <Card>
                 <CardContent className="pt-6">
@@ -204,42 +204,14 @@ export default function ContactPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Office Hours</h3>
-                      <p className="text-muted-foreground text-sm">Mon - Fri: 9:00 - 18:00</p>
-                      <p className="text-muted-foreground text-sm">Sat: 10:00 - 14:00</p>
-                      <p className="text-xs text-primary mt-1">24/7 Emergency Monitoring</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <MapPin className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Visit Us</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {companySettings.company_name}<br />
-                        {companySettings.address}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            {/* Contact Form */}
+            {/* AI Chat Card - Middle Column */}
+            <div className="lg:col-span-1">
+              <InlineAIChat />
+            </div>
+
+            {/* Contact Form - Right Column */}
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
