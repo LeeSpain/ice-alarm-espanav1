@@ -82,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (roleInfo.is_staff && roleInfo.staff_role) {
         setIsStaff(true);
         setStaffRole(roleInfo.staff_role);
-        setMemberId(null);
+        // Preserve memberId too for dual-role accounts (staff + member)
+        // so staff users can still access member-facing pages like /dashboard/profile.
+        setMemberId(roleInfo.member_id ?? null);
         // Preserve partner data if user holds both staff AND partner roles
         if (roleInfo.is_partner && roleInfo.partner_id) {
           setPartnerId(roleInfo.partner_id);
