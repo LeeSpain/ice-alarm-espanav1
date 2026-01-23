@@ -23,8 +23,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users, Send,
-  DollarSign, Check, XCircle, Pause, Play, Save, Package, FileText
+  DollarSign, Check, XCircle, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, User
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -50,6 +55,22 @@ interface Partner {
   payout_iban: string | null;
   payout_beneficiary_name: string | null;
   notes_internal: string | null;
+  agreement_signed_at: string | null;
+  agreement_version: string | null;
+}
+
+interface PartnerAgreement {
+  id: string;
+  partner_id: string;
+  version: string;
+  signer_name: string;
+  signer_id_type: string;
+  signer_id_number: string;
+  signed_at: string;
+  ip_address: string | null;
+  confirmed_read: boolean;
+  confirmed_understand: boolean;
+  confirmed_accept: boolean;
 }
 
 interface Invite {
@@ -470,8 +491,12 @@ export default function PartnerDetailPage() {
       </Card>
 
       <Tabs defaultValue="details" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="agreement">
+            <FileSignature className="h-4 w-4 mr-1" />
+            Agreement
+          </TabsTrigger>
           <TabsTrigger value="invites">Invites ({invites?.length || 0})</TabsTrigger>
           <TabsTrigger value="attributions">Referrals ({attributions?.length || 0})</TabsTrigger>
           <TabsTrigger value="commissions">Commissions ({commissions?.length || 0})</TabsTrigger>
@@ -564,6 +589,59 @@ export default function PartnerDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Agreement Tab */}
+        <TabsContent value="agreement">
+          {partner.agreement_signed_at ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <Check className="h-5 w-5" />
+                  Agreement Signed
+                </CardTitle>
+                <CardDescription>
+                  Signed on {format(new Date(partner.agreement_signed_at), "dd MMMM yyyy 'at' HH:mm")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Version</p>
+                      <p className="font-medium">{partner.agreement_version || "1.0"}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    This partner has signed the agreement and is eligible for commission payments.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-amber-300 dark:border-amber-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  Agreement Not Signed
+                </CardTitle>
+                <CardDescription>
+                  This partner has not signed the partnership agreement
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    <strong>⚠️ Commission payments are blocked</strong> until the partner signs the agreement.
+                    The partner will be prompted to sign when they next log in to their dashboard.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="invites">
@@ -717,14 +795,25 @@ export default function PartnerDetailPage() {
                         </TableCell>
                         <TableCell>
                           {commission.status === "approved" && (
-                            <Button
-                              size="sm"
-                              onClick={() => markCommissionPaid.mutate(commission.id)}
-                              disabled={markCommissionPaid.isPending}
-                            >
-                              <Check className="mr-1 h-3 w-3" />
-                              Mark Paid
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => markCommissionPaid.mutate(commission.id)}
+                                    disabled={markCommissionPaid.isPending || !partner.agreement_signed_at}
+                                  >
+                                    <Check className="mr-1 h-3 w-3" />
+                                    Mark Paid
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              {!partner.agreement_signed_at && (
+                                <TooltipContent>
+                                  <p>Agreement must be signed first</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
                           )}
                         </TableCell>
                       </TableRow>

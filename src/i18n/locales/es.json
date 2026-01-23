@@ -1222,6 +1222,7 @@
     "endShift": "Finalizar turno",
     "invites": "Invitaciones",
     "marketing": "Herramientas Marketing",
+    "agreement": "Acuerdo",
     "backToPartners": "Volver a Partners",
     "shiftNotes": "Notas de turno",
     "aiCommandCentre": "Centro de Mando IA",
@@ -1545,5 +1546,106 @@
     "welcomeMessage": "¡Hola! 👋 Soy tu asistente virtual de ICE Alarm. ¿En qué puedo ayudarte hoy? Puedo responder preguntas sobre nuestros servicios, precios, o ayudarte a comenzar.",
     "errorMessage": "Lo siento, hubo un problema al conectar. Por favor, intenta de nuevo más tarde.",
     "fallbackMessage": "Lo siento, no pude procesar tu mensaje. Por favor, intenta de nuevo."
+  },
+  "partnerAgreement": {
+    "title": "Acuerdo de Colaboración",
+    "pageDescription": "Su acuerdo de colaboración con ICE Alarm España",
+    "requiredMessage": "Por favor, revise y firme el acuerdo de colaboración para continuar",
+    "mustSignWarning": "Debe firmar este acuerdo antes de acceder a su panel de socio. El pago de comisiones requiere un acuerdo firmado.",
+    "version": "Versión",
+    "effectiveDate": "Fecha de Vigencia",
+    "signatureSection": "Firma Electrónica",
+    "signatureInstructions": "Complete todos los campos a continuación para firmar este acuerdo electrónicamente",
+    "signerName": "Nombre Legal Completo",
+    "signerNamePlaceholder": "Introduzca su nombre legal completo",
+    "idType": "Tipo de Documento de Identidad",
+    "selectIdType": "Seleccione tipo de documento",
+    "idTypes": {
+      "nie": "NIE - Número de Identidad de Extranjero",
+      "nif": "NIF - Número de Identificación Fiscal",
+      "cif": "CIF - Código de Identificación Fiscal de Empresa"
+    },
+    "idNumber": "Número de Documento",
+    "signDate": "Fecha de Firma",
+    "confirmRead": "Confirmo que he leído este acuerdo en su totalidad",
+    "confirmUnderstand": "Confirmo que entiendo mis obligaciones bajo este acuerdo",
+    "confirmAccept": "Acepto todos los términos y condiciones de este acuerdo",
+    "signButton": "Firmar Acuerdo",
+    "signing": "Firmando...",
+    "signedSuccess": "Acuerdo firmado correctamente",
+    "signError": "Error al firmar el acuerdo. Por favor, inténtelo de nuevo.",
+    "legalBinding": "Al firmar, acepta quedar legalmente vinculado por estos términos bajo la ley española",
+    "legalNotice": "Este acuerdo se rige por la legislación española. Cualquier disputa se resolverá en los tribunales de España.",
+    "signed": "Firmado",
+    "signatureDetails": "Detalles de la Firma",
+    "signedOn": "Firmado el",
+    "idDocument": "Documento de Identidad",
+    "signedAt": "Firmado A",
+    "agreementText": "Texto del Acuerdo",
+    "signedVersion": "Versión Firmada",
+    "viewFullAgreement": "Ver Texto Completo del Acuerdo",
+    "notSigned": "Acuerdo No Firmado",
+    "notSignedDescription": "Aún no ha firmado el acuerdo de colaboración",
+    "refreshToSign": "Por favor, actualice la página para firmar el acuerdo",
+    "noAgreementSigned": "Sin Acuerdo Firmado",
+    "noAgreementSignedAdmin": "Este socio no ha firmado el acuerdo. Las comisiones no se pueden pagar hasta que se firme el acuerdo.",
+    "sections": {
+      "parties": {
+        "title": "PARTES CONTRATANTES",
+        "content": "<strong>ICE Alarm España S.L.</strong>, con domicilio social en Calle Principal 1, Albox, 04800 Almería, España, y CIF B24731531, representada por su administrador legal (en adelante \"LA EMPRESA\").<br/><br/>Y el <strong>Colaborador</strong>, cuyos datos están registrados en nuestro sistema de portal de colaboradores en el momento de la firma de este acuerdo (en adelante \"EL COLABORADOR\")."
+      },
+      "definitions": {
+        "title": "DEFINICIONES",
+        "content": "<strong>Referido:</strong> Un cliente potencial presentado a LA EMPRESA por EL COLABORADOR a través del sistema de referidos designado.<br/><br/><strong>Comisión:</strong> El pago debido a EL COLABORADOR por referidos exitosos según lo definido en este acuerdo.<br/><br/><strong>Cliente Convertido:</strong> Un referido que ha completado el proceso de suscripción y cuyo dispositivo colgante ha sido entregado."
+      },
+      "object": {
+        "title": "OBJETO DEL ACUERDO",
+        "content": "EL COLABORADOR se compromete a promover y referir clientes potenciales a los servicios de alarma de emergencia personal de LA EMPRESA. LA EMPRESA se compromete a pagar comisiones por referidos exitosos de acuerdo con los términos de este acuerdo."
+      },
+      "obligations": {
+        "title": "OBLIGACIONES DEL COLABORADOR",
+        "content": "EL COLABORADOR se compromete a:<br/><br/>• Promover los servicios de LA EMPRESA de manera ética y profesional<br/>• Proporcionar información precisa y veraz sobre los servicios<br/>• No hacer afirmaciones falsas o promesas en nombre de LA EMPRESA<br/>• Respetar los derechos de propiedad intelectual de LA EMPRESA<br/>• Utilizar únicamente materiales de marketing aprobados<br/>• Cumplir con todas las leyes y regulaciones españolas aplicables<br/>• Mantener la confidencialidad de la información comercial<br/>• No participar en actividades que puedan dañar la reputación de LA EMPRESA"
+      },
+      "commissions": {
+        "title": "ESTRUCTURA DE COMISIONES",
+        "content": "EL COLABORADOR recibirá una comisión de <strong>50€ (cincuenta euros)</strong> brutos por cada referido exitoso. Un referido se considera exitoso cuando:<br/><br/>• El cliente referido completa el proceso de registro<br/>• El cliente completa el pago de su suscripción<br/>• El dispositivo colgante se entrega al cliente<br/><br/>Las comisiones entran en un período de retención de 7 días después del evento desencadenante, durante el cual pueden ser canceladas si el pedido es reembolsado o cancelado."
+      },
+      "payment": {
+        "title": "TÉRMINOS DE PAGO",
+        "content": "Las comisiones se procesan mensualmente. Después del período de retención de 7 días, las comisiones aprobadas se programarán para pago. Los pagos se realizan mediante transferencia bancaria al IBAN proporcionado por EL COLABORADOR. EL COLABORADOR es responsable de todos los impuestos aplicables sobre los ingresos por comisiones. Umbral mínimo de pago: 50€. LA EMPRESA se reserva el derecho de retener el pago si el acuerdo no está firmado o hay preocupaciones de cumplimiento."
+      },
+      "intellectualProperty": {
+        "title": "PROPIEDAD INTELECTUAL",
+        "content": "Todas las marcas comerciales, logotipos, materiales de marketing y propiedad intelectual pertenecen exclusivamente a LA EMPRESA. EL COLABORADOR recibe una licencia limitada y no exclusiva para usar materiales de marketing aprobados únicamente con el propósito de promover los servicios de LA EMPRESA. Esta licencia termina inmediatamente tras la terminación de este acuerdo."
+      },
+      "confidentiality": {
+        "title": "CONFIDENCIALIDAD",
+        "content": "EL COLABORADOR se compromete a mantener estricta confidencialidad respecto a:<br/><br/>• Datos personales e información de clientes<br/>• Estrategias y prácticas comerciales de LA EMPRESA<br/>• Estructuras de comisiones y términos de colaboradores<br/>• Cualquier información propietaria compartida durante la colaboración<br/><br/>Esta obligación sobrevive a la terminación de este acuerdo."
+      },
+      "dataProtection": {
+        "title": "PROTECCIÓN DE DATOS (RGPD/LOPD)",
+        "content": "Ambas partes acuerdan cumplir con el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 de Protección de Datos Personales (LOPD-GDD). EL COLABORADOR deberá:<br/><br/>• Solo recopilar y procesar datos personales con el consentimiento adecuado<br/>• No compartir datos de clientes referidos con terceros<br/>• Informar inmediatamente a LA EMPRESA de cualquier violación de datos<br/>• Eliminar datos personales tras la terminación de este acuerdo<br/><br/>LA EMPRESA actúa como Responsable del Tratamiento para todos los datos de clientes."
+      },
+      "duration": {
+        "title": "DURACIÓN",
+        "content": "Este acuerdo es válido por un período indefinido desde la fecha de la firma electrónica. Cualquiera de las partes puede terminar este acuerdo con 30 días de preaviso por escrito. LA EMPRESA se reserva el derecho de suspender o terminar la colaboración inmediatamente en caso de incumplimiento de estos términos."
+      },
+      "termination": {
+        "title": "TERMINACIÓN",
+        "content": "Este acuerdo puede terminarse:<br/><br/>• Por cualquiera de las partes con 30 días de preaviso por escrito<br/>• Inmediatamente por LA EMPRESA por incumplimiento de términos<br/>• Inmediatamente si EL COLABORADOR participa en actividad fraudulenta<br/>• Inmediatamente si EL COLABORADOR daña la reputación de LA EMPRESA<br/><br/>Tras la terminación, las comisiones aprobadas pendientes serán pagadas. Los referidos pendientes en progreso al momento de la terminación pueden ser elegibles para comisión si se convierten dentro de 30 días."
+      },
+      "liability": {
+        "title": "RESPONSABILIDAD",
+        "content": "EL COLABORADOR opera como contratista independiente, no como empleado de LA EMPRESA. EL COLABORADOR es el único responsable de sus propias obligaciones fiscales y contribuciones a la seguridad social. LA EMPRESA no será responsable de ninguna pérdida incurrida por EL COLABORADOR en el curso de sus actividades promocionales. EL COLABORADOR indemniza a LA EMPRESA contra cualquier reclamación derivada de sus actividades promocionales."
+      },
+      "jurisdiction": {
+        "title": "JURISDICCIÓN Y LEY APLICABLE",
+        "content": "Este acuerdo se rige por la legislación española. Cualquier disputa derivada de este acuerdo se someterá a la jurisdicción exclusiva de los tribunales de Almería, España. Las partes renuncian a cualquier otra jurisdicción que pudiera corresponderles."
+      },
+      "general": {
+        "title": "DISPOSICIONES GENERALES",
+        "content": "• Este acuerdo constituye el acuerdo completo entre las partes<br/>• Las modificaciones deben hacerse por escrito y firmadas por ambas partes<br/>• Si alguna cláusula se considera inválida, las cláusulas restantes permanecen en vigor<br/>• Las firmas electrónicas tienen la misma validez legal que las firmas manuscritas bajo la ley española<br/>• LA EMPRESA se reserva el derecho de modificar las estructuras de comisiones con 30 días de preaviso"
+      }
+    }
   }
 }

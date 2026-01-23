@@ -3,8 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { PartnerSidebar } from "./PartnerSidebar";
 import { PartnerHeader } from "@/components/partner/PartnerHeader";
+import { AgreementRequiredModal } from "@/components/partner/AgreementRequiredModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePartnerData } from "@/hooks/usePartnerData";
 import { cn } from "@/lib/utils";
+import { CURRENT_AGREEMENT_VERSION } from "@/content/partnerAgreementTerms";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function PartnerLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -14,6 +18,40 @@ export function PartnerLayout() {
   const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
   const partnerIdParam = searchParams.get("partnerId");
   const isAdminViewMode = isAdminRole && !!partnerIdParam;
+
+  // Fetch partner data to check agreement status
+  const { data: partner, isLoading: partnerLoading } = usePartnerData(
+    isAdminViewMode ? partnerIdParam : undefined
+  );
+
+  // Check if partner needs to sign the agreement
+  const agreementRequired = partner && !partner.agreement_signed_at;
+  
+  // For admin view mode, don't block with agreement modal
+  // For regular partners, block if agreement not signed
+  const showAgreementModal = agreementRequired && !isAdminViewMode && !partnerLoading;
+
+  // Show loading state while fetching partner data
+  if (partnerLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="space-y-4 text-center">
+          <Skeleton className="h-8 w-48 mx-auto" />
+          <Skeleton className="h-4 w-64 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show agreement modal if not signed (blocking)
+  if (showAgreementModal && partner) {
+    return (
+      <AgreementRequiredModal 
+        partnerId={partner.id} 
+        partnerName={partner.contact_name} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

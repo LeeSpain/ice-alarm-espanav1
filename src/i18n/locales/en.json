@@ -1246,6 +1246,7 @@
     "endShift": "End Shift",
     "invites": "Invites",
     "marketing": "Marketing Tools",
+    "agreement": "Agreement",
     "backToPartners": "Back to Partners",
     "shiftNotes": "Shift Notes",
     "aiCommandCentre": "AI Command Centre",
@@ -1569,5 +1570,106 @@
     "welcomeMessage": "Hello! 👋 I'm your ICE Alarm virtual assistant. How can I help you today? I can answer questions about our services, pricing, or help you get started.",
     "errorMessage": "Sorry, there was a connection issue. Please try again later.",
     "fallbackMessage": "Sorry, I couldn't process your message. Please try again."
+  },
+  "partnerAgreement": {
+    "title": "Partner Agreement",
+    "pageDescription": "Your partnership agreement with ICE Alarm España",
+    "requiredMessage": "Please review and sign the partner agreement to continue",
+    "mustSignWarning": "You must sign this agreement before accessing your partner dashboard. Commission payments require a signed agreement.",
+    "version": "Version",
+    "effectiveDate": "Effective Date",
+    "signatureSection": "Electronic Signature",
+    "signatureInstructions": "Complete all fields below to sign this agreement electronically",
+    "signerName": "Full Legal Name",
+    "signerNamePlaceholder": "Enter your full legal name",
+    "idType": "ID Document Type",
+    "selectIdType": "Select document type",
+    "idTypes": {
+      "nie": "NIE - Foreigner ID Number",
+      "nif": "NIF - Spanish Tax ID",
+      "cif": "CIF - Company Tax ID"
+    },
+    "idNumber": "ID Number",
+    "signDate": "Signature Date",
+    "confirmRead": "I confirm that I have read this agreement in its entirety",
+    "confirmUnderstand": "I confirm that I understand my obligations under this agreement",
+    "confirmAccept": "I accept all terms and conditions of this agreement",
+    "signButton": "Sign Agreement",
+    "signing": "Signing...",
+    "signedSuccess": "Agreement signed successfully",
+    "signError": "Failed to sign agreement. Please try again.",
+    "legalBinding": "By signing, you agree to be legally bound by these terms under Spanish law",
+    "legalNotice": "This agreement is governed by Spanish law. Any disputes will be resolved in the courts of Spain.",
+    "signed": "Signed",
+    "signatureDetails": "Signature Details",
+    "signedOn": "Signed on",
+    "idDocument": "ID Document",
+    "signedAt": "Signed At",
+    "agreementText": "Agreement Text",
+    "signedVersion": "Signed Version",
+    "viewFullAgreement": "View Full Agreement Text",
+    "notSigned": "Agreement Not Signed",
+    "notSignedDescription": "You have not yet signed the partner agreement",
+    "refreshToSign": "Please refresh the page to sign the agreement",
+    "noAgreementSigned": "No Agreement Signed",
+    "noAgreementSignedAdmin": "This partner has not signed the agreement. Commissions cannot be paid until the agreement is signed.",
+    "sections": {
+      "parties": {
+        "title": "CONTRACTING PARTIES",
+        "content": "<strong>ICE Alarm España S.L.</strong>, with registered office at Calle Principal 1, Albox, 04800 Almería, Spain, and CIF B24731531, represented by its legal administrator (hereinafter \"THE COMPANY\").<br/><br/>And the <strong>Partner</strong>, whose details are registered in our partner portal system at the time of signing this agreement (hereinafter \"THE PARTNER\")."
+      },
+      "definitions": {
+        "title": "DEFINITIONS",
+        "content": "<strong>Referral:</strong> A potential customer introduced to THE COMPANY by THE PARTNER through the designated referral system.<br/><br/><strong>Commission:</strong> The payment due to THE PARTNER for successful referrals as defined in this agreement.<br/><br/><strong>Converted Customer:</strong> A referral who has completed the subscription process and whose pendant device has been delivered."
+      },
+      "object": {
+        "title": "OBJECT OF THE AGREEMENT",
+        "content": "THE PARTNER agrees to promote and refer potential customers to THE COMPANY's personal emergency alarm services. THE COMPANY agrees to pay commissions for successful referrals in accordance with the terms of this agreement."
+      },
+      "obligations": {
+        "title": "PARTNER OBLIGATIONS",
+        "content": "THE PARTNER agrees to:<br/><br/>• Promote THE COMPANY's services ethically and professionally<br/>• Provide accurate and truthful information about the services<br/>• Not make false claims or promises on behalf of THE COMPANY<br/>• Respect the intellectual property rights of THE COMPANY<br/>• Use only approved marketing materials<br/>• Comply with all applicable Spanish laws and regulations<br/>• Maintain confidentiality of business information<br/>• Not engage in any activities that could damage THE COMPANY's reputation"
+      },
+      "commissions": {
+        "title": "COMMISSION STRUCTURE",
+        "content": "THE PARTNER shall receive a commission of <strong>€50 (fifty euros)</strong> gross for each successful referral. A referral is considered successful when:<br/><br/>• The referred customer completes the registration process<br/>• The customer completes payment for their subscription<br/>• The pendant device is delivered to the customer<br/><br/>Commissions enter a 7-day holding period after the triggering event, during which they may be cancelled if the order is refunded or cancelled."
+      },
+      "payment": {
+        "title": "PAYMENT TERMS",
+        "content": "Commissions are processed monthly. After the 7-day holding period, approved commissions will be scheduled for payment. Payments are made via bank transfer to the IBAN provided by THE PARTNER. THE PARTNER is responsible for all applicable taxes on commission income. Minimum payout threshold: €50. THE COMPANY reserves the right to withhold payment if agreement is unsigned or there are compliance concerns."
+      },
+      "intellectualProperty": {
+        "title": "INTELLECTUAL PROPERTY",
+        "content": "All trademarks, logos, marketing materials, and intellectual property belong exclusively to THE COMPANY. THE PARTNER is granted a limited, non-exclusive license to use approved marketing materials solely for the purpose of promoting THE COMPANY's services. This license terminates immediately upon termination of this agreement."
+      },
+      "confidentiality": {
+        "title": "CONFIDENTIALITY",
+        "content": "THE PARTNER agrees to maintain strict confidentiality regarding:<br/><br/>• Customer personal data and information<br/>• THE COMPANY's business strategies and practices<br/>• Commission structures and partner terms<br/>• Any proprietary information shared during the partnership<br/><br/>This obligation survives the termination of this agreement."
+      },
+      "dataProtection": {
+        "title": "DATA PROTECTION (GDPR/LOPD)",
+        "content": "Both parties agree to comply with Regulation (EU) 2016/679 (GDPR) and Spanish Organic Law 3/2018 on Personal Data Protection (LOPD-GDD). THE PARTNER shall:<br/><br/>• Only collect and process personal data with proper consent<br/>• Not share referred customer data with third parties<br/>• Report any data breaches immediately to THE COMPANY<br/>• Delete personal data upon termination of this agreement<br/><br/>THE COMPANY acts as Data Controller for all customer data."
+      },
+      "duration": {
+        "title": "DURATION",
+        "content": "This agreement is valid for an indefinite period from the date of electronic signature. Either party may terminate this agreement with 30 days written notice. THE COMPANY reserves the right to suspend or terminate the partnership immediately in case of breach of these terms."
+      },
+      "termination": {
+        "title": "TERMINATION",
+        "content": "This agreement may be terminated:<br/><br/>• By either party with 30 days written notice<br/>• Immediately by THE COMPANY for breach of terms<br/>• Immediately if THE PARTNER engages in fraudulent activity<br/>• Immediately if THE PARTNER damages THE COMPANY's reputation<br/><br/>Upon termination, pending approved commissions will be paid. Pending referrals in progress at termination may still be eligible for commission if converted within 30 days."
+      },
+      "liability": {
+        "title": "LIABILITY",
+        "content": "THE PARTNER operates as an independent contractor, not an employee of THE COMPANY. THE PARTNER is solely responsible for their own tax obligations and social security contributions. THE COMPANY shall not be liable for any losses incurred by THE PARTNER in the course of their promotional activities. THE PARTNER indemnifies THE COMPANY against any claims arising from their promotional activities."
+      },
+      "jurisdiction": {
+        "title": "JURISDICTION AND APPLICABLE LAW",
+        "content": "This agreement is governed by Spanish law. Any disputes arising from this agreement shall be submitted to the exclusive jurisdiction of the courts of Almería, Spain. The parties waive any other jurisdiction that may correspond to them."
+      },
+      "general": {
+        "title": "GENERAL PROVISIONS",
+        "content": "• This agreement constitutes the entire agreement between the parties<br/>• Modifications must be made in writing and signed by both parties<br/>• If any clause is deemed invalid, the remaining clauses remain in force<br/>• Electronic signatures have the same legal validity as handwritten signatures under Spanish law<br/>• THE COMPANY reserves the right to modify commission structures with 30 days notice"
+      }
+    }
   }
 }

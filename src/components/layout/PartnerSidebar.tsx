@@ -13,7 +13,8 @@ import {
   ArrowLeft,
   ChevronLeft,
   Menu,
-  Megaphone
+  Megaphone,
+  FileSignature
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -45,6 +46,7 @@ const navItems: MenuItem[] = [
   { labelKey: "sidebar.invites", icon: Send, path: "/partner-dashboard/invites" },
   { labelKey: "sidebar.marketing", icon: Megaphone, path: "/partner-dashboard/marketing" },
   { labelKey: "sidebar.commissions", icon: DollarSign, path: "/partner-dashboard/commissions" },
+  { labelKey: "sidebar.agreement", icon: FileSignature, path: "/partner-dashboard/agreement" },
   { labelKey: "sidebar.settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
 
