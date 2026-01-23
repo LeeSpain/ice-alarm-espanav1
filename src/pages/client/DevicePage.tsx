@@ -52,7 +52,7 @@ export default function DevicePage() {
   // Phone-Only Member View
   if (!hasPendant) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t('navigation.myDevice')}</h1>
           <p className="text-muted-foreground mt-1">{t('membership.phoneOnlyService')}</p>
@@ -218,7 +218,7 @@ export default function DevicePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t('navigation.myPendant')}</h1>
         <p className="text-muted-foreground mt-1">{t('device.yourIceAlarmPendant', 'Your ICE Alarm GPS Personal Pendant')}</p>

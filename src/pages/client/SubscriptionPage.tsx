@@ -39,7 +39,7 @@ export default function SubscriptionPage() {
 
   if (!subscription) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Subscription & Billing</h1>
         </div>
@@ -63,7 +63,7 @@ export default function SubscriptionPage() {
     : "bg-muted";
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Subscription & Billing</h1>
         <p className="text-muted-foreground mt-1">Manage your plan and payments</p>

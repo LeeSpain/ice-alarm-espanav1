@@ -6,14 +6,12 @@ import { useMemberProfile } from "@/hooks/useMemberProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { Loader2, Save, User, Camera } from "lucide-react";
+import { Loader2, User, Globe, Mail, Phone, MapPin, Edit } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
@@ -102,222 +100,195 @@ export default function ProfilePage() {
   const initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your personal information</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Profile</h1>
+          <p className="text-muted-foreground mt-1">Manage your personal information</p>
+        </div>
       </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Profile Photo */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Profile Photo</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={profile.photo_url || undefined} />
-              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <Button type="button" variant="outline" className="touch-target">
-                <Camera className="mr-2 h-4 w-4" />
-                Change Photo
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                JPG or PNG, max 5MB
+      {/* Main Grid Layout */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Sidebar - Photo Card */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Profile Photo</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <Avatar className="h-32 w-32">
+                <AvatarImage src={profile?.photo_url || undefined} />
+                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+                  {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <p className="text-sm text-muted-foreground text-center">
+                Contact support to update your profile photo
               </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Personal Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Personal Information</CardTitle>
-            <CardDescription>
-              Contact support to update your email or date of birth
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+          {/* Language Preference Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name</Label>
-                <Input
-                  id="first_name"
-                  {...form.register("first_name")}
-                  className="touch-target"
-                />
-                {form.formState.errors.first_name && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.first_name.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name</Label>
-                <Input
-                  id="last_name"
-                  {...form.register("last_name")}
-                  className="touch-target"
-                />
-                {form.formState.errors.last_name && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.last_name.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={profile.email}
-                disabled
-                className="bg-muted touch-target"
-              />
-              <p className="text-xs text-muted-foreground">
-                Contact support to change your email address
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                {...form.register("phone")}
-                className="touch-target"
-              />
-              {form.formState.errors.phone && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dob">Date of Birth</Label>
-              <Input
-                id="dob"
-                value={new Date(profile.date_of_birth).toLocaleDateString()}
-                disabled
-                className="bg-muted touch-target"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Address */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Address</CardTitle>
-            <CardDescription>
-              This is used for emergency response
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address_line_1">Address Line 1</Label>
-              <Input
-                id="address_line_1"
-                {...form.register("address_line_1")}
-                className="touch-target"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address_line_2">Address Line 2 (Optional)</Label>
-              <Input
-                id="address_line_2"
-                {...form.register("address_line_2")}
-                className="touch-target"
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  {...form.register("city")}
-                  className="touch-target"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="province">Province</Label>
-                <Input
-                  id="province"
-                  {...form.register("province")}
-                  className="touch-target"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="postal_code">Postal Code</Label>
-              <Input
-                id="postal_code"
-                {...form.register("postal_code")}
-                className="touch-target"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
                 <Label>Preferred Language</Label>
-                <p className="text-sm text-muted-foreground">
-                  Choose your preferred language for communication
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium capitalize">
+                    {profile?.preferred_language || "English"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Our team will communicate with you in this language
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={form.watch("preferred_language") === "en" ? "text-foreground font-medium" : "text-muted-foreground"}>
-                  🇬🇧 English
-                </span>
-                <Switch
-                  checked={form.watch("preferred_language") === "es"}
-                  onCheckedChange={(checked) => 
-                    form.setValue("preferred_language", checked ? "es" : "en")
-                  }
-                />
-                <span className={form.watch("preferred_language") === "es" ? "text-foreground font-medium" : "text-muted-foreground"}>
-                  🇪🇸 Español
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            size="lg" 
-            disabled={isSaving}
-            className="touch-target"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
-            )}
-          </Button>
+            </CardContent>
+          </Card>
         </div>
-      </form>
+
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Personal Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>First Name</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.first_name || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Last Name</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.last_name || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Date of Birth</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.date_of_birth 
+                      ? format(new Date(profile.date_of_birth), "dd MMMM yyyy")
+                      : "—"
+                    }
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>NIE/DNI</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.nie_dni || "—"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    {profile?.email || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    {profile?.phone || "—"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Address */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Street Address</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.address_line_1 || "—"}
+                    {profile?.address_line_2 && <span className="block text-muted-foreground">{profile.address_line_2}</span>}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>City</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.city || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Province</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.province || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Postal Code</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.postal_code || "—"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Country</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg font-medium">
+                    {profile?.country || "Spain"}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Update Request */}
+          <Card className="border-dashed">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Edit className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold">Need to update your information?</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Contact our support team and we'll help you update your profile details.
+                  </p>
+                </div>
+                <Button asChild className="flex-shrink-0">
+                  <a href="/dashboard/support">Contact Support</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

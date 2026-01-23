@@ -8,28 +8,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -37,7 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Phone, Edit, Trash2, User, GripVertical } from "lucide-react";
+import { 
+  Loader2, 
+  Phone as PhoneIcon, 
+  User,
+  Users,
+  UserPlus,
+  Shield,
+  Mail
+} from "lucide-react";
 import { toast } from "sonner";
 
 const contactSchema = z.object({
@@ -203,265 +191,110 @@ export default function EmergencyContactsPage() {
   const canAddMore = (contacts?.length || 0) < 3;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
-      <div className="flex items-start justify-between">
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Emergency Contacts</h1>
-          <p className="text-muted-foreground mt-1">
-            People we contact in an emergency (up to 3)
-          </p>
+          <p className="text-muted-foreground mt-1">People we call if you need help</p>
         </div>
-        {canAddMore && (
-          <Button onClick={openAddDialog} className="touch-target">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Contact
-          </Button>
-        )}
       </div>
 
-      {!contacts || contacts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No Emergency Contacts</h3>
-            <p className="text-muted-foreground mb-4">
-              Add contacts so we can reach your loved ones in an emergency.
-            </p>
-            <Button onClick={openAddDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Your First Contact
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
+      {/* Info Banner */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">Your Emergency Network</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                These contacts will be called in order of priority if we can't reach you during an emergency.
+                You can have up to 3 contacts.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Contacts Grid */}
+      {contacts && contacts.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {contacts.map((contact, index) => (
-            <Card key={contact.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex items-stretch">
-                  {/* Priority Handle */}
-                  <div className="flex items-center justify-center px-3 bg-muted border-r">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  
-                  {/* Contact Info */}
-                  <div className="flex-1 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-lg">{contact.contact_name}</h3>
-                          {contact.is_primary && (
-                            <Badge variant="default" className="text-xs">Primary</Badge>
-                          )}
-                          {!contact.is_primary && (
-                            <Badge variant="outline" className="text-xs">
-                              #{contact.priority_order}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground">{contact.relationship}</p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(contact)}
-                          className="touch-target"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeletingContact(contact.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="touch-target text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+            <Card key={contact.id} className={contact.is_primary ? "border-primary/50" : ""}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {contact.contact_name.split(" ").map(n => n[0]).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-base">{contact.contact_name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{contact.relationship}</p>
                     </div>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
-                      <a 
-                        href={`tel:${contact.phone}`}
-                        className="flex items-center gap-2 text-primary hover:underline"
-                      >
-                        <Phone className="h-4 w-4" />
-                        {contact.phone}
-                      </a>
-                      {contact.speaks_spanish && (
-                        <Badge variant="secondary" className="text-xs">
-                          🇪🇸 Speaks Spanish
-                        </Badge>
-                      )}
-                    </div>
-
-                    {contact.notes && (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {contact.notes}
-                      </p>
-                    )}
                   </div>
+                  <Badge variant={contact.is_primary ? "default" : "outline"}>
+                    #{index + 1}
+                  </Badge>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <PhoneIcon className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{contact.phone}</span>
+                </div>
+                {contact.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{contact.email}</span>
+                  </div>
+                )}
+                {contact.speaks_spanish && (
+                  <Badge variant="secondary" className="text-xs">
+                    Speaks Spanish
+                  </Badge>
+                )}
+                {contact.notes && (
+                  <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                    {contact.notes}
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
-
-          {canAddMore && (
-            <Button 
-              variant="outline" 
-              onClick={openAddDialog}
-              className="w-full touch-target"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Another Contact ({3 - (contacts?.length || 0)} remaining)
-            </Button>
-          )}
         </div>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">No Emergency Contacts</h3>
+            <p className="text-muted-foreground mb-4">
+              Add emergency contacts so we can reach your loved ones if needed.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingContact ? "Edit Contact" : "Add Emergency Contact"}
-            </DialogTitle>
-            <DialogDescription>
-              This person will be contacted in case of an emergency.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="contact_name">Full Name</Label>
-              <Input
-                id="contact_name"
-                {...form.register("contact_name")}
-                placeholder="e.g., Juan García"
-              />
-              {form.formState.errors.contact_name && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.contact_name.message}
-                </p>
-              )}
+      {/* Help Card */}
+      <Card className="border-dashed">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <UserPlus className="h-6 w-6 text-primary" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="relationship">Relationship</Label>
-              <Select
-                value={form.watch("relationship")}
-                onValueChange={(value) => form.setValue("relationship", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select relationship" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RELATIONSHIPS.map((rel) => (
-                    <SelectItem key={rel} value={rel}>
-                      {rel}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.relationship && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.relationship.message}
-                </p>
-              )}
+            <div className="flex-1">
+              <h4 className="font-semibold">Need to update your emergency contacts?</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Contact our support team to add, remove, or update your emergency contact list.
+              </p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                {...form.register("phone")}
-                placeholder="+34 600 000 000"
-              />
-              {form.formState.errors.phone && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email (Optional)</Label>
-              <Input
-                id="email"
-                type="email"
-                {...form.register("email")}
-                placeholder="email@example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Input
-                id="notes"
-                {...form.register("notes")}
-                placeholder="e.g., Best to call after 6pm"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="speaks_spanish"
-                checked={form.watch("speaks_spanish")}
-                onCheckedChange={(checked) => 
-                  form.setValue("speaks_spanish", checked as boolean)
-                }
-              />
-              <Label htmlFor="speaks_spanish" className="cursor-pointer">
-                🇪🇸 This person speaks Spanish
-              </Label>
-            </div>
-
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  editingContact ? "Update Contact" : "Add Contact"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Contact?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove this person from your emergency contacts. 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <Button asChild className="flex-shrink-0">
+              <a href="/dashboard/support">Contact Support</a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
