@@ -26,3 +26,12 @@ verify_jwt = false
 
 [functions.process-commissions]
 verify_jwt = false
+
+[functions.ai-run]
+verify_jwt = false
+
+[functions.ai-execute-action]
+verify_jwt = false
+
+[functions.ai-dispatch-events]
+verify_jwt = false
