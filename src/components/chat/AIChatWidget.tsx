@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X, Send, Loader2, Bot, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import { useAIChat } from "@/hooks/useAIChat";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
-export function AIChatWidget() {
+interface AIChatWidgetProps {
+  defaultOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function AIChatWidget({ defaultOpen = false, onClose }: AIChatWidgetProps) {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  // Hide the floating button when triggered from header
+  const showFloatingButton = !defaultOpen;
   
   const {
     messages,
@@ -43,43 +50,50 @@ export function AIChatWidget() {
     }
   }, [isOpen, initializeChat]);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    onClose?.();
+  };
+
   return (
     <>
-      {/* Chat Toggle Button - Shows Avatar */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "fixed top-20 right-6 z-50 h-18 w-18 rounded-full shadow-lg transition-all duration-300",
-          "bg-background border-2 border-primary/30 hover:border-primary/50 hover:shadow-xl hover:scale-105",
-          "flex items-center justify-center overflow-hidden",
-          isOpen && "scale-0 opacity-0"
-        )}
-        style={{ height: "72px", width: "72px" }}
-        aria-label={t("chat.openChat", "Open chat")}
-      >
-        {avatarUrl ? (
-          <img 
-            src={avatarUrl} 
-            alt="Chat Assistant" 
-            className={cn(
-              "h-full w-full object-cover transition-opacity duration-200",
-              imagePreloaded ? "opacity-100" : "opacity-0"
-            )}
-            loading="eager"
-            fetchPriority="high"
-          />
-        ) : null}
-        {/* Fallback shown while loading or if no avatar */}
-        {(!avatarUrl || !imagePreloaded) && (
-          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-            <Bot className="h-8 w-8 text-primary" />
-          </div>
-        )}
-        {/* Pulsing online indicator */}
-        <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-green-500 border-2 border-background">
-          <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
-        </span>
-      </button>
+      {/* Chat Toggle Button - Shows Avatar - Only when not triggered from header */}
+      {showFloatingButton && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "fixed top-20 right-6 z-50 h-18 w-18 rounded-full shadow-lg transition-all duration-300",
+            "bg-background border-2 border-primary/30 hover:border-primary/50 hover:shadow-xl hover:scale-105",
+            "flex items-center justify-center overflow-hidden",
+            isOpen && "scale-0 opacity-0"
+          )}
+          style={{ height: "72px", width: "72px" }}
+          aria-label={t("chat.openChat", "Open chat")}
+        >
+          {avatarUrl ? (
+            <img 
+              src={avatarUrl} 
+              alt="Chat Assistant" 
+              className={cn(
+                "h-full w-full object-cover transition-opacity duration-200",
+                imagePreloaded ? "opacity-100" : "opacity-0"
+              )}
+              loading="eager"
+              fetchPriority="high"
+            />
+          ) : null}
+          {/* Fallback shown while loading or if no avatar */}
+          {(!avatarUrl || !imagePreloaded) && (
+            <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+              <Bot className="h-8 w-8 text-primary" />
+            </div>
+          )}
+          {/* Pulsing online indicator */}
+          <span className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-green-500 border-2 border-background">
+            <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
+          </span>
+        </button>
+      )}
 
       {/* Chat Window */}
       <div
@@ -125,7 +139,7 @@ export function AIChatWidget() {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               aria-label={t("chat.closeChat", "Close chat")}
             >
               <X className="h-5 w-5" />

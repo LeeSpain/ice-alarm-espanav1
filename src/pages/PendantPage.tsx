@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
 import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import {
   Accordion,
@@ -156,6 +157,7 @@ export default function PendantPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
+            <HeaderChatButton />
             <LanguageSelector />
             <Button variant="ghost" asChild>
               <Link to="/login">{t("pendant.nav.signIn")}</Link>
