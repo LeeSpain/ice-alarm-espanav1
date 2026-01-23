@@ -49,8 +49,18 @@ const menuItems: MenuItem[] = [
   { icon: FileText, label: "Shift Notes", path: "/call-centre/shift-notes" },
 ];
 
-export function CallCentreSidebar() {
+interface CallCentreSidebarProps {
+  onCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function CallCentreSidebar({ onCollapsedChange }: CallCentreSidebarProps = {}) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // Notify parent of collapse state changes
+  const handleCollapse = (value: boolean) => {
+    setCollapsed(value);
+    onCollapsedChange?.(value);
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const [badges, setBadges] = useState({ alerts: 0, messages: 0 });
   const location = useLocation();
@@ -245,7 +255,7 @@ export function CallCentreSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => handleCollapse(!collapsed)}
           className={cn(
             "absolute -right-3 top-20 h-6 w-6 rounded-full border bg-background shadow-md hover:bg-accent",
             "transition-transform duration-300",

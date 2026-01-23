@@ -91,8 +91,18 @@ const secondaryMenuItems: MenuItem[] = [
   { icon: Settings, label: "Settings", path: "/admin/settings", superAdminOnly: true },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // Notify parent of collapse state changes
+  const handleCollapse = (value: boolean) => {
+    setCollapsed(value);
+    onCollapsedChange?.(value);
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const [financeOpen, setFinanceOpen] = useState(false);
   const location = useLocation();
@@ -340,7 +350,7 @@ export function AdminSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => handleCollapse(!collapsed)}
           className={cn(
             "absolute -right-3 top-20 h-6 w-6 rounded-full border bg-background shadow-md hover:bg-accent",
             "transition-transform duration-300",

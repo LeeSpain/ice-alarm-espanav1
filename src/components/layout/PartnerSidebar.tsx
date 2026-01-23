@@ -45,8 +45,18 @@ const navItems: MenuItem[] = [
   { label: "Settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
 
-export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, partnerIdParam }: PartnerSidebarProps) {
+interface ExtendedPartnerSidebarProps extends PartnerSidebarProps {
+  onCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, partnerIdParam, onCollapsedChange }: ExtendedPartnerSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // Notify parent of collapse state changes
+  const handleCollapse = (value: boolean) => {
+    setCollapsed(value);
+    onCollapsedChange?.(value);
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -229,7 +239,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => handleCollapse(!collapsed)}
           className={cn(
             "absolute -right-3 top-20 h-6 w-6 rounded-full border bg-background shadow-md hover:bg-accent",
             "transition-transform duration-300",

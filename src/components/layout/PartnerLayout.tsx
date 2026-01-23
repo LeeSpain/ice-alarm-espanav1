@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { PartnerSidebar } from "./PartnerSidebar";
 import { PartnerHeader } from "@/components/partner/PartnerHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 export function PartnerLayout() {
+  const [collapsed, setCollapsed] = useState(false);
   const [searchParams] = useSearchParams();
   const { isStaff, staffRole } = useAuth();
 
@@ -17,9 +20,13 @@ export function PartnerLayout() {
       <PartnerSidebar 
         isAdminViewMode={isAdminViewMode} 
         partnerIdParam={partnerIdParam}
+        onCollapsedChange={setCollapsed}
       />
       {/* Desktop: sidebar margin, Mobile: top padding for fixed header */}
-      <div className="md:ml-64 pt-16 md:pt-0 transition-all duration-300">
+      <div className={cn(
+        "pt-16 md:pt-0 transition-all duration-300",
+        collapsed ? "md:ml-16" : "md:ml-64"
+      )}>
         <PartnerHeader 
           isAdminViewMode={isAdminViewMode}
           partnerIdParam={partnerIdParam}

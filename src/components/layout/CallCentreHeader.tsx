@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ export function CallCentreHeader() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [staffId, setStaffId] = useState<string | null>(null);
 
   // Fetch staff info
   const { data: staffInfo } = useQuery({
@@ -30,7 +32,7 @@ export function CallCentreHeader() {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from("staff")
-        .select("first_name, last_name, email, role")
+        .select("id, first_name, last_name, email, role")
         .eq("user_id", user.id)
         .maybeSingle();
       
@@ -39,6 +41,13 @@ export function CallCentreHeader() {
     },
     enabled: !!user?.id,
   });
+
+  // Set staffId for NotificationBell when staff info is loaded
+  useEffect(() => {
+    if (staffInfo?.id) {
+      setStaffId(staffInfo.id);
+    }
+  }, [staffInfo?.id]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -71,6 +80,12 @@ export function CallCentreHeader() {
       {/* Right side actions */}
       <div className="flex items-center gap-2">
         {/* Language Selector */}
+        <LanguageSelector variant="icon-only" />
+
+        {/* Notification Bell */}
+        <NotificationBell staffId={staffId} />
+
+        {/* User Menu */}
         <LanguageSelector variant="icon-only" />
 
         {/* User Menu */}
