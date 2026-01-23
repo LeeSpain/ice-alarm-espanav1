@@ -35,19 +35,18 @@ export function MemberChatButton({ className, memberId }: MemberChatButtonProps)
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "relative h-10 w-10 rounded-full transition-all duration-200",
-          "bg-background border border-border hover:border-primary/50 hover:shadow-md",
-          "flex items-center justify-center overflow-hidden",
+          "relative h-10 w-10 rounded-full overflow-hidden shadow-lg hover:scale-105 transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
           className
         )}
-        aria-label={t("chat.openChat", "Open chat")}
+        aria-label={t("chat.openChat", "Chat with AI Assistant")}
       >
         {avatarUrl && imagePreloaded ? (
           <img 
             src={avatarUrl} 
-            alt="AI Assistant" 
+            alt="AI Help" 
             className="h-full w-full object-cover"
             loading="eager"
+            fetchPriority="high"
           />
         ) : (
           <Bot className="h-5 w-5 text-primary" />
