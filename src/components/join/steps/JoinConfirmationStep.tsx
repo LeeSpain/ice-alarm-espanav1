@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PartyPopper, CheckCircle2, Mail, Phone, Calendar, Smartphone, Package, ArrowRight, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 interface JoinConfirmationStepProps {
   data: JoinWizardData;
 }
 
 export function JoinConfirmationStep({ data }: JoinConfirmationStepProps) {
+  const { settings: companySettings } = useCompanySettings();
   const { t } = useTranslation();
   
   const nextSteps = [
@@ -99,9 +101,9 @@ export function JoinConfirmationStep({ data }: JoinConfirmationStepProps) {
         <p>{t("joinWizard.confirmation.questionsTitle")}</p>
         <p>
           {t("joinWizard.confirmation.callUsAt")}{" "}
-          <a href="tel:+34900000000" className="text-primary hover:underline">+34 900 000 000</a>{" "}
+          <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, "")}`} className="text-primary hover:underline">{companySettings.emergency_phone}</a>{" "}
           {t("joinWizard.confirmation.orEmail")}{" "}
-          <a href="mailto:support@icealarm.es" className="text-primary hover:underline">support@icealarm.es</a>
+          <a href={`mailto:${companySettings.support_email}`} className="text-primary hover:underline">{companySettings.support_email}</a>
         </p>
       </div>
     </div>

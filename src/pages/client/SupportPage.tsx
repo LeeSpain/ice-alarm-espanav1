@@ -20,6 +20,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const FAQ_ITEMS = [
   {
@@ -70,6 +71,9 @@ const FAQ_ITEMS = [
 ];
 
 export default function SupportPage() {
+  const { settings: companySettings } = useCompanySettings();
+  const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
+  
   const [contactForm, setContactForm] = useState({
     subject: "",
     message: "",
@@ -137,7 +141,7 @@ export default function SupportPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Phone */}
                 <a 
-                  href="tel:+34950473199"
+                  href={`tel:${phoneForLink}`}
                   className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -145,13 +149,13 @@ export default function SupportPage() {
                   </div>
                   <div>
                     <p className="font-medium">Call Us</p>
-                    <p className="text-lg font-bold text-primary">+34 950 473 199</p>
+                    <p className="text-lg font-bold text-primary">{companySettings.emergency_phone}</p>
                   </div>
                 </a>
 
                 {/* WhatsApp */}
                 <a 
-                  href="https://wa.me/34950473199"
+                  href={`https://wa.me/${phoneForLink.replace("+", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 p-4 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"

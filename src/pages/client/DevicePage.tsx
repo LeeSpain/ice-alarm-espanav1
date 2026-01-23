@@ -19,11 +19,15 @@ import {
   Wrench,
   RefreshCw
 } from "lucide-react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function DevicePage() {
   const { t } = useTranslation();
   const { data: device, isLoading: deviceLoading } = useMemberDevice();
   const { data: subscription, isLoading: subLoading } = useMemberSubscription();
+  const { settings: companySettings } = useCompanySettings();
+  
+  const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
 
   const isLoading = deviceLoading || subLoading;
   const hasPendant = subscription?.has_pendant && device;
@@ -78,10 +82,10 @@ export default function DevicePage() {
             <div className="p-6 bg-primary/5 rounded-lg text-center">
               <p className="text-sm text-muted-foreground mb-2">{t('support.emergencyNumber')}</p>
               <a 
-                href="tel:+34950473199"
+                href={`tel:${phoneForLink}`}
                 className="text-3xl md:text-4xl font-bold text-primary hover:underline block"
               >
-                +34 950 473 199
+                {companySettings.emergency_phone}
               </a>
               <Button 
                 className="mt-4 bg-[#25D366] hover:bg-[#128C7E] text-white"
@@ -89,7 +93,7 @@ export default function DevicePage() {
                 asChild
               >
                 <a 
-                  href="https://wa.me/34950473199" 
+                  href={`https://wa.me/${phoneForLink.replace("+", "")}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

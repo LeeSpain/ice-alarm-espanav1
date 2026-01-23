@@ -11,7 +11,7 @@ import { Logo } from "@/components/ui/logo";
 import { toast } from "sonner";
 import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
-
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 // Step Components
 import { JoinMembershipStep } from "@/components/join/steps/JoinMembershipStep";
 import { JoinPersonalStep } from "@/components/join/steps/JoinPersonalStep";
@@ -46,6 +46,9 @@ export default function JoinWizard() {
   const [wizardData, setWizardData] = useState<JoinWizardData>(initialJoinWizardData);
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Company settings for dynamic phone/email
+  const { settings: companySettings } = useCompanySettings();
   
   // Progressive save hook
   const { saveDraft, clearSession, isSaving } = useRegistrationDraft();
@@ -429,11 +432,11 @@ export default function JoinWizard() {
         <div className="container max-w-4xl text-center text-sm text-muted-foreground">
           <p>
             {t("joinWizard.needHelp")}{" "}
-            <a href="tel:+34900000000" className="text-primary hover:underline">
-              {t("joinWizard.callUs")} +34 900 000 000
+            <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, "")}`} className="text-primary hover:underline">
+              {t("joinWizard.callUs")} {companySettings.emergency_phone}
             </a>{" "}
             {t("common.or")}{" "}
-            <a href="mailto:support@icealarm.es" className="text-primary hover:underline">
+            <a href={`mailto:${companySettings.support_email}`} className="text-primary hover:underline">
               {t("joinWizard.emailUs")}
             </a>
           </p>
