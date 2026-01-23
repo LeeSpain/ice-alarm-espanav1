@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchInProgress = useRef(false);
   const lastFetchedUserId = useRef<string | null>(null);
 
-  // Reduced timeout from 8s to 4s for faster perceived performance
+  // Timeout for role fetch - 8s to prevent premature failures on slow connections
   const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
     return await Promise.race([
       promise,
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
   };
   
-  const ROLE_FETCH_TIMEOUT = 4000; // 4 seconds (reduced from 8s)
+  const ROLE_FETCH_TIMEOUT = 8000; // 8 seconds - more forgiving
 
   const fetchUserRole = async (userId: string) => {
     // Prevent duplicate fetches for the same user
@@ -152,36 +152,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-    let initialSessionHandled = false;
+    let initialFetchDone = false;
 
-    // Set up auth state listener BEFORE getting session
+    // Get initial session FIRST, then set up listener
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          try {
+            await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
+          } catch (e) {
+            console.error("[AuthContext] Initial role fetch failed:", e);
+            if (isMounted) setRoleLoadFailed(true);
+          }
+        }
+      } catch (e) {
+        console.error("[AuthContext] Session fetch failed:", e);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          initialFetchDone = true;
+        }
+      }
+    };
+
+    // Initialize auth first
+    initializeAuth();
+
+    // Set up auth state listener AFTER initial fetch starts
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
 
-        // Skip INITIAL_SESSION since we handle it in initializeAuth
-        // This prevents duplicate role fetching
+        // Skip INITIAL_SESSION and early events before our initial fetch completes
         if (event === 'INITIAL_SESSION') {
           return;
         }
 
-        // Only re-fetch roles on actual auth changes (sign in/out)
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setIsLoading(true);
-          setSession(session);
-          setUser(session?.user ?? null);
+        // For SIGNED_IN during initial load, skip if we're already handling it
+        if (event === 'SIGNED_IN' && !initialFetchDone) {
+          return;
+        }
 
-          if (session?.user) {
+        // Handle actual auth changes after initial load
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Only refetch if this is a NEW sign-in (not the initial one)
+          if (session?.user && session.user.id !== lastFetchedUserId.current) {
+            setIsLoading(true);
+            setSession(session);
+            setUser(session?.user ?? null);
+
             try {
               await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
             } catch (e) {
               console.error("[AuthContext] Role fetch failed:", e);
               if (isMounted) setRoleLoadFailed(true);
             }
-          }
-          
-          if (isMounted) {
-            setIsLoading(false);
+            
+            if (isMounted) {
+              setIsLoading(false);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
@@ -192,36 +230,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPartnerId(null);
           setIsPartner(false);
           setIsLoading(false);
+          lastFetchedUserId.current = null;
         }
       }
     );
-
-    // Get initial session
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!isMounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Avoid getting stuck in a forever-loading state if RPCs hang.
-        try {
-          await withTimeout(fetchUserRole(session.user.id), ROLE_FETCH_TIMEOUT);
-        } catch (e) {
-          console.error("[AuthContext] Role fetch failed:", e);
-          if (isMounted) setRoleLoadFailed(true);
-        }
-      }
-      
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
 
     return () => {
       isMounted = false;
