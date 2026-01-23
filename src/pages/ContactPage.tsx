@@ -61,10 +61,10 @@ export default function ContactPage() {
       if (error) throw error;
 
       setIsSubmitted(true);
-      toast.success("Your message has been sent successfully!");
+      toast.success(t("contact.success.message"));
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error(t("contact.error.sendFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -94,21 +94,21 @@ export default function ContactPage() {
               <div className="h-16 w-16 rounded-full bg-status-active/20 flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="h-8 w-8 text-status-active" />
               </div>
-              <h2 className="text-2xl font-bold mb-3">Thank You!</h2>
+              <h2 className="text-2xl font-bold mb-3">{t("contact.success.title")}</h2>
               <p className="text-muted-foreground mb-6">
-                Your enquiry has been received. A member of our team will contact you within 24 hours.
+                {t("contact.success.description")}
               </p>
               <div className="space-y-3">
                 <Button asChild className="w-full">
                   <Link to="/">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Return to Home
+                    {t("contact.success.returnHome")}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild className="w-full">
                   <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
                     <Phone className="h-4 w-4 mr-2" />
-                    Call Us Now
+                    {t("contact.success.callNow")}
                   </a>
                 </Button>
               </div>
@@ -154,9 +154,9 @@ export default function ContactPage() {
       {/* Hero Section */}
       <section className="pt-24 pb-12 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Get in Touch</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">{t("contact.hero.title")}</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Have questions about our emergency alarm service? We're here to help you and your family feel safe and protected.
+            {t("contact.hero.subtitle")}
           </p>
         </div>
       </section>
@@ -174,8 +174,8 @@ export default function ContactPage() {
                       <Phone className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Call Us</h3>
-                      <p className="text-muted-foreground text-sm mb-2">Speak directly with our team</p>
+                      <h3 className="font-semibold mb-1">{t("contact.info.callUs")}</h3>
+                      <p className="text-muted-foreground text-sm mb-2">{t("contact.info.callUsDesc")}</p>
                       <a 
                         href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} 
                         className="text-primary font-medium hover:underline"
@@ -194,8 +194,8 @@ export default function ContactPage() {
                       <Mail className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Email Us</h3>
-                      <p className="text-muted-foreground text-sm mb-2">We'll respond within 24 hours</p>
+                      <h3 className="font-semibold mb-1">{t("contact.info.emailUs")}</h3>
+                      <p className="text-muted-foreground text-sm mb-2">{t("contact.info.emailUsDesc")}</p>
                       <a 
                         href={`mailto:${companySettings.support_email}`} 
                         className="text-primary font-medium hover:underline"
@@ -215,17 +215,17 @@ export default function ContactPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    Send Us a Message
+                    {t("contact.form.title")}
                   </CardTitle>
                   <CardDescription>
-                    Fill out the form below and we'll get back to you as soon as possible.
+                    {t("contact.form.subtitle")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="first_name">First Name *</Label>
+                        <Label htmlFor="first_name">{t("contact.form.firstName")} *</Label>
                         <Input
                           id="first_name"
                           required
@@ -235,7 +235,7 @@ export default function ContactPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="last_name">Last Name *</Label>
+                        <Label htmlFor="last_name">{t("contact.form.lastName")} *</Label>
                         <Input
                           id="last_name"
                           required
@@ -248,7 +248,7 @@ export default function ContactPage() {
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email">{t("contact.form.email")} *</Label>
                         <Input
                           id="email"
                           type="email"
@@ -259,7 +259,7 @@ export default function ContactPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number *</Label>
+                        <Label htmlFor="phone">{t("contact.form.phone")} *</Label>
                         <Input
                           id="phone"
                           type="tel"
@@ -273,7 +273,7 @@ export default function ContactPage() {
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="preferred_language">Preferred Language</Label>
+                        <Label htmlFor="preferred_language">{t("contact.form.language")}</Label>
                         <Select 
                           value={formData.preferred_language} 
                           onValueChange={(value) => handleChange("preferred_language", value)}
@@ -288,7 +288,7 @@ export default function ContactPage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="enquiry_type">Enquiry Type</Label>
+                        <Label htmlFor="enquiry_type">{t("contact.form.enquiryType")}</Label>
                         <Select 
                           value={formData.enquiry_type} 
                           onValueChange={(value) => handleChange("enquiry_type", value)}
@@ -297,34 +297,34 @@ export default function ContactPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="general">General Enquiry</SelectItem>
-                            <SelectItem value="pricing">Pricing Information</SelectItem>
-                            <SelectItem value="demo">Request a Demo</SelectItem>
-                            <SelectItem value="partnership">Partnership</SelectItem>
-                            <SelectItem value="support">Technical Support</SelectItem>
+                            <SelectItem value="general">{t("contact.enquiry.general")}</SelectItem>
+                            <SelectItem value="pricing">{t("contact.enquiry.pricing")}</SelectItem>
+                            <SelectItem value="demo">{t("contact.enquiry.demo")}</SelectItem>
+                            <SelectItem value="partnership">{t("contact.enquiry.partnership")}</SelectItem>
+                            <SelectItem value="support">{t("contact.enquiry.support")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="message">Message</Label>
+                      <Label htmlFor="message">{t("contact.form.message")}</Label>
                       <Textarea
                         id="message"
                         rows={5}
                         value={formData.message}
                         onChange={(e) => handleChange("message", e.target.value)}
-                        placeholder="Tell us how we can help you..."
+                        placeholder={t("contact.form.messagePlaceholder")}
                       />
                     </div>
 
                     <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? (
-                        <>Sending...</>
+                        <>{t("contact.form.sending")}</>
                       ) : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
-                          Send Message
+                          {t("contact.form.sendMessage")}
                         </>
                       )}
                     </Button>
@@ -339,33 +339,33 @@ export default function ContactPage() {
       {/* Why Choose Us Section */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-8">Why Families Trust ICE Alarm</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">{t("contact.whyTrust.title")}</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Shield className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">24/7 Protection</h3>
+              <h3 className="font-semibold mb-2">{t("contact.whyTrust.protection")}</h3>
               <p className="text-sm text-muted-foreground">
-                Our monitoring centre operates around the clock, ensuring help is always available.
+                {t("contact.whyTrust.protectionDesc")}
               </p>
             </div>
             <div className="text-center">
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Users className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Bilingual Support</h3>
+              <h3 className="font-semibold mb-2">{t("contact.whyTrust.bilingual")}</h3>
               <p className="text-sm text-muted-foreground">
-                Our team speaks both English and Spanish fluently for your convenience.
+                {t("contact.whyTrust.bilingualDesc")}
               </p>
             </div>
             <div className="text-center">
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Clock className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Fast Response</h3>
+              <h3 className="font-semibold mb-2">{t("contact.whyTrust.response")}</h3>
               <p className="text-sm text-muted-foreground">
-                Average response time under 30 seconds for all emergency alerts.
+                {t("contact.whyTrust.responseDesc")}
               </p>
             </div>
           </div>
@@ -377,7 +377,7 @@ export default function ContactPage() {
         <div className="container mx-auto text-center">
           <Logo size="sm" />
           <p className="text-sm text-muted-foreground mt-4">
-            © {new Date().getFullYear()} {companySettings.company_name}. All rights reserved.
+            © {new Date().getFullYear()} {companySettings.company_name}. {t("landing.allRightsReserved")}
           </p>
         </div>
       </footer>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { useMemberProfile } from "@/hooks/useMemberProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,26 +14,28 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, User, Globe, Mail, Phone, MapPin, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
-const profileSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  phone: z.string().min(1, "Phone number is required"),
-  address_line_1: z.string().min(1, "Address is required"),
-  address_line_2: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  province: z.string().min(1, "Province is required"),
-  postal_code: z.string().min(1, "Postal code is required"),
-  preferred_language: z.enum(["en", "es"]),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { Link } from "react-router-dom";
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { memberId, isLoading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useMemberProfile();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+
+  const profileSchema = z.object({
+    first_name: z.string().min(1, t("validation.nameRequired")),
+    last_name: z.string().min(1, t("validation.nameRequired")),
+    phone: z.string().min(1, t("validation.phoneRequired")),
+    address_line_1: z.string().min(1, t("validation.addressRequired")),
+    address_line_2: z.string().optional(),
+    city: z.string().min(1, t("validation.required")),
+    province: z.string().min(1, t("validation.required")),
+    postal_code: z.string().min(1, t("validation.required")),
+    preferred_language: z.enum(["en", "es"]),
+  });
+
+  type ProfileFormData = z.infer<typeof profileSchema>;
 
   const isLoading = authLoading || profileLoading;
 
@@ -74,10 +77,10 @@ export default function ProfilePage() {
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["member-profile"] });
-      toast.success("Profile updated successfully");
+      toast.success(t("profile.updateSuccess"));
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast.error(t("profile.updateFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -94,7 +97,7 @@ export default function ProfilePage() {
   if (!profile && !isLoading) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Profile not found. Please contact support.</p>
+        <p className="text-muted-foreground">{t("profile.notFound")}</p>
       </div>
     );
   }
@@ -107,15 +110,13 @@ export default function ProfilePage() {
     );
   }
 
-  const initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">My Profile</h1>
-          <p className="text-muted-foreground mt-1">Manage your personal information</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("profile.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("profile.subtitle")}</p>
         </div>
       </div>
 
@@ -125,7 +126,7 @@ export default function ProfilePage() {
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Profile Photo</CardTitle>
+              <CardTitle className="text-lg">{t("profile.profilePhoto")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               <Avatar className="h-32 w-32">
@@ -135,7 +136,7 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <p className="text-sm text-muted-foreground text-center">
-                Contact support to update your profile photo
+                {t("profile.contactSupportToChange")}
               </p>
             </CardContent>
           </Card>
@@ -143,19 +144,19 @@ export default function ProfilePage() {
           {/* Language Preference Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Preferences</CardTitle>
+              <CardTitle className="text-lg">{t("profile.preferences")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Preferred Language</Label>
+                <Label>{t("profile.preferredLanguage")}</Label>
                 <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                   <Globe className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium capitalize">
-                    {profile?.preferred_language || "English"}
+                    {profile?.preferred_language === "es" ? "Español" : "English"}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Our team will communicate with you in this language
+                  {t("profile.languageDesc")}
                 </p>
               </div>
             </CardContent>
@@ -169,25 +170,25 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Personal Information
+                {t("profile.personalInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>First Name</Label>
+                  <Label>{t("profile.firstName")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.first_name || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Last Name</Label>
+                  <Label>{t("profile.lastName")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.last_name || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Date of Birth</Label>
+                  <Label>{t("profile.dateOfBirth")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.date_of_birth 
                       ? format(new Date(profile.date_of_birth), "dd MMMM yyyy")
@@ -196,7 +197,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>NIE/DNI</Label>
+                  <Label>{t("profile.nieDni")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.nie_dni || "—"}
                   </div>
@@ -210,20 +211,20 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Contact Information
+                {t("profile.contactInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Email Address</Label>
+                  <Label>{t("profile.emailAddress")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     {profile?.email || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone Number</Label>
+                  <Label>{t("profile.phoneNumber")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     {profile?.phone || "—"}
@@ -238,38 +239,38 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Address
+                {t("profile.address")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Street Address</Label>
+                  <Label>{t("profile.streetAddress")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.address_line_1 || "—"}
                     {profile?.address_line_2 && <span className="block text-muted-foreground">{profile.address_line_2}</span>}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>City</Label>
+                  <Label>{t("profile.city")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.city || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Province</Label>
+                  <Label>{t("profile.province")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.province || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Postal Code</Label>
+                  <Label>{t("profile.postalCode")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.postal_code || "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Country</Label>
+                  <Label>{t("profile.country")}</Label>
                   <div className="p-3 bg-muted/50 rounded-lg font-medium">
                     {profile?.country || "Spain"}
                   </div>
@@ -286,13 +287,13 @@ export default function ProfilePage() {
                   <Edit className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold">Need to update your information?</h4>
+                  <h4 className="font-semibold">{t("profile.needToUpdate")}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Contact our support team and we'll help you update your profile details.
+                    {t("profile.contactSupportDesc")}
                   </p>
                 </div>
                 <Button asChild className="flex-shrink-0">
-                  <a href="/dashboard/support">Contact Support</a>
+                  <Link to="/dashboard/support">{t("support.contactSupport")}</Link>
                 </Button>
               </div>
             </CardContent>

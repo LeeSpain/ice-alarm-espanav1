@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,23 +16,6 @@ import { Logo } from "@/components/ui/logo";
 import { Loader2, ArrowLeft, User, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
 
-const registrationSchema = z.object({
-  first_name: z.string().min(1, "First name is required").max(100),
-  last_name: z.string().min(1, "Last name is required").max(100),
-  phone: z.string().min(9, "Please enter a valid phone number").max(20),
-  date_of_birth: z.string().min(1, "Date of birth is required"),
-  nie_dni: z.string().optional(),
-  address_line_1: z.string().min(1, "Address is required").max(200),
-  address_line_2: z.string().optional(),
-  city: z.string().min(1, "City is required").max(100),
-  province: z.string().min(1, "Province is required").max(100),
-  postal_code: z.string().min(4, "Please enter a valid postal code").max(10),
-  preferred_language: z.enum(["en", "es"]),
-  special_instructions: z.string().optional(),
-});
-
-type RegistrationFormValues = z.infer<typeof registrationSchema>;
-
 const spanishProvinces = [
   "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona",
   "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca",
@@ -43,10 +27,28 @@ const spanishProvinces = [
 ];
 
 export default function CompleteRegistration() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const { user, refreshAuth } = useAuth();
+
+  const registrationSchema = z.object({
+    first_name: z.string().min(1, t("registration.firstNameRequired")).max(100),
+    last_name: z.string().min(1, t("registration.lastNameRequired")).max(100),
+    phone: z.string().min(9, t("validation.invalidPhone")).max(20),
+    date_of_birth: z.string().min(1, t("registration.dobRequired")),
+    nie_dni: z.string().optional(),
+    address_line_1: z.string().min(1, t("validation.addressRequired")).max(200),
+    address_line_2: z.string().optional(),
+    city: z.string().min(1, t("registration.cityRequired")).max(100),
+    province: z.string().min(1, t("registration.provinceRequired")).max(100),
+    postal_code: z.string().min(4, t("registration.postalCodeRequired")).max(10),
+    preferred_language: z.enum(["en", "es"]),
+    special_instructions: z.string().optional(),
+  });
+
+  type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
@@ -68,7 +70,7 @@ export default function CompleteRegistration() {
 
   const onSubmit = async (values: RegistrationFormValues) => {
     if (!user) {
-      toast.error("Please log in to continue");
+      toast.error(t("registration.pleaseLogin"));
       navigate("/login");
       return;
     }
@@ -98,10 +100,10 @@ export default function CompleteRegistration() {
       }
 
       await refreshAuth();
-      toast.success("Registration complete! Welcome to ICE Alarm España.");
+      toast.success(t("registration.success"));
       navigate("/dashboard");
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t("errors.unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -113,11 +115,11 @@ export default function CompleteRegistration() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              Please{" "}
+              {t("registration.pleaseLoginFirst")}{" "}
               <Link to="/login" className="text-primary hover:underline">
-                log in
+                {t("auth.login")}
               </Link>{" "}
-              to complete your registration.
+              {t("registration.toComplete")}
             </p>
           </CardContent>
         </Card>
@@ -136,10 +138,9 @@ export default function CompleteRegistration() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
+            <CardTitle className="text-2xl">{t("registration.title")}</CardTitle>
             <CardDescription>
-              Please provide your details to complete registration. This information helps our
-              emergency response team assist you effectively.
+              {t("registration.subtitle")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -149,21 +150,21 @@ export default function CompleteRegistration() {
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <User className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-medium hidden sm:inline">Personal</span>
+                <span className="text-sm font-medium hidden sm:inline">{t("registration.steps.personal")}</span>
               </div>
               <div className="h-px w-8 bg-border" />
               <div className={`flex items-center gap-2 ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <MapPin className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-medium hidden sm:inline">Address</span>
+                <span className="text-sm font-medium hidden sm:inline">{t("registration.steps.address")}</span>
               </div>
               <div className="h-px w-8 bg-border" />
               <div className={`flex items-center gap-2 ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   <Phone className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-medium hidden sm:inline">Preferences</span>
+                <span className="text-sm font-medium hidden sm:inline">{t("registration.steps.preferences")}</span>
               </div>
             </div>
 
@@ -178,7 +179,7 @@ export default function CompleteRegistration() {
                         name="first_name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>{t("profile.firstName")}</FormLabel>
                             <FormControl>
                               <Input placeholder="John" {...field} />
                             </FormControl>
@@ -191,7 +192,7 @@ export default function CompleteRegistration() {
                         name="last_name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel>{t("profile.lastName")}</FormLabel>
                             <FormControl>
                               <Input placeholder="Smith" {...field} />
                             </FormControl>
@@ -206,7 +207,7 @@ export default function CompleteRegistration() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>{t("common.phone")}</FormLabel>
                           <FormControl>
                             <Input placeholder="+34 600 000 000" {...field} />
                           </FormControl>
@@ -220,7 +221,7 @@ export default function CompleteRegistration() {
                       name="date_of_birth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
+                          <FormLabel>{t("profile.dateOfBirth")}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -234,7 +235,7 @@ export default function CompleteRegistration() {
                       name="nie_dni"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>NIE/DNI (Optional)</FormLabel>
+                          <FormLabel>{t("registration.nieDniOptional")}</FormLabel>
                           <FormControl>
                             <Input placeholder="X1234567A" {...field} />
                           </FormControl>
@@ -245,7 +246,7 @@ export default function CompleteRegistration() {
 
                     <div className="flex justify-end">
                       <Button type="button" onClick={() => setStep(2)}>
-                        Next
+                        {t("common.next")}
                       </Button>
                     </div>
                   </div>
@@ -259,7 +260,7 @@ export default function CompleteRegistration() {
                       name="address_line_1"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Address Line 1</FormLabel>
+                          <FormLabel>{t("profile.addressLine1")}</FormLabel>
                           <FormControl>
                             <Input placeholder="Calle Principal 1" {...field} />
                           </FormControl>
@@ -273,9 +274,9 @@ export default function CompleteRegistration() {
                       name="address_line_2"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Address Line 2 (Optional)</FormLabel>
+                          <FormLabel>{t("profile.addressLine2")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Apartment, floor, etc." {...field} />
+                            <Input placeholder={t("registration.addressLine2Placeholder")} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -288,7 +289,7 @@ export default function CompleteRegistration() {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City</FormLabel>
+                            <FormLabel>{t("profile.city")}</FormLabel>
                             <FormControl>
                               <Input placeholder="Albox" {...field} />
                             </FormControl>
@@ -302,7 +303,7 @@ export default function CompleteRegistration() {
                         name="postal_code"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Postal Code</FormLabel>
+                            <FormLabel>{t("profile.postalCode")}</FormLabel>
                             <FormControl>
                               <Input placeholder="04800" {...field} />
                             </FormControl>
@@ -317,11 +318,11 @@ export default function CompleteRegistration() {
                       name="province"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Province</FormLabel>
+                          <FormLabel>{t("profile.province")}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select province" />
+                                <SelectValue placeholder={t("registration.selectProvince")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -340,10 +341,10 @@ export default function CompleteRegistration() {
                     <div className="flex justify-between">
                       <Button type="button" variant="outline" onClick={() => setStep(1)}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
+                        {t("common.back")}
                       </Button>
                       <Button type="button" onClick={() => setStep(3)}>
-                        Next
+                        {t("common.next")}
                       </Button>
                     </div>
                   </div>
@@ -357,11 +358,11 @@ export default function CompleteRegistration() {
                       name="preferred_language"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Preferred Language</FormLabel>
+                          <FormLabel>{t("profile.preferredLanguage")}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
+                                <SelectValue placeholder={t("registration.selectLanguage")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -379,10 +380,10 @@ export default function CompleteRegistration() {
                       name="special_instructions"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Special Instructions (Optional)</FormLabel>
+                          <FormLabel>{t("registration.specialInstructions")}</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Any special instructions for emergency responders (e.g., gate code, mobility issues, pets, etc.)"
+                              placeholder={t("registration.specialInstructionsPlaceholder")}
                               className="min-h-[100px]"
                               {...field}
                             />
@@ -395,16 +396,16 @@ export default function CompleteRegistration() {
                     <div className="flex justify-between">
                       <Button type="button" variant="outline" onClick={() => setStep(2)}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
+                        {t("common.back")}
                       </Button>
                       <Button type="submit" disabled={isLoading}>
                         {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Completing...
+                            {t("registration.completing")}
                           </>
                         ) : (
-                          "Complete Registration"
+                          t("registration.completeRegistration")
                         )}
                       </Button>
                     </div>
