@@ -6,6 +6,7 @@ import { AIChatWidget } from "./AIChatWidget";
 import { useAIAgent } from "@/hooks/useAIAgents";
 
 const AGENT_KEY = "member_specialist";
+const AVATAR_AGENT_KEY = "customer_service_expert"; // Use same avatar as frontend
 
 interface MemberChatButtonProps {
   className?: string;
@@ -17,9 +18,9 @@ export function MemberChatButton({ className, memberId }: MemberChatButtonProps)
   const [isOpen, setIsOpen] = useState(false);
   const [imagePreloaded, setImagePreloaded] = useState(false);
   
-  // Fetch the member specialist agent to get its avatar
-  const { data: agent } = useAIAgent(AGENT_KEY);
-  const avatarUrl = agent?.avatar_url;
+  // Fetch the customer service agent for avatar (matches frontend widget)
+  const { data: avatarAgent } = useAIAgent(AVATAR_AGENT_KEY);
+  const avatarUrl = avatarAgent?.avatar_url;
 
   // Preload avatar image for instant display
   useEffect(() => {
@@ -49,7 +50,9 @@ export function MemberChatButton({ className, memberId }: MemberChatButtonProps)
             fetchPriority="high"
           />
         ) : (
-          <Bot className="h-5 w-5 text-primary" />
+          <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+            <Bot className="h-5 w-5 text-primary" />
+          </div>
         )}
         {/* Pulsing online indicator */}
         <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background">
