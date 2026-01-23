@@ -39,7 +39,7 @@ export default function PendantPage() {
   const { settings: companySettings } = useCompanySettings();
   
   // Batch fetch all images in a single query
-  const { getImage } = useWebsiteImagesBatch(["pendant_hero", "pendant_specs"]);
+  const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch(["pendant_hero", "pendant_specs"]);
   const pendantHeroImage = getImage("pendant_hero");
   const pendantSpecsImage = getImage("pendant_specs");
 
@@ -184,6 +184,7 @@ export default function PendantPage() {
                     priority={true}
                     width={500}
                     height={500}
+                    isLoadingUrl={imagesLoading}
                   />
                 </div>
                 {/* Trust Badge */}
