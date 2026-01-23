@@ -1536,6 +1536,7 @@
   "chat": {
     "openChat": "Open chat",
     "closeChat": "Close chat",
+    "newChat": "New chat",
     "assistantName": "ICE Alarm Assistant",
     "available": "Available 24/7",
     "placeholder": "Type your message...",
