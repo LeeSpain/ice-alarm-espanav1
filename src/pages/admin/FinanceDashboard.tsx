@@ -23,6 +23,7 @@ import {
   AlertCircle,
   PieChart,
   BarChart3,
+  Receipt,
 } from "lucide-react";
 import {
   PieChart as RechartsPie,
@@ -39,6 +40,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { usePendingCostsTotal } from "@/hooks/useOperationalCosts";
 
 const CHART_COLORS = {
   primary: "hsl(var(--primary))",
@@ -81,6 +83,9 @@ interface OrderStatus {
 }
 
 export default function FinanceDashboard() {
+  // Fetch pending costs total
+  const { data: pendingCostsTotal } = usePendingCostsTotal();
+
   // Fetch main finance stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["finance-dashboard-stats"],
@@ -494,6 +499,34 @@ export default function FinanceDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Expenses Alert Card */}
+      {pendingCostsTotal !== undefined && pendingCostsTotal > 0 && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-amber-600" />
+                Pending Business Expenses
+              </CardTitle>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin/products">
+                  Manage Costs
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-2xl font-bold text-amber-600">{formatCurrency(pendingCostsTotal)}</p>
+                <p className="text-xs text-muted-foreground">Total pending/overdue expenses</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts Row */}
       <div className="grid gap-6 lg:grid-cols-2">

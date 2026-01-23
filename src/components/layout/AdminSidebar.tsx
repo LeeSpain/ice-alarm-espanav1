@@ -22,6 +22,7 @@ import {
   DollarSign,
   PieChart,
   Activity,
+  Package,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -120,6 +121,7 @@ const menuGroups: MenuGroup[] = [
       { icon: CreditCard, labelKey: "sidebar.subscriptions", path: "/admin/subscriptions" },
       { icon: DollarSign, labelKey: "sidebar.payments", path: "/admin/payments" },
       { icon: DollarSign, labelKey: "sidebar.commissions", path: "/admin/commissions" },
+      { icon: Package, labelKey: "sidebar.products", path: "/admin/products" },
       { icon: Activity, labelKey: "sidebar.analytics", path: "/admin/analytics" },
       { icon: BarChart3, labelKey: "sidebar.reports", path: "/admin/reports" }
     ]

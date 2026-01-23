@@ -1152,14 +1152,58 @@ export type Database = {
           },
         ]
       }
+      operational_costs: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["cost_category"]
+          created_at: string
+          due_date: string | null
+          frequency: Database["public"]["Enums"]["cost_frequency"]
+          id: string
+          name: string
+          notes: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["cost_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: Database["public"]["Enums"]["cost_category"]
+          created_at?: string
+          due_date?: string | null
+          frequency?: Database["public"]["Enums"]["cost_frequency"]
+          id?: string
+          name: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["cost_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["cost_category"]
+          created_at?: string
+          due_date?: string | null
+          frequency?: Database["public"]["Enums"]["cost_frequency"]
+          id?: string
+          name?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["cost_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
+          cost_price: number | null
           created_at: string | null
           description: string
           device_id: string | null
           id: string
           item_type: Database["public"]["Enums"]["order_item_type"]
           order_id: string
+          product_id: string | null
           quantity: number | null
           tax_amount: number
           tax_rate: number
@@ -1167,12 +1211,14 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          cost_price?: number | null
           created_at?: string | null
           description: string
           device_id?: string | null
           id?: string
           item_type: Database["public"]["Enums"]["order_item_type"]
           order_id: string
+          product_id?: string | null
           quantity?: number | null
           tax_amount: number
           tax_rate: number
@@ -1180,12 +1226,14 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          cost_price?: number | null
           created_at?: string | null
           description?: string
           device_id?: string | null
           id?: string
           item_type?: Database["public"]["Enums"]["order_item_type"]
           order_id?: string
+          product_id?: string | null
           quantity?: number | null
           tax_amount?: number
           tax_rate?: number
@@ -1205,6 +1253,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1626,6 +1681,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          cost_price: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          selling_price_net: number
+          selling_tax_rate: number
+          sku: string | null
+          supplier_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          cost_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          selling_price_net?: number
+          selling_tax_rate?: number
+          sku?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          selling_price_net?: number
+          selling_tax_rate?: number
+          sku?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       registration_drafts: {
         Row: {
@@ -2155,6 +2252,14 @@ export type Database = {
       communication_direction: "inbound" | "outbound"
       communication_type: "call_inbound" | "call_outbound" | "sms" | "whatsapp"
       contact_method_type: "email" | "phone" | "social" | "other"
+      cost_category:
+        | "supplier_payment"
+        | "operational"
+        | "marketing"
+        | "staff"
+        | "other"
+      cost_frequency: "one_time" | "monthly" | "annual"
+      cost_status: "pending" | "paid" | "overdue"
       device_config_status: "pending" | "configured" | "failed"
       device_status: "active" | "inactive" | "faulty" | "returned" | "in_stock"
       import_batch_status:
@@ -2342,6 +2447,15 @@ export const Constants = {
       communication_direction: ["inbound", "outbound"],
       communication_type: ["call_inbound", "call_outbound", "sms", "whatsapp"],
       contact_method_type: ["email", "phone", "social", "other"],
+      cost_category: [
+        "supplier_payment",
+        "operational",
+        "marketing",
+        "staff",
+        "other",
+      ],
+      cost_frequency: ["one_time", "monthly", "annual"],
+      cost_status: ["pending", "paid", "overdue"],
       device_config_status: ["pending", "configured", "failed"],
       device_status: ["active", "inactive", "faulty", "returned", "in_stock"],
       import_batch_status: [
