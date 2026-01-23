@@ -163,8 +163,8 @@ export default function LandingPage() {
                     <ShieldCheck className="h-6 w-6 text-alert-resolved" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">10,000+</p>
-                    <p className="text-sm text-muted-foreground">{t("landing.familiesProtected")}</p>
+                    <p className="text-2xl font-bold">24/7</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.alwaysProtected")}</p>
                   </div>
                 </div>
               </div>
