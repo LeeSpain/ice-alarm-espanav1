@@ -301,7 +301,7 @@ export function useUpdateAgentConfig() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-agent-config"] });
     },
   });

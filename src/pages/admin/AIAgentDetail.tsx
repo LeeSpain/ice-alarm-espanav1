@@ -9,7 +9,6 @@ import {
   GraduationCap, 
   Play, 
   History,
-  Save,
   Power,
   PowerOff
 } from "lucide-react";
@@ -21,8 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   useAIAgent, 
   useAIAgentConfig, 
-  useUpdateAgent,
-  useUpdateAgentConfig
+  useUpdateAgent
 } from "@/hooks/useAIAgents";
 import { AIInstructionsTab } from "@/components/admin/ai/AIInstructionsTab";
 import { AIToolsTab } from "@/components/admin/ai/AIToolsTab";
@@ -58,7 +56,7 @@ export default function AIAgentDetail() {
           ? t("ai.agentPausedDescription") 
           : t("ai.agentEnabledDescription"),
       });
-    } catch (error) {
+    } catch {
       toast({
         title: t("common.error"),
         description: t("ai.toggleError"),
