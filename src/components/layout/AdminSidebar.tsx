@@ -91,6 +91,7 @@ const menuGroups: MenuGroup[] = [
     labelKey: "sidebar.partners",
     items: [
       { icon: Handshake, labelKey: "sidebar.partners", path: "/admin/partners" },
+      { icon: LayoutDashboard, labelKey: "sidebar.partnerDashboard", path: "/partner-dashboard" },
       { icon: ClipboardCheck, labelKey: "sidebar.partnersQa", path: "/admin/partners-qa", superAdminOnly: true }
     ]
   },
