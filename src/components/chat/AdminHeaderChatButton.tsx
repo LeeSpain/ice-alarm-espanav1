@@ -9,9 +9,10 @@ const AGENT_KEY = "main_brain";
 
 interface AdminHeaderChatButtonProps {
   className?: string;
+  staffName?: string | null;
 }
 
-export function AdminHeaderChatButton({ className }: AdminHeaderChatButtonProps) {
+export function AdminHeaderChatButton({ className, staffName }: AdminHeaderChatButtonProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [imagePreloaded, setImagePreloaded] = useState(false);
@@ -62,6 +63,8 @@ export function AdminHeaderChatButton({ className }: AdminHeaderChatButtonProps)
           defaultOpen={true}
           onClose={() => setIsOpen(false)}
           agentKey={AGENT_KEY}
+          staffName={staffName}
+          userRole="admin"
         />
       )}
     </>
