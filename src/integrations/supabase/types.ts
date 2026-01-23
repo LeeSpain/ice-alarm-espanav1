@@ -1950,6 +1950,7 @@ export type Database = {
       }
       partners: {
         Row: {
+          cif: string | null
           company_name: string | null
           contact_name: string
           created_at: string
@@ -1966,6 +1967,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cif?: string | null
           company_name?: string | null
           contact_name: string
           created_at?: string
@@ -1982,6 +1984,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cif?: string | null
           company_name?: string | null
           contact_name?: string
           created_at?: string
