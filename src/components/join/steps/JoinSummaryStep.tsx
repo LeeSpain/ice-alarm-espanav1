@@ -31,6 +31,7 @@ export function JoinSummaryStep({ data, onUpdate }: JoinSummaryStepProps) {
     membershipType: data.membershipType, 
     billingFrequency: data.billingFrequency, 
     includePendant: data.includePendant, 
+    pendantCount: data.pendantCount,
     includeShipping: data.includePendant,
     registrationFeeEnabled,
     registrationFeeDiscount

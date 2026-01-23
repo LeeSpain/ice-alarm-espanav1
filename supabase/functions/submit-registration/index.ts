@@ -118,9 +118,9 @@ serve(async (req) => {
     const subscriptionTax = subscriptionNet * PRICING.subscriptionTaxRate;
     const subscriptionFinal = subscriptionNet + subscriptionTax;
     
-    // Pendant: net price + 21% IVA
+    // Pendant: net price + 21% IVA - use provided count or default based on membership
     const pendantCount = body.includePendant 
-      ? (body.membershipType === "couple" ? 2 : 1) 
+      ? (body.pendantCount || (body.membershipType === "couple" ? 2 : 1))
       : 0;
     const pendantNet = pendantCount * PRICING.pendantNet;
     const pendantTax = pendantNet * PRICING.pendantTaxRate;
