@@ -162,7 +162,7 @@ export default function ContactPage() {
       {/* Main Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Contact Info Cards - Left Column */}
             <div className="space-y-6">
               <Card>
@@ -206,13 +206,9 @@ export default function ContactPage() {
               </Card>
             </div>
 
-            {/* AI Chat Card - Middle Column */}
-            <div className="lg:col-span-1">
+            {/* AI Chat + Contact Form - Right Column */}
+            <div className="lg:col-span-2 space-y-6">
               <InlineAIChat />
-            </div>
-
-            {/* Contact Form - Right Column */}
-            <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
