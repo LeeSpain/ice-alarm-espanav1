@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/** Website image data structure */
 interface WebsiteImage {
   id: string;
   location_key: string;
