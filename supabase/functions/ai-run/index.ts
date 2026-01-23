@@ -118,7 +118,7 @@ serve(async (req) => {
     }
 
     // Handle CHAT WIDGET requests differently
-    if (isChatWidget && agentKey === "customer_service_expert") {
+    if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist")) {
       const userLanguage = context?.userLanguage || "en";
       const conversationHistory = context?.conversationHistory || [];
       const currentMessage = context?.currentMessage || "";
@@ -128,10 +128,69 @@ serve(async (req) => {
         ? "\n\n**IMPORTANTE**: El usuario está comunicándose en ESPAÑOL. DEBES responder completamente en español. Usa terminología española natural y un tono amigable."
         : "\n\n**IMPORTANT**: The user is communicating in ENGLISH. You MUST respond entirely in English. Use natural English terminology and a friendly tone.";
 
+      let systemPrompt = CUSTOMER_SERVICE_CHAT_PROMPT;
+
+      // For member_specialist, fetch member data and personalize the prompt
+      if (agentKey === "member_specialist" && context?.memberId) {
+        // Fetch member data
+        const { data: member } = await supabase
+          .from("members")
+          .select("first_name, last_name, preferred_language, status, city, province, phone, email")
+          .eq("id", context.memberId)
+          .single();
+
+        // Fetch device status
+        const { data: device } = await supabase
+          .from("devices")
+          .select("status, battery_level, last_checkin_at, last_location_address")
+          .eq("member_id", context.memberId)
+          .eq("status", "active")
+          .maybeSingle();
+
+        // Fetch subscription
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select("plan_type, status, renewal_date, amount, billing_frequency")
+          .eq("member_id", context.memberId)
+          .eq("status", "active")
+          .maybeSingle();
+
+        // Fetch emergency contacts count
+        const { count: contactsCount } = await supabase
+          .from("emergency_contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("member_id", context.memberId);
+
+        // Build personalized prompt
+        const memberContext = `
+## Current Member Context (PERSONALIZED)
+You are speaking directly with ${member?.first_name || "this member"}. Use their name naturally in conversation.
+
+- **Member Name**: ${member?.first_name} ${member?.last_name}
+- **Location**: ${member?.city || "Unknown"}, ${member?.province || ""}
+- **Member Status**: ${member?.status || "unknown"}
+- **Device Status**: ${device?.status || "No active device"} ${device?.battery_level ? `(Battery: ${device.battery_level}%)` : ""}
+- **Last Device Check-in**: ${device?.last_checkin_at ? new Date(device.last_checkin_at).toLocaleString() : "N/A"}
+- **Subscription**: ${subscription?.plan_type || "None"} plan (${subscription?.status || "inactive"})
+- **Next Renewal**: ${subscription?.renewal_date ? new Date(subscription.renewal_date).toLocaleDateString() : "N/A"}
+- **Monthly Amount**: ${subscription?.amount ? `€${subscription.amount}` : "N/A"}
+- **Emergency Contacts**: ${contactsCount || 0} configured
+
+## Your Role as Member Specialist
+- You are ${member?.first_name}'s personal support assistant
+- Reference their specific data to provide personalized help
+- If their device battery is low, proactively mention it
+- Help them with their subscription, device, emergency contacts, or any questions
+- Be warm and personal - you know them!
+`;
+
+        systemPrompt = CUSTOMER_SERVICE_CHAT_PROMPT + memberContext;
+      }
+
       const messages = [
         { 
           role: "system", 
-          content: CUSTOMER_SERVICE_CHAT_PROMPT + languageInstruction
+          content: systemPrompt + languageInstruction
         },
         ...conversationHistory.map((msg: { role: string; content: string }) => ({
           role: msg.role,
