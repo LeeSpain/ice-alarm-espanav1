@@ -6,6 +6,8 @@ interface WebsiteImage {
   location_key: string;
   image_url: string;
   alt_text: string | null;
+  blur_placeholder: string | null;
+  dominant_color: string | null;
   updated_at: string;
 }
 
@@ -32,6 +34,8 @@ export function useWebsiteImage(locationKey: string) {
   return {
     imageUrl: data?.image_url || null,
     altText: data?.alt_text || "",
+    blurPlaceholder: data?.blur_placeholder || null,
+    dominantColor: data?.dominant_color || null,
     isLoading,
     error,
     hasCustomImage: !!data?.image_url,
@@ -65,12 +69,14 @@ export function useWebsiteImagesBatch(locationKeys: string[]) {
     enabled: locationKeys.length > 0,
   });
 
-  // Helper to get a specific image from the batch - no defaults
+  // Helper to get a specific image from the batch - includes blur data
   const getImage = (locationKey: string) => {
     const customImage = data?.[locationKey];
     return {
       imageUrl: customImage?.image_url || null,
       altText: customImage?.alt_text || "",
+      blurPlaceholder: customImage?.blur_placeholder || null,
+      dominantColor: customImage?.dominant_color || null,
       hasCustomImage: !!customImage?.image_url,
     };
   };
