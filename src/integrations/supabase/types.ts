@@ -58,6 +58,276 @@ export type Database = {
           },
         ]
       }
+      ai_actions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          error_message: string | null
+          executed_at: string | null
+          executed_by: string | null
+          id: string
+          payload: Json
+          result: Json | null
+          run_id: string | null
+          status: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          id?: string
+          payload: Json
+          result?: Json | null
+          run_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          id?: string
+          payload?: Json
+          result?: Json | null
+          run_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_configs: {
+        Row: {
+          agent_id: string | null
+          business_context: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          language_policy: Json | null
+          read_permissions: Json | null
+          system_instruction: string
+          tool_policy: Json | null
+          triggers: Json | null
+          version: number | null
+          write_permissions: Json | null
+        }
+        Insert: {
+          agent_id?: string | null
+          business_context?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language_policy?: Json | null
+          read_permissions?: Json | null
+          system_instruction: string
+          tool_policy?: Json | null
+          triggers?: Json | null
+          version?: number | null
+          write_permissions?: Json | null
+        }
+        Update: {
+          agent_id?: string | null
+          business_context?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language_policy?: Json | null
+          read_permissions?: Json | null
+          system_instruction?: string
+          tool_policy?: Json | null
+          triggers?: Json | null
+          version?: number | null
+          write_permissions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_configs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agents: {
+        Row: {
+          agent_key: string
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          instance_count: number | null
+          mode: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_key: string
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          instance_count?: number | null
+          mode?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_key?: string
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          instance_count?: number | null
+          mode?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_events: {
+        Row: {
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processed: boolean | null
+          processed_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_memory: {
+        Row: {
+          agent_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          importance: number | null
+          scope: string
+          scope_id: string | null
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          agent_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          scope: string
+          scope_id?: string | null
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          agent_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          scope?: string
+          scope_id?: string | null
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_memory_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_runs: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input_context: Json | null
+          model_used: string | null
+          output: Json | null
+          status: string | null
+          tokens_used: number | null
+          trigger_event_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_context?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          status?: string | null
+          tokens_used?: number | null
+          trigger_event_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_context?: Json | null
+          model_used?: string | null
+          output?: Json | null
+          status?: string | null
+          tokens_used?: number | null
+          trigger_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_runs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_runs_trigger_event_id_fkey"
+            columns: ["trigger_event_id"]
+            isOneToOne: false
+            referencedRelation: "ai_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alert_communications: {
         Row: {
           alert_id: string
@@ -2152,7 +2422,9 @@ export type Database = {
       website_images: {
         Row: {
           alt_text: string | null
+          blur_placeholder: string | null
           created_at: string
+          dominant_color: string | null
           id: string
           image_url: string
           location_key: string
@@ -2161,7 +2433,9 @@ export type Database = {
         }
         Insert: {
           alt_text?: string | null
+          blur_placeholder?: string | null
           created_at?: string
+          dominant_color?: string | null
           id?: string
           image_url: string
           location_key: string
@@ -2170,7 +2444,9 @@ export type Database = {
         }
         Update: {
           alt_text?: string | null
+          blur_placeholder?: string | null
           created_at?: string
+          dominant_color?: string | null
           id?: string
           image_url?: string
           location_key?: string
