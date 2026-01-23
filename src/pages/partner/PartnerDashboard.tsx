@@ -175,11 +175,13 @@ export default function PartnerDashboard() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <div className="flex gap-2">
-                <code className="flex-1 rounded bg-muted px-3 py-2 text-sm border truncate">
-                  {referralLink}
-                </code>
-                <Button onClick={copyReferralLink}>
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 min-w-0">
+                  <code className="block w-full rounded bg-muted px-3 py-2 text-sm border overflow-hidden text-ellipsis whitespace-nowrap">
+                    {referralLink}
+                  </code>
+                </div>
+                <Button onClick={copyReferralLink} className="shrink-0">
                   <Copy className="h-4 w-4 mr-2" />
                   Copy
                 </Button>
