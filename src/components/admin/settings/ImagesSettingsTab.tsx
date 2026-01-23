@@ -10,7 +10,8 @@ import {
   Globe, 
   ShoppingBag,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  MessageCircle
 } from "lucide-react";
 import { ImageUploadCard } from "./ImageUploadCard";
 import { useWebsiteImages } from "@/hooks/useWebsiteImage";
@@ -47,6 +48,13 @@ export function ImagesSettingsTab() {
       icon: <ShoppingBag className="h-4 w-4" />,
       description: "Images displayed on the product/pendant page",
       configs: WEBSITE_IMAGE_CONFIGS.filter(c => c.usedIn.includes("PendantPage")),
+    },
+    {
+      id: "chatwidget",
+      label: "Chat Widget",
+      icon: <MessageCircle className="h-4 w-4" />,
+      description: "Images used in the AI chat assistant",
+      configs: WEBSITE_IMAGE_CONFIGS.filter(c => c.usedIn.includes("ChatWidget")),
     },
   ];
 
@@ -115,7 +123,7 @@ export function ImagesSettingsTab() {
 
         {/* Image Groups Tabs */}
         <Tabs value={activeGroup} onValueChange={setActiveGroup}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             {imageGroups.map(group => {
               const uploadedCount = group.configs.filter(c => getImageUrl(c.locationKey)).length;
               const totalCount = group.configs.length;

@@ -1521,5 +1521,16 @@
       "callUsAt": "Call us at",
       "orEmail": "or email"
     }
+  },
+  "chat": {
+    "openChat": "Open chat",
+    "closeChat": "Close chat",
+    "assistantName": "ICE Alarm Assistant",
+    "available": "Available 24/7",
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "welcomeMessage": "Hello! 👋 I'm your ICE Alarm virtual assistant. How can I help you today? I can answer questions about our services, pricing, or help you get started.",
+    "errorMessage": "Sorry, there was a connection issue. Please try again later.",
+    "fallbackMessage": "Sorry, I couldn't process your message. Please try again."
   }
 }
