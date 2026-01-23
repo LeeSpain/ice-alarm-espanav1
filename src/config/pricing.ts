@@ -145,6 +145,9 @@ export interface OrderCalculation {
   
   // Registration
   registrationFee: number;
+  registrationFeeOriginal: number;
+  registrationFeeDiscount: number; // percentage applied
+  registrationFeeEnabled: boolean;
   
   // Shipping
   shipping: number;
@@ -161,10 +164,20 @@ export interface OrderOptions {
   includePendant: boolean;
   pendantCount?: number;
   includeShipping?: boolean;
+  // Registration fee settings
+  registrationFeeEnabled?: boolean;
+  registrationFeeDiscount?: number; // 0-100
 }
 
 export function calculateOrder(options: OrderOptions): OrderCalculation {
-  const { membershipType, billingFrequency, includePendant, includeShipping = true } = options;
+  const { 
+    membershipType, 
+    billingFrequency, 
+    includePendant, 
+    includeShipping = true,
+    registrationFeeEnabled = true,
+    registrationFeeDiscount = 0,
+  } = options;
   
   // Determine pendant count
   let pendantCount = 0;
@@ -182,8 +195,12 @@ export function calculateOrder(options: OrderOptions): OrderCalculation {
   const pendantTax = pendantNet * PRICING.pendant.taxRate;
   const pendantFinal = pendantNet + pendantTax;
   
-  // Registration (no IVA)
-  const registrationFee = PRICING.registration.amount;
+  // Registration (no IVA) - apply enabled/discount settings
+  const registrationFeeOriginal = PRICING.registration.amount;
+  let registrationFee = 0;
+  if (registrationFeeEnabled) {
+    registrationFee = registrationFeeOriginal * (1 - registrationFeeDiscount / 100);
+  }
   
   // Shipping (IVA included, only if pendant ordered)
   const shipping = (includePendant && includeShipping) ? PRICING.shipping.amount : 0;
@@ -202,6 +219,9 @@ export function calculateOrder(options: OrderOptions): OrderCalculation {
     pendantFinal,
     pendantCount,
     registrationFee,
+    registrationFeeOriginal,
+    registrationFeeDiscount,
+    registrationFeeEnabled,
     shipping,
     subtotalNet,
     totalTax,

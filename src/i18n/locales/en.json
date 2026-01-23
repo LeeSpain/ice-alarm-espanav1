@@ -94,7 +94,9 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "noData": "No data available",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "free": "FREE",
+    "off": "off"
   },
   "auth": {
     "login": "Login",

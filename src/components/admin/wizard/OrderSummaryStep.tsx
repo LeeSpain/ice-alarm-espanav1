@@ -2,24 +2,29 @@ import { WizardData } from "@/pages/admin/AddMemberWizard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { User, MapPin, Heart, Phone, Smartphone, CreditCard } from "lucide-react";
+import { User, MapPin, Heart, Phone, Smartphone, CreditCard, Gift } from "lucide-react";
 import { 
   calculateOrder, 
   formatPrice, 
   getSubscriptionMonthlyFinal 
 } from "@/config/pricing";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 interface OrderSummaryStepProps {
   data: WizardData;
 }
 
 export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
-  // Use centralized pricing calculations
+  const { registrationFeeEnabled, registrationFeeDiscount } = usePricingSettings();
+  
+  // Use centralized pricing calculations with registration fee settings
   const order = calculateOrder({
     membershipType: data.membershipType,
     billingFrequency: data.billingFrequency,
     includePendant: data.includePendant,
     includeShipping: data.includePendant,
+    registrationFeeEnabled,
+    registrationFeeDiscount,
   });
   
   const monthlyFinal = getSubscriptionMonthlyFinal(data.membershipType);
@@ -172,13 +177,35 @@ export function OrderSummaryStep({ data }: OrderSummaryStepProps) {
           )}
 
           {/* Registration Fee */}
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-medium">Registration Fee</p>
-              <p className="text-sm text-muted-foreground">One-time setup fee (no IVA)</p>
+          {order.registrationFeeEnabled && (
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium flex items-center gap-2">
+                  Registration Fee
+                  {order.registrationFeeDiscount === 100 && (
+                    <Badge className="bg-status-active/20 text-status-active border-0 gap-1">
+                      <Gift className="h-3 w-3" />
+                      FREE
+                    </Badge>
+                  )}
+                  {order.registrationFeeDiscount > 0 && order.registrationFeeDiscount < 100 && (
+                    <Badge className="bg-status-active/20 text-status-active border-0">
+                      {order.registrationFeeDiscount}% off
+                    </Badge>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">One-time setup fee (no IVA)</p>
+              </div>
+              <div className="text-right">
+                {order.registrationFeeDiscount > 0 && (
+                  <p className="text-sm text-muted-foreground line-through">{formatPrice(order.registrationFeeOriginal)}</p>
+                )}
+                <p className="font-medium">
+                  {order.registrationFeeDiscount === 100 ? "FREE" : formatPrice(order.registrationFee)}
+                </p>
+              </div>
             </div>
-            <p className="font-medium">{formatPrice(order.registrationFee)}</p>
-          </div>
+          )}
 
           <Separator />
 

@@ -6,9 +6,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, MapPin, Smartphone, CreditCard, Calendar, CalendarDays, Sparkles, Check, Shield } from "lucide-react";
+import { User, MapPin, Smartphone, CreditCard, Calendar, CalendarDays, Sparkles, Check, Shield, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSubscriptionFinalPrice, getSubscriptionMonthlyFinal, getAnnualSavings, formatPrice, calculateOrder } from "@/config/pricing";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
 
 interface JoinSummaryStepProps {
   data: JoinWizardData;
@@ -17,12 +18,23 @@ interface JoinSummaryStepProps {
 
 export function JoinSummaryStep({ data, onUpdate }: JoinSummaryStepProps) {
   const { t } = useTranslation();
+  const { registrationFeeEnabled, registrationFeeDiscount, registrationFeeBase, registrationFeeFinal } = usePricingSettings();
+  
   const monthlyFinal = getSubscriptionMonthlyFinal(data.membershipType);
   const annualFinal = getSubscriptionFinalPrice(data.membershipType, 'annual');
   const annualMonthlyEquiv = annualFinal / 12;
   const annualSavings = getAnnualSavings(data.membershipType);
   const savingsPercentage = Math.round((annualSavings / (monthlyFinal * 12)) * 100);
-  const order = calculateOrder({ membershipType: data.membershipType, billingFrequency: data.billingFrequency, includePendant: data.includePendant, includeShipping: data.includePendant });
+  
+  // Pass pricing settings to order calculation
+  const order = calculateOrder({ 
+    membershipType: data.membershipType, 
+    billingFrequency: data.billingFrequency, 
+    includePendant: data.includePendant, 
+    includeShipping: data.includePendant,
+    registrationFeeEnabled,
+    registrationFeeDiscount
+  });
 
   return (
     <div className="space-y-6">
@@ -68,7 +80,36 @@ export function JoinSummaryStep({ data, onUpdate }: JoinSummaryStepProps) {
         <div className="flex justify-between items-start"><div><p className="font-medium">{data.membershipType === "single" ? t("joinWizard.summary.individual") : t("joinWizard.summary.couple")} {t("joinWizard.summary.membership")}</p><p className="text-sm text-muted-foreground">{data.billingFrequency === "monthly" ? t("joinWizard.summary.monthlySubscription") : t("joinWizard.summary.annualSubscription")}</p></div><p className="font-medium">{formatPrice(order.subscriptionFinal)}</p></div>
         {order.pendantCount > 0 && <div className="flex justify-between items-start"><div><p className="font-medium flex items-center gap-2"><Smartphone className="h-4 w-4" />{t("joinWizard.summary.gpsSafetyPendant")}{order.pendantCount > 1 && <span>× {order.pendantCount}</span>}</p><p className="text-sm text-muted-foreground">{t("joinWizard.summary.oneTimePurchaseIva")}</p></div><p className="font-medium">{formatPrice(order.pendantFinal)}</p></div>}
         {order.shipping > 0 && <div className="flex justify-between items-start"><div><p className="font-medium">{t("joinWizard.summary.shipping")}</p><p className="text-sm text-muted-foreground">{t("joinWizard.summary.deliveryAddress")}</p></div><p className="font-medium">{formatPrice(order.shipping)}</p></div>}
-        <div className="flex justify-between items-start"><div><p className="font-medium">{t("joinWizard.summary.registrationFee")}</p><p className="text-sm text-muted-foreground">{t("joinWizard.summary.oneTimeSetupFee")}</p></div><p className="font-medium">{formatPrice(order.registrationFee)}</p></div>
+        {/* Registration Fee - with discount display */}
+        {order.registrationFeeEnabled && (
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-medium flex items-center gap-2">
+                {t("joinWizard.summary.registrationFee")}
+                {order.registrationFeeDiscount === 100 && (
+                  <Badge className="bg-status-active/20 text-status-active border-0 gap-1">
+                    <Gift className="h-3 w-3" />
+                    {t("common.free") || "FREE"}
+                  </Badge>
+                )}
+                {order.registrationFeeDiscount > 0 && order.registrationFeeDiscount < 100 && (
+                  <Badge className="bg-status-active/20 text-status-active border-0">
+                    {order.registrationFeeDiscount}% {t("common.off") || "off"}
+                  </Badge>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">{t("joinWizard.summary.oneTimeSetupFee")}</p>
+            </div>
+            <div className="text-right">
+              {order.registrationFeeDiscount > 0 && (
+                <p className="text-sm text-muted-foreground line-through">{formatPrice(order.registrationFeeOriginal)}</p>
+              )}
+              <p className="font-medium">
+                {order.registrationFeeDiscount === 100 ? (t("common.free") || "FREE") : formatPrice(order.registrationFee)}
+              </p>
+            </div>
+          </div>
+        )}
         <Separator /><div className="flex justify-between text-lg font-bold"><span>{t("joinWizard.summary.totalDueToday")}</span><span className="text-primary">{formatPrice(order.grandTotal)}</span></div>
         {data.billingFrequency === "monthly" && <p className="text-sm text-muted-foreground text-center">{t("joinWizard.summary.thenMonthly", { amount: formatPrice(monthlyFinal) })}</p>}
       </CardContent></Card>
