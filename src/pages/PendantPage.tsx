@@ -32,15 +32,19 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function PendantPage() {
   const { t } = useTranslation();
+  const { settings: companySettings } = useCompanySettings();
   
   // Batch fetch all images in a single query
   const { getImage } = useWebsiteImagesBatch(["pendant_hero", "pendant_specs"]);
   const pendantHeroImage = getImage("pendant_hero");
   const pendantSpecsImage = getImage("pendant_specs");
 
+  // Format phone for tel: links
+  const phoneForLink = companySettings.emergency_phone.replace(/\s/g, '');
   const features = [
     {
       icon: MapPin,
@@ -233,9 +237,9 @@ export default function PendantPage() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
-                  <a href="tel:+34950473199">
+                  <a href={`tel:${phoneForLink}`}>
                     <Phone className="mr-2 h-5 w-5" />
-                    +34 950 473 199
+                    {companySettings.emergency_phone}
                   </a>
                 </Button>
               </div>
@@ -641,9 +645,9 @@ export default function PendantPage() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
-              <a href="tel:+34950473199">
+              <a href={`tel:${phoneForLink}`}>
                 <Phone className="mr-2 h-5 w-5" />
-                +34 950 473 199
+                {companySettings.emergency_phone}
               </a>
             </Button>
           </div>
@@ -666,8 +670,8 @@ export default function PendantPage() {
             <div>
               <h4 className="font-semibold mb-4">{t("pendant.footer.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li>+34 950 473 199</li>
-                <li>info@icealarm.es</li>
+                <li>{companySettings.emergency_phone}</li>
+                <li>{companySettings.support_email}</li>
                 <li>{t("pendant.footer.whatsappAvailable")}</li>
               </ul>
             </div>
@@ -690,7 +694,7 @@ export default function PendantPage() {
           </div>
           <div className="border-t border-sidebar-border pt-8 text-center text-sm text-sidebar-foreground/60">
             <p>{t("pendant.footer.companyInfo")}</p>
-            <p className="mt-1">© {new Date().getFullYear()} ICE Alarm España. {t("pendant.footer.allRightsReserved")}</p>
+            <p className="mt-1">© {new Date().getFullYear()} {companySettings.company_name}. {t("pendant.footer.allRightsReserved")}</p>
           </div>
         </div>
       </footer>
