@@ -473,33 +473,39 @@ export type Database = {
       conversations: {
         Row: {
           assigned_to: string | null
+          conversation_type: string | null
           created_at: string | null
           id: string
           last_message_at: string | null
-          member_id: string
+          member_id: string | null
           priority: string | null
+          staff_participants: string[] | null
           status: string | null
           subject: string | null
           updated_at: string | null
         }
         Insert: {
           assigned_to?: string | null
+          conversation_type?: string | null
           created_at?: string | null
           id?: string
           last_message_at?: string | null
-          member_id: string
+          member_id?: string | null
           priority?: string | null
+          staff_participants?: string[] | null
           status?: string | null
           subject?: string | null
           updated_at?: string | null
         }
         Update: {
           assigned_to?: string | null
+          conversation_type?: string | null
           created_at?: string | null
           id?: string
           last_message_at?: string | null
-          member_id?: string
+          member_id?: string | null
           priority?: string | null
+          staff_participants?: string[] | null
           status?: string | null
           subject?: string | null
           updated_at?: string | null
