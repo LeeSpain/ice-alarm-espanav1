@@ -1,339 +1,245 @@
 
 
-## Start New Conversation - Staff & Member Messaging
+## First-Time Visitor Language Selection Popup
 
 ### Overview
-Extend the messaging system to allow staff to create conversations with **both members AND other staff members**. Currently, the `conversations` table requires a `member_id` (NOT NULL), which prevents staff-to-staff messaging.
+Create a professional, welcoming popup that appears immediately when a first-time visitor lands on the site. The popup will display the ICE Alarm logo and two large clickable flag options (UK and Spain flags) for English and Spanish. Once selected, the language is set across the entire platform and the choice is remembered so the popup never shows again.
 
 ---
 
-### Phase 1: Database Schema Update
+### Design Specification
 
-**Modify `conversations` table to support staff-only conversations:**
-
-```sql
--- Make member_id nullable to allow staff-only conversations
-ALTER TABLE public.conversations 
-ALTER COLUMN member_id DROP NOT NULL;
-
--- Add staff_participants column for staff-to-staff and group conversations
-ALTER TABLE public.conversations 
-ADD COLUMN staff_participants UUID[] DEFAULT '{}';
-
--- Add conversation_type to distinguish between types
-ALTER TABLE public.conversations 
-ADD COLUMN conversation_type TEXT DEFAULT 'member' 
-CHECK (conversation_type IN ('member', 'staff', 'internal'));
-```
-
-| Conversation Type | Description |
-|-------------------|-------------|
-| `member` | Staff-to-member conversation (current behavior) |
-| `staff` | Staff-to-staff direct messaging |
-| `internal` | Internal team thread (no member) |
-
-**Update RLS Policies:**
-```sql
--- Staff can view conversations they're part of (as participants or assigned)
-CREATE POLICY "Staff can view own staff conversations"
-ON public.conversations FOR SELECT
-USING (
-  is_staff(auth.uid()) AND (
-    conversation_type = 'member' 
-    OR (SELECT id FROM staff WHERE user_id = auth.uid()) = ANY(staff_participants)
-    OR assigned_to = (SELECT id FROM staff WHERE user_id = auth.uid())
-  )
-);
-```
-
----
-
-### Phase 2: Update "Start New Conversation" Dialog
-
-**File:** `src/pages/admin/MessagesPage.tsx`
-
-**Changes:**
-1. Add conversation type selector (tabs or radio): "Message Member" | "Message Staff"
-2. Conditionally show Member dropdown OR Staff dropdown based on selection
-3. Update `createConversation()` to handle both types
-
-**Updated Dialog UI:**
+**Visual Design:**
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Start New Conversation                                     │
-│  Create a new conversation                                  │
-├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌──────────────────┐ ┌──────────────────┐                 │
-│  │  💬 Member       │ │  👥 Staff        │  ← Tab selection │
-│  └──────────────────┘ └──────────────────┘                 │
+│                     [ICE Alarm Logo]                        │
+│                        España                               │
 │                                                             │
-│  [If Member Tab]                                            │
-│  Select Member *                                            │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ Search or select a member...                    ▼   │   │
-│  └─────────────────────────────────────────────────────┘   │
+│              Choose Your Preferred Language                 │
+│              Elija su idioma preferido                      │
 │                                                             │
-│  [If Staff Tab]                                             │
-│  Select Staff Member(s) *                                   │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ John Smith (Admin)                              ▼   │   │
-│  │ ☑ Sarah Jones (Call Centre)                         │   │
-│  │ ☑ Mike Wilson (Supervisor)                          │   │
-│  └─────────────────────────────────────────────────────┘   │
+│     ┌─────────────────┐    ┌─────────────────┐             │
+│     │                 │    │                 │             │
+│     │    🇬🇧 / 🇪🇸     │    │    🇬🇧 / 🇪🇸     │             │
+│     │   (SVG Flag)    │    │   (SVG Flag)    │             │
+│     │                 │    │                 │             │
+│     │    English      │    │    Español      │             │
+│     │                 │    │                 │             │
+│     └─────────────────┘    └─────────────────┘             │
 │                                                             │
-│  Subject *                                                  │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ e.g., Shift handover, Device escalation...          │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  Priority                                                   │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ Normal                                          ▼   │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  Message *                                                  │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                                                     │   │
-│  │                                                     │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│                              [Cancel]  [Start Conversation] │
 └─────────────────────────────────────────────────────────────┘
 ```
 
----
-
-### Phase 3: Update Conversation Creation Logic
-
-**Current State Object:**
-```typescript
-const [newConversation, setNewConversation] = useState({
-  memberId: "",
-  subject: "",
-  message: "",
-  priority: "normal",
-});
-```
-
-**Updated State Object:**
-```typescript
-const [newConversation, setNewConversation] = useState({
-  type: "member" as "member" | "staff",
-  memberId: "",
-  staffParticipants: [] as string[],
-  subject: "",
-  message: "",
-  priority: "normal",
-});
-```
-
-**Updated Create Function:**
-```typescript
-const createConversation = async () => {
-  const isStaffConversation = newConversation.type === "staff";
-  
-  // Validation
-  if (isStaffConversation && newConversation.staffParticipants.length === 0) {
-    toast.error("Please select at least one staff member");
-    return;
-  }
-  if (!isStaffConversation && !newConversation.memberId) {
-    toast.error("Please select a member");
-    return;
-  }
-
-  const { data: convData, error } = await supabase
-    .from("conversations")
-    .insert({
-      member_id: isStaffConversation ? null : newConversation.memberId,
-      staff_participants: isStaffConversation 
-        ? [...newConversation.staffParticipants, currentStaffId] 
-        : [],
-      conversation_type: isStaffConversation ? "staff" : "member",
-      subject: newConversation.subject,
-      status: "open",
-      priority: newConversation.priority,
-      assigned_to: currentStaffId,
-    })
-    .select()
-    .single();
-
-  // ... create first message
-};
-```
+**Key Features:**
+- Modal overlay with blurred background
+- Logo prominently displayed at top
+- Bilingual heading (both languages shown)
+- Two large, hoverable flag cards
+- Smooth animations on hover
+- No close button - user must select a language
+- Professional, clean design matching brand identity
 
 ---
 
-### Phase 4: Update Conversation List Display
+### Phase 1: Create Language Selection Modal Component
 
-**Modified Conversation Interface:**
+**File:** `src/components/LanguageSelectionModal.tsx`
+
+**Component Features:**
+- Uses Dialog component from Radix UI
+- Controlled by localStorage check for first-time visitors
+- Large clickable flag cards (not emoji - use proper SVG flags)
+- Bilingual header text (English and Spanish shown together)
+- Sets i18n language on selection
+- Stores `languageSelected: true` in localStorage
+- Smooth fade-in animation
+
+**Component Structure:**
 ```typescript
-interface Conversation {
-  id: string;
-  subject: string | null;
-  status: string;
-  priority: string;
-  last_message_at: string;
-  created_at: string;
-  assigned_to: string | null;
-  conversation_type: "member" | "staff" | "internal";
-  
-  // For member conversations
-  member_id: string | null;
-  member?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  } | null;
-  
-  // For staff conversations
-  staff_participants: string[];
-  participants_info?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-  }[];
-  
-  // Common
-  assigned_staff?: { first_name: string; last_name: string } | null;
-  unread_count?: number;
-  last_message_preview?: string;
+interface LanguageSelectionModalProps {
+  open: boolean;
+  onLanguageSelect: (lang: string) => void;
+}
+
+export function LanguageSelectionModal({ open, onLanguageSelect }: Props) {
+  return (
+    <Dialog open={open}>
+      <DialogContent hideCloseButton className="max-w-md text-center">
+        <Logo size="lg" className="mx-auto mb-4" />
+        
+        <DialogHeader>
+          <DialogTitle className="text-2xl">
+            Choose Your Language / Elija su Idioma
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          {/* English Card */}
+          <button onClick={() => onLanguageSelect('en')} 
+            className="p-6 border rounded-xl hover:border-primary hover:bg-primary/5 transition-all">
+            {/* UK Flag SVG */}
+            <span className="text-lg font-medium mt-3">English</span>
+          </button>
+          
+          {/* Spanish Card */}
+          <button onClick={() => onLanguageSelect('es')}
+            className="p-6 border rounded-xl hover:border-primary hover:bg-primary/5 transition-all">
+            {/* Spain Flag SVG */}
+            <span className="text-lg font-medium mt-3">Español</span>
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 ```
 
-**List Item Display Logic:**
+---
+
+### Phase 2: Create SVG Flag Components
+
+**File:** `src/components/flags/UKFlag.tsx`
+**File:** `src/components/flags/SpainFlag.tsx`
+
+High-quality SVG flag components that scale well and look professional:
+
+**UK Flag Example:**
 ```typescript
-// In conversation list item render
-{conv.conversation_type === "member" ? (
-  <div className="flex items-center gap-2">
-    <User className="h-4 w-4" />
-    <span>{conv.member?.first_name} {conv.member?.last_name}</span>
-  </div>
-) : (
-  <div className="flex items-center gap-2">
-    <Users className="h-4 w-4 text-blue-500" />
-    <span>{conv.participants_info?.map(p => p.first_name).join(", ")}</span>
-    <Badge variant="outline" className="text-xs">Staff</Badge>
-  </div>
-)}
+export function UKFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 30" className={className}>
+      {/* Union Jack SVG paths */}
+    </svg>
+  );
+}
+```
+
+**Spain Flag Example:**
+```typescript
+export function SpainFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className}>
+      {/* Spanish flag SVG paths */}
+    </svg>
+  );
+}
 ```
 
 ---
 
-### Phase 5: Update Fetch & Filter Logic
+### Phase 3: Integrate Modal into App Component
 
-**Updated fetchConversations:**
+**File:** `src/App.tsx`
+
+**Changes:**
+1. Add state to track if language selection popup should show
+2. Check localStorage on mount for `iceAlarmLanguageSelected`
+3. If not found, show the modal
+4. On language selection, set i18n language and store flag in localStorage
+
+**Implementation:**
 ```typescript
-const fetchConversations = async () => {
-  const { data: convData } = await supabase
-    .from("conversations")
-    .select(`
-      *,
-      member:members!conversations_member_id_fkey(id, first_name, last_name, email, phone)
-    `)
-    .order("last_message_at", { ascending: false });
-
-  // Fetch staff participants for staff conversations
-  const staffConversations = convData?.filter(c => c.conversation_type === "staff") || [];
-  const allParticipantIds = staffConversations.flatMap(c => c.staff_participants || []);
+const App = () => {
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   
-  const { data: participantsData } = await supabase
-    .from("staff")
-    .select("id, first_name, last_name")
-    .in("id", allParticipantIds);
-
-  const participantsMap = new Map(participantsData?.map(s => [s.id, s]) || []);
-
-  // Add participants_info to staff conversations
-  const enrichedConversations = convData?.map(conv => ({
-    ...conv,
-    participants_info: conv.conversation_type === "staff"
-      ? (conv.staff_participants || []).map(id => participantsMap.get(id)).filter(Boolean)
-      : undefined,
-  }));
-
-  setConversations(enrichedConversations);
+  useEffect(() => {
+    // Check if this is a first-time visitor
+    const hasSelectedLanguage = localStorage.getItem('iceAlarmLanguageSelected');
+    if (!hasSelectedLanguage) {
+      setShowLanguageModal(true);
+    }
+  }, []);
+  
+  const handleLanguageSelect = async (langCode: string) => {
+    await i18n.changeLanguage(langCode);
+    localStorage.setItem('iceAlarmLanguageSelected', 'true');
+    setShowLanguageModal(false);
+  };
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        {/* ... existing providers */}
+        <LanguageSelectionModal 
+          open={showLanguageModal} 
+          onLanguageSelect={handleLanguageSelect} 
+        />
+        {/* ... rest of app */}
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
 };
 ```
 
-**Updated Filter Tabs:**
-Add a new filter tab for staff conversations:
-```typescript
-<TabsTrigger value="staff">
-  <Users className="h-4 w-4 mr-1" />
-  Staff
-</TabsTrigger>
+---
+
+### Phase 4: Add Translation Keys
+
+**File:** `src/i18n/locales/en.json`
+**File:** `src/i18n/locales/es.json`
+
+Add new translation keys for the language selection modal:
+
+```json
+// en.json - add to "languageSelection" section
+{
+  "languageSelection": {
+    "title": "Choose Your Language",
+    "titleSpanish": "Elija su Idioma", 
+    "english": "English",
+    "spanish": "Español"
+  }
+}
+
+// es.json - add matching section
+{
+  "languageSelection": {
+    "title": "Choose Your Language",
+    "titleSpanish": "Elija su Idioma",
+    "english": "English", 
+    "spanish": "Español"
+  }
+}
 ```
 
-Filter logic:
-```typescript
-case "staff":
-  filtered = filtered.filter(c => c.conversation_type === "staff");
-  break;
-```
+Note: Both titles are shown simultaneously in the modal (bilingual display), so both languages see both texts.
 
 ---
 
-### Phase 6: Apply Same Changes to Call Centre MessagesPage
-
-**File:** `src/pages/call-centre/MessagesPage.tsx`
-
-Apply identical changes:
-1. Update dialog with type selection
-2. Update conversation creation logic
-3. Update conversation list display
-4. Update fetch and filter logic
-
----
-
-### Summary of Files to Modify
+### Summary of Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| Database Migration | Create | Make member_id nullable, add staff_participants & conversation_type |
-| `src/pages/admin/MessagesPage.tsx` | Modify | Add staff messaging to dialog, update list display |
-| `src/pages/call-centre/MessagesPage.tsx` | Modify | Same changes as admin MessagesPage |
+| `src/components/LanguageSelectionModal.tsx` | Create | Main language selection modal component |
+| `src/components/flags/UKFlag.tsx` | Create | High-quality UK flag SVG component |
+| `src/components/flags/SpainFlag.tsx` | Create | High-quality Spain flag SVG component |
+| `src/App.tsx` | Modify | Add modal state, localStorage check, and render modal |
+| `src/i18n/locales/en.json` | Modify | Add languageSelection translation keys |
+| `src/i18n/locales/es.json` | Modify | Add languageSelection translation keys |
 
 ---
 
-### Technical Implementation Details
+### Technical Details
 
-**Database Migration SQL:**
-```sql
--- 1. Make member_id nullable
-ALTER TABLE public.conversations ALTER COLUMN member_id DROP NOT NULL;
+**localStorage Key:** `iceAlarmLanguageSelected`
+- Value: `"true"` when user has made a selection
+- Checked on every app load
+- Combined with existing `i18nextLng` key for language persistence
 
--- 2. Add new columns
-ALTER TABLE public.conversations ADD COLUMN conversation_type TEXT DEFAULT 'member';
-ALTER TABLE public.conversations ADD COLUMN staff_participants UUID[] DEFAULT '{}';
+**Why Not Use i18nextLng Key Alone?**
+- The browser language detector sets `i18nextLng` automatically based on browser settings
+- We need a separate flag to distinguish between "auto-detected" and "user-selected"
+- This ensures the popup only shows once, even if user later clears just the language preference
 
--- 3. Add check constraint
-ALTER TABLE public.conversations ADD CONSTRAINT conversation_type_check 
-CHECK (conversation_type IN ('member', 'staff', 'internal'));
+**Modal Behavior:**
+- Cannot be dismissed without selection (no X button, no backdrop click)
+- Blocks interaction with the rest of the site
+- Professional, welcoming design
+- Large touch-friendly buttons for elderly users
 
--- 4. Update existing conversations to have type 'member'
-UPDATE public.conversations SET conversation_type = 'member' WHERE conversation_type IS NULL;
-
--- 5. Ensure existing RLS still works - staff can manage all types
--- (Existing policy already allows staff to manage all conversations)
-```
-
-**UI Component Updates:**
-- Import `Users` icon from lucide-react for staff conversations
-- Add Tabs component inside dialog for type selection
-- Conditionally render member dropdown vs staff multi-select
-- Use Checkbox for multi-select staff participants
-
----
-
-### Visual Indicators in Conversation List
-
-| Type | Icon | Badge |
-|------|------|-------|
-| Member | `<User />` | None |
-| Staff | `<Users className="text-blue-500" />` | `Staff` outline badge |
-| Internal | `<MessageSquare className="text-purple-500" />` | `Internal` outline badge |
+**Performance:**
+- Modal component is loaded immediately (not lazy loaded)
+- Both language bundles already eagerly loaded
+- Instant language switch with no network delay
 
