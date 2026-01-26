@@ -38,7 +38,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
     setError(null);
     try {
       const { referralCode: partnerRef, utmParams } = getStoredReferralData();
-      const { data: registrationResult, error: registrationError } = await supabase.functions.invoke("submit-registration", { body: { membershipType: data.membershipType, primaryMember: data.primaryMember, partnerMember: data.partnerMember, address: data.address, medicalInfo: data.medicalInfo, partnerMedicalInfo: data.partnerMedicalInfo, emergencyContacts: data.emergencyContacts, includePendant: data.includePendant, pendantCount: data.pendantCount, billingFrequency: data.billingFrequency, partnerRef, utmParams } });
+      const { data: registrationResult, error: registrationError } = await supabase.functions.invoke("submit-registration", { body: { membershipType: data.membershipType, primaryMember: data.primaryMember, partnerMember: data.partnerMember, address: data.address, separateAddresses: data.separateAddresses, partnerAddress: data.partnerAddress, emergencyContacts: data.emergencyContacts, includePendant: data.includePendant, pendantCount: data.pendantCount, billingFrequency: data.billingFrequency, partnerRef, utmParams } });
       if (registrationError) throw new Error(registrationError.message || "Failed to submit registration");
       if (!registrationResult?.success) throw new Error(registrationResult?.error || "Registration failed");
       onUpdate({ memberId: registrationResult.memberId, orderId: registrationResult.orderNumber });
