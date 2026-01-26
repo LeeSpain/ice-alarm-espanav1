@@ -52,22 +52,20 @@ export interface JoinWizardData {
   
   // Step 3: Address
   address: AddressDetails;
+  separateAddresses?: boolean;
+  partnerAddress?: AddressDetails;
   
-  // Step 4: Medical Information
-  medicalInfo: MedicalDetails;
-  partnerMedicalInfo?: MedicalDetails;
-  
-  // Step 5: Emergency Contacts
+  // Step 4: Emergency Contacts (Medical moved to post-payment intake)
   emergencyContacts: EmergencyContact[];
   
-  // Step 6: Pendant Option
+  // Step 5: Pendant Option
   includePendant: boolean;
   pendantCount: number;
   
-  // Step 7: Billing & Summary
+  // Step 6: Billing & Summary
   billingFrequency: "monthly" | "annual";
   
-  // Step 8: Terms & Payment
+  // Step 7: Terms & Payment
   acceptTerms: boolean;
   acceptPrivacy: boolean;
   paymentComplete: boolean;
@@ -99,16 +97,7 @@ export const initialJoinWizardData: JoinWizardData = {
     postalCode: "",
     country: "Spain",
   },
-  medicalInfo: {
-    bloodType: "",
-    allergies: [],
-    medications: [],
-    medicalConditions: [],
-    doctorName: "",
-    doctorPhone: "",
-    hospitalPreference: "",
-    additionalNotes: "",
-  },
+  separateAddresses: false,
   emergencyContacts: [],
   includePendant: true,
   pendantCount: 1,

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Heart, Phone, Smartphone, FileText, CreditCard, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Phone, Smartphone, FileText, CreditCard, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JoinWizardData, initialJoinWizardData } from "@/types/wizard";
 import { Logo } from "@/components/ui/logo";
@@ -16,7 +16,6 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { JoinMembershipStep } from "@/components/join/steps/JoinMembershipStep";
 import { JoinPersonalStep } from "@/components/join/steps/JoinPersonalStep";
 import { JoinAddressStep } from "@/components/join/steps/JoinAddressStep";
-import { JoinMedicalStep } from "@/components/join/steps/JoinMedicalStep";
 import { JoinContactsStep } from "@/components/join/steps/JoinContactsStep";
 import { JoinPendantStep } from "@/components/join/steps/JoinPendantStep";
 import { JoinSummaryStep } from "@/components/join/steps/JoinSummaryStep";
@@ -27,12 +26,11 @@ const steps = [
   { id: 1, titleKey: "joinWizard.steps.plan", icon: Users, shortTitleKey: "joinWizard.steps.plan" },
   { id: 2, titleKey: "joinWizard.steps.personal", icon: User, shortTitleKey: "joinWizard.steps.personal" },
   { id: 3, titleKey: "joinWizard.steps.address", icon: MapPin, shortTitleKey: "joinWizard.steps.address" },
-  { id: 4, titleKey: "joinWizard.steps.medical", icon: Heart, shortTitleKey: "joinWizard.steps.medical" },
-  { id: 5, titleKey: "joinWizard.steps.contacts", icon: Phone, shortTitleKey: "joinWizard.steps.contacts" },
-  { id: 6, titleKey: "joinWizard.steps.device", icon: Smartphone, shortTitleKey: "joinWizard.steps.device" },
-  { id: 7, titleKey: "joinWizard.steps.review", icon: FileText, shortTitleKey: "joinWizard.steps.review" },
-  { id: 8, titleKey: "joinWizard.steps.payment", icon: CreditCard, shortTitleKey: "joinWizard.steps.payment" },
-  { id: 9, titleKey: "joinWizard.steps.complete", icon: PartyPopper, shortTitleKey: "joinWizard.steps.complete" },
+  { id: 4, titleKey: "joinWizard.steps.contacts", icon: Phone, shortTitleKey: "joinWizard.steps.contacts" },
+  { id: 5, titleKey: "joinWizard.steps.device", icon: Smartphone, shortTitleKey: "joinWizard.steps.device" },
+  { id: 6, titleKey: "joinWizard.steps.review", icon: FileText, shortTitleKey: "joinWizard.steps.review" },
+  { id: 7, titleKey: "joinWizard.steps.payment", icon: CreditCard, shortTitleKey: "joinWizard.steps.payment" },
+  { id: 8, titleKey: "joinWizard.steps.complete", icon: PartyPopper, shortTitleKey: "joinWizard.steps.complete" },
 ];
 
 const WIZARD_STORAGE_KEY = "join_wizard_data";
@@ -83,7 +81,7 @@ export default function JoinWizard() {
             paymentComplete: true,
             orderId: orderNumber,
           });
-          setCurrentStep(9); // Go to confirmation step
+          setCurrentStep(8); // Go to confirmation step
           toast.success("Payment successful! Welcome to ICE Alarm.");
         } catch (e) {
           console.error("Failed to parse saved wizard data:", e);
@@ -95,7 +93,7 @@ export default function JoinWizard() {
           paymentComplete: true,
           orderId: orderNumber,
         }));
-        setCurrentStep(9);
+        setCurrentStep(8);
         toast.success("Payment successful! Welcome to ICE Alarm.");
       }
       // Clear saved data and registration session
@@ -110,7 +108,7 @@ export default function JoinWizard() {
         try {
           const parsed = JSON.parse(savedData);
           setWizardData(parsed);
-          setCurrentStep(8); // Go back to payment step
+          setCurrentStep(7); // Go back to payment step
         } catch (e) {
           console.error("Failed to parse saved wizard data:", e);
         }
@@ -149,23 +147,31 @@ export default function JoinWizard() {
         }
         return primaryValid;
       case 3:
-        return !!(
+        const primaryAddressValid = !!(
           wizardData.address.addressLine1 &&
           wizardData.address.city &&
           wizardData.address.province &&
           wizardData.address.postalCode
         );
+        if (wizardData.membershipType === "couple" && wizardData.separateAddresses) {
+          const partnerAddressValid = !!(
+            wizardData.partnerAddress?.addressLine1 &&
+            wizardData.partnerAddress?.city &&
+            wizardData.partnerAddress?.province &&
+            wizardData.partnerAddress?.postalCode
+          );
+          return primaryAddressValid && partnerAddressValid;
+        }
+        return primaryAddressValid;
       case 4:
-        return true; // Medical info is optional
-      case 5:
         return wizardData.emergencyContacts.length >= 1;
-      case 6:
+      case 5:
         return true; // Pendant option always valid
-      case 7:
+      case 6:
         return wizardData.acceptTerms && wizardData.acceptPrivacy;
-      case 8:
+      case 7:
         return wizardData.paymentComplete;
-      case 9:
+      case 8:
         return true;
       default:
         return true;
@@ -215,10 +221,24 @@ export default function JoinWizard() {
         if (!wizardData.address.postalCode) {
           return "Please enter your postal code";
         }
+        if (wizardData.membershipType === "couple" && wizardData.separateAddresses) {
+          if (!wizardData.partnerAddress?.addressLine1) {
+            return "Please enter your partner's street address";
+          }
+          if (!wizardData.partnerAddress?.city) {
+            return "Please enter your partner's city";
+          }
+          if (!wizardData.partnerAddress?.province) {
+            return "Please select your partner's province";
+          }
+          if (!wizardData.partnerAddress?.postalCode) {
+            return "Please enter your partner's postal code";
+          }
+        }
         return null;
-      case 5:
+      case 4:
         return "Please add at least one emergency contact";
-      case 7:
+      case 6:
         if (!wizardData.acceptTerms) {
           return "Please accept the Terms of Service";
         }
@@ -258,7 +278,7 @@ export default function JoinWizard() {
 
   const handleStepClick = (stepId: number) => {
     // Allow navigation to completed steps or current step (but not beyond, and not after completion)
-    if (stepId <= currentStep && currentStep < 9) {
+    if (stepId <= currentStep && currentStep < 8) {
       setCurrentStep(stepId);
     }
   };
@@ -279,14 +299,12 @@ export default function JoinWizard() {
       case 3:
         return <JoinAddressStep data={wizardData} onUpdate={updateWizardData} />;
       case 4:
-        return <JoinMedicalStep data={wizardData} onUpdate={updateWizardData} />;
-      case 5:
         return <JoinContactsStep data={wizardData} onUpdate={updateWizardData} />;
-      case 6:
+      case 5:
         return <JoinPendantStep data={wizardData} onUpdate={updateWizardData} />;
-      case 7:
+      case 6:
         return <JoinSummaryStep data={wizardData} onUpdate={updateWizardData} />;
-      case 8:
+      case 7:
         return (
           <JoinPaymentStep 
             data={wizardData} 
@@ -294,7 +312,7 @@ export default function JoinWizard() {
             onPaymentInitiated={handlePaymentInitiated}
           />
         );
-      case 9:
+      case 8:
         return <JoinConfirmationStep data={wizardData} />;
       default:
         return null;
@@ -302,7 +320,7 @@ export default function JoinWizard() {
   };
 
   // Don't show navigation buttons on payment step (handled internally) or confirmation step
-  const showNavigationButtons = currentStep !== 8 && currentStep !== 9;
+  const showNavigationButtons = currentStep !== 7 && currentStep !== 8;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -312,7 +330,7 @@ export default function JoinWizard() {
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-8 w-auto" />
           </Link>
-          {currentStep < 9 && (
+          {currentStep < 8 && (
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
               {t("joinWizard.exit")}
             </Link>
@@ -321,7 +339,7 @@ export default function JoinWizard() {
       </header>
 
       <main className="container max-w-4xl py-8 px-4">
-        {currentStep < 9 && (
+        {currentStep < 8 && (
           <>
             {/* Progress Bar */}
             <Progress value={progress} className="h-2 mb-6" />
@@ -413,7 +431,7 @@ export default function JoinWizard() {
         )}
 
         {/* Back button on payment step */}
-        {currentStep === 8 && (
+        {currentStep === 7 && (
           <div className="flex justify-start mt-8">
             <Button
               variant="outline"
