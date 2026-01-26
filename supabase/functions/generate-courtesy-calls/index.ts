@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     // Fetch all active members with courtesy calls enabled
     const { data: members, error: membersError } = await supabase
       .from("members")
-      .select("id, first_name, last_name, phone, created_at")
+      .select("id, first_name, last_name, phone, created_at, courtesy_call_frequency, next_courtesy_call_date")
       .eq("status", "active")
       .eq("courtesy_calls_enabled", true);
 
@@ -37,27 +37,78 @@ Deno.serve(async (req) => {
     let tasksCreated = 0;
     let tasksSkipped = 0;
 
-    for (const member of members || []) {
-      const memberCreatedAt = new Date(member.created_at);
-      const memberDay = memberCreatedAt.getDate();
+    // Helper function to calculate next call date based on frequency
+    const calculateNextCallDate = (frequency: string, baseDate: Date = new Date()): Date => {
+      const result = new Date(baseDate);
+      switch (frequency) {
+        case "daily":
+          result.setDate(result.getDate() + 1);
+          break;
+        case "weekly":
+          result.setDate(result.getDate() + 7);
+          break;
+        case "bi-weekly":
+          result.setDate(result.getDate() + 14);
+          break;
+        case "quarterly":
+          result.setMonth(result.getMonth() + 3);
+          break;
+        case "monthly":
+        default:
+          result.setMonth(result.getMonth() + 1);
+          break;
+      }
+      return result;
+    };
 
-      // Check if today is the member's monthly anniversary
-      if (memberDay !== todayDay) {
+    // Helper function to get frequency label for task title
+    const getFrequencyLabel = (frequency: string): string => {
+      switch (frequency) {
+        case "daily": return "Daily";
+        case "weekly": return "Weekly";
+        case "bi-weekly": return "Bi-weekly";
+        case "quarterly": return "Quarterly";
+        case "monthly":
+        default:
+          return "Monthly";
+      }
+    };
+
+    // Helper function to check if task should be generated based on frequency
+    const shouldGenerateTask = (frequency: string, nextCallDate: string | null): boolean => {
+      const todayStr = today.toISOString().split("T")[0];
+      
+      // If next call date is set, check if it's today or in the past
+      if (nextCallDate) {
+        return nextCallDate <= todayStr;
+      }
+      
+      // If no next call date is set, generate task (first time)
+      return true;
+    };
+
+    for (const member of members || []) {
+      const frequency = (member as any).courtesy_call_frequency || "monthly";
+      const nextCallDate = member.next_courtesy_call_date;
+
+      // Check if we should generate a task based on frequency
+      if (!shouldGenerateTask(frequency, nextCallDate)) {
         continue;
       }
 
-      // Check if a courtesy call task already exists for this member this month
-      const monthStart = new Date(currentYear, currentMonth, 1);
-      const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+      // Check if a courtesy call task already exists for this member today (to avoid duplicates)
+      const todayStart = new Date(today);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(today);
+      todayEnd.setHours(23, 59, 59, 999);
 
       const { data: existingTasks, error: tasksError } = await supabase
         .from("tasks")
         .select("id")
         .eq("member_id", member.id)
         .eq("task_type", "courtesy_call")
-        .gte("created_at", monthStart.toISOString())
-        .lte("created_at", monthEnd.toISOString())
-        .neq("status", "completed");
+        .gte("created_at", todayStart.toISOString())
+        .lte("created_at", todayEnd.toISOString());
 
       if (tasksError) {
         console.error(`Error checking existing tasks for member ${member.id}:`, tasksError);
@@ -65,7 +116,7 @@ Deno.serve(async (req) => {
       }
 
       if (existingTasks && existingTasks.length > 0) {
-        console.log(`Courtesy call task already exists for member ${member.id} this month`);
+        console.log(`Courtesy call task already exists for member ${member.id} today`);
         tasksSkipped++;
         continue;
       }
@@ -74,9 +125,10 @@ Deno.serve(async (req) => {
       const dueDate = new Date();
       dueDate.setHours(17, 0, 0, 0); // Set due time to 5 PM
 
+      const frequencyLabel = getFrequencyLabel(frequency);
       const { error: insertError } = await supabase.from("tasks").insert({
-        title: `Monthly Courtesy Call - ${member.first_name} ${member.last_name}`,
-        description: `Monthly check-in call for ${member.first_name} ${member.last_name}. Phone: ${member.phone || 'N/A'}`,
+        title: `${frequencyLabel} Courtesy Call - ${member.first_name} ${member.last_name}`,
+        description: `${frequencyLabel} check-in call for ${member.first_name} ${member.last_name}. Phone: ${member.phone || 'N/A'}`,
         member_id: member.id,
         task_type: "courtesy_call",
         priority: "normal",
@@ -89,14 +141,14 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      console.log(`Created courtesy call task for member ${member.id}`);
+      console.log(`Created ${frequencyLabel.toLowerCase()} courtesy call task for member ${member.id}`);
       tasksCreated++;
 
-      // Update next courtesy call date for the member
-      const nextMonth = new Date(currentYear, currentMonth + 1, memberDay);
+      // Update next courtesy call date for the member based on frequency
+      const nextDate = calculateNextCallDate(frequency);
       await supabase
         .from("members")
-        .update({ next_courtesy_call_date: nextMonth.toISOString().split("T")[0] })
+        .update({ next_courtesy_call_date: nextDate.toISOString().split("T")[0] })
         .eq("id", member.id);
     }
 

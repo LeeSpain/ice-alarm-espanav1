@@ -1309,6 +1309,7 @@ export type Database = {
           address_line_2: string | null
           city: string
           country: string | null
+          courtesy_call_frequency: string | null
           courtesy_calls_enabled: boolean | null
           created_at: string | null
           date_of_birth: string
@@ -1337,6 +1338,7 @@ export type Database = {
           address_line_2?: string | null
           city: string
           country?: string | null
+          courtesy_call_frequency?: string | null
           courtesy_calls_enabled?: boolean | null
           created_at?: string | null
           date_of_birth: string
@@ -1365,6 +1367,7 @@ export type Database = {
           address_line_2?: string | null
           city?: string
           country?: string | null
+          courtesy_call_frequency?: string | null
           courtesy_calls_enabled?: boolean | null
           created_at?: string | null
           date_of_birth?: string
@@ -2677,6 +2680,7 @@ export type Database = {
           address_line_2: string | null
           city: string
           country: string | null
+          courtesy_call_frequency: string | null
           courtesy_calls_enabled: boolean | null
           created_at: string | null
           date_of_birth: string
