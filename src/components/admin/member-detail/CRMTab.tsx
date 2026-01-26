@@ -99,17 +99,24 @@ export function CRMTab({ memberId }: CRMTabProps) {
     );
   }
 
+  // Always show courtesy calls, even if no CRM data
   if (!profile && !importRow) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No CRM data available for this member</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            This member was not imported from CRM or has no CRM profile attached.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Always show Courtesy Calls Card */}
+        <CourtesyCallsCard memberId={memberId} />
+        
+        {/* CRM empty state */}
+        <Card>
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No CRM data available for this member</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              This member was not imported from CRM or has no CRM profile attached.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

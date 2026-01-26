@@ -4,17 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { 
   AlertTriangle, 
   Clock, 
   MessageSquare, 
   CheckCircle, 
   ClipboardList,
-  Search,
   Phone,
   ArrowRight,
-  User,
   FileText,
   Plus,
   Cake
@@ -50,6 +47,19 @@ interface Task {
   member?: {
     first_name: string;
     last_name: string;
+  };
+}
+
+interface CourtesyCall {
+  id: string;
+  title: string;
+  due_date: string;
+  status: string;
+  member_id: string;
+  member: {
+    first_name: string;
+    last_name: string;
+    phone: string;
   };
 }
 
@@ -98,9 +108,8 @@ export default function StaffDashboard() {
   const [recentMessages, setRecentMessages] = useState<Message[]>([]);
   const [shiftNotes, setShiftNotes] = useState<ShiftNote[]>([]);
   const [birthdays, setBirthdays] = useState<BirthdayMember[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [courtesyCalls, setCourtesyCalls] = useState<CourtesyCall[]>([]);
+  const [isCompletingCall, setIsCompletingCall] = useState<string | null>(null);
 
   // Fetch staff ID on mount
   useEffect(() => {
@@ -143,10 +152,18 @@ export default function StaffDashboard() {
       })
       .subscribe();
 
+    const tasksChannel = supabase
+      .channel('dashboard-courtesy-calls')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        fetchCourtesyCalls();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(alertsChannel);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(membersChannel);
+      supabase.removeChannel(tasksChannel);
     };
   }, [staffId]);
 
@@ -158,7 +175,8 @@ export default function StaffDashboard() {
       fetchRecentMessages(),
       fetchMyTasks(),
       fetchShiftNotes(),
-      fetchBirthdays()
+      fetchBirthdays(),
+      fetchCourtesyCalls()
     ]);
   };
 
@@ -280,22 +298,45 @@ export default function StaffDashboard() {
     }
   };
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
+  const fetchCourtesyCalls = async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        id,
+        title,
+        due_date,
+        status,
+        member_id,
+        member:members(first_name, last_name, phone)
+      `)
+      .eq('task_type', 'courtesy_call')
+      .neq('status', 'completed')
+      .order('due_date', { ascending: true })
+      .limit(10);
+
+    if (!error && data) {
+      setCourtesyCalls((data as any[]) || []);
     }
+  };
 
-    setIsSearching(true);
-    const { data } = await supabase
-      .from('members')
-      .select('id, first_name, last_name, phone, email')
-      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
-      .limit(5);
+  const handleCompleteCourtesyCall = async (taskId: string) => {
+    setIsCompletingCall(taskId);
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          status: 'completed', 
+          completed_at: new Date().toISOString() 
+        })
+        .eq('id', taskId);
 
-    setSearchResults(data || []);
-    setIsSearching(false);
+      if (error) throw error;
+      fetchCourtesyCalls();
+    } catch (error) {
+      console.error('Error completing courtesy call:', error);
+    } finally {
+      setIsCompletingCall(null);
+    }
   };
 
   const handleClaimAlert = async (alertId: string) => {
@@ -455,56 +496,78 @@ export default function StaffDashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Member Search */}
+        {/* Courtesy Calls */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.quickMemberSearch')}</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Phone className="h-5 w-5 text-primary" />
+                {t('staffDashboard.courtesyCalls', 'Courtesy Calls')}
+                {courtesyCalls.length > 0 && (
+                  <Badge variant="secondary">{courtesyCalls.length}</Badge>
+                )}
+              </CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/call-centre/members">
-                  {t('staffDashboard.browseAll')} <ArrowRight className="h-4 w-4 ml-1" />
+                <Link to="/call-centre/tasks?filter=courtesy_call">
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('staffDashboard.searchPlaceholder')}
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
-            
-            {searchResults.length > 0 && (
+            {courtesyCalls.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
+                <p>{t('staffDashboard.noCourtesyCallsDue', 'No courtesy calls pending')}</p>
+              </div>
+            ) : (
               <div className="space-y-2">
-                {searchResults.map((member) => (
+                {courtesyCalls.map((call) => (
                   <div 
-                    key={member.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/call-centre/members/${member.id}`)}
+                    key={call.id} 
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
                   >
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 flex-1 cursor-pointer"
+                      onClick={() => navigate(`/call-centre/members/${call.member_id}`)}
+                    >
                       <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary" />
+                        <Phone className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{member.first_name} {member.last_name}</p>
-                        <p className="text-xs text-muted-foreground">{member.phone}</p>
+                        <p className="font-medium">{call.member?.first_name} {call.member?.last_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {call.member?.phone} • {call.due_date ? format(new Date(call.due_date), 'MMM d') : 'No date'}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}>
-                      <Phone className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${call.member?.phone}`; }}
+                        title={t('common.call', 'Call')}
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleCompleteCourtesyCall(call.id)}
+                        disabled={isCompletingCall === call.id}
+                        title={t('common.markComplete', 'Mark Complete')}
+                        className="text-status-active hover:text-status-active"
+                      >
+                        {isCompletingCall === call.id ? (
+                          <Clock className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
-
-            {searchQuery.length >= 2 && searchResults.length === 0 && !isSearching && (
-              <p className="text-center text-muted-foreground py-4">{t('staffDashboard.noMembersFound')}</p>
             )}
           </CardContent>
         </Card>
