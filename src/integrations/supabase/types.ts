@@ -2725,7 +2725,11 @@ export type Database = {
         | "geo_fence"
         | "check_in"
         | "manual"
-      app_role: "super_admin" | "admin" | "call_centre"
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "call_centre"
+        | "call_centre_supervisor"
       billing_frequency: "monthly" | "annual"
       commission_status: "pending_release" | "approved" | "paid" | "cancelled"
       communication_direction: "inbound" | "outbound"
@@ -2920,7 +2924,12 @@ export const Constants = {
         "check_in",
         "manual",
       ],
-      app_role: ["super_admin", "admin", "call_centre"],
+      app_role: [
+        "super_admin",
+        "admin",
+        "call_centre",
+        "call_centre_supervisor",
+      ],
       billing_frequency: ["monthly", "annual"],
       commission_status: ["pending_release", "approved", "paid", "cancelled"],
       communication_direction: ["inbound", "outbound"],
