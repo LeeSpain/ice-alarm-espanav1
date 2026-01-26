@@ -222,12 +222,12 @@ export default function ShiftNotesPage() {
 
                 <div>
                   <Label>Related Member (Optional)</Label>
-                  <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                  <Select value={selectedMemberId} onValueChange={(val) => setSelectedMemberId(val === "none" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a member..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {members.map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name}
