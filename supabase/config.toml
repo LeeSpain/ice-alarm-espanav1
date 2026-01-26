@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.staff-register]
 verify_jwt = false
+
+[functions.partner-admin-create]
+verify_jwt = false
