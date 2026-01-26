@@ -4,8 +4,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
   Loader2, Plus, Send, MessageSquare, Search,
-  Phone, Mail, User, Clock, CheckCircle, ListTodo,
-  ExternalLink, Paperclip, StickyNote
+  Phone, ExternalLink, StickyNote, Users, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -42,14 +42,21 @@ interface Conversation {
   last_message_at: string;
   created_at: string;
   assigned_to: string | null;
-  member_id: string;
+  conversation_type: "member" | "staff" | "internal";
+  member_id: string | null;
   member?: {
     id: string;
     first_name: string;
     last_name: string;
     email: string;
     phone: string;
-  };
+  } | null;
+  staff_participants?: string[];
+  participants_info?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[];
   assigned_staff?: {
     first_name: string;
     last_name: string;
@@ -100,7 +107,9 @@ export default function MessagesPage() {
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [newConversation, setNewConversation] = useState({
+    type: "member" as "member" | "staff",
     memberId: "",
+    staffParticipants: [] as string[],
     subject: "",
     message: "",
     priority: "normal",
@@ -214,6 +223,15 @@ export default function MessagesPage() {
 
       const staffMap = new Map(staffData?.map(s => [s.id, s]) || []);
 
+      // Fetch staff participants info for staff conversations
+      const staffConvs = convData?.filter(c => c.conversation_type === "staff") || [];
+      const allParticipantIds = staffConvs.flatMap(c => c.staff_participants || []);
+      const { data: participantsData } = await supabase
+        .from("staff")
+        .select("id, first_name, last_name")
+        .in("id", allParticipantIds);
+      const participantsMap = new Map(participantsData?.map(s => [s.id, s]) || []);
+
       // Fetch unread counts and last message preview
       const conversationsWithDetails = await Promise.all(
         (convData || []).map(async (conv) => {
@@ -222,7 +240,7 @@ export default function MessagesPage() {
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
             .eq("is_read", false)
-            .eq("sender_type", "member");
+            .neq("sender_type", "staff");
 
           const { data: lastMsg } = await supabase
             .from("messages")
@@ -234,14 +252,18 @@ export default function MessagesPage() {
 
           return {
             ...conv,
+            conversation_type: (conv.conversation_type || "member") as "member" | "staff" | "internal",
             assigned_staff: conv.assigned_to ? staffMap.get(conv.assigned_to) || null : null,
+            participants_info: conv.conversation_type === "staff"
+              ? (conv.staff_participants || []).map((id: string) => participantsMap.get(id)).filter(Boolean)
+              : undefined,
             unread_count: count || 0,
             last_message_preview: lastMsg?.content?.substring(0, 60) + (lastMsg?.content && lastMsg.content.length > 60 ? "..." : "") || "",
           };
         })
       );
 
-      setConversations(conversationsWithDetails);
+      setConversations(conversationsWithDetails as Conversation[]);
     } catch (error) {
       console.error("Error fetching conversations:", error);
       toast.error("Failed to load conversations");
@@ -259,13 +281,16 @@ export default function MessagesPage() {
         filtered = filtered.filter(c => (c.unread_count || 0) > 0);
         break;
       case "mine":
-        filtered = filtered.filter(c => c.assigned_to === currentStaffId);
+        filtered = filtered.filter(c => c.assigned_to === currentStaffId || (c.staff_participants || []).includes(currentStaffId || ""));
         break;
       case "unassigned":
-        filtered = filtered.filter(c => !c.assigned_to);
+        filtered = filtered.filter(c => !c.assigned_to && c.conversation_type === "member");
         break;
       case "resolved":
         filtered = filtered.filter(c => c.status === "resolved" || c.status === "closed");
+        break;
+      case "staff":
+        filtered = filtered.filter(c => c.conversation_type === "staff");
         break;
     }
 
@@ -353,7 +378,18 @@ export default function MessagesPage() {
   };
 
   const createConversation = async () => {
-    if (!newConversation.memberId || !newConversation.subject.trim() || !newConversation.message.trim()) {
+    const isStaffConversation = newConversation.type === "staff";
+
+    // Validation
+    if (isStaffConversation && newConversation.staffParticipants.length === 0) {
+      toast.error("Please select at least one staff member");
+      return;
+    }
+    if (!isStaffConversation && !newConversation.memberId) {
+      toast.error("Please select a member");
+      return;
+    }
+    if (!newConversation.subject.trim() || !newConversation.message.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -364,7 +400,11 @@ export default function MessagesPage() {
       const { data: convData, error: convError } = await supabase
         .from("conversations")
         .insert({
-          member_id: newConversation.memberId,
+          member_id: isStaffConversation ? null : newConversation.memberId,
+          staff_participants: isStaffConversation 
+            ? [...newConversation.staffParticipants, currentStaffId].filter(Boolean)
+            : [],
+          conversation_type: isStaffConversation ? "staff" : "member",
           subject: newConversation.subject,
           status: "open",
           priority: newConversation.priority,
@@ -390,7 +430,7 @@ export default function MessagesPage() {
 
       toast.success("Conversation created");
       setIsDialogOpen(false);
-      setNewConversation({ memberId: "", subject: "", message: "", priority: "normal" });
+      setNewConversation({ type: "member", memberId: "", staffParticipants: [], subject: "", message: "", priority: "normal" });
       fetchConversations();
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -512,31 +552,85 @@ export default function MessagesPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Start New Conversation</DialogTitle>
-              <DialogDescription>Create a new conversation with a member</DialogDescription>
+              <DialogDescription>Create a new conversation with a member or staff</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Member</label>
-                <Select
-                  value={newConversation.memberId}
-                  onValueChange={(v) => setNewConversation({ ...newConversation, memberId: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a member..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.first_name} {member.last_name} - {member.email}
-                      </SelectItem>
+              {/* Conversation Type Selector */}
+              <Tabs value={newConversation.type} onValueChange={(v) => setNewConversation({ ...newConversation, type: v as "member" | "staff", memberId: "", staffParticipants: [] })}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="member" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Member
+                  </TabsTrigger>
+                  <TabsTrigger value="staff" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Staff
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {/* Member Selection */}
+              {newConversation.type === "member" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Member</label>
+                  <Select
+                    value={newConversation.memberId}
+                    onValueChange={(v) => setNewConversation({ ...newConversation, memberId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a member..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.first_name} {member.last_name} - {member.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Staff Selection (Multi-select) */}
+              {newConversation.type === "staff" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Staff Member(s)</label>
+                  <div className="border rounded-md max-h-[200px] overflow-auto">
+                    {staffList.filter(s => s.id !== currentStaffId).map((staff) => (
+                      <label
+                        key={staff.id}
+                        className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
+                      >
+                        <Checkbox
+                          checked={newConversation.staffParticipants.includes(staff.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setNewConversation({
+                                ...newConversation,
+                                staffParticipants: [...newConversation.staffParticipants, staff.id]
+                              });
+                            } else {
+                              setNewConversation({
+                                ...newConversation,
+                                staffParticipants: newConversation.staffParticipants.filter(id => id !== staff.id)
+                              });
+                            }
+                          }}
+                        />
+                        <span className="text-sm">{staff.first_name} {staff.last_name}</span>
+                      </label>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                    {staffList.filter(s => s.id !== currentStaffId).length === 0 && (
+                      <p className="p-3 text-sm text-muted-foreground">No other staff members available</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Subject</label>
                 <Input
-                  placeholder="e.g., Payment inquiry, Device help..."
+                  placeholder={newConversation.type === "staff" ? "e.g., Shift handover, Escalation..." : "e.g., Payment inquiry, Device help..."}
                   value={newConversation.subject}
                   onChange={(e) => setNewConversation({ ...newConversation, subject: e.target.value })}
                 />
@@ -592,6 +686,10 @@ export default function MessagesPage() {
           </TabsTrigger>
           <TabsTrigger value="mine">Assigned to Me</TabsTrigger>
           <TabsTrigger value="unassigned">Unassigned</TabsTrigger>
+          <TabsTrigger value="staff" className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            Staff
+          </TabsTrigger>
           <TabsTrigger value="resolved">Resolved</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -638,12 +736,27 @@ export default function MessagesPage() {
                         )} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className={cn(
-                              "font-medium truncate",
-                              (conv.unread_count || 0) > 0 && "font-semibold"
-                            )}>
-                              {conv.member?.first_name} {conv.member?.last_name}
-                            </p>
+                            <div className="flex items-center gap-2 min-w-0">
+                              {conv.conversation_type === "staff" ? (
+                                <>
+                                  <Users className="h-4 w-4 text-blue-500 shrink-0" />
+                                  <p className={cn(
+                                    "font-medium truncate",
+                                    (conv.unread_count || 0) > 0 && "font-semibold"
+                                  )}>
+                                    {conv.participants_info?.map(p => p.first_name).join(", ") || "Staff Chat"}
+                                  </p>
+                                  <Badge variant="outline" className="text-xs shrink-0">Staff</Badge>
+                                </>
+                              ) : (
+                                <p className={cn(
+                                  "font-medium truncate",
+                                  (conv.unread_count || 0) > 0 && "font-semibold"
+                                )}>
+                                  {conv.member?.first_name} {conv.member?.last_name}
+                                </p>
+                              )}
+                            </div>
                             <span className="text-xs text-muted-foreground shrink-0">
                               {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
                             </span>
@@ -657,12 +770,14 @@ export default function MessagesPage() {
                           <div className="flex items-center gap-2 mt-2">
                             {getStatusBadge(conv.status)}
                             {getPriorityBadge(conv.priority)}
-                            {conv.assigned_staff ? (
-                              <span className="text-xs text-muted-foreground">
-                                {conv.assigned_staff.first_name}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-orange-500">Unassigned</span>
+                            {conv.conversation_type !== "staff" && (
+                              conv.assigned_staff ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {conv.assigned_staff.first_name}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-orange-500">Unassigned</span>
+                              )
                             )}
                           </div>
                         </div>
