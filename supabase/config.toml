@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.ai-dispatch-events]
 verify_jwt = false
+
+[functions.generate-courtesy-calls]
+verify_jwt = false

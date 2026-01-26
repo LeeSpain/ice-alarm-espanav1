@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-
+import { CourtesyCallsCard } from "./CourtesyCallsCard";
 interface CRMProfile {
   member_id: string;
   stage: string | null;
@@ -115,6 +115,9 @@ export function CRMTab({ memberId }: CRMTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Courtesy Calls Card */}
+      <CourtesyCallsCard memberId={memberId} />
+
       {/* CRM Profile */}
       {profile && (
         <Card>
