@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +8,8 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSelectionModal } from "@/components/LanguageSelectionModal";
+import i18n from "@/i18n";
 
 // Auth - Not lazy loaded (critical path)
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -158,145 +160,169 @@ queryClient.prefetchQuery({
   staleTime: 1000 * 60 * 30, // 30 minutes
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <ScrollToTop />
-      <PageTracker />
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/pendant" element={<PendantPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/join" element={<JoinWizard />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/staff/login" element={<StaffLogin />} />
-              <Route path="/register" element={<Navigate to="/join" replace />} />
-              <Route path="/complete-registration" element={<CompleteRegistration />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
+const App = () => {
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-              {/* Admin Dashboard Routes - Require Admin Role */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requireStaff requireAdmin>
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<AdminDashboard />} />
-                <Route path="members" element={<MembersPage />} />
-                <Route path="devices" element={<DevicesPage />} />
-                <Route path="finance" element={<FinanceDashboard />} />
-                <Route path="orders" element={<OrdersPage />} />
-                <Route path="subscriptions" element={<SubscriptionsPage />} />
-                <Route path="payments" element={<PaymentsPage />} />
-                <Route path="alerts" element={<AlertsPage />} />
-                <Route path="staff" element={<StaffPage />} />
-                <Route path="reports" element={<ReportsPage />} />
-                <Route path="analytics" element={<AnalyticsPage />} />
-                <Route path="products" element={<ProductsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="messages" element={<MessagesPage />} />
-                <Route path="tasks" element={<TasksPage />} />
-                <Route path="tickets" element={<AdminTicketsPage />} />
-                <Route path="leads" element={<LeadsPage />} />
-                <Route path="members/new" element={<AddMemberWizard />} />
-                <Route path="members/:id" element={<MemberDetailPage />} />
-                <Route path="partners" element={<PartnersPage />} />
-                <Route path="partners/new" element={<AddPartnerPage />} />
-                <Route path="partners/:id" element={<PartnerDetailPage />} />
-                <Route path="partners-qa" element={<PartnersQAPage />} />
-                <Route path="commissions" element={<CommissionsPage />} />
-                <Route path="crm-import" element={<CRMImportPage />} />
-                <Route path="crm-import/batches" element={<ImportBatchesPage />} />
-                <Route path="crm-contacts" element={<CRMContactsPage />} />
-                <Route path="crm-contacts/:id" element={<CRMContactDetailPage />} />
-                <Route path="ai" element={<AICommandCentre />} />
-                <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
-              </Route>
+  useEffect(() => {
+    // Check if this is a first-time visitor
+    const hasSelectedLanguage = localStorage.getItem("iceAlarmLanguageSelected");
+    if (!hasSelectedLanguage) {
+      setShowLanguageModal(true);
+    }
+  }, []);
 
-              {/* Partner Public Routes */}
-              <Route path="/partner" element={<PartnerOnboarding />} />
-              <Route path="/partner/join" element={<PartnerJoin />} />
-              <Route path="/partner/verify" element={<PartnerVerify />} />
-              <Route path="/partner/login" element={<PartnerLogin />} />
+  const handleLanguageSelect = async (langCode: string) => {
+    await i18n.changeLanguage(langCode);
+    localStorage.setItem("iceAlarmLanguageSelected", "true");
+    setShowLanguageModal(false);
+  };
 
-              {/* Partner Dashboard Routes - Require Partner Role */}
-              <Route
-                path="/partner-dashboard"
-                element={
-                  <ProtectedRoute requirePartner>
-                    <PartnerLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<PartnerDashboard />} />
-                <Route path="invites" element={<PartnerInvitesPage />} />
-                <Route path="marketing" element={<PartnerMarketingPage />} />
-                <Route path="commissions" element={<PartnerCommissionsPage />} />
-                <Route path="agreement" element={<PartnerAgreementPage />} />
-                <Route path="settings" element={<PartnerSettingsPage />} />
-              </Route>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ScrollToTop />
+        <PageTracker />
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            
+            {/* Language Selection Modal for First-Time Visitors */}
+            <LanguageSelectionModal
+              open={showLanguageModal}
+              onLanguageSelect={handleLanguageSelect}
+            />
+            
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/pendant" element={<PendantPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/join" element={<JoinWizard />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/staff/login" element={<StaffLogin />} />
+                <Route path="/register" element={<Navigate to="/join" replace />} />
+                <Route path="/complete-registration" element={<CompleteRegistration />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
 
-              {/* Call Centre Dashboard Routes - Require Staff Role */}
-              <Route
-                path="/call-centre"
-                element={
-                  <ProtectedRoute requireStaff>
-                    <CallCentreLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<StaffDashboard />} />
-                <Route path="alerts" element={<CallCentreDashboard />} />
-                <Route path="members" element={<CallCentreMembersPage />} />
-                <Route path="members/:id" element={<MemberDetailPage />} />
-                <Route path="shift-notes" element={<ShiftNotesPage />} />
-                <Route path="shift-history" element={<ShiftHistoryPage />} />
-                <Route path="preferences" element={<StaffPreferencesPage />} />
-                <Route path="messages" element={<CallCentreMessagesPage />} />
-                <Route path="tasks" element={<CallCentreTasksPage />} />
-                <Route path="tickets" element={<CallCentreTicketsPage />} />
-                <Route path="leads" element={<CallCentreLeadsPage />} />
-              </Route>
+                {/* Admin Dashboard Routes - Require Admin Role */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requireStaff requireAdmin>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="members" element={<MembersPage />} />
+                  <Route path="devices" element={<DevicesPage />} />
+                  <Route path="finance" element={<FinanceDashboard />} />
+                  <Route path="orders" element={<OrdersPage />} />
+                  <Route path="subscriptions" element={<SubscriptionsPage />} />
+                  <Route path="payments" element={<PaymentsPage />} />
+                  <Route path="alerts" element={<AlertsPage />} />
+                  <Route path="staff" element={<StaffPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="products" element={<ProductsPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="messages" element={<MessagesPage />} />
+                  <Route path="tasks" element={<TasksPage />} />
+                  <Route path="tickets" element={<AdminTicketsPage />} />
+                  <Route path="leads" element={<LeadsPage />} />
+                  <Route path="members/new" element={<AddMemberWizard />} />
+                  <Route path="members/:id" element={<MemberDetailPage />} />
+                  <Route path="partners" element={<PartnersPage />} />
+                  <Route path="partners/new" element={<AddPartnerPage />} />
+                  <Route path="partners/:id" element={<PartnerDetailPage />} />
+                  <Route path="partners-qa" element={<PartnersQAPage />} />
+                  <Route path="commissions" element={<CommissionsPage />} />
+                  <Route path="crm-import" element={<CRMImportPage />} />
+                  <Route path="crm-import/batches" element={<ImportBatchesPage />} />
+                  <Route path="crm-contacts" element={<CRMContactsPage />} />
+                  <Route path="crm-contacts/:id" element={<CRMContactDetailPage />} />
+                  <Route path="ai" element={<AICommandCentre />} />
+                  <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
+                </Route>
 
-              {/* Client Dashboard Routes - Require Member */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute requireMember>
-                    <ClientLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<ClientDashboard />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="medical" element={<MedicalInfoPage />} />
-                <Route path="contacts" element={<EmergencyContactsPage />} />
-                <Route path="device" element={<DevicePage />} />
-                <Route path="subscription" element={<SubscriptionPage />} />
-                <Route path="alerts" element={<AlertHistoryPage />} />
-                <Route path="support" element={<SupportPage />} />
-                <Route path="messages" element={<ClientMessagesPage />} />
-              </Route>
+                {/* Partner Public Routes */}
+                <Route path="/partner" element={<PartnerOnboarding />} />
+                <Route path="/partner/join" element={<PartnerJoin />} />
+                <Route path="/partner/verify" element={<PartnerVerify />} />
+                <Route path="/partner/login" element={<PartnerLogin />} />
 
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </AuthProvider>
-      </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+                {/* Partner Dashboard Routes - Require Partner Role */}
+                <Route
+                  path="/partner-dashboard"
+                  element={
+                    <ProtectedRoute requirePartner>
+                      <PartnerLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<PartnerDashboard />} />
+                  <Route path="invites" element={<PartnerInvitesPage />} />
+                  <Route path="marketing" element={<PartnerMarketingPage />} />
+                  <Route path="commissions" element={<PartnerCommissionsPage />} />
+                  <Route path="agreement" element={<PartnerAgreementPage />} />
+                  <Route path="settings" element={<PartnerSettingsPage />} />
+                </Route>
+
+                {/* Call Centre Dashboard Routes - Require Staff Role */}
+                <Route
+                  path="/call-centre"
+                  element={
+                    <ProtectedRoute requireStaff>
+                      <CallCentreLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<StaffDashboard />} />
+                  <Route path="alerts" element={<CallCentreDashboard />} />
+                  <Route path="members" element={<CallCentreMembersPage />} />
+                  <Route path="members/:id" element={<MemberDetailPage />} />
+                  <Route path="shift-notes" element={<ShiftNotesPage />} />
+                  <Route path="shift-history" element={<ShiftHistoryPage />} />
+                  <Route path="preferences" element={<StaffPreferencesPage />} />
+                  <Route path="messages" element={<CallCentreMessagesPage />} />
+                  <Route path="tasks" element={<CallCentreTasksPage />} />
+                  <Route path="tickets" element={<CallCentreTicketsPage />} />
+                  <Route path="leads" element={<CallCentreLeadsPage />} />
+                </Route>
+
+                {/* Client Dashboard Routes - Require Member */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute requireMember>
+                      <ClientLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<ClientDashboard />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="medical" element={<MedicalInfoPage />} />
+                  <Route path="contacts" element={<EmergencyContactsPage />} />
+                  <Route path="device" element={<DevicePage />} />
+                  <Route path="subscription" element={<SubscriptionPage />} />
+                  <Route path="alerts" element={<AlertHistoryPage />} />
+                  <Route path="support" element={<SupportPage />} />
+                  <Route path="messages" element={<ClientMessagesPage />} />
+                </Route>
+
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </AuthProvider>
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
