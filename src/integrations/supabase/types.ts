@@ -1309,12 +1309,14 @@ export type Database = {
           address_line_2: string | null
           city: string
           country: string | null
+          courtesy_calls_enabled: boolean | null
           created_at: string | null
           date_of_birth: string
           email: string
           first_name: string
           id: string
           last_name: string
+          next_courtesy_call_date: string | null
           nie_dni: string | null
           phone: string
           photo_url: string | null
@@ -1335,12 +1337,14 @@ export type Database = {
           address_line_2?: string | null
           city: string
           country?: string | null
+          courtesy_calls_enabled?: boolean | null
           created_at?: string | null
           date_of_birth: string
           email: string
           first_name: string
           id?: string
           last_name: string
+          next_courtesy_call_date?: string | null
           nie_dni?: string | null
           phone: string
           photo_url?: string | null
@@ -1361,12 +1365,14 @@ export type Database = {
           address_line_2?: string | null
           city?: string
           country?: string | null
+          courtesy_calls_enabled?: boolean | null
           created_at?: string | null
           date_of_birth?: string
           email?: string
           first_name?: string
           id?: string
           last_name?: string
+          next_courtesy_call_date?: string | null
           nie_dni?: string | null
           phone?: string
           photo_url?: string | null
@@ -2426,6 +2432,7 @@ export type Database = {
           member_id: string | null
           priority: string | null
           status: string | null
+          task_type: string | null
           title: string
           updated_at: string | null
         }
@@ -2440,6 +2447,7 @@ export type Database = {
           member_id?: string | null
           priority?: string | null
           status?: string | null
+          task_type?: string | null
           title: string
           updated_at?: string | null
         }
@@ -2454,6 +2462,7 @@ export type Database = {
           member_id?: string | null
           priority?: string | null
           status?: string | null
+          task_type?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -2668,12 +2677,14 @@ export type Database = {
           address_line_2: string | null
           city: string
           country: string | null
+          courtesy_calls_enabled: boolean | null
           created_at: string | null
           date_of_birth: string
           email: string
           first_name: string
           id: string
           last_name: string
+          next_courtesy_call_date: string | null
           nie_dni: string | null
           phone: string
           photo_url: string | null

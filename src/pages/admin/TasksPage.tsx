@@ -5,13 +5,13 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
   Loader2, Plus, CheckCircle, Clock, AlertCircle,
-  User, Calendar, Search, Filter, MoreHorizontal
+  User, Calendar, Search, MoreHorizontal, Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -49,10 +49,12 @@ interface Task {
   member_id: string | null;
   assigned_to: string | null;
   created_by: string | null;
+  task_type: string | null;
   member?: {
     id: string;
     first_name: string;
     last_name: string;
+    phone: string;
   } | null;
   assigned_staff?: {
     first_name: string;
@@ -126,7 +128,7 @@ export default function TasksPage() {
         .from("tasks")
         .select(`
           *,
-          member:members!tasks_member_id_fkey(id, first_name, last_name)
+          member:members!tasks_member_id_fkey(id, first_name, last_name, phone)
         `)
         .order("created_at", { ascending: false });
 
@@ -175,6 +177,9 @@ export default function TasksPage() {
         filtered = filtered.filter(t => 
           t.due_date && isPast(parseISO(t.due_date)) && t.status !== "completed"
         );
+        break;
+      case "courtesy_calls":
+        filtered = filtered.filter(t => t.task_type === "courtesy_call" && t.status !== "completed");
         break;
     }
 
@@ -328,6 +333,9 @@ export default function TasksPage() {
   const overdueCount = tasks.filter(t => 
     t.due_date && isPast(parseISO(t.due_date)) && t.status !== "completed"
   ).length;
+  const courtesyCallsCount = tasks.filter(t => 
+    t.task_type === "courtesy_call" && t.status !== "completed"
+  ).length;
 
   if (isLoading) {
     return (
@@ -366,12 +374,21 @@ export default function TasksPage() {
           />
         </div>
         <Tabs value={filter} onValueChange={setFilter}>
-          <TabsList>
+          <TabsList className="flex-wrap">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">{t("tasks.pending")}</TabsTrigger>
             <TabsTrigger value="in_progress">{t("tasks.inProgress")}</TabsTrigger>
             <TabsTrigger value="completed">{t("tasks.completed")}</TabsTrigger>
             <TabsTrigger value="mine">My Tasks</TabsTrigger>
+            <TabsTrigger value="courtesy_calls" className="text-primary">
+              <Phone className="h-3 w-3 mr-1" />
+              Courtesy Calls
+              {courtesyCallsCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {courtesyCallsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             {overdueCount > 0 && (
               <TabsTrigger value="overdue" className="text-destructive">
                 {t("tasks.overdue")} ({overdueCount})
@@ -396,12 +413,19 @@ export default function TasksPage() {
         ) : (
           filteredTasks.map((task) => (
             <Card key={task.id} className={cn(
-              task.status === "completed" && "opacity-60"
+              task.status === "completed" && "opacity-60",
+              task.task_type === "courtesy_call" && "border-l-4 border-l-primary"
             )}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
+                      {task.task_type === "courtesy_call" && (
+                        <Badge variant="outline" className="text-primary border-primary">
+                          <Phone className="w-3 h-3 mr-1" />
+                          Courtesy Call
+                        </Badge>
+                      )}
                       {getStatusBadge(task.status)}
                       {getPriorityBadge(task.priority)}
                       {getDueDateBadge(task.due_date, task.status)}
@@ -426,6 +450,15 @@ export default function TasksPage() {
                           <User className="w-3 h-3" />
                           {task.member.first_name} {task.member.last_name}
                         </Link>
+                      )}
+                      {task.task_type === "courtesy_call" && task.member?.phone && (
+                        <a 
+                          href={`tel:${task.member.phone}`}
+                          className="flex items-center gap-1 text-primary hover:underline"
+                        >
+                          <Phone className="w-3 h-3" />
+                          {task.member.phone}
+                        </a>
                       )}
                       {task.due_date && (
                         <span className="flex items-center gap-1">
