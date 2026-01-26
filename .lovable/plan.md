@@ -1,155 +1,217 @@
 
 
-## Enhanced Courtesy Calls Settings Plan
+## Add Staff Member Feature Plan
 
 ### Overview
-Currently, the Courtesy Calls feature only has an on/off toggle with monthly frequency hardcoded. This plan adds frequency options (daily, weekly, bi-weekly, monthly, quarterly) so staff can customize how often each member receives courtesy calls.
+Create a complete "Add Staff Member" functionality in the admin section that allows super admins and admins to create new staff accounts with different roles. The feature will:
+1. Create an auth user in the backend
+2. Insert a staff record with the selected role
+3. Send login credentials via email
 
 ---
 
 ### Phase 1: Database Schema Update
 
-**Add `courtesy_call_frequency` column to members table:**
+**Add new role `call_centre_supervisor` to the `app_role` enum:**
 
 ```sql
-ALTER TABLE public.members 
-ADD COLUMN courtesy_call_frequency text DEFAULT 'monthly';
+ALTER TYPE public.app_role ADD VALUE 'call_centre_supervisor';
 ```
 
-Supported values:
-- `daily` - Every day
-- `weekly` - Every 7 days
-- `bi-weekly` - Every 14 days
-- `monthly` - Same day each month (current behavior)
-- `quarterly` - Every 3 months
+**Updated Role Hierarchy:**
+| Role | Access Level | Description |
+|------|-------------|-------------|
+| `super_admin` | Full system access | Can manage all settings, staff, and system configuration |
+| `admin` | Full admin access | Can manage members, partners, staff, and business operations |
+| `call_centre_supervisor` | Staff dashboard + supervisor features | Access to call centre dashboard + can manage call centre staff tasks |
+| `call_centre` | Staff dashboard only | Access to call centre operations (alerts, members, messages, tasks) |
 
 ---
 
-### Phase 2: Update CourtesyCallsCard Component
+### Phase 2: Create Edge Function for Staff Registration
 
-**File:** `src/components/admin/member-detail/CourtesyCallsCard.tsx`
+**File:** `supabase/functions/staff-register/index.ts`
+
+**Purpose:** Securely create staff accounts using Supabase Admin API
+
+**Flow:**
+1. Validate caller is admin (check JWT)
+2. Validate input data (email, name, role)
+3. Generate temporary password
+4. Create auth user with `supabase.auth.admin.createUser()`
+5. Insert staff record with role
+6. Send welcome email with temporary password via Resend
+7. Log activity
+
+**Request Body:**
+```typescript
+interface StaffRegistrationRequest {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "admin" | "call_centre_supervisor" | "call_centre";
+  phone?: string;
+  preferred_language: "en" | "es";
+}
+```
+
+**Response:**
+```typescript
+{ success: true, staff_id: "uuid", message: "Staff member created" }
+```
+
+---
+
+### Phase 3: Create Staff Form Component
+
+**File:** `src/components/admin/staff/StaffForm.tsx`
+
+**Features:**
+- Form with Zod validation
+- Fields: First Name, Last Name, Email, Phone (optional), Role (dropdown), Language
+- Role dropdown shows:
+  - Admin
+  - Call Centre Supervisor  
+  - Call Centre
+- Loading state during submission
+- Error handling with toast messages
+
+**UI Layout:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Add Staff Member                                           │
+│  Create a new staff account. They will receive login        │
+│  credentials via email.                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  First Name *              Last Name *                      │
+│  ┌───────────────────┐    ┌───────────────────┐            │
+│  │                   │    │                   │            │
+│  └───────────────────┘    └───────────────────┘            │
+│                                                             │
+│  Email Address *                                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                                                     │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Phone (Optional)                                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ +34                                                 │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Role *                                                     │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Select a role...                               ▼   │   │
+│  │  • Admin                                           │   │
+│  │  • Call Centre Supervisor                          │   │
+│  │  • Call Centre                                     │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Preferred Language                                         │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ English                                        ▼   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│                              [Cancel]  [Create Staff]       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Phase 4: Update StaffPage Component
+
+**File:** `src/pages/admin/StaffPage.tsx`
 
 **Changes:**
-1. Add a **Select dropdown** for frequency selection below the toggle
-2. Fetch and display current frequency setting
-3. Save frequency changes to database
-4. Update labels dynamically based on selected frequency
-
-**New UI Layout:**
-```
-┌─────────────────────────────────────────────────────────┐
-│  📞 Courtesy Calls                                      │
-│  Monthly check-in calls scheduled automatically         │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Enable Courtesy Calls          [Toggle: ON/OFF]        │
-│  Automatically generate call tasks                      │
-│                                                         │
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  Call Frequency                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │  Monthly ▼                                       │   │
-│  │  • Daily                                         │   │
-│  │  • Weekly                                        │   │
-│  │  • Bi-weekly                                     │   │
-│  │  • Monthly ✓                                     │   │
-│  │  • Quarterly                                     │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                         │
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  📅 Next Scheduled Call                                │
-│  February 15, 2026                                      │
-│                                                         │
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  🕐 Recent Completed Calls                             │
-│     • Monthly Courtesy Call - Jan 15, 2026             │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+1. Import and use new `StaffForm` component
+2. Add mutation for calling staff-register edge function
+3. Update role badge display to include new supervisor role
+4. Add success/error handling with toast notifications
+5. Invalidate query on successful creation
 
 ---
 
-### Phase 3: Update Edge Function Logic
+### Phase 5: Update Access Control
 
-**File:** `supabase/functions/generate-courtesy-calls/index.ts`
+**File:** `src/components/auth/ProtectedRoute.tsx`
 
 **Changes:**
-1. Fetch `courtesy_call_frequency` along with other member fields
-2. Add logic to determine if a task should be generated based on frequency:
-   - **Daily**: Create task every day
-   - **Weekly**: Create task if 7+ days since last task
-   - **Bi-weekly**: Create task if 14+ days since last task
-   - **Monthly**: Current logic (same day each month)
-   - **Quarterly**: Create task if 3+ months since last task
+Add new prop `requireSupervisor` to allow supervisor-level access to specific routes.
 
-3. Update next call date calculation based on frequency
-4. Update task title to reflect frequency ("Daily Courtesy Call", "Weekly Courtesy Call", etc.)
-
----
-
-### Phase 4: Update Next Call Date Calculation
-
-The `next_courtesy_call_date` calculation needs to account for different frequencies:
-
-| Frequency | Next Call Date Logic |
-|-----------|---------------------|
-| Daily | Tomorrow |
-| Weekly | 7 days from today |
-| Bi-weekly | 14 days from today |
-| Monthly | Same day next month |
-| Quarterly | Same day in 3 months |
+**Updated Route Access Matrix:**
+| Route | super_admin | admin | call_centre_supervisor | call_centre |
+|-------|-------------|-------|------------------------|-------------|
+| `/admin/*` | ✅ | ✅ | ❌ | ❌ |
+| `/admin/staff` | ✅ | ❌ | ❌ | ❌ |
+| `/call-centre/*` | ✅ | ✅ | ✅ | ✅ |
+| Supervisor features | ✅ | ✅ | ✅ | ❌ |
 
 ---
 
-### Summary of Files to Modify
+### Phase 6: Update UI Components
 
-| File | Changes |
-|------|---------|
-| Database Migration | Add `courtesy_call_frequency` column |
-| `src/components/admin/member-detail/CourtesyCallsCard.tsx` | Add frequency selector dropdown, update labels |
-| `supabase/functions/generate-courtesy-calls/index.ts` | Handle multiple frequencies in task generation |
+**File:** `src/pages/admin/StaffPage.tsx`
+
+Update `getRoleBadge()` function:
+```typescript
+case "call_centre_supervisor":
+  return <Badge className="bg-amber-500 text-white">Supervisor</Badge>;
+```
+
+**File:** `src/components/layout/CallCentreSidebar.tsx`
+
+No changes needed - supervisors will use same sidebar but may have additional features in the future.
+
+---
+
+### Summary of Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| Database Migration | Create | Add `call_centre_supervisor` to `app_role` enum |
+| `supabase/functions/staff-register/index.ts` | Create | Edge function for secure staff creation |
+| `src/components/admin/staff/StaffForm.tsx` | Create | Staff creation form component |
+| `src/pages/admin/StaffPage.tsx` | Modify | Integrate form and add new role badge |
+| `src/components/auth/ProtectedRoute.tsx` | Modify | Add supervisor access level (optional) |
 
 ---
 
 ### Technical Details
 
-**New State in CourtesyCallsCard:**
+**Password Generation:**
 ```typescript
-const [frequency, setFrequency] = useState<string>("monthly");
-```
-
-**Frequency Options:**
-```typescript
-const frequencyOptions = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "bi-weekly", label: "Bi-weekly (Every 2 weeks)" },
-  { value: "monthly", label: "Monthly" },
-  { value: "quarterly", label: "Quarterly (Every 3 months)" },
-];
-```
-
-**Updated Fetch Query:**
-```typescript
-.select("courtesy_calls_enabled, courtesy_call_frequency, next_courtesy_call_date, created_at")
-```
-
-**Save Frequency Handler:**
-```typescript
-const handleFrequencyChange = async (newFrequency: string) => {
-  const { error } = await supabase
-    .from("members")
-    .update({ courtesy_call_frequency: newFrequency })
-    .eq("id", memberId);
-  
-  if (error) toast.error("Failed to update frequency");
-  else {
-    setFrequency(newFrequency);
-    toast.success(`Courtesy call frequency set to ${newFrequency}`);
+function generateTempPassword(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  let password = "";
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-};
+  return password;
+}
 ```
+
+**Welcome Email Template:**
+```html
+<h1>Welcome to ICE Alarm Staff Portal</h1>
+<p>Hello [First Name],</p>
+<p>Your staff account has been created with the role: [Role]</p>
+<p>Your temporary login credentials:</p>
+<ul>
+  <li>Email: [Email]</li>
+  <li>Temporary Password: [Password]</li>
+</ul>
+<p>Please log in and change your password immediately.</p>
+<a href="[Staff Login URL]">Login to Staff Portal</a>
+```
+
+---
+
+### Security Considerations
+
+1. **Edge Function Auth**: Verify caller has admin/super_admin role before creating staff
+2. **Password**: Generate secure temporary password, force change on first login
+3. **Email Validation**: Check email doesn't already exist in auth.users or staff table
+4. **Audit Logging**: Log all staff creation events in activity_logs
+5. **RLS**: Existing staff RLS policies will apply to new records
 
