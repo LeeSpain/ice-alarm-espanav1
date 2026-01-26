@@ -26,15 +26,6 @@ const partnerFormSchema = z.object({
 
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
-function generateReferralCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
 export default function AddPartnerPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,12 +47,15 @@ export default function AddPartnerPage() {
   const onSubmit = async (data: PartnerFormValues) => {
     setIsSubmitting(true);
     try {
-      // Generate a unique referral code
-      const referralCode = generateReferralCode();
+      // Get the current session for auth header
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Not authenticated");
+      }
 
-      const { data: partner, error } = await supabase
-        .from("partners")
-        .insert({
+      // Call the edge function to create partner with auth user and email
+      const response = await supabase.functions.invoke("partner-admin-create", {
+        body: {
           contact_name: data.contact_name,
           company_name: data.company_name || null,
           email: data.email,
@@ -70,20 +64,24 @@ export default function AddPartnerPage() {
           payout_beneficiary_name: data.payout_beneficiary_name || null,
           payout_iban: data.payout_iban || null,
           notes_internal: data.notes_internal || null,
-          referral_code: referralCode,
-          status: "active", // Admin-created partners are active immediately
-          payout_method: "bank_transfer",
-        })
-        .select()
-        .single();
+        },
+      });
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create partner");
+      }
 
-      toast.success("Partner created successfully!");
-      navigate(`/admin/partners/${partner.id}`);
-    } catch (error: any) {
+      const result = response.data;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create partner");
+      }
+
+      toast.success("Partner created successfully! Login credentials sent via email.");
+      navigate(`/admin/partners/${result.partner_id}`);
+    } catch (error: unknown) {
       console.error("Error creating partner:", error);
-      toast.error(error.message || "Failed to create partner");
+      const message = error instanceof Error ? error.message : "Failed to create partner";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

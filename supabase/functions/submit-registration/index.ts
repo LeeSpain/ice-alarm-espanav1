@@ -1,10 +1,122 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Build registration confirmation email HTML
+function buildRegistrationConfirmationEmail(
+  firstName: string,
+  membershipType: string,
+  total: number,
+  hasPendant: boolean,
+  pendantCount: number,
+  language: "en" | "es"
+): string {
+  const pendantInfo = hasPendant 
+    ? (language === "es" 
+        ? `✓ Colgante GPS (×${pendantCount})` 
+        : `✓ GPS Pendant (×${pendantCount})`)
+    : "";
+
+  if (language === "es") {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #dc2626;">ICE Alarm España</h1>
+        </div>
+        
+        <h2 style="color: #1f2937;">¡Tu registro está casi completo!</h2>
+        
+        <p>Hola ${firstName},</p>
+        
+        <p>¡Gracias por comenzar tu registro en ICE Alarm! Tu inscripción está casi lista.</p>
+        
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="margin: 0; color: #92400e;">
+            <strong>⚠️ Importante:</strong> Por favor completa el pago para activar tu membresía.
+          </p>
+        </div>
+        
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1f2937;">Resumen del Pedido:</h3>
+          <p style="margin: 5px 0;">✓ Membresía ${membershipType === "couple" ? "Pareja" : "Individual"}</p>
+          ${pendantInfo ? `<p style="margin: 5px 0;">${pendantInfo}</p>` : ""}
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+          <p style="margin: 5px 0; font-size: 18px;"><strong>Total: €${total.toFixed(2)}</strong></p>
+        </div>
+        
+        <p>Si no completaste el pago, puedes volver en cualquier momento para finalizarlo.</p>
+        
+        <p>¿Tienes preguntas? Responde a este email o llámanos.</p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <p style="color: #6b7280; font-size: 14px;">
+          Saludos cordiales,<br>
+          El Equipo de ICE Alarm
+        </p>
+      </body>
+      </html>
+    `;
+  }
+
+  // English version
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #dc2626;">ICE Alarm España</h1>
+      </div>
+      
+      <h2 style="color: #1f2937;">Your registration is almost complete!</h2>
+      
+      <p>Hello ${firstName},</p>
+      
+      <p>Thank you for starting your ICE Alarm registration! Your enrollment is almost ready.</p>
+      
+      <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <p style="margin: 0; color: #92400e;">
+          <strong>⚠️ Important:</strong> Please complete your payment to activate your membership.
+        </p>
+      </div>
+      
+      <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1f2937;">Order Summary:</h3>
+        <p style="margin: 5px 0;">✓ ${membershipType === "couple" ? "Couple" : "Individual"} Membership</p>
+        ${pendantInfo ? `<p style="margin: 5px 0;">${pendantInfo}</p>` : ""}
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+        <p style="margin: 5px 0; font-size: 18px;"><strong>Total: €${total.toFixed(2)}</strong></p>
+      </div>
+      
+      <p>If you didn't complete the payment, you can return anytime to finalize it.</p>
+      
+      <p>Have questions? Reply to this email or give us a call.</p>
+      
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+      
+      <p style="color: #6b7280; font-size: 14px;">
+        Best regards,<br>
+        The ICE Alarm Team
+      </p>
+    </body>
+    </html>
+  `;
+}
 
 interface MemberDetails {
   firstName: string;
@@ -634,6 +746,41 @@ serve(async (req) => {
         pendantCount,
         hasPartnerAttribution
       );
+    }
+
+    // 13. SEND REGISTRATION CONFIRMATION EMAIL
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    if (RESEND_API_KEY && body.primaryMember.email) {
+      try {
+        const resend = new Resend(RESEND_API_KEY);
+        
+        const emailHtml = buildRegistrationConfirmationEmail(
+          body.primaryMember.firstName,
+          body.membershipType,
+          total,
+          body.includePendant,
+          pendantCount,
+          body.primaryMember.preferredLanguage
+        );
+
+        const { error: emailError } = await resend.emails.send({
+          from: "ICE Alarm <welcome@icealarm.es>",
+          to: [body.primaryMember.email],
+          subject: body.primaryMember.preferredLanguage === "es"
+            ? "Completa tu registro en ICE Alarm"
+            : "Complete Your ICE Alarm Registration",
+          html: emailHtml,
+        });
+
+        if (emailError) {
+          console.error("Error sending registration confirmation email:", emailError);
+        } else {
+          console.log("Registration confirmation email sent to:", body.primaryMember.email);
+        }
+      } catch (emailErr) {
+        console.error("Failed to send registration confirmation email:", emailErr);
+        // Don't fail registration, email is non-critical
+      }
     }
 
     // Return all IDs needed for checkout
