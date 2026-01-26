@@ -1,179 +1,339 @@
 
 
-## Complete Email System Review and Fix Plan
+## Start New Conversation - Staff & Member Messaging
 
-### Current Email Status
-
-After reviewing all edge functions and registration flows, here's the complete picture:
-
-| User Type | Trigger | Email Sent? |
-|-----------|---------|-------------|
-| Staff (Admin-Created) | Admin creates via Staff Page | YES - Welcome email with temp password |
-| Partner (Self-Registered) | Partner registers at /partner/join | YES - Verification email |
-| Partner Invites | Partner sends invitation | YES - Custom invitation email |
-| Partner (Admin-Created) | Admin creates at /admin/partners/add | NO - Missing |
-| Member (Registration) | Completes /join wizard | NO - Missing |
-| Member (Payment Confirmed) | Stripe payment succeeds | NO - Missing |
+### Overview
+Extend the messaging system to allow staff to create conversations with **both members AND other staff members**. Currently, the `conversations` table requires a `member_id` (NOT NULL), which prevents staff-to-staff messaging.
 
 ---
 
-### Phase 1: Add Welcome Email for Admin-Created Partners
+### Phase 1: Database Schema Update
 
-**Problem:** When admins create partners via `/admin/partners/add`, the partner is marked as "active" immediately but receives no email with login credentials.
+**Modify `conversations` table to support staff-only conversations:**
 
-**Solution:** Create a new edge function `partner-admin-create` that:
-1. Creates an auth user with a temporary password
-2. Creates the partner record linked to the auth user
-3. Sends a bilingual welcome email with login credentials
+```sql
+-- Make member_id nullable to allow staff-only conversations
+ALTER TABLE public.conversations 
+ALTER COLUMN member_id DROP NOT NULL;
 
-**Files to Modify:**
-- Create: `supabase/functions/partner-admin-create/index.ts`
-- Modify: `src/pages/admin/AddPartnerPage.tsx` - Use the new edge function instead of direct Supabase insert
+-- Add staff_participants column for staff-to-staff and group conversations
+ALTER TABLE public.conversations 
+ADD COLUMN staff_participants UUID[] DEFAULT '{}';
 
-**Email Content (Spanish/English):**
+-- Add conversation_type to distinguish between types
+ALTER TABLE public.conversations 
+ADD COLUMN conversation_type TEXT DEFAULT 'member' 
+CHECK (conversation_type IN ('member', 'staff', 'internal'));
 ```
-Subject: Your ICE Alarm Partner Account Has Been Created
 
-Hello [Contact Name],
+| Conversation Type | Description |
+|-------------------|-------------|
+| `member` | Staff-to-member conversation (current behavior) |
+| `staff` | Staff-to-staff direct messaging |
+| `internal` | Internal team thread (no member) |
 
-Welcome to the ICE Alarm Partner Program! Your account has been created by our admin team.
-
-Your login credentials:
-- Email: [email]
-- Temporary Password: [password]
-
-Your referral code: [REFERRAL_CODE]
-
-Please log in and change your password immediately:
-[Login Button → /partner/login]
-
-If you have questions, contact our team.
-
-Best regards,
-The ICE Alarm Team
+**Update RLS Policies:**
+```sql
+-- Staff can view conversations they're part of (as participants or assigned)
+CREATE POLICY "Staff can view own staff conversations"
+ON public.conversations FOR SELECT
+USING (
+  is_staff(auth.uid()) AND (
+    conversation_type = 'member' 
+    OR (SELECT id FROM staff WHERE user_id = auth.uid()) = ANY(staff_participants)
+    OR assigned_to = (SELECT id FROM staff WHERE user_id = auth.uid())
+  )
+);
 ```
 
 ---
 
-### Phase 2: Add Member Welcome Email After Payment
+### Phase 2: Update "Start New Conversation" Dialog
 
-**Problem:** When a member completes Stripe payment, they receive no email confirmation that their membership is now active.
+**File:** `src/pages/admin/MessagesPage.tsx`
 
-**Solution:** Add email sending to the `stripe-webhook` function after `checkout.session.completed`:
+**Changes:**
+1. Add conversation type selector (tabs or radio): "Message Member" | "Message Staff"
+2. Conditionally show Member dropdown OR Staff dropdown based on selection
+3. Update `createConversation()` to handle both types
 
-**Files to Modify:**
-- `supabase/functions/stripe-webhook/index.ts` - Add Resend email sending after payment confirmation
-
-**Email Content (Spanish/English):**
+**Updated Dialog UI:**
 ```
-Subject: Welcome to ICE Alarm - Your Membership is Active!
-
-Hello [First Name],
-
-Thank you for joining ICE Alarm! Your payment has been processed successfully and your membership is now active.
-
-Order Details:
-- Order Number: [ORDER_NUMBER]
-- Amount Paid: €[AMOUNT]
-- Membership Type: [Individual/Couple] - [Monthly/Annual]
-
-What happens next:
-1. If you ordered a GPS pendant, we'll ship it within 2-3 business days
-2. You'll receive tracking information once shipped
-3. Our team will contact you to complete device setup
-
-Need help? Contact our support team or visit your member dashboard:
-[Login to Dashboard Button → /dashboard]
-
-Stay safe,
-The ICE Alarm Team
-```
-
----
-
-### Phase 3: Add Registration Confirmation Email (Optional)
-
-**Problem:** Members who complete the registration form but haven't paid yet receive no confirmation.
-
-**Consideration:** Since payment is the next step, sending an email before payment may not be necessary. However, if the user abandons checkout, we have no email trail.
-
-**Recommendation:** Add a simple confirmation email in `submit-registration` after successful registration:
-
-**Email Content:**
-```
-Subject: Complete Your ICE Alarm Registration
-
-Hello [First Name],
-
-Thank you for starting your ICE Alarm registration!
-
-Your registration is almost complete. Please complete your payment to activate your membership.
-
-If you didn't complete checkout, you can return anytime:
-[Complete Payment Button → /join/payment]
-
-Order Summary:
-- Membership: [Type]
-- Total: €[AMOUNT]
-
-Best regards,
-The ICE Alarm Team
+┌─────────────────────────────────────────────────────────────┐
+│  Start New Conversation                                     │
+│  Create a new conversation                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────────┐ ┌──────────────────┐                 │
+│  │  💬 Member       │ │  👥 Staff        │  ← Tab selection │
+│  └──────────────────┘ └──────────────────┘                 │
+│                                                             │
+│  [If Member Tab]                                            │
+│  Select Member *                                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Search or select a member...                    ▼   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  [If Staff Tab]                                             │
+│  Select Staff Member(s) *                                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ John Smith (Admin)                              ▼   │   │
+│  │ ☑ Sarah Jones (Call Centre)                         │   │
+│  │ ☑ Mike Wilson (Supervisor)                          │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Subject *                                                  │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ e.g., Shift handover, Device escalation...          │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Priority                                                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Normal                                          ▼   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Message *                                                  │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                                                     │   │
+│  │                                                     │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│                              [Cancel]  [Start Conversation] │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Summary of Changes
+### Phase 3: Update Conversation Creation Logic
+
+**Current State Object:**
+```typescript
+const [newConversation, setNewConversation] = useState({
+  memberId: "",
+  subject: "",
+  message: "",
+  priority: "normal",
+});
+```
+
+**Updated State Object:**
+```typescript
+const [newConversation, setNewConversation] = useState({
+  type: "member" as "member" | "staff",
+  memberId: "",
+  staffParticipants: [] as string[],
+  subject: "",
+  message: "",
+  priority: "normal",
+});
+```
+
+**Updated Create Function:**
+```typescript
+const createConversation = async () => {
+  const isStaffConversation = newConversation.type === "staff";
+  
+  // Validation
+  if (isStaffConversation && newConversation.staffParticipants.length === 0) {
+    toast.error("Please select at least one staff member");
+    return;
+  }
+  if (!isStaffConversation && !newConversation.memberId) {
+    toast.error("Please select a member");
+    return;
+  }
+
+  const { data: convData, error } = await supabase
+    .from("conversations")
+    .insert({
+      member_id: isStaffConversation ? null : newConversation.memberId,
+      staff_participants: isStaffConversation 
+        ? [...newConversation.staffParticipants, currentStaffId] 
+        : [],
+      conversation_type: isStaffConversation ? "staff" : "member",
+      subject: newConversation.subject,
+      status: "open",
+      priority: newConversation.priority,
+      assigned_to: currentStaffId,
+    })
+    .select()
+    .single();
+
+  // ... create first message
+};
+```
+
+---
+
+### Phase 4: Update Conversation List Display
+
+**Modified Conversation Interface:**
+```typescript
+interface Conversation {
+  id: string;
+  subject: string | null;
+  status: string;
+  priority: string;
+  last_message_at: string;
+  created_at: string;
+  assigned_to: string | null;
+  conversation_type: "member" | "staff" | "internal";
+  
+  // For member conversations
+  member_id: string | null;
+  member?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  } | null;
+  
+  // For staff conversations
+  staff_participants: string[];
+  participants_info?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[];
+  
+  // Common
+  assigned_staff?: { first_name: string; last_name: string } | null;
+  unread_count?: number;
+  last_message_preview?: string;
+}
+```
+
+**List Item Display Logic:**
+```typescript
+// In conversation list item render
+{conv.conversation_type === "member" ? (
+  <div className="flex items-center gap-2">
+    <User className="h-4 w-4" />
+    <span>{conv.member?.first_name} {conv.member?.last_name}</span>
+  </div>
+) : (
+  <div className="flex items-center gap-2">
+    <Users className="h-4 w-4 text-blue-500" />
+    <span>{conv.participants_info?.map(p => p.first_name).join(", ")}</span>
+    <Badge variant="outline" className="text-xs">Staff</Badge>
+  </div>
+)}
+```
+
+---
+
+### Phase 5: Update Fetch & Filter Logic
+
+**Updated fetchConversations:**
+```typescript
+const fetchConversations = async () => {
+  const { data: convData } = await supabase
+    .from("conversations")
+    .select(`
+      *,
+      member:members!conversations_member_id_fkey(id, first_name, last_name, email, phone)
+    `)
+    .order("last_message_at", { ascending: false });
+
+  // Fetch staff participants for staff conversations
+  const staffConversations = convData?.filter(c => c.conversation_type === "staff") || [];
+  const allParticipantIds = staffConversations.flatMap(c => c.staff_participants || []);
+  
+  const { data: participantsData } = await supabase
+    .from("staff")
+    .select("id, first_name, last_name")
+    .in("id", allParticipantIds);
+
+  const participantsMap = new Map(participantsData?.map(s => [s.id, s]) || []);
+
+  // Add participants_info to staff conversations
+  const enrichedConversations = convData?.map(conv => ({
+    ...conv,
+    participants_info: conv.conversation_type === "staff"
+      ? (conv.staff_participants || []).map(id => participantsMap.get(id)).filter(Boolean)
+      : undefined,
+  }));
+
+  setConversations(enrichedConversations);
+};
+```
+
+**Updated Filter Tabs:**
+Add a new filter tab for staff conversations:
+```typescript
+<TabsTrigger value="staff">
+  <Users className="h-4 w-4 mr-1" />
+  Staff
+</TabsTrigger>
+```
+
+Filter logic:
+```typescript
+case "staff":
+  filtered = filtered.filter(c => c.conversation_type === "staff");
+  break;
+```
+
+---
+
+### Phase 6: Apply Same Changes to Call Centre MessagesPage
+
+**File:** `src/pages/call-centre/MessagesPage.tsx`
+
+Apply identical changes:
+1. Update dialog with type selection
+2. Update conversation creation logic
+3. Update conversation list display
+4. Update fetch and filter logic
+
+---
+
+### Summary of Files to Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/partner-admin-create/index.ts` | Create | New edge function for admin partner creation with email |
-| `src/pages/admin/AddPartnerPage.tsx` | Modify | Call new edge function instead of direct insert |
-| `supabase/config.toml` | Modify | Add new function config |
-| `supabase/functions/stripe-webhook/index.ts` | Modify | Add member welcome email after payment |
-| `supabase/functions/submit-registration/index.ts` | Modify | Add registration confirmation email (optional) |
+| Database Migration | Create | Make member_id nullable, add staff_participants & conversation_type |
+| `src/pages/admin/MessagesPage.tsx` | Modify | Add staff messaging to dialog, update list display |
+| `src/pages/call-centre/MessagesPage.tsx` | Modify | Same changes as admin MessagesPage |
 
 ---
 
 ### Technical Implementation Details
 
-**Partner Admin Create Edge Function:**
-```typescript
-// Key flow:
-1. Validate admin caller (JWT check)
-2. Generate temp password (12 chars)
-3. Create auth user with supabase.auth.admin.createUser()
-4. Create partner record linked to auth user
-5. Send welcome email via Resend
-6. Log activity
+**Database Migration SQL:**
+```sql
+-- 1. Make member_id nullable
+ALTER TABLE public.conversations ALTER COLUMN member_id DROP NOT NULL;
+
+-- 2. Add new columns
+ALTER TABLE public.conversations ADD COLUMN conversation_type TEXT DEFAULT 'member';
+ALTER TABLE public.conversations ADD COLUMN staff_participants UUID[] DEFAULT '{}';
+
+-- 3. Add check constraint
+ALTER TABLE public.conversations ADD CONSTRAINT conversation_type_check 
+CHECK (conversation_type IN ('member', 'staff', 'internal'));
+
+-- 4. Update existing conversations to have type 'member'
+UPDATE public.conversations SET conversation_type = 'member' WHERE conversation_type IS NULL;
+
+-- 5. Ensure existing RLS still works - staff can manage all types
+-- (Existing policy already allows staff to manage all conversations)
 ```
 
-**Stripe Webhook Email Addition:**
-```typescript
-// After checkout.session.completed processing:
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-if (RESEND_API_KEY && memberData?.email) {
-  // Send welcome email to new member
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: "ICE Alarm <welcome@icealarm.es>",
-      to: [memberData.email],
-      subject: language === "es" ? "¡Bienvenido a ICE Alarm!" : "Welcome to ICE Alarm!",
-      html: emailTemplate,
-    }),
-  });
-}
-```
+**UI Component Updates:**
+- Import `Users` icon from lucide-react for staff conversations
+- Add Tabs component inside dialog for type selection
+- Conditionally render member dropdown vs staff multi-select
+- Use Checkbox for multi-select staff participants
 
 ---
 
-### Priority Order
+### Visual Indicators in Conversation List
 
-1. **High Priority:** Partner Admin Create email - Partners have no way to log in without this
-2. **High Priority:** Member welcome email after payment - Critical for customer experience
-3. **Medium Priority:** Registration confirmation email - Nice to have for abandoned cart recovery
+| Type | Icon | Badge |
+|------|------|-------|
+| Member | `<User />` | None |
+| Staff | `<Users className="text-blue-500" />` | `Staff` outline badge |
+| Internal | `<MessageSquare className="text-purple-500" />` | `Internal` outline badge |
 
