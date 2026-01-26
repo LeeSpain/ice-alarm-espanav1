@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Plus, 
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { StaffForm } from "@/components/admin/staff/StaffForm";
 
 export default function StaffPage() {
   const queryClient = useQueryClient();
@@ -56,24 +57,27 @@ export default function StaffPage() {
     },
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    try {
       const { error } = await supabase
         .from("staff")
         .update({ is_active: isActive })
         .eq("id", id);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
+      
       queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
       toast.success("Staff member status updated");
-    },
-    onError: (error) => {
+    } catch (error) {
       toast.error("Failed to update status");
       console.error(error);
-    },
-  });
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setIsDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["admin-staff"] });
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -81,6 +85,8 @@ export default function StaffPage() {
         return <Badge className="bg-purple-500 text-white">Super Admin</Badge>;
       case "admin":
         return <Badge className="bg-primary text-primary-foreground">Admin</Badge>;
+      case "call_centre_supervisor":
+        return <Badge className="bg-amber-500 text-white">Supervisor</Badge>;
       case "call_centre":
         return <Badge variant="secondary">Call Centre</Badge>;
       default:
@@ -112,11 +118,10 @@ export default function StaffPage() {
                 Create a new staff account. They will receive login credentials via email.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground text-center">
-                Staff creation form will be implemented with Supabase Auth admin functions.
-              </p>
-            </div>
+            <StaffForm 
+              onSuccess={handleFormSuccess}
+              onCancel={() => setIsDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -220,14 +225,14 @@ export default function StaffPage() {
                           {member.is_active ? (
                             <DropdownMenuItem 
                               className="text-destructive"
-                              onClick={() => toggleStatusMutation.mutate({ id: member.id, isActive: false })}
+                              onClick={() => handleToggleStatus(member.id, false)}
                             >
                               <UserX className="mr-2 h-4 w-4" />
                               Deactivate
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem 
-                              onClick={() => toggleStatusMutation.mutate({ id: member.id, isActive: true })}
+                              onClick={() => handleToggleStatus(member.id, true)}
                             >
                               <UserCheck className="mr-2 h-4 w-4" />
                               Activate
