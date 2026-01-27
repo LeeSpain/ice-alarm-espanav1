@@ -1,85 +1,138 @@
 
 
-# Add Pendant Requirement to All AI-Generated Images
+# Fix Facebook Page Access Token "Not Saving" Issue
 
-## Problem Statement
+## Problem Analysis
 
-Currently, the AI image generation prompts only mention the ICE Alarm pendant in the `pendant_focus` style. For effective product marketing, **every generated image should show the pendant** around the person's neck (or a similar visible representation) to reinforce brand recognition and product awareness.
+After thorough investigation, I found that the **data IS being saved correctly to the database**:
+
+```sql
+-- Database shows these records exist with the correct values:
+settings_facebook_page_id = "107949497473966"
+settings_facebook_page_access_token = "EAA5U5iMwv1IBQ..." (full token stored)
+```
+
+**The actual problem is a UX issue:**
+
+When you click "Save Facebook Configuration":
+1. The token is sent to the edge function ✅
+2. It's saved to `system_settings` table ✅
+3. A success toast appears ✅
+4. `queryClient.invalidateQueries({ queryKey: ["system-settings"] })` runs
+5. This triggers the `useEffect` that fetches settings from the database
+6. The `useEffect` immediately **resets the input field** to `"••••••••••••"` (masked value)
+
+This makes it **appear** as if the token wasn't saved, when in reality:
+- It WAS saved to the database
+- The UI just reset to show the masked dots again
+
+## Root Cause
+
+The `useEffect` (lines 110-164) runs every time the `settings` query data changes. After saving and invalidating, it overwrites the form state with freshly fetched data, which masks the token again.
 
 ## Solution
 
-Update the edge function prompts to include a **mandatory pendant requirement** in all image styles, ensuring the SOS pendant device is always visible in the generated imagery.
+Add a flag to track when we're actively saving, and prevent the `useEffect` from overwriting form fields during that time. This gives the user clear feedback that their save was successful.
 
-## Implementation
+### Changes Required
 
-### Update Edge Function Prompts
+**File: `src/pages/admin/SettingsPage.tsx`**
 
-**File:** `supabase/functions/generate-ai-image/index.ts`
-
-**Changes:**
-
-1. Update each style description to explicitly include the pendant
-2. Add a **global pendant requirement** in the `CRITICAL Requirements` section
-
-**Updated `IMAGE_STYLES` (lines 10-17):**
+1. **Add a "just saved" tracking state** to prevent immediate form reset:
 
 ```typescript
-const IMAGE_STYLES: Record<string, string> = {
-  senior_active: "A happy, healthy senior (65-75 years old) wearing an ICE Alarm SOS pendant around their neck, enjoying outdoor activities in a sunny Spanish Mediterranean setting. The pendant should be clearly visible on a lanyard or chain. The person is active, smiling, and full of life. Warm golden sunlight, terrace or garden background. Professional lifestyle photography, warm and inviting atmosphere.",
-  
-  family_peace: "A caring adult child (40-50 years) sharing a warm, loving moment with their elderly parent (70-80 years) who is wearing an ICE Alarm SOS pendant visibly around their neck. Mediterranean home setting with soft natural light. The pendant provides a subtle but reassuring presence. Emotional connection, reassuring and heartfelt. Professional family photography style.",
-  
-  pendant_focus: "A modern, sleek ICE Alarm SOS emergency pendant device worn prominently around the neck of an active, well-dressed senior. The pendant is the focal point - clearly visible on a professional lanyard or elegant chain. Lifestyle context showing independence and confidence. Clean, professional product-lifestyle photography.",
-  
-  spanish_lifestyle: "Happy seniors enjoying the beautiful Spanish Mediterranean lifestyle, with one or more wearing a visible ICE Alarm SOS pendant around their neck. Terrace with sea views, garden with olive trees, or charming Spanish courtyard. The pendant is naturally integrated into their outfit. Warm golden hour light, relaxed and content atmosphere. Professional travel-lifestyle photography.",
-  
-  independence: "A confident, independent senior (70s) wearing an ICE Alarm SOS pendant around their neck, going about daily activities with a smile - walking in a park, reading in a café, or gardening. The pendant is clearly visible, symbolizing their freedom and safety. Empowering imagery showing active aging. Natural light, authentic moments. Professional documentary-style photography.",
-  
-  peace_of_mind: "A serene scene showing a senior couple or individual relaxing safely at home in Spain, with the ICE Alarm SOS pendant visible around their neck. Comfortable living room or sunny balcony. The pendant provides a sense of security and contentment. Soft, warm lighting. Professional interior-lifestyle photography.",
+const [recentlySavedSection, setRecentlySavedSection] = useState<string | null>(null);
+```
+
+2. **Update `handleSaveFacebook` to track the save**:
+
+```typescript
+const handleSaveFacebook = () => {
+  const updates: Record<string, string> = {};
+  if (facebookSettings.page_id) {
+    updates.facebook_page_id = facebookSettings.page_id;
+  }
+  if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
+    updates.facebook_page_access_token = facebookSettings.page_access_token;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    toast({
+      title: "No changes to save",
+      description: "Enter new values to update the settings."
+    });
+    return;
+  }
+
+  setRecentlySavedSection("facebook");
+  saveMutation.mutate(updates);
 };
 ```
 
-2. **Update CRITICAL Requirements section (lines 39-50):**
+3. **Update the `useEffect` to skip resetting recently saved sections**:
 
-Add a mandatory pendant requirement to the global requirements:
-
+In the Facebook settings portion of the `useEffect`:
 ```typescript
-const requirements = `
-
-CRITICAL Requirements:
-- Professional photography quality, sharp and well-composed
-- Warm, caring, and reassuring emotional tone
-- THE PERSON MUST BE WEARING A VISIBLE SOS/EMERGENCY PENDANT around their neck on a lanyard or chain - this is MANDATORY
-- The pendant should be a small, sleek, modern emergency device (similar to a medical alert pendant)
-- DO NOT include any text, logos, or overlays in the image
-- Suitable for Facebook marketing (1200x630 landscape)
-- Natural, authentic representation of seniors
-- Avoid clinical, hospital, or medical settings
-- Focus on independence, dignity, peace of mind, and active living
-- Use warm Mediterranean color palette (golden light, blue skies, terracotta)
-- Include diverse but authentic representation`;
+// Only update Facebook settings if we haven't just saved them
+if (recentlySavedSection !== "facebook") {
+  setFacebookSettings({
+    page_id: settingsMap.settings_facebook_page_id || "",
+    page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
+  });
+}
 ```
 
-## Summary of Changes
+4. **Clear the flag after a delay** (in the mutation's onSuccess):
+
+```typescript
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+  queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+  queryClient.invalidateQueries({ queryKey: ["pricing-settings"] });
+  toast({
+    title: "Settings saved",
+    description: "Your changes have been saved successfully."
+  });
+  // Clear the recently saved flag after a delay to allow the toast to show
+  setTimeout(() => setRecentlySavedSection(null), 2000);
+},
+```
+
+5. **Alternative simpler fix** - Just show the masked value immediately after save to confirm it's saved:
+
+Instead of the above, we can update the success handler to explicitly set the masked value with a "Saved!" indicator:
+
+```typescript
+// In handleSaveFacebook success path
+if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
+  // After successful save, show the masked value to confirm it's stored
+  setFacebookSettings(prev => ({
+    ...prev,
+    page_access_token: "••••••••••••"  // Show masked after save
+  }));
+}
+```
+
+## Recommended Approach
+
+The **simplest fix** is option 5 above - when a token is successfully saved, immediately update the local state to show the masked value. This:
+- Confirms to the user the token was saved
+- Prevents confusion from the form "resetting"
+- Requires minimal code changes
+
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-ai-image/index.ts` | Update all 6 style prompts to mention pendant + add global mandatory pendant requirement |
+| `src/pages/admin/SettingsPage.tsx` | Add recently-saved tracking OR update local state after successful save to show masked value |
 
-## Expected Result
+## Testing After Fix
 
-After this change:
-- **Every AI-generated image** will show a person wearing the ICE Alarm SOS pendant
-- The pendant will be naturally integrated into the scene (not forced or awkward)
-- Brand/product visibility will be consistent across all marketing materials
-- Different styles will still have their unique character, but all include the product
-
-## Prompt Engineering Notes
-
-The prompts use specific language to guide the AI:
-- "wearing an ICE Alarm SOS pendant around their neck" - explicit product placement
-- "clearly visible" / "visibly" - ensures the pendant isn't hidden
-- "lanyard or chain" - gives realistic wearing context
-- "naturally integrated" / "subtle but reassuring" - prevents awkward forced placement
-- CRITICAL section emphasizes it's MANDATORY with caps for emphasis to the AI model
+1. Go to Settings → Communications
+2. Scroll to Facebook Page Configuration
+3. Enter a Page Access Token
+4. Click "Save Facebook Configuration"
+5. Observe: Token field shows `••••••••••••` (confirms saved)
+6. Toast shows "Settings saved"
+7. Refresh page - token field still shows `••••••••••••` (confirms persistence)
 
