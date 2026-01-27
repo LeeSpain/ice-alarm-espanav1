@@ -295,9 +295,7 @@ export default function PartnerInvitesPage() {
             }
           </p>
         </div>
-        {/* Only show send invite button if not in admin view mode */}
-        {!isAdminViewMode && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -492,7 +490,6 @@ export default function PartnerInvitesPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
       </div>
 
       {/* Referral Link Card - read-only for admins */}
@@ -516,18 +513,16 @@ export default function PartnerInvitesPage() {
             </Button>
           </div>
 
-          {!isAdminViewMode && (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={shareViaWhatsApp}>
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Share via WhatsApp
-              </Button>
-              <Button variant="outline" onClick={shareViaEmail}>
-                <Mail className="h-4 w-4 mr-2" />
-                Share via Email
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={shareViaWhatsApp}>
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Share via WhatsApp
+            </Button>
+            <Button variant="outline" onClick={shareViaEmail}>
+              <Mail className="h-4 w-4 mr-2" />
+              Share via Email
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -548,9 +543,7 @@ export default function PartnerInvitesPage() {
             <div className="text-center py-8 text-muted-foreground">
               <Send className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No invites sent yet</p>
-              {!isAdminViewMode && (
-                <p className="text-sm">Start inviting people to earn commissions!</p>
-              )}
+              <p className="text-sm">Start inviting people to earn commissions!</p>
             </div>
           ) : (
             <Table>
