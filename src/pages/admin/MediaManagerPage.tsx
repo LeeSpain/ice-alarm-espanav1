@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye } from "lucide-react";
+import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
@@ -51,7 +51,7 @@ export default function MediaManagerPage() {
   const [complianceWarnings, setComplianceWarnings] = useState<ComplianceWarning[]>([]);
   const [showComplianceDialog, setShowComplianceDialog] = useState(false);
 
-  const { posts, isLoading, createDraft, updateDraft, approvePost, publishPost, deletePost, isCreating, isUpdating, isApproving, isPublishing } = useSocialPosts(statusFilter);
+  const { posts, isLoading, createDraft, updateDraft, approvePost, retryPost, publishPost, deletePost, isCreating, isUpdating, isApproving, isRetrying, isPublishing } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
   const { uploadImage, isUploading } = useSocialPostImages();
   const { generateDraft, isGenerating } = useMediaDraft();
@@ -217,6 +217,12 @@ export default function MediaManagerPage() {
     } finally {
       setPublishingFromQueue(null);
     }
+  };
+
+  const handleRetryFromPreview = async () => {
+    if (!previewPost) return;
+    await retryPost(previewPost.id);
+    setPreviewPost(null);
   };
 
   const handleEditFromPreview = () => {
@@ -573,7 +579,32 @@ export default function MediaManagerPage() {
                             {format(new Date(post.created_at), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                            <div className="flex justify-end items-center gap-1">
+                              {/* Error indicator for failed posts */}
+                              {post.status === "failed" && post.error_message && (
+                                <span 
+                                  className="text-destructive cursor-help" 
+                                  title={post.error_message}
+                                >
+                                  <AlertCircle className="h-4 w-4" />
+                                </span>
+                              )}
+                              {/* Retry button for failed posts */}
+                              {post.status === "failed" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 gap-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    retryPost(post.id);
+                                  }}
+                                  disabled={isRetrying}
+                                >
+                                  <RefreshCw className={cn("h-3 w-3", isRetrying && "animate-spin")} />
+                                  {t("mediaManager.actions.retry")}
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -636,8 +667,10 @@ export default function MediaManagerPage() {
         open={!!previewPost}
         onOpenChange={(open) => !open && setPreviewPost(null)}
         onPublish={handlePublishFromPreview}
+        onRetry={handleRetryFromPreview}
         onEdit={handleEditFromPreview}
         isPublishing={publishingFromQueue === previewPost?.id}
+        isRetrying={isRetrying}
       />
     </div>
   );

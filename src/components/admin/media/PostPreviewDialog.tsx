@@ -10,7 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, Edit, ImageOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Send, Edit, ImageOff, RefreshCw, AlertCircle } from "lucide-react";
 import { SocialPost } from "@/hooks/useSocialPosts";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +20,10 @@ interface PostPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPublish: () => void;
+  onRetry?: () => void;
   onEdit: () => void;
   isPublishing: boolean;
+  isRetrying?: boolean;
 }
 
 export function PostPreviewDialog({
@@ -28,14 +31,17 @@ export function PostPreviewDialog({
   open,
   onOpenChange,
   onPublish,
+  onRetry,
   onEdit,
   isPublishing,
+  isRetrying,
 }: PostPreviewDialogProps) {
   const { t } = useTranslation();
 
   if (!post) return null;
 
   const canPublish = post.status === "approved";
+  const isFailed = post.status === "failed";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,6 +54,16 @@ export function PostPreviewDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden space-y-4">
+          {/* Error Alert for Failed Posts */}
+          {isFailed && post.error_message && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                <strong>{t("mediaManager.errors.publishFailed")}:</strong> {post.error_message}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Image Preview */}
           {post.image_url ? (
             <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
@@ -122,22 +138,37 @@ export function PostPreviewDialog({
             <Edit className="h-4 w-4 mr-2" />
             {t("mediaManager.preview.editFirst")}
           </Button>
-          <Button
-            onClick={onPublish}
-            disabled={!canPublish || isPublishing}
-            title={
-              !canPublish
-                ? t("mediaManager.mustBeApproved")
-                : t("mediaManager.preview.publishNow")
-            }
-          >
-            {isPublishing ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4 mr-2" />
-            )}
-            {t("mediaManager.preview.publishNow")}
-          </Button>
+          {isFailed && onRetry ? (
+            <Button
+              onClick={onRetry}
+              disabled={isRetrying}
+              variant="default"
+            >
+              {isRetrying ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {t("mediaManager.actions.retry")}
+            </Button>
+          ) : (
+            <Button
+              onClick={onPublish}
+              disabled={!canPublish || isPublishing}
+              title={
+                !canPublish
+                  ? t("mediaManager.mustBeApproved")
+                  : t("mediaManager.preview.publishNow")
+              }
+            >
+              {isPublishing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {t("mediaManager.preview.publishNow")}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

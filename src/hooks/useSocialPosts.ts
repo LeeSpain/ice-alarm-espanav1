@@ -161,6 +161,35 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
   });
 
+  // Retry a failed post (reset to approved)
+  const retryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data: post, error } = await supabase
+        .from("social_posts")
+        .update({
+          status: "approved",
+          error_message: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return post as SocialPost;
+    },
+    onSuccess: (post) => {
+      queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
+      toast({ title: "Post ready for retry", description: "You can now attempt to publish again." });
+      logSocialPostActivity("retry_requested", post.id, { status: "failed" }, { status: "approved" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error preparing retry", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Publish to Facebook
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -220,11 +249,13 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     createDraft: createMutation.mutateAsync,
     updateDraft: updateMutation.mutateAsync,
     approvePost: approveMutation.mutateAsync,
+    retryPost: retryMutation.mutateAsync,
     publishPost: publishMutation.mutateAsync,
     deletePost: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isApproving: approveMutation.isPending,
+    isRetrying: retryMutation.isPending,
     isPublishing: publishMutation.isPending,
   };
 }
