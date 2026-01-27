@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { es, enGB } from "date-fns/locale";
 import i18n from "@/i18n";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
+import { ShiftReportModal } from "@/components/call-centre/ShiftReportModal";
 
 interface AlertStats {
   incoming: number;
@@ -396,6 +397,7 @@ export default function StaffDashboard() {
           </h1>
           <p className="text-sm text-muted-foreground capitalize">{currentDate}</p>
         </div>
+        <ShiftReportModal />
       </div>
 
       {/* Stats Cards */}
