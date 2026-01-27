@@ -89,6 +89,8 @@ export default function SettingsPage() {
   });
 
   const [showFacebookToken, setShowFacebookToken] = useState(false);
+  // Track recently saved sections to prevent useEffect from resetting form values
+  const [recentlySavedSection, setRecentlySavedSection] = useState<string | null>(null);
   // Password visibility toggles
   const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [showTwilioToken, setShowTwilioToken] = useState(false);
@@ -149,11 +151,13 @@ export default function SettingsPage() {
 
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
 
-      // Facebook settings
-      setFacebookSettings({
-        page_id: settingsMap.settings_facebook_page_id || "",
-        page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
-      });
+      // Facebook settings - only update if we haven't just saved them
+      if (recentlySavedSection !== "facebook") {
+        setFacebookSettings({
+          page_id: settingsMap.settings_facebook_page_id || "",
+          page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
+        });
+      }
 
       // Registration fee settings - keys are stored with 'settings_' prefix
       setRegistrationFeeSettings({
@@ -186,6 +190,8 @@ export default function SettingsPage() {
         title: "Settings saved",
         description: "Your changes have been saved successfully."
       });
+      // Clear the recently saved flag after a delay to allow the query to settle
+      setTimeout(() => setRecentlySavedSection(null), 2000);
     },
     onError: (error) => {
       toast({
@@ -271,7 +277,8 @@ export default function SettingsPage() {
     if (facebookSettings.page_id) {
       updates.facebook_page_id = facebookSettings.page_id;
     }
-    if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
+    const hasNewToken = facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•");
+    if (hasNewToken) {
       updates.facebook_page_access_token = facebookSettings.page_access_token;
     }
 
@@ -281,6 +288,17 @@ export default function SettingsPage() {
         description: "Enter new values to update the settings."
       });
       return;
+    }
+
+    // Set flag to prevent useEffect from immediately resetting the form
+    setRecentlySavedSection("facebook");
+    
+    // Immediately show masked value for the token to confirm it's being saved
+    if (hasNewToken) {
+      setFacebookSettings(prev => ({
+        ...prev,
+        page_access_token: "••••••••••••"
+      }));
     }
 
     saveMutation.mutate(updates);
