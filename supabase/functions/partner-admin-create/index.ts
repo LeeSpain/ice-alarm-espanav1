@@ -239,8 +239,18 @@ serve(async (req) => {
 
     if (createAuthError || !authUser.user) {
       console.error("Error creating auth user:", createAuthError);
+      
+      // Provide user-friendly error messages
+      let userMessage = "Failed to create user account";
+      if (createAuthError?.message?.includes("already been registered") || 
+          createAuthError?.code === "email_exists") {
+        userMessage = "This email address is already registered in the system. Please use a different email or check if a partner account already exists.";
+      } else if (createAuthError?.message) {
+        userMessage = createAuthError.message;
+      }
+      
       return new Response(
-        JSON.stringify({ error: createAuthError?.message || "Failed to create user account" }),
+        JSON.stringify({ error: userMessage }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

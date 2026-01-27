@@ -67,8 +67,12 @@ export default function AddPartnerPage() {
         },
       });
 
+      // Handle edge function errors - parse the response body for details
       if (response.error) {
-        throw new Error(response.error.message || "Failed to create partner");
+        // Try to get the actual error message from the response
+        const errorData = response.data;
+        const errorMessage = errorData?.error || response.error.message || "Failed to create partner";
+        throw new Error(errorMessage);
       }
 
       const result = response.data;
