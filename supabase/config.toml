@@ -44,3 +44,12 @@ verify_jwt = false
 
 [functions.partner-admin-create]
 verify_jwt = false
+
+[functions.send-member-update-request]
+verify_jwt = false
+
+[functions.validate-member-update-token]
+verify_jwt = false
+
+[functions.submit-member-update]
+verify_jwt = false

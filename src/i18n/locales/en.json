@@ -2088,5 +2088,40 @@
     "error": {
       "sendFailed": "Failed to send message. Please try again."
     }
+  },
+  "crm": {
+    "requestMemberUpdate": "Request Member Update",
+    "memberUpdateRequest": "Member Update Request",
+    "sendUpdateRequest": "Send Update Request",
+    "requestUpdateDescription": "Send an email to the member with a link to update their missing information.",
+    "missingFields": "Missing Fields Detected",
+    "selectRecipient": "Select Email Recipient",
+    "updateRequestSent": "Update request sent successfully",
+    "updateRequestFailed": "Failed to send update request",
+    "noMissingFields": "No missing fields detected",
+    "allFieldsComplete": "This member's profile appears to be complete.",
+    "fieldsToUpdate": "The member will be asked to provide:",
+    "lessThan2Contacts": "Less than 2 emergency contacts",
+    "contactsMissingEmail": "Emergency contacts missing email",
+    "selectFieldsAndEmail": "Please select at least one field and an email",
+    "noCRMData": "No CRM data available for this member",
+    "noCRMDataDesc": "This member was not imported from CRM or has no CRM profile attached."
+  },
+  "memberUpdate": {
+    "title": "Update Your Information",
+    "subtitle": "Please complete the missing information below",
+    "tokenExpired": "Link Expired",
+    "tokenExpiredDesc": "This link has expired. Please contact us for a new link.",
+    "tokenInvalid": "Invalid Link",
+    "tokenInvalidDesc": "This link is invalid. Please contact us for assistance.",
+    "tokenAlreadyUsed": "Already Submitted",
+    "tokenAlreadyUsedDesc": "This form has already been submitted. Thank you!",
+    "updateSuccess": "Thank You!",
+    "updateSuccessDesc": "Your information has been updated successfully.",
+    "profileSection": "Personal Information",
+    "medicalSection": "Medical Information",
+    "contactsSection": "Emergency Contacts",
+    "contactsDescription": "Please ensure you have at least 2 emergency contacts with valid information.",
+    "submitUpdate": "Submit Update"
   }
 }

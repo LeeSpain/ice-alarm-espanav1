@@ -2040,5 +2040,40 @@
     "error": {
       "sendFailed": "Error al enviar el mensaje. Por favor, inténtelo de nuevo."
     }
+  },
+  "crm": {
+    "requestMemberUpdate": "Solicitar Actualización",
+    "memberUpdateRequest": "Solicitud de Actualización del Socio",
+    "sendUpdateRequest": "Enviar Solicitud",
+    "requestUpdateDescription": "Envíe un correo al socio con un enlace para actualizar su información faltante.",
+    "missingFields": "Campos Faltantes Detectados",
+    "selectRecipient": "Seleccionar Destinatario",
+    "updateRequestSent": "Solicitud de actualización enviada",
+    "updateRequestFailed": "Error al enviar la solicitud",
+    "noMissingFields": "No se detectaron campos faltantes",
+    "allFieldsComplete": "El perfil de este socio parece estar completo.",
+    "fieldsToUpdate": "Se solicitará al socio que proporcione:",
+    "lessThan2Contacts": "Menos de 2 contactos de emergencia",
+    "contactsMissingEmail": "Contactos de emergencia sin correo",
+    "selectFieldsAndEmail": "Por favor seleccione al menos un campo y un correo",
+    "noCRMData": "No hay datos CRM disponibles para este socio",
+    "noCRMDataDesc": "Este socio no fue importado del CRM o no tiene perfil CRM asociado."
+  },
+  "memberUpdate": {
+    "title": "Actualice su Información",
+    "subtitle": "Por favor complete la información faltante a continuación",
+    "tokenExpired": "Enlace Caducado",
+    "tokenExpiredDesc": "Este enlace ha caducado. Por favor contáctenos para obtener uno nuevo.",
+    "tokenInvalid": "Enlace Inválido",
+    "tokenInvalidDesc": "Este enlace no es válido. Por favor contáctenos para asistencia.",
+    "tokenAlreadyUsed": "Ya Enviado",
+    "tokenAlreadyUsedDesc": "Este formulario ya ha sido enviado. ¡Gracias!",
+    "updateSuccess": "¡Gracias!",
+    "updateSuccessDesc": "Su información ha sido actualizada correctamente.",
+    "profileSection": "Información Personal",
+    "medicalSection": "Información Médica",
+    "contactsSection": "Contactos de Emergencia",
+    "contactsDescription": "Por favor asegúrese de tener al menos 2 contactos de emergencia con información válida.",
+    "submitUpdate": "Enviar Actualización"
   }
 }
