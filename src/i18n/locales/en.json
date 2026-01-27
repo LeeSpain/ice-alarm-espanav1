@@ -1432,7 +1432,8 @@
     "backToPartners": "Back to Partners",
     "shiftNotes": "Shift Notes",
     "aiCommandCentre": "AI Command Centre",
-    "aiOverview": "Overview"
+    "aiOverview": "Overview",
+    "mediaManager": "Media Manager"
   },
   "ai": {
     "commandCentre": "AI Command Centre",
