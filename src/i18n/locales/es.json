@@ -823,7 +823,20 @@
     "todaysShiftNotes": "Notas del turno de hoy",
     "addNote": "Añadir nota",
     "noShiftNotesYetToday": "Sin notas de turno hoy aún",
-    "claim": "Reclamar"
+    "claim": "Reclamar",
+    "generateShiftNote": "Generar Nota de Turno",
+    "shiftSummaryReport": "Informe Resumen de Turno",
+    "generatedAt": "Generado",
+    "last12Hours": "Últimas 12 Horas",
+    "tasksDueOverdue": "Tareas Pendientes/Vencidas Hoy",
+    "alertsCount": "Alertas",
+    "shiftNotesCount": "Notas de Turno",
+    "overdueCount": "Vencidas",
+    "dueTodayCount": "Para Hoy",
+    "noAlertsInPeriod": "Sin alertas en este período",
+    "noNotesInPeriod": "Sin notas de turno en este período",
+    "noTasksDue": "Sin tareas pendientes o vencidas",
+    "wasDue": "Vencía"
   },
   "leadsWidget": {
     "newLeads": "Nuevos leads",

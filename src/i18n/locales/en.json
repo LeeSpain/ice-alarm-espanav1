@@ -855,7 +855,20 @@
     "todaysShiftNotes": "Today's Shift Notes",
     "addNote": "Add Note",
     "noShiftNotesYetToday": "No shift notes yet today",
-    "claim": "Claim"
+    "claim": "Claim",
+    "generateShiftNote": "Generate Shift Note",
+    "shiftSummaryReport": "Shift Summary Report",
+    "generatedAt": "Generated",
+    "last12Hours": "Last 12 Hours",
+    "tasksDueOverdue": "Tasks Due/Overdue Today",
+    "alertsCount": "Alerts",
+    "shiftNotesCount": "Shift Notes",
+    "overdueCount": "Overdue",
+    "dueTodayCount": "Due Today",
+    "noAlertsInPeriod": "No alerts in this period",
+    "noNotesInPeriod": "No shift notes in this period",
+    "noTasksDue": "No tasks due or overdue",
+    "wasDue": "Was due"
   },
   "leadsWidget": {
     "newLeads": "New Leads",
