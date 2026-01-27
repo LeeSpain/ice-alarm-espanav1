@@ -1,94 +1,112 @@
 
-# Fix Email Sending - Domain Verification Issue
 
-## Problem Identified
-All emails from the system are failing because **the `icealarm.es` domain is not verified in Resend**. The edge function logs show:
+# Fix Email Sending - Domain Verification Required
 
+## The Problem
+
+All emails in your system are **failing with a 403 error** because the `icealarm.es` domain is **not verified in Resend**.
+
+The edge function logs clearly show:
 ```
-Error: The icealarm.es domain is not verified.
-Please add and verify your domain on https://resend.com/domains
+Error sending welcome email: {
+  statusCode: 403,
+  message: "The icealarm.es domain is not verified. 
+            Please, add and verify your domain on https://resend.com/domains"
+}
 ```
 
-This affects:
-- Partner welcome emails (when admin creates partner)
-- Staff welcome emails
-- Partner invite emails
-- Member registration confirmation emails
-- Member welcome emails (after payment)
-- Member update request emails
+The partner account IS being created successfully - only the email delivery fails.
 
 ---
 
-## Required Action: Verify Domain in Resend
+## Root Cause
 
-**You need to go to Resend and verify your domain:**
+Resend requires you to verify domain ownership before you can send emails from that domain. This is an anti-spam measure.
 
-1. Go to [https://resend.com/domains](https://resend.com/domains)
-2. Click "Add Domain"
-3. Enter `icealarm.es`
-4. Add the DNS records shown (typically TXT and MX records) to your domain's DNS settings
-5. Wait for verification (usually a few minutes)
-
----
-
-## Inconsistency Found
-
-There's also an inconsistency - one function uses a different domain:
-
-| Function | Current Domain | Recommended |
-|----------|---------------|-------------|
-| `send-member-update-request` | `icealarmespana.com` | `icealarm.es` |
+**Current Status:**
+- Partner creation: Working
+- Staff creation: Working
+- Email sending: BLOCKED (domain not verified)
 
 ---
 
-## Code Changes (After Domain Verification)
+## Required Action (You Must Do This)
 
-Once the domain is verified, I'll update the inconsistent email address:
+### Step 1: Go to Resend Dashboard
+Visit: https://resend.com/domains
 
-### Update `send-member-update-request`
+### Step 2: Add Your Domain
+1. Click "Add Domain"
+2. Enter: `icealarm.es`
+3. Click "Add"
 
-**File:** `supabase/functions/send-member-update-request/index.ts`
+### Step 3: Add DNS Records
+Resend will show you DNS records to add. Typically:
 
-Change line 173:
+| Type | Name | Value |
+|------|------|-------|
+| TXT | `_resend` | `resend-verify=xxxxx` |
+| MX | `send` | `feedback-smtp.region.amazonses.com` |
+| TXT | `send._domainkey` | `p=xxxxx` (DKIM key) |
+
+Add these to your domain's DNS settings (where you manage icealarm.es)
+
+### Step 4: Verify
+Click "Verify" in Resend. This usually takes a few minutes.
+
+---
+
+## Affected Email Functions
+
+All 6 email-sending functions use `@icealarm.es` and are blocked:
+
+1. **partner-admin-create** - Partner welcome emails
+2. **staff-register** - Staff welcome emails  
+3. **partner-send-invite** - Partner invitation emails
+4. **submit-registration** - Member registration confirmation
+5. **stripe-webhook** - Member welcome after payment
+6. **send-member-update-request** - Member update request emails
+
+Once you verify the domain, **all these will work automatically** - no code changes needed.
+
+---
+
+## Temporary Workaround (For Testing Only)
+
+If you cannot verify the domain immediately, you can temporarily use Resend's sandbox domain:
+
+**Change in code:**
 ```typescript
-// Before
-from: "ICE Alarm España <noreply@icealarmespana.com>"
+// FROM (blocked):
+from: "ICE Alarm <welcome@icealarm.es>"
 
-// After
-from: "ICE Alarm España <noreply@icealarm.es>"
+// TO (testing only - only sends to YOUR email):
+from: "ICE Alarm <onboarding@resend.dev>"
 ```
+
+**Limitation**: Sandbox emails only work when sending to the email address you used to sign up for Resend.
 
 ---
 
 ## Summary
 
-| Step | Action | Owner |
-|------|--------|-------|
-| 1 | Verify `icealarm.es` domain in Resend | You |
-| 2 | Update DNS records as instructed by Resend | You |
-| 3 | Update inconsistent email domain in code | Me |
+| Step | Action | Who |
+|------|--------|-----|
+| 1 | Verify `icealarm.es` in Resend | You |
+| 2 | Add DNS records to your domain | You |
+| 3 | Wait for verification (few minutes) | Automatic |
+| 4 | Test partner creation again | You |
+
+**No code changes are required** - the email functions are correctly implemented. They just need the domain to be verified in Resend.
 
 ---
 
-## Quick Workaround (If Domain Can't Be Verified)
+## Quick Test After Verification
 
-If you cannot verify `icealarm.es`, you could use Resend's free sandbox domain for testing:
-- Use `onboarding@resend.dev` as the sender
-- This only works for sending to your own email address
+Once verified, create a new test partner and check the logs. You should see:
+```
+Welcome email sent to: icesoslite@gmail.com
+```
 
-However, for production, you **must verify your own domain**.
+Instead of the current error.
 
----
-
-## Technical Details
-
-### Functions Affected
-
-1. **partner-admin-create** - Welcome email to new partners
-2. **staff-register** - Welcome email to new staff members  
-3. **partner-send-invite** - Partner invitation emails to leads
-4. **stripe-webhook** - Welcome email after payment completion
-5. **submit-registration** - Registration confirmation email
-6. **send-member-update-request** - Update request emails to members
-
-All these will work automatically once `icealarm.es` is verified in Resend.
