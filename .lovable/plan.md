@@ -1,159 +1,207 @@
 
 
-# Fix Facebook Configuration Save and Failed Post Retry
+# Upgrade Image Generation to AI-Powered Professional Images
 
-## Problem Analysis
+## Current State Analysis
 
-After thorough investigation, I found **two separate issues**:
+The existing `useBrandedImageGenerator.ts` uses **Canvas API** to programmatically draw images:
+- Creates gradient backgrounds with brand colors
+- Draws geometric shapes (corner accents)
+- Renders text overlay (headline, subheadline, CTA button)
+- Adds brand logo representation (simple heart icon)
 
-### Issue 1: Save IS Working (No Bug Here)
-The Facebook configuration **is saving correctly**. Database evidence:
-- `settings_facebook_page_id` = `107949497473966` (saved at 18:19:46)
-- `settings_facebook_page_access_token` = valid 280-char token (saved at 18:19:46)
+**Limitations:**
+- No photographic elements - purely text and shapes
+- Cannot show people, products, or realistic scenarios
+- Generic, template-like appearance
+- Not competitive with professional social media imagery
 
-The error you're seeing in the UI (`#210: A page access token is required`) is from a **previous failed publish attempt** at 18:14:32 - which was BEFORE you saved the correct credentials at 18:19:46.
+## Proposed Solution
 
-### Issue 2: Failed Posts Cannot Be Re-Published (BUG)
-Once a post fails, its status is `failed`. The `facebook-publish` edge function **rejects any post that isn't `approved`**:
+Replace the canvas-based generator with **Lovable AI Image Generation** using `google/gemini-3-pro-image-preview` (higher quality) or `google/gemini-2.5-flash-image` (faster). This allows generating:
 
-```typescript
-// Line 86-93 of facebook-publish/index.ts
-if (post.status !== "approved") {
-  return new Response(JSON.stringify({ 
-    error: "Post must be approved before publishing",
-    current_status: post.status 
-  }), { status: 400 });
-}
+- **Realistic photos** of seniors using the pendant
+- **Professional lifestyle imagery** (people walking, in gardens, with family)
+- **Contextual scenes** (Spanish settings, homes, outdoor activities)
+- **Brand-consistent visuals** with proper text overlay
+
+## Architecture
+
+```text
++-------------------+     +------------------------+     +------------------+
+|  Media Manager    | --> |  generate-ai-image     | --> |  Lovable AI      |
+|  (Frontend)       |     |  (Edge Function)       |     |  Gateway         |
++-------------------+     +------------------------+     +------------------+
+        |                           |                            |
+        |  1. Send prompt +         |  2. Call Gemini            |  3. Return
+        |     image_text            |     Image Model            |     base64
+        |                           |                            |
+        v                           v                            v
++-------------------+     +------------------------+     +------------------+
+|  Image displayed  | <-- |  Upload to Storage     | <-- |  Generated Image |
+|  in draft         |     |  Return public URL     |     |  (base64)        |
++-------------------+     +------------------------+     +------------------+
 ```
-
-**There's no UI mechanism to re-approve a failed post** - the Approve button only shows for `draft` status posts.
-
-## Solution
-
-### Fix 1: Add "Retry" Functionality for Failed Posts
-Allow failed posts to be re-approved so they can be published again with corrected credentials.
-
-**Changes to `useSocialPosts.ts`:**
-- Modify `approveMutation` to also accept `failed` status posts (or create a separate `retryMutation`)
-- This allows changing `failed` → `approved` so publishing can be attempted again
-
-**Changes to `MediaManagerPage.tsx`:**
-- Add a "Retry" button for failed posts in the table
-- Show the error message to help users understand why it failed
-- Clear the error when re-approving
-
-### Fix 2: Improve Error Visibility
-When a post fails, the error message should be more visible:
-- Display `error_message` in a tooltip or inline in the table
-- Show it in the post preview dialog
-- Add a dedicated "Failed Posts" section or highlight them in the Ready to Publish area
 
 ## Implementation Steps
 
-### Step 1: Update useSocialPosts Hook
-**File:** `src/hooks/useSocialPosts.ts`
+### Step 1: Create New Edge Function for AI Image Generation
+**File:** `supabase/functions/generate-ai-image/index.ts`
 
-Add a `retryPost` mutation that:
-1. Clears the `error_message` field
-2. Sets status back to `approved`
-3. Allows the post to be re-published
+This function will:
+1. Accept the post context (topic, goal, audience, image_text suggestions)
+2. Build a detailed image generation prompt
+3. Call Lovable AI with the image model
+4. Convert the base64 response to a file
+5. Upload to Supabase Storage
+6. Return the public URL
 
-```typescript
-// Add retryMutation after approveMutation
-const retryMutation = useMutation({
-  mutationFn: async (id: string) => {
-    const { data: post, error } = await supabase
-      .from("social_posts")
-      .update({
-        status: "approved",
-        error_message: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select()
-      .single();
+**Key prompt engineering:**
+- Include ICE Alarm brand context
+- Request realistic photography style
+- Specify elderly/senior-friendly imagery
+- Include Spanish/Mediterranean settings when appropriate
+- Request warm, reassuring tones (not clinical)
 
-    if (error) throw error;
-    return post as SocialPost;
-  },
-  onSuccess: (post) => {
-    queryClient.invalidateQueries({ queryKey: ["social-posts"] });
-    queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
-    queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-    toast({ title: "Post ready for retry", description: "You can now attempt to publish again." });
-  },
-  // ... error handling
-});
-```
+### Step 2: Create AI Image Generation Hook
+**File:** `src/hooks/useAIImageGenerator.ts`
 
-### Step 2: Add Retry Button to MediaManagerPage
+A new React hook that:
+- Calls the `generate-ai-image` edge function
+- Manages loading/error states
+- Returns the generated image URL
+- Provides retry capability
+
+### Step 3: Update MediaManagerPage
 **File:** `src/pages/admin/MediaManagerPage.tsx`
 
-In the existing posts table, add a "Retry" button for failed posts:
+Add a new "Generate AI Image" button alongside the existing one:
+- Keep the current canvas-based generator as "Quick Brand Image" (faster, no AI credits)
+- Add new "Generate Realistic Image" button (AI-powered)
+- Show image style selector (e.g., "Senior with pendant", "Family scene", "Spanish lifestyle")
 
-```tsx
-{post.status === "failed" && (
-  <Button 
-    variant="outline" 
-    size="sm"
-    onClick={() => retryPost(post.id)}
-    disabled={isRetrying}
-  >
-    <RefreshCw className="h-4 w-4 mr-1" />
-    Retry
-  </Button>
-)}
-```
+### Step 4: Add Image Style Templates
+Create predefined prompt templates for common scenarios:
 
-### Step 3: Show Error Message in Table
-**File:** `src/pages/admin/MediaManagerPage.tsx`
+| Style | Prompt Focus |
+|-------|-------------|
+| `senior_active` | Happy senior actively enjoying life outdoors in Spain |
+| `family_peace` | Adult child hugging elderly parent, showing care and connection |
+| `pendant_focus` | Close-up of pendant device being worn, modern technology |
+| `spanish_lifestyle` | Mediterranean setting, terrace, garden, sunshine |
+| `independence` | Senior confidently going about daily activities alone |
 
-Add a column or tooltip showing the error message for failed posts:
-
-```tsx
-{post.status === "failed" && post.error_message && (
-  <Tooltip>
-    <TooltipTrigger>
-      <AlertCircle className="h-4 w-4 text-destructive" />
-    </TooltipTrigger>
-    <TooltipContent>
-      <p className="max-w-xs">{post.error_message}</p>
-    </TooltipContent>
-  </Tooltip>
-)}
-```
-
-### Step 4: Add Translation Keys
+### Step 5: Add Translation Keys
 **Files:** `src/i18n/locales/en.json`, `src/i18n/locales/es.json`
 
-Add keys for retry functionality:
-- `mediaManager.actions.retry`: "Retry"
-- `mediaManager.status.retryReady`: "Post ready for retry"
-- `mediaManager.errors.publishFailed`: "Publishing failed"
+New keys for:
+- Image generation options
+- Style selector labels
+- Loading/error states
 
-### Step 5: Update PostPreviewDialog
-**File:** `src/components/admin/media/PostPreviewDialog.tsx`
+## Technical Details
 
-Show error message if the post has one, and change the Publish button to "Retry" for failed posts.
+### Edge Function Implementation
+
+```typescript
+// supabase/functions/generate-ai-image/index.ts
+
+const IMAGE_STYLES = {
+  senior_active: "A happy, healthy senior (65-75 years old) enjoying outdoor activities in a sunny Spanish setting. Warm and inviting atmosphere. Professional photography style.",
+  family_peace: "A caring adult child (40-50 years) with their elderly parent (70-80 years) sharing a warm moment. Mediterranean home setting. Emotional and reassuring.",
+  pendant_focus: "A modern, sleek emergency pendant device worn around the neck of an active senior. Focus on the device with lifestyle context. Clean, professional product photography.",
+  spanish_lifestyle: "Seniors enjoying the Spanish Mediterranean lifestyle - terrace, garden, coastal views. Warm golden light, relaxed and happy atmosphere.",
+  independence: "A confident senior (70s) going about daily activities independently - shopping, walking, gardening. Empowering and positive imagery.",
+};
+
+// Image generation prompt builder
+function buildImagePrompt(style: string, imageText: ImageText, topic: string): string {
+  const baseContext = `Create a professional, high-quality social media image for ICE Alarm España, a 24/7 emergency response service for seniors in Spain.`;
+  
+  const stylePrompt = IMAGE_STYLES[style] || IMAGE_STYLES.senior_active;
+  
+  const requirements = `
+    Requirements:
+    - Professional photography quality
+    - Warm, caring, and reassuring tone
+    - NO text overlays (text will be added separately)
+    - Suitable for Facebook marketing
+    - Aspect ratio: 1200x630 (landscape)
+    - Include diverse representation when showing people
+    - Avoid clinical or medical settings
+    - Focus on independence, peace of mind, and active living
+  `;
+  
+  return `${baseContext}\n\nTopic: ${topic}\nStyle: ${stylePrompt}\n${requirements}`;
+}
+```
+
+### Frontend Integration
+
+```typescript
+// In MediaManagerPage.tsx - new button group
+<div className="grid grid-cols-3 gap-2">
+  <Button onClick={generateQuickBrandImage}>
+    <ImageIcon /> Quick Brand Image
+  </Button>
+  <Select value={imageStyle} onValueChange={setImageStyle}>
+    <SelectItem value="senior_active">Active Senior</SelectItem>
+    <SelectItem value="family_peace">Family Moment</SelectItem>
+    <SelectItem value="spanish_lifestyle">Spanish Lifestyle</SelectItem>
+  </Select>
+  <Button onClick={generateAIImage} disabled={isGeneratingAI}>
+    <Sparkles /> Generate AI Image
+  </Button>
+</div>
+```
+
+### Text Overlay Option
+
+After generating the AI image, offer an optional text overlay:
+- Use the existing canvas logic to add brand elements
+- Overlay headline/subheadline on top of the AI-generated photo
+- This combines realistic imagery with branded messaging
+
+## Files to Create
+
+| File | Description |
+|------|-------------|
+| `supabase/functions/generate-ai-image/index.ts` | Edge function for AI image generation |
+| `src/hooks/useAIImageGenerator.ts` | React hook for calling the edge function |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/hooks/useSocialPosts.ts` | Add `retryPost` mutation with cache invalidation |
-| `src/pages/admin/MediaManagerPage.tsx` | Add Retry button, show error messages |
-| `src/components/admin/media/PostPreviewDialog.tsx` | Show error, support retry action |
-| `src/i18n/locales/en.json` | Add retry translation keys |
-| `src/i18n/locales/es.json` | Add retry translation keys (Spanish) |
+| File | Changes |
+|------|---------|
+| `src/pages/admin/MediaManagerPage.tsx` | Add AI image generation UI, style selector |
+| `src/hooks/useBrandedImageGenerator.ts` | Add optional text overlay on existing images |
+| `src/i18n/locales/en.json` | New translation keys |
+| `src/i18n/locales/es.json` | Spanish translations |
+| `supabase/config.toml` | Register new edge function |
 
-## Summary
+## UX Flow
 
-**Your Facebook credentials ARE saved correctly.** The issue is that:
-1. The post failed BEFORE you saved the correct credentials
-2. Failed posts currently cannot be re-published
+1. User creates a post with topic, goal, and audience
+2. User runs AI workflow to generate text suggestions (existing)
+3. User selects an image style from the dropdown
+4. User clicks "Generate AI Image" button
+5. Edge function generates a realistic image using Lovable AI
+6. Image is uploaded to storage and displayed in preview
+7. (Optional) User can click "Add Brand Overlay" to add text on top
 
-The fix adds a "Retry" mechanism that:
-- Clears the error message
-- Sets the post back to "approved" status
-- Allows you to attempt publishing again with the now-correct credentials
+## Cost Considerations
+
+- AI image generation uses Lovable AI credits
+- Suggest using `google/gemini-3-pro-image-preview` for higher quality (slower, more expensive)
+- Alternatively, `google/gemini-2.5-flash-image` for faster generation (lower cost)
+- Keep the canvas-based generator as a free/fast fallback option
+
+## Quality Assurance
+
+The AI image generation prompt includes:
+- Compliance with brand guidelines
+- Avoidance of medical/clinical imagery
+- Focus on positive, empowering visuals
+- Diversity requirements
+- Professional photography standards
 
