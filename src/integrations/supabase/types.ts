@@ -1955,6 +1955,8 @@ export type Database = {
           partner_id: string
           sent_at: string | null
           status: Database["public"]["Enums"]["invite_status"]
+          view_count: number | null
+          viewed_at: string | null
         }
         Insert: {
           channel: Database["public"]["Enums"]["invite_channel"]
@@ -1968,6 +1970,8 @@ export type Database = {
           partner_id: string
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invite_status"]
+          view_count?: number | null
+          viewed_at?: string | null
         }
         Update: {
           channel?: Database["public"]["Enums"]["invite_channel"]
@@ -1981,6 +1985,8 @@ export type Database = {
           partner_id?: string
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invite_status"]
+          view_count?: number | null
+          viewed_at?: string | null
         }
         Relationships: [
           {
@@ -2808,7 +2814,13 @@ export type Database = {
       import_row_status: "pending" | "imported" | "failed" | "skipped"
       import_row_target: "member" | "crm_contact" | "skip"
       invite_channel: "email" | "sms" | "whatsapp" | "link"
-      invite_status: "draft" | "sent" | "registered" | "converted" | "expired"
+      invite_status:
+        | "draft"
+        | "sent"
+        | "viewed"
+        | "registered"
+        | "converted"
+        | "expired"
       member_status: "active" | "inactive" | "suspended"
       order_item_type:
         | "pendant"
@@ -3010,7 +3022,14 @@ export const Constants = {
       import_row_status: ["pending", "imported", "failed", "skipped"],
       import_row_target: ["member", "crm_contact", "skip"],
       invite_channel: ["email", "sms", "whatsapp", "link"],
-      invite_status: ["draft", "sent", "registered", "converted", "expired"],
+      invite_status: [
+        "draft",
+        "sent",
+        "viewed",
+        "registered",
+        "converted",
+        "expired",
+      ],
       member_status: ["active", "inactive", "suspended"],
       order_item_type: [
         "pendant",

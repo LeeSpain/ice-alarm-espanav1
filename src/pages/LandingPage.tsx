@@ -11,6 +11,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +31,17 @@ export default function LandingPage() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
-  // Capture partner referral code on landing
+  // Capture partner referral code on landing and track view
   useEffect(() => {
     const refCode = searchParams.get("ref");
     if (refCode) {
       const utmParams = extractUtmParams(searchParams);
       storeReferralData(refCode, utmParams);
+      
+      // Fire and forget - track that the referral link was viewed
+      supabase.functions.invoke("track-invite-view", {
+        body: { referralCode: refCode }
+      }).catch(() => {}); // Silent failure
     }
   }, [searchParams]);
 
