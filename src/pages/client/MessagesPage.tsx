@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Loader2, Plus, Send, MessageSquare, ArrowLeft,
-  CheckCheck, Clock
+  CheckCheck, Clock, Inbox, PenLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +46,7 @@ interface Message {
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslation();
   const { memberId, isLoading: authLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,13 +59,14 @@ export default function MessagesPage() {
   const [replyMessage, setReplyMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const unreadCount = conversations.filter(c => c.has_unread).length;
+
   useEffect(() => {
     if (authLoading) return;
     
     if (memberId) {
       fetchConversations();
 
-      // Real-time subscription for conversations
       const channel = supabase
         .channel("client-conversations")
         .on(
@@ -84,7 +87,6 @@ export default function MessagesPage() {
         supabase.removeChannel(channel);
       };
     } else {
-      // No memberId and auth is done loading - set loading to false
       setIsLoading(false);
     }
   }, [memberId, authLoading]);
@@ -123,7 +125,6 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   const fetchConversations = async () => {
     if (!memberId) return;
 
@@ -136,7 +137,6 @@ export default function MessagesPage() {
 
       if (error) throw error;
 
-      // Fetch last message and unread status for each conversation
       const conversationsWithDetails = await Promise.all(
         (data || []).map(async (conv) => {
           const { data: lastMsg } = await supabase
@@ -165,7 +165,7 @@ export default function MessagesPage() {
       setConversations(conversationsWithDetails);
     } catch (error) {
       console.error("Error fetching conversations:", error);
-      toast.error("Failed to load messages");
+      toast.error(t("messages.failedToLoad"));
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +181,6 @@ export default function MessagesPage() {
 
       if (error) throw error;
 
-      // Mark staff messages as read
       await supabase
         .from("messages")
         .update({ is_read: true, read_at: new Date().toISOString() })
@@ -189,7 +188,6 @@ export default function MessagesPage() {
         .eq("sender_type", "staff")
         .eq("is_read", false);
 
-      // Get staff names for staff messages
       const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s.first_name]) || []);
@@ -197,11 +195,11 @@ export default function MessagesPage() {
       setMessages(
         data?.map(m => ({
           ...m,
-          staff_name: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || "Support" : undefined,
+          staff_name: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || t("support.support") : undefined,
         })) || []
       );
 
-      fetchConversations(); // Refresh to update unread status
+      fetchConversations();
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -209,13 +207,12 @@ export default function MessagesPage() {
 
   const createConversation = async () => {
     if (!newSubject.trim() || !newMessage.trim() || !memberId) {
-      toast.error("Please enter a subject and message");
+      toast.error(t("messages.enterSubjectAndMessage"));
       return;
     }
 
     setIsSending(true);
     try {
-      // Create conversation
       const { data: convData, error: convError } = await supabase
         .from("conversations")
         .insert({
@@ -228,7 +225,6 @@ export default function MessagesPage() {
 
       if (convError) throw convError;
 
-      // Create first message
       const { error: msgError } = await supabase
         .from("messages")
         .insert({
@@ -241,7 +237,7 @@ export default function MessagesPage() {
 
       if (msgError) throw msgError;
 
-      toast.success("Message sent successfully!");
+      toast.success(t("messages.messageSent"));
       setIsDialogOpen(false);
       setNewSubject("");
       setNewMessage("");
@@ -249,7 +245,7 @@ export default function MessagesPage() {
       setSelectedConversation(convData);
     } catch (error) {
       console.error("Error creating conversation:", error);
-      toast.error("Failed to send message");
+      toast.error(t("messages.failedToSend"));
     } finally {
       setIsSending(false);
     }
@@ -272,7 +268,6 @@ export default function MessagesPage() {
 
       if (error) throw error;
 
-      // Update conversation last_message_at
       await supabase
         .from("conversations")
         .update({ last_message_at: new Date().toISOString() })
@@ -282,7 +277,7 @@ export default function MessagesPage() {
       fetchMessages(selectedConversation.id);
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error(t("messages.failedToSend"));
     } finally {
       setIsSending(false);
     }
@@ -291,22 +286,22 @@ export default function MessagesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-blue-500 text-lg px-3 py-1">Open</Badge>;
+        return <Badge className="bg-blue-500">{t("support.status.open")}</Badge>;
       case "pending":
-        return <Badge variant="secondary" className="text-lg px-3 py-1">Pending</Badge>;
+        return <Badge variant="secondary">{t("common.pending")}</Badge>;
       case "resolved":
-        return <Badge className="bg-green-600 text-lg px-3 py-1">Resolved</Badge>;
+        return <Badge className="bg-alert-resolved">{t("support.status.resolved")}</Badge>;
       case "closed":
-        return <Badge variant="outline" className="text-lg px-3 py-1">Closed</Badge>;
+        return <Badge variant="outline">{t("support.status.closed")}</Badge>;
       default:
-        return <Badge className="text-lg px-3 py-1">{status}</Badge>;
+        return <Badge>{status}</Badge>;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -314,28 +309,30 @@ export default function MessagesPage() {
   // Conversation detail view
   if (selectedConversation) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in">
         <Button
           variant="ghost"
-          size="lg"
           onClick={() => setSelectedConversation(null)}
-          className="text-lg"
         >
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          Back to Messages
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("messages.backToMessages")}
         </Button>
 
         <Card>
           <CardHeader className="border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">{selectedConversation.subject || "Conversation"}</CardTitle>
+              <div>
+                <CardTitle className="text-xl">{selectedConversation.subject || t("messages.conversation")}</CardTitle>
+                <CardDescription>
+                  {t("messages.started")} {formatDistanceToNow(new Date(selectedConversation.created_at), { addSuffix: true })}
+                </CardDescription>
+              </div>
               {getStatusBadge(selectedConversation.status)}
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {/* Messages */}
-            <ScrollArea className="h-[400px] p-6">
-              <div className="space-y-6">
+            <ScrollArea className="h-[400px] p-4">
+              <div className="space-y-4">
                 {messages.filter(m => m.message_type !== "system").map((msg) => (
                   <div
                     key={msg.id}
@@ -346,24 +343,24 @@ export default function MessagesPage() {
                   >
                     <div
                       className={cn(
-                        "max-w-[80%] rounded-2xl p-4",
+                        "max-w-[80%] rounded-2xl px-4 py-3",
                         msg.sender_type === "member"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-muted rounded-bl-md"
                       )}
                     >
-                      <p className="text-lg whitespace-pre-wrap">{msg.content}</p>
-                      <div className="flex items-center justify-end gap-2 mt-2 text-sm opacity-70">
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      <div className="flex items-center justify-end gap-2 mt-1 text-xs opacity-70">
                         <span>
                           {msg.sender_type === "staff" && msg.staff_name
                             ? `${msg.staff_name} • `
                             : msg.sender_type === "member"
-                            ? "You • "
+                            ? `${t("messages.you")} • `
                             : ""}
                           {format(new Date(msg.created_at), "h:mm a")}
                         </span>
                         {msg.sender_type === "member" && msg.is_read && (
-                          <CheckCheck className="h-4 w-4" />
+                          <CheckCheck className="h-3 w-3" />
                         )}
                       </div>
                     </div>
@@ -373,12 +370,11 @@ export default function MessagesPage() {
               </div>
             </ScrollArea>
 
-            {/* Reply Box */}
-            <div className="p-6 border-t">
-              <div className="flex gap-3">
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
                 <Textarea
-                  placeholder="Type your message..."
-                  className="min-h-[80px] text-lg resize-none"
+                  placeholder={t("messages.typeMessage")}
+                  className="min-h-[60px] resize-none flex-1"
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   onKeyDown={(e) => {
@@ -388,20 +384,19 @@ export default function MessagesPage() {
                     }
                   }}
                 />
+                <Button
+                  onClick={sendReply}
+                  disabled={isSending || !replyMessage.trim()}
+                  size="icon"
+                  className="h-auto aspect-square"
+                >
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
-              <Button
-                onClick={sendReply}
-                disabled={isSending || !replyMessage.trim()}
-                className="w-full mt-3 text-lg h-14"
-                size="lg"
-              >
-                {isSending ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-5 w-5" />
-                )}
-                Send Message
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -411,74 +406,90 @@ export default function MessagesPage() {
 
   // Conversation list view
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">My Messages</h1>
-          <p className="text-lg text-muted-foreground mt-1">Contact our support team</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("messages.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("messages.subtitle")}</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="lg" className="text-lg h-14 px-6">
-              <Plus className="mr-2 h-5 w-5" />
-              New Message
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("messages.newMessage")}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-2xl">Send a Message</DialogTitle>
-              <DialogDescription className="text-lg">
-                Our support team will respond as soon as possible
+              <DialogTitle>{t("messages.sendMessage")}</DialogTitle>
+              <DialogDescription>
+                {t("messages.teamWillRespond")}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-lg font-medium">Subject</label>
+                <label className="text-sm font-medium">{t("messages.subject")}</label>
                 <Input
-                  placeholder="What is your message about?"
-                  className="text-lg h-14"
+                  placeholder={t("messages.subjectPlaceholder")}
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-lg font-medium">Message</label>
+                <label className="text-sm font-medium">{t("messages.message")}</label>
                 <Textarea
-                  placeholder="Write your message here..."
-                  className="min-h-[150px] text-lg"
+                  placeholder={t("messages.messagePlaceholder")}
+                  className="min-h-[120px]"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={createConversation} disabled={isSending} size="lg" className="w-full text-lg h-14">
-                {isSending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Send Message
+              <Button onClick={createConversation} disabled={isSending} className="w-full">
+                {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t("messages.sendMessage")}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Unread indicator */}
+      {unreadCount > 0 && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <Inbox className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium">{t("messages.unreadMessages", { count: unreadCount })}</p>
+              <p className="text-sm text-muted-foreground">{t("messages.clickToRead")}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Conversations List */}
       {conversations.length === 0 ? (
         <Card className="py-16">
           <CardContent className="text-center">
-            <MessageSquare className="mx-auto h-16 w-16 text-muted-foreground opacity-50 mb-4" />
-            <p className="text-xl font-medium">No messages yet</p>
-            <p className="text-lg text-muted-foreground mt-2">
-              Send us a message and we'll get back to you soon
+            <div className="h-20 w-20 mx-auto bg-muted rounded-full flex items-center justify-center mb-6">
+              <MessageSquare className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-xl mb-2">{t("messages.noMessages")}</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              {t("messages.noMessagesDesc")}
             </p>
-            <Button size="lg" className="mt-6 text-lg h-14 px-8" onClick={() => setIsDialogOpen(true)}>
-              <Plus className="mr-2 h-5 w-5" />
-              Send Your First Message
+            <Button className="mt-6" onClick={() => setIsDialogOpen(true)}>
+              <PenLine className="mr-2 h-4 w-4" />
+              {t("messages.sendFirstMessage")}
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {conversations.map((conv) => (
             <Card
               key={conv.id}
@@ -488,30 +499,32 @@ export default function MessagesPage() {
               )}
               onClick={() => setSelectedConversation(conv)}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {conv.has_unread && (
-                        <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
                       )}
                       <h3 className={cn(
-                        "text-xl truncate",
+                        "font-medium truncate",
                         conv.has_unread && "font-semibold"
                       )}>
-                        {conv.subject || "No subject"}
+                        {conv.subject || t("messages.conversation")}
                       </h3>
                     </div>
-                    <p className="text-lg text-muted-foreground mt-2 line-clamp-2">
-                      {conv.last_message_preview}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}</span>
-                    </div>
+                    {conv.last_message_preview && (
+                      <p className="text-sm text-muted-foreground mt-1 truncate">
+                        {conv.last_message_preview}
+                      </p>
+                    )}
                   </div>
-                  <div className="shrink-0">
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
                     {getStatusBadge(conv.status)}
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                    </span>
                   </div>
                 </div>
               </CardContent>
