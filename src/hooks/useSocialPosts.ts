@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { logSocialPostActivity } from "@/lib/auditLog";
 
 export type SocialPostStatus = "draft" | "approved" | "published" | "failed";
 export type SocialPostLanguage = "en" | "es" | "both";
@@ -90,9 +91,15 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       if (error) throw error;
       return post as SocialPost;
     },
-    onSuccess: () => {
+    onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       toast({ title: "Draft created", description: "Your post draft has been saved." });
+      // Audit log
+      logSocialPostActivity("draft_created", post.id, undefined, {
+        goal: post.goal,
+        topic: post.topic,
+        language: post.language,
+      });
     },
     onError: (error: any) => {
       toast({ title: "Error creating draft", description: error.message, variant: "destructive" });
@@ -112,9 +119,14 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       if (error) throw error;
       return post as SocialPost;
     },
-    onSuccess: () => {
+    onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       toast({ title: "Draft updated", description: "Your changes have been saved." });
+      // Audit log
+      logSocialPostActivity("draft_edited", post.id, undefined, {
+        post_text_length: post.post_text?.length,
+        has_image: !!post.image_url,
+      });
     },
     onError: (error: any) => {
       toast({ title: "Error updating draft", description: error.message, variant: "destructive" });
@@ -138,9 +150,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       if (error) throw error;
       return post as SocialPost;
     },
-    onSuccess: () => {
+    onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       toast({ title: "Post approved", description: "The post is ready to publish." });
+      // Audit log
+      logSocialPostActivity("approved", post.id, { status: "draft" }, { status: "approved" });
     },
     onError: (error: any) => {
       toast({ title: "Error approving post", description: error.message, variant: "destructive" });
@@ -150,13 +164,16 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
   // Publish to Facebook
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Log publish attempt
+      logSocialPostActivity("publish_attempted", id);
+      
       const { data, error } = await supabase.functions.invoke("facebook-publish", {
         body: { post_id: id },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return data;
+      return { ...data, post_id: id };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
@@ -164,10 +181,18 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
         title: "Published to Facebook!",
         description: `Post ID: ${data.facebook_post_id}`,
       });
+      // Log publish success
+      logSocialPostActivity("publish_success", data.post_id, undefined, {
+        facebook_post_id: data.facebook_post_id,
+      });
     },
-    onError: (error: any) => {
+    onError: (error: any, postId: string) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       toast({ title: "Publishing failed", description: error.message, variant: "destructive" });
+      // Log publish failure
+      logSocialPostActivity("publish_failed", postId, undefined, {
+        error: error.message,
+      });
     },
   });
 

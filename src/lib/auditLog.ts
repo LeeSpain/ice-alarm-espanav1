@@ -12,7 +12,8 @@ type EntityType =
   | "partner"
   | "partner_invite"
   | "partner_attribution"
-  | "partner_commission";
+  | "partner_commission"
+  | "social_post";
 
 type ActionType = 
   | "create" 
@@ -31,7 +32,13 @@ type ActionType =
   | "commission_created"
   | "commission_approved"
   | "commission_paid"
-  | "commission_cancelled";
+  | "commission_cancelled"
+  | "draft_created"
+  | "draft_edited"
+  | "approved"
+  | "publish_attempted"
+  | "publish_success"
+  | "publish_failed";
 
 interface AuditLogEntry {
   action: ActionType;
@@ -199,6 +206,24 @@ export async function logCommissionActivity(
     action,
     entityType: "partner_commission",
     entityId: commissionId,
+    oldValues,
+    newValues,
+  });
+}
+
+/**
+ * Log a social post action
+ */
+export async function logSocialPostActivity(
+  action: ActionType,
+  postId: string,
+  oldValues?: Record<string, unknown>,
+  newValues?: Record<string, unknown>
+): Promise<void> {
+  return logActivity({
+    action,
+    entityType: "social_post",
+    entityId: postId,
     oldValues,
     newValues,
   });
