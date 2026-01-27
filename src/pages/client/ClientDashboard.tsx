@@ -199,16 +199,41 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {/* Welcome Section */}
-      <div className="space-y-1">
-        {memberLoading && !isTemplatePreview ? (
-          <Skeleton className="h-8 w-64" />
-        ) : (
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            {t("dashboard.welcomeBack")}, {memberName}
-          </h1>
-        )}
-        <p className="text-muted-foreground text-sm">{currentDate}</p>
+      {/* Welcome Section with Help Icons */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          {memberLoading && !isTemplatePreview ? (
+            <Skeleton className="h-8 w-64" />
+          ) : (
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              {t("dashboard.welcomeBack")}, {memberName}
+            </h1>
+          )}
+          <p className="text-muted-foreground text-sm">{currentDate}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            size="icon" 
+            variant="outline"
+            className="h-10 w-10"
+            title={t("dashboard.callUs")}
+            asChild
+          >
+            <a href="tel:+34900123456">
+              <Phone className="h-5 w-5" />
+            </a>
+          </Button>
+          <Button 
+            size="icon" 
+            className="h-10 w-10 bg-[#25D366] hover:bg-[#128C7E] text-white"
+            title={t("dashboard.whatsappUs")}
+            asChild
+          >
+            <a href="https://wa.me/34900123456" target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="h-5 w-5" />
+            </a>
+          </Button>
+        </div>
       </div>
 
       {/* Device Status */}
@@ -239,36 +264,6 @@ export default function ClientDashboard() {
         </Card>
       )}
 
-      {/* Emergency Contact Card */}
-      <Card className="bg-primary text-primary-foreground overflow-hidden">
-        <CardContent className="p-4 md:p-6">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-lg font-semibold mb-1">{t("dashboard.needHelp") || "Need Help?"}</h2>
-              <p className="text-primary-foreground/80 text-sm">
-                {t("dashboard.emergencyTeamReady") || "Our 24/7 emergency response team is always ready to help"}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                size="default" 
-                variant="secondary"
-                className="font-medium"
-              >
-                <Phone className="mr-2 h-4 w-4" />
-                {t("dashboard.callIceAlarm") || "Call ICE Alarm"}
-              </Button>
-              <Button 
-                size="default" 
-                className="font-medium bg-[#25D366] hover:bg-[#128C7E] text-white"
-              >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                WhatsApp
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Quick Actions Grid */}
       <div className="grid gap-4 md:grid-cols-2">
