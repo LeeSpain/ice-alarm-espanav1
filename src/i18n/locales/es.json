@@ -25,6 +25,11 @@
     "research": "Investigar",
     "writeDraft": "Escribir Borrador",
     "generateImage": "Generar Imagen",
+    "quickBrandImage": "Imagen Rápida",
+    "generateAIImage": "Generar Imagen IA",
+    "aiImageGeneration": "Generación de Imagen IA",
+    "selectImageStyle": "Seleccionar estilo",
+    "aiImageDescription": "Genere imágenes profesionales y realistas usando IA. Estas lucen más naturales que los gráficos de marca.",
     "fullWorkflow": "Flujo Completo",
     "enterTopicToEnable": "Introduzca un tema para habilitar funciones de IA",
     "runAIFirst": "Ejecute el flujo de IA primero para obtener texto de imagen",
@@ -99,6 +104,14 @@
       "empty": "No hay publicaciones aprobadas. ¡Cree y apruebe borradores para verlos aquí!",
       "preview": "Vista Previa",
       "publishNow": "Publicar"
+    },
+    "imageStyles": {
+      "seniorActive": "Senior Activo",
+      "familyPeace": "Momento Familiar",
+      "pendantFocus": "Enfoque en Colgante",
+      "spanishLifestyle": "Estilo de Vida Español",
+      "independence": "Independencia",
+      "peaceOfMind": "Tranquilidad"
     },
     "preview": {
       "title": "Vista Previa de Publicación",

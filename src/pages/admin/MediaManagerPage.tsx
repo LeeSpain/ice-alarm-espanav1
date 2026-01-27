@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2 } from "lucide-react";
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
 import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
 import { useBrandedImageGenerator } from "@/hooks/useBrandedImageGenerator";
+import { useAIImageGenerator, IMAGE_STYLE_OPTIONS, ImageStyle } from "@/hooks/useAIImageGenerator";
 import { useApprovedPosts, usePostMetrics } from "@/hooks/usePostMetrics";
 import { checkPostCompliance, ComplianceWarning } from "@/lib/complianceChecker";
 import { ComplianceWarningDialog } from "@/components/admin/media/ComplianceWarningDialog";
@@ -50,12 +51,14 @@ export default function MediaManagerPage() {
   const [aiOutput, setAiOutput] = useState<MediaDraftOutput | null>(null);
   const [complianceWarnings, setComplianceWarnings] = useState<ComplianceWarning[]>([]);
   const [showComplianceDialog, setShowComplianceDialog] = useState(false);
+  const [imageStyle, setImageStyle] = useState<ImageStyle>("senior_active");
 
   const { posts, isLoading, createDraft, updateDraft, approvePost, retryPost, publishPost, deletePost, isCreating, isUpdating, isApproving, isRetrying, isPublishing } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
   const { uploadImage, isUploading } = useSocialPostImages();
   const { generateDraft, isGenerating } = useMediaDraft();
-  const { generateImage: generateBrandedImage, isGenerating: isGeneratingImage } = useBrandedImageGenerator();
+  const { generateImage: generateBrandedImage, isGenerating: isGeneratingBrandedImage } = useBrandedImageGenerator();
+  const { generateImage: generateAIImage, isGenerating: isGeneratingAIImage } = useAIImageGenerator();
   
   // Ready to Publish data
   const { data: approvedPosts = [], isLoading: isLoadingApproved } = useApprovedPosts();
@@ -340,7 +343,7 @@ export default function MediaManagerPage() {
               </Button>
               <Button 
                 variant="outline" 
-                disabled={isGeneratingImage || !aiOutput?.image_text}
+                disabled={isGeneratingBrandedImage || !aiOutput?.image_text}
                 onClick={async () => {
                   if (!aiOutput?.image_text) {
                     return;
@@ -359,8 +362,8 @@ export default function MediaManagerPage() {
                 className="gap-2"
                 title={!aiOutput?.image_text ? t("mediaManager.runAIFirst") : t("mediaManager.generateBrandedImage")}
               >
-                {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                {t("mediaManager.generateImage")}
+                {isGeneratingBrandedImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                {t("mediaManager.quickBrandImage")}
               </Button>
               <Button 
                 variant="outline" 
@@ -371,6 +374,51 @@ export default function MediaManagerPage() {
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                 {t("mediaManager.fullWorkflow")}
               </Button>
+            </div>
+
+            {/* AI Image Generation Section */}
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <Label className="text-sm font-medium">{t("mediaManager.aiImageGeneration")}</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={imageStyle} onValueChange={(v) => setImageStyle(v as ImageStyle)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder={t("mediaManager.selectImageStyle")} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {IMAGE_STYLE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="default"
+                  disabled={isGeneratingAIImage || !topic}
+                  onClick={async () => {
+                    const url = await generateAIImage({
+                      style: imageStyle,
+                      topic,
+                      imageText: aiOutput?.image_text,
+                      postId: selectedPostId || undefined,
+                    });
+                    if (url) {
+                      setImageUrl(url);
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  {isGeneratingAIImage ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4" />
+                  )}
+                  {t("mediaManager.generateAIImage")}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("mediaManager.aiImageDescription")}
+              </p>
             </div>
 
             {/* AI Output Preview */}
