@@ -1951,5 +1951,57 @@
     "pleaseLogin": "Por favor inicie sesión primero",
     "pleaseLoginFirst": "Por favor",
     "toComplete": "para completar su registro"
+  },
+  "contact": {
+    "hero": {
+      "title": "Contáctenos",
+      "subtitle": "Estamos aquí para ayudarle. Contacte con nuestro equipo para cualquier pregunta sobre nuestros servicios."
+    },
+    "info": {
+      "callUs": "Llámenos",
+      "callUsDesc": "Hable directamente con nuestro equipo 24/7",
+      "emailUs": "Escríbanos",
+      "emailUsDesc": "Responderemos en 24 horas"
+    },
+    "form": {
+      "title": "Envíenos un Mensaje",
+      "subtitle": "Complete el formulario y nos pondremos en contacto lo antes posible.",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "language": "Idioma Preferido",
+      "enquiryType": "Tipo de Consulta",
+      "message": "Mensaje",
+      "messagePlaceholder": "Cuéntenos cómo podemos ayudarle...",
+      "sendMessage": "Enviar Mensaje",
+      "sending": "Enviando..."
+    },
+    "enquiry": {
+      "general": "Consulta General",
+      "pricing": "Precios y Planes",
+      "demo": "Solicitar una Demo",
+      "partnership": "Colaboración",
+      "support": "Soporte Técnico"
+    },
+    "whyTrust": {
+      "title": "¿Por Qué Confiar en ICE Alarm?",
+      "protection": "Protección 24/7",
+      "protectionDesc": "Monitoreo de emergencia las 24 horas con equipo de respuesta siempre listo para ayudar.",
+      "bilingual": "Soporte Bilingüe",
+      "bilingualDesc": "Operadores fluidos en inglés y español que entienden sus necesidades.",
+      "response": "Respuesta Rápida",
+      "responseDesc": "Tiempo de respuesta promedio inferior a 30 segundos cuando más nos necesita."
+    },
+    "success": {
+      "title": "¡Mensaje Enviado!",
+      "message": "Gracias por contactarnos. Nos pondremos en contacto pronto.",
+      "description": "Nuestro equipo revisará su mensaje y responderá en 24 horas. Para asuntos urgentes, llámenos directamente.",
+      "returnHome": "Volver al Inicio",
+      "callNow": "Llámenos Ahora"
+    },
+    "error": {
+      "sendFailed": "Error al enviar el mensaje. Por favor, inténtelo de nuevo."
+    }
   }
 }

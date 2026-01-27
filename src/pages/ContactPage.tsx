@@ -231,7 +231,6 @@ export default function ContactPage() {
                           required
                           value={formData.first_name}
                           onChange={(e) => handleChange("first_name", e.target.value)}
-                          placeholder="John"
                         />
                       </div>
                       <div className="space-y-2">
@@ -241,7 +240,6 @@ export default function ContactPage() {
                           required
                           value={formData.last_name}
                           onChange={(e) => handleChange("last_name", e.target.value)}
-                          placeholder="Smith"
                         />
                       </div>
                     </div>
@@ -255,7 +253,6 @@ export default function ContactPage() {
                           required
                           value={formData.email}
                           onChange={(e) => handleChange("email", e.target.value)}
-                          placeholder="john@example.com"
                         />
                       </div>
                       <div className="space-y-2">
@@ -266,7 +263,7 @@ export default function ContactPage() {
                           required
                           value={formData.phone}
                           onChange={(e) => handleChange("phone", e.target.value)}
-                          placeholder="+34 600 000 000"
+                          placeholder={t("common.phonePlaceholder")}
                         />
                       </div>
                     </div>
