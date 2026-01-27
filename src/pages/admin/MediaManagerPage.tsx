@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
 import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
+import { useBrandedImageGenerator } from "@/hooks/useBrandedImageGenerator";
 import { cn } from "@/lib/utils";
 const GOALS = [
   { value: "brand_awareness", label: "Brand Awareness" },
@@ -62,6 +63,7 @@ export default function MediaManagerPage() {
   const { data: selectedPost } = useSocialPost(selectedPostId);
   const { uploadImage, isUploading } = useSocialPostImages();
   const { generateDraft, isGenerating } = useMediaDraft();
+  const { generateImage: generateBrandedImage, isGenerating: isGeneratingImage } = useBrandedImageGenerator();
 
   // Load selected post into form
   const handleSelectPost = (post: SocialPost) => {
@@ -278,11 +280,26 @@ export default function MediaManagerPage() {
               </Button>
               <Button 
                 variant="outline" 
-                disabled
+                disabled={isGeneratingImage || !aiOutput?.image_text}
+                onClick={async () => {
+                  if (!aiOutput?.image_text) {
+                    return;
+                  }
+                  const url = await generateBrandedImage({
+                    imageText: {
+                      headline: aiOutput.image_text.headline,
+                      subheadline: aiOutput.image_text.subheadline,
+                      cta: aiOutput.image_text.cta || "Learn More",
+                    },
+                  });
+                  if (url) {
+                    setImageUrl(url);
+                  }
+                }}
                 className="gap-2"
-                title="Image generation coming soon"
+                title={!aiOutput?.image_text ? "Run AI workflow first to get image text" : "Generate branded image"}
               >
-                <ImageIcon className="h-4 w-4" />
+                {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 Generate Image
               </Button>
               <Button 
