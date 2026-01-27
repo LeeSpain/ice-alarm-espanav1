@@ -273,7 +273,7 @@ export default function MedicalInfoPage() {
               </div>
               <div className="flex gap-2">
                 <Input
-                  placeholder={t("medical.addAllergy", "Add allergy...")}
+                  placeholder={t("medical.addAllergy")}
                   value={newAllergy}
                   onChange={(e) => setNewAllergy(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem("allergy"))}
@@ -324,11 +324,11 @@ export default function MedicalInfoPage() {
               <CardContent className="space-y-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">{t("common.name")}</Label>
-                  <Input {...form.register("doctor_name")} placeholder={t("medical.doctorName", "Dr. Name")} />
+                  <Input {...form.register("doctor_name")} placeholder={t("medical.doctorName")} />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">{t("common.phone")}</Label>
-                  <Input {...form.register("doctor_phone")} placeholder="+34 000 000 000" />
+                  <Input {...form.register("doctor_phone")} placeholder={t("common.phonePlaceholder")} />
                 </div>
               </CardContent>
             </Card>
@@ -342,7 +342,7 @@ export default function MedicalInfoPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Input {...form.register("hospital_preference")} placeholder={t("medical.hospitalName", "Hospital name")} />
+                <Input {...form.register("hospital_preference")} placeholder={t("medical.hospitalName")} />
               </CardContent>
             </Card>
 
@@ -367,7 +367,7 @@ export default function MedicalInfoPage() {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder={t("medical.addCondition", "Add condition...")}
+                    placeholder={t("medical.addCondition")}
                     value={newCondition}
                     onChange={(e) => setNewCondition(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem("condition"))}
@@ -400,7 +400,7 @@ export default function MedicalInfoPage() {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder={t("medical.addMedication", "Add medication...")}
+                    placeholder={t("medical.addMedication")}
                     value={newMedication}
                     onChange={(e) => setNewMedication(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addItem("medication"))}
@@ -424,7 +424,7 @@ export default function MedicalInfoPage() {
             <CardContent>
               <Textarea
                 {...form.register("additional_notes")}
-                placeholder={t("medical.notesPlaceholder", "Any other important medical information...")}
+                placeholder={t("medical.notesPlaceholder")}
                 rows={3}
               />
             </CardContent>

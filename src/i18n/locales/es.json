@@ -79,7 +79,9 @@
     "created": "Creado",
     "deleted": "Eliminado",
     "goBack": "Volver",
-    "create": "Crear"
+    "create": "Crear",
+    "spain": "España",
+    "phonePlaceholder": "+34 000 000 000"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -408,6 +410,21 @@
     "noContacts": "Sin contactos de emergencia",
     "noContactsDesc": "Añada contactos para que podamos comunicarnos con sus seres queridos en caso de emergencia.",
     "addFirstContact": "Añadir su primer contacto",
+    "subtitle": "Personas a las que llamamos si necesita ayuda",
+    "networkTitle": "Su Red de Emergencia",
+    "networkDesc": "Estos contactos serán llamados en orden de prioridad si no podemos localizarle durante una emergencia. Puede tener hasta 3 contactos.",
+    "addPrompt": "Añada contactos de emergencia para que podamos avisar a sus seres queridos si es necesario.",
+    "addFirst": "Añadir Su Primer Contacto",
+    "limitReached": "Ha alcanzado el máximo de 3 contactos de emergencia. Elimine uno para añadir otro.",
+    "dialogDesc": "Introduzca los datos de su contacto de emergencia.",
+    "selectRelationship": "Seleccionar relación",
+    "notesPlaceholder": "Cualquier información adicional...",
+    "deleteTitle": "Eliminar Contacto",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este contacto de emergencia? Esta acción no se puede deshacer.",
+    "updated": "Contacto actualizado correctamente",
+    "added": "Contacto añadido correctamente",
+    "deleted": "Contacto eliminado",
+    "namePlaceholder": "Nombre completo",
     "relationships": {
       "spouse": "Cónyuge",
       "partner": "Pareja",
@@ -445,7 +462,22 @@
     "safetyNote": "Los cambios médicos son revisados por nuestro equipo por su seguridad",
     "noConditions": "Sin condiciones registradas",
     "noMedications": "Sin medicamentos registrados",
-    "notSpecified": "No especificado"
+    "notSpecified": "No especificado",
+    "subtitle": "Información de salud importante para emergencias",
+    "emergencyTitle": "Datos Médicos de Emergencia",
+    "emergencyDesc": "Esta información se comparte con los servicios de emergencia cuando necesita ayuda. Manténgala actualizada para su seguridad.",
+    "noData": "Sin Información Médica",
+    "addPrompt": "Añada sus datos médicos para que podamos proporcionar mejor atención de emergencia.",
+    "addInfo": "Añadir Información Médica",
+    "hospital": "Hospital Preferido",
+    "hospitalName": "Nombre del hospital",
+    "conditions": "Condiciones Médicas",
+    "addCondition": "Añadir condición...",
+    "addMedication": "Añadir medicación...",
+    "addAllergy": "Añadir alergia...",
+    "notesPlaceholder": "Cualquier otra información médica importante...",
+    "selectBloodType": "Seleccionar grupo sanguíneo",
+    "noneRecorded": "Ninguno registrado"
   },
   "subscription": {
     "currentPlan": "Plan actual",
@@ -469,6 +501,9 @@
     "paid": "Pagado",
     "failed": "Fallido",
     "refunded": "Reembolsado",
+    "mo": "/mes",
+    "yr": "/año",
+    "quarterly": "/trimestre",
     "changePlanNote": "Para cambiar entre planes Individual y Pareja, contacte con nuestro equipo de soporte."
   },
   "support": {
@@ -564,7 +599,8 @@
     "phoneNumber": "Número de teléfono",
     "streetAddress": "Dirección",
     "nieDni": "NIE/DNI",
-    "contactInfo": "Información de contacto"
+    "contactInfo": "Información de contacto",
+    "selectLanguage": "Seleccionar idioma"
   },
   "dashboard": {
     "welcomeBack": "Bienvenido/a",

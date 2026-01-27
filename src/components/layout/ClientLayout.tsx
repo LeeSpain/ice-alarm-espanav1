@@ -80,45 +80,45 @@ export function ClientLayout() {
     {
       id: "dashboard",
       icon: Home,
-      label: t("navigation.home") || "Dashboard",
+      label: t("navigation.home"),
       items: [
-        { icon: Home, label: t("navigation.home") || "Dashboard", path: "/dashboard" }
+        { icon: Home, label: t("navigation.home"), path: "/dashboard" }
       ]
     },
     {
       id: "profile",
       icon: User,
-      label: t("navigation.myAccount") || "My Account",
+      label: t("navigation.myAccount"),
       items: [
-        { icon: User, label: t("navigation.profile") || "Profile", path: "/dashboard/profile" },
-        { icon: Heart, label: t("navigation.medicalInfo") || "Medical Info", path: "/dashboard/medical" },
-        { icon: Phone, label: t("navigation.emergencyContacts") || "Emergency Contacts", path: "/dashboard/contacts" }
+        { icon: User, label: t("navigation.profile"), path: "/dashboard/profile" },
+        { icon: Heart, label: t("navigation.medicalInfo"), path: "/dashboard/medical" },
+        { icon: Phone, label: t("navigation.emergencyContacts"), path: "/dashboard/contacts" }
       ]
     },
     {
       id: "services",
       icon: Smartphone,
-      label: t("navigation.services") || "Services",
+      label: t("navigation.services"),
       items: [
-        { icon: Smartphone, label: t("navigation.myDevice") || "My Device", path: "/dashboard/device" },
-        { icon: Bell, label: t("navigation.alertHistory") || "Alert History", path: "/dashboard/alerts" },
-        { icon: MessageSquare, label: t("navigation.messages") || "Messages", path: "/dashboard/messages" }
+        { icon: Smartphone, label: t("navigation.myDevice"), path: "/dashboard/device" },
+        { icon: Bell, label: t("navigation.alertHistory"), path: "/dashboard/alerts" },
+        { icon: MessageSquare, label: t("navigation.messages"), path: "/dashboard/messages" }
       ]
     },
     {
       id: "billing",
       icon: CreditCard,
-      label: t("navigation.billing") || "Billing",
+      label: t("navigation.billing"),
       items: [
-        { icon: CreditCard, label: t("navigation.subscription") || "Subscription", path: "/dashboard/subscription" }
+        { icon: CreditCard, label: t("navigation.subscription"), path: "/dashboard/subscription" }
       ]
     },
     {
       id: "support",
       icon: Headphones,
-      label: t("navigation.support") || "Support",
+      label: t("navigation.support"),
       items: [
-        { icon: Headphones, label: t("navigation.contactSupport") || "Contact Support", path: "/dashboard/support" }
+        { icon: Headphones, label: t("navigation.contactSupport"), path: "/dashboard/support" }
       ]
     }
   ];
@@ -348,9 +348,9 @@ export function ClientLayout() {
             collapsed && !isMobile ? "h-10 px-2" : "h-12"
           )}
         >
-          <Phone className={cn("shrink-0 h-5 w-5", !collapsed && !isMobile && "mr-2")} />
-          {(isMobile || !collapsed) && <span className="text-sm">{t("dashboard.contactIceAlarm") || "Call ICE Alarm"}</span>}
-        </Button>
+            <Phone className={cn("shrink-0 h-5 w-5", !collapsed && !isMobile && "mr-2")} />
+            {(isMobile || !collapsed) && <span className="text-sm">{t("dashboard.contactIceAlarm")}</span>}
+          </Button>
       </div>
 
       {/* Sign out */}
@@ -366,12 +366,12 @@ export function ClientLayout() {
               )}
             >
               <LogOut className="h-5 w-5" />
-              {(isMobile || !collapsed) && <span>{t("auth.signOut") || "Sign Out"}</span>}
+              {(isMobile || !collapsed) && <span>{t("auth.signOut")}</span>}
             </Button>
           </TooltipTrigger>
           {!isMobile && collapsed && (
             <TooltipContent side="right" className="font-medium">
-              {t("auth.signOut") || "Sign Out"}
+              {t("auth.signOut")}
             </TooltipContent>
           )}
         </Tooltip>
@@ -440,7 +440,7 @@ export function ClientLayout() {
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder={t("common.search") || "Search..."}
+                placeholder={t("common.search")}
                 className="pl-10 bg-secondary/50 border-0 focus-visible:ring-1"
               />
             </div>
@@ -470,18 +470,18 @@ export function ClientLayout() {
                     <span className="font-medium">{displayName}</span>
                     <span className="text-xs text-muted-foreground">{displayEmail}</span>
                     <Badge variant="secondary" className="w-fit mt-1 text-xs">
-                      {t("common.member") || "Member"}
+                      {t("common.member")}
                     </Badge>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <NavLink to="/dashboard/profile">{t("auth.accountSettings") || "Account Settings"}</NavLink>
+                  <NavLink to="/dashboard/profile">{t("auth.accountSettings")}</NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  {t("auth.signOut") || "Sign Out"}
+                  {t("auth.signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -65,20 +65,20 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
-const RELATIONSHIPS = [
-  "Spouse",
-  "Partner",
-  "Child",
-  "Son",
-  "Daughter",
-  "Sibling",
-  "Brother",
-  "Sister",
-  "Parent",
-  "Friend",
-  "Neighbor",
-  "Caregiver",
-  "Other",
+const RELATIONSHIP_KEYS = [
+  { value: "Spouse", key: "spouse" },
+  { value: "Partner", key: "partner" },
+  { value: "Child", key: "child" },
+  { value: "Son", key: "son" },
+  { value: "Daughter", key: "daughter" },
+  { value: "Sibling", key: "sibling" },
+  { value: "Brother", key: "brother" },
+  { value: "Sister", key: "sister" },
+  { value: "Parent", key: "parent" },
+  { value: "Friend", key: "friend" },
+  { value: "Neighbor", key: "neighbor" },
+  { value: "Caregiver", key: "caregiver" },
+  { value: "Other", key: "other" },
 ];
 
 export default function EmergencyContactsPage() {
@@ -377,7 +377,7 @@ export default function EmergencyContactsPage() {
               <Input
                 id="contact_name"
                 {...form.register("contact_name")}
-                placeholder={t("contacts.namePlaceholder", "Full name")}
+                placeholder={t("contacts.namePlaceholder")}
               />
               {form.formState.errors.contact_name && (
                 <p className="text-sm text-destructive">{form.formState.errors.contact_name.message}</p>
@@ -391,11 +391,13 @@ export default function EmergencyContactsPage() {
                 onValueChange={(value) => form.setValue("relationship", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t("contacts.selectRelationship", "Select relationship")} />
+                  <SelectValue placeholder={t("contacts.selectRelationship")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {RELATIONSHIPS.map((rel) => (
-                    <SelectItem key={rel} value={rel}>{rel}</SelectItem>
+                  {RELATIONSHIP_KEYS.map((rel) => (
+                    <SelectItem key={rel.value} value={rel.value}>
+                      {t(`contacts.relationships.${rel.key}`)}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

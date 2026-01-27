@@ -177,8 +177,8 @@ export default function ProfilePage() {
                       <FormLabel>{t("profile.preferredLanguage")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select language" />
+                      <SelectTrigger>
+                            <SelectValue placeholder={t("profile.selectLanguage")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -384,7 +384,7 @@ export default function ProfilePage() {
                       {t("profile.country")}
                     </Label>
                     <div className="p-3 bg-muted/50 rounded-lg font-medium text-muted-foreground">
-                      {profile?.country || "Spain"}
+                      {profile?.country || t("common.spain")}
                     </div>
                   </div>
                 </div>

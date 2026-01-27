@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
+import i18n from "@/i18n";
 
 // Mock data for template preview mode
 const MOCK_MEMBER = {
@@ -143,24 +145,20 @@ export default function ClientDashboard() {
   const displayContacts = isTemplatePreview ? MOCK_CONTACTS : contacts;
   const displayAlertsCount = isTemplatePreview ? 2 : alertsCount;
 
-  const currentDate = new Date().toLocaleDateString('en-GB', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  const dateLocale = i18n.language === 'es' ? es : enGB;
+  const currentDate = format(new Date(), 'EEEE, d MMMM yyyy', { locale: dateLocale });
 
-  const memberName = displayMember?.first_name || t("common.member") || "Member";
+  const memberName = displayMember?.first_name || t("common.member");
 
   const formatPlanType = (type: string) => {
-    return type === "single" ? "Single Person" : type === "couple" ? "Couple" : type;
+    return type === "single" ? t("membership.single") : type === "couple" ? t("membership.couple") : type;
   };
 
   const formatBillingFrequency = (freq: string) => {
     switch (freq) {
-      case "monthly": return "/month";
-      case "quarterly": return "/quarter";
-      case "annual": return "/year";
+      case "monthly": return t("subscription.mo");
+      case "quarterly": return t("subscription.quarterly");
+      case "annual": return t("subscription.yr");
       default: return "";
     }
   };
