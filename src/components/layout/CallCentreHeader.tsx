@@ -86,9 +86,6 @@ export function CallCentreHeader() {
         <NotificationBell staffId={staffId} />
 
         {/* User Menu */}
-        <LanguageSelector variant="icon-only" />
-
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
