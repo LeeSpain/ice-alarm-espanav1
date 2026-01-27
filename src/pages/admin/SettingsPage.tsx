@@ -91,6 +91,8 @@ export default function SettingsPage() {
   const [showFacebookToken, setShowFacebookToken] = useState(false);
   // Track recently saved sections to prevent useEffect from resetting form values
   const [recentlySavedSection, setRecentlySavedSection] = useState<string | null>(null);
+  // Prevent background refetch/state sync from overwriting in-progress edits
+  const [facebookDirty, setFacebookDirty] = useState(false);
   // Password visibility toggles
   const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [showTwilioToken, setShowTwilioToken] = useState(false);
@@ -105,7 +107,10 @@ export default function SettingsPage() {
       
       if (error) throw error;
       return (data || []) as SystemSetting[];
-    }
+     },
+     // Avoid surprise refetches while typing/pasting long tokens
+     refetchOnWindowFocus: false,
+     refetchOnReconnect: false,
   });
 
   // Populate state from fetched settings
@@ -152,7 +157,7 @@ export default function SettingsPage() {
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
 
       // Facebook settings - only update if we haven't just saved them
-      if (recentlySavedSection !== "facebook") {
+      if (recentlySavedSection !== "facebook" && !facebookDirty) {
         setFacebookSettings({
           page_id: settingsMap.settings_facebook_page_id || "",
           page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
@@ -165,7 +170,7 @@ export default function SettingsPage() {
         discount: parseFloat(settingsMap.settings_registration_fee_discount || "0")
       });
     }
-  }, [settings]);
+  }, [settings, recentlySavedSection, facebookDirty]);
 
   // Save settings mutation
   const saveMutation = useMutation({
@@ -292,6 +297,8 @@ export default function SettingsPage() {
 
     // Set flag to prevent useEffect from immediately resetting the form
     setRecentlySavedSection("facebook");
+    // We are committing these edits now
+    setFacebookDirty(false);
     
     // Immediately show masked value for the token to confirm it's being saved
     if (hasNewToken) {
@@ -938,7 +945,10 @@ export default function SettingsPage() {
                   <Label>Page ID</Label>
                   <Input 
                     value={facebookSettings.page_id}
-                    onChange={(e) => setFacebookSettings(prev => ({ ...prev, page_id: e.target.value }))}
+                    onChange={(e) => {
+                      setFacebookDirty(true);
+                      setFacebookSettings(prev => ({ ...prev, page_id: e.target.value }));
+                    }}
                     placeholder="123456789012345"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -952,7 +962,10 @@ export default function SettingsPage() {
                     <Input 
                       type={showFacebookToken ? "text" : "password"}
                       value={facebookSettings.page_access_token}
-                      onChange={(e) => setFacebookSettings(prev => ({ ...prev, page_access_token: e.target.value }))}
+                      onChange={(e) => {
+                        setFacebookDirty(true);
+                        setFacebookSettings(prev => ({ ...prev, page_access_token: e.target.value }));
+                      }}
                       placeholder="EAA..."
                       className="pr-10"
                     />
