@@ -58,12 +58,15 @@ export function ShiftReportModal() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [shiftNotes, setShiftNotes] = useState<ShiftNote[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [generatedAt, setGeneratedAt] = useState<string>("");
 
   const dateLocale = i18n.language === 'es' ? es : enGB;
-  const generatedAt = format(new Date(), "EEEE, d MMMM yyyy 'at' HH:mm", { locale: dateLocale });
 
   const fetchReportData = async () => {
     setLoading(true);
+    
+    // Update the generated timestamp each time modal opens
+    setGeneratedAt(format(new Date(), "EEEE, d MMMM yyyy 'at' HH:mm", { locale: dateLocale }));
     
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
     const todayEnd = new Date();
