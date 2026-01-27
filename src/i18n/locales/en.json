@@ -1999,5 +1999,57 @@
     "pleaseLogin": "Please log in first",
     "pleaseLoginFirst": "Please",
     "toComplete": "to complete your registration"
+  },
+  "contact": {
+    "hero": {
+      "title": "Get in Touch",
+      "subtitle": "We're here to help. Reach out to our team for any questions about our services."
+    },
+    "info": {
+      "callUs": "Call Us",
+      "callUsDesc": "Speak directly with our team 24/7",
+      "emailUs": "Email Us",
+      "emailUsDesc": "We'll respond within 24 hours"
+    },
+    "form": {
+      "title": "Send us a Message",
+      "subtitle": "Fill out the form below and we'll get back to you as soon as possible.",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "language": "Preferred Language",
+      "enquiryType": "Enquiry Type",
+      "message": "Message",
+      "messagePlaceholder": "Tell us how we can help you...",
+      "sendMessage": "Send Message",
+      "sending": "Sending..."
+    },
+    "enquiry": {
+      "general": "General Enquiry",
+      "pricing": "Pricing & Plans",
+      "demo": "Request a Demo",
+      "partnership": "Partnership",
+      "support": "Technical Support"
+    },
+    "whyTrust": {
+      "title": "Why Trust ICE Alarm?",
+      "protection": "24/7 Protection",
+      "protectionDesc": "Round-the-clock emergency monitoring and response team always ready to help.",
+      "bilingual": "Bilingual Support",
+      "bilingualDesc": "Fluent English and Spanish operators who understand your needs.",
+      "response": "Fast Response",
+      "responseDesc": "Average response time under 30 seconds when you need us most."
+    },
+    "success": {
+      "title": "Message Sent!",
+      "message": "Thank you for contacting us. We'll get back to you soon.",
+      "description": "Our team will review your message and respond within 24 hours. For urgent matters, please call us directly.",
+      "returnHome": "Return to Home",
+      "callNow": "Call Us Now"
+    },
+    "error": {
+      "sendFailed": "Failed to send message. Please try again."
+    }
   }
 }
