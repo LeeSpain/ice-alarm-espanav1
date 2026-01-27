@@ -9,14 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit } from "lucide-react";
+import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
 import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
 import { useBrandedImageGenerator } from "@/hooks/useBrandedImageGenerator";
+import { useApprovedPosts, usePostMetrics } from "@/hooks/usePostMetrics";
 import { checkPostCompliance, ComplianceWarning } from "@/lib/complianceChecker";
 import { ComplianceWarningDialog } from "@/components/admin/media/ComplianceWarningDialog";
+import { PostMetricsBar } from "@/components/admin/media/PostMetricsBar";
+import { ReadyToPublishSection } from "@/components/admin/media/ReadyToPublishSection";
+import { PostPreviewDialog } from "@/components/admin/media/PostPreviewDialog";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -33,6 +37,8 @@ export default function MediaManagerPage() {
   const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<SocialPostStatus | "all">("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [previewPost, setPreviewPost] = useState<SocialPost | null>(null);
+  const [publishingFromQueue, setPublishingFromQueue] = useState<string | null>(null);
   
   // Form state
   const [goal, setGoal] = useState("");
@@ -50,6 +56,10 @@ export default function MediaManagerPage() {
   const { uploadImage, isUploading } = useSocialPostImages();
   const { generateDraft, isGenerating } = useMediaDraft();
   const { generateImage: generateBrandedImage, isGenerating: isGeneratingImage } = useBrandedImageGenerator();
+  
+  // Ready to Publish data
+  const { data: approvedPosts = [], isLoading: isLoadingApproved } = useApprovedPosts();
+  const { data: metrics, isLoading: isLoadingMetrics } = usePostMetrics();
 
   // Load selected post into form
   const handleSelectPost = (post: SocialPost) => {
@@ -188,12 +198,51 @@ export default function MediaManagerPage() {
     }
   };
 
+  // Ready to Publish handlers
+  const handlePublishFromQueue = async (postId: string) => {
+    setPublishingFromQueue(postId);
+    try {
+      await publishPost(postId);
+    } finally {
+      setPublishingFromQueue(null);
+    }
+  };
+
+  const handlePublishFromPreview = async () => {
+    if (!previewPost) return;
+    setPublishingFromQueue(previewPost.id);
+    try {
+      await publishPost(previewPost.id);
+      setPreviewPost(null);
+    } finally {
+      setPublishingFromQueue(null);
+    }
+  };
+
+  const handleEditFromPreview = () => {
+    if (!previewPost) return;
+    handleSelectPost(previewPost);
+    setPreviewPost(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">{t("mediaManager.title")}</h1>
         <p className="text-muted-foreground">{t("mediaManager.subtitle")}</p>
       </div>
+
+      {/* Post Metrics Bar */}
+      <PostMetricsBar metrics={metrics} isLoading={isLoadingMetrics} />
+
+      {/* Ready to Publish Section */}
+      <ReadyToPublishSection
+        posts={approvedPosts}
+        isLoading={isLoadingApproved}
+        onPreview={setPreviewPost}
+        onPublish={handlePublishFromQueue}
+        publishingId={publishingFromQueue}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Panel - Create/Edit Draft */}
@@ -531,6 +580,18 @@ export default function MediaManagerPage() {
                                 className="h-8 w-8"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  setPreviewPost(post);
+                                }}
+                                title={t("mediaManager.readyToPublish.preview")}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   handleSelectPost(post);
                                 }}
                               >
@@ -567,6 +628,16 @@ export default function MediaManagerPage() {
         warnings={complianceWarnings}
         onConfirm={handleForceApprove}
         isLoading={isApproving}
+      />
+
+      {/* Post Preview Dialog */}
+      <PostPreviewDialog
+        post={previewPost}
+        open={!!previewPost}
+        onOpenChange={(open) => !open && setPreviewPost(null)}
+        onPublish={handlePublishFromPreview}
+        onEdit={handleEditFromPreview}
+        isPublishing={publishingFromQueue === previewPost?.id}
       />
     </div>
   );

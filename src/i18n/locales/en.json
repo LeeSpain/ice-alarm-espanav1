@@ -80,6 +80,28 @@
       "confirmCheckbox": "I have reviewed these warnings and confirm this content is appropriate",
       "approveAnyway": "Approve Anyway",
       "editPost": "Edit Post"
+    },
+    "metrics": {
+      "drafts": "Drafts",
+      "approved": "Approved",
+      "published": "Published",
+      "failed": "Failed"
+    },
+    "readyToPublish": {
+      "title": "Ready to Publish",
+      "subtitle": "Posts approved and waiting for publication",
+      "empty": "No approved posts ready. Create and approve drafts to see them here!",
+      "preview": "Preview",
+      "publishNow": "Publish"
+    },
+    "preview": {
+      "title": "Post Preview",
+      "description": "Review the full post before publishing to Facebook",
+      "noImage": "No image attached",
+      "metadata": "Post Details",
+      "publishNow": "Publish to Facebook",
+      "editFirst": "Edit Post",
+      "close": "Close"
     }
   },
   "common": {

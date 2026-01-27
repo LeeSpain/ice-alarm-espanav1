@@ -80,6 +80,28 @@
       "confirmCheckbox": "He revisado estas advertencias y confirmo que este contenido es apropiado",
       "approveAnyway": "Aprobar de Todos Modos",
       "editPost": "Editar Publicación"
+    },
+    "metrics": {
+      "drafts": "Borradores",
+      "approved": "Aprobados",
+      "published": "Publicados",
+      "failed": "Fallidos"
+    },
+    "readyToPublish": {
+      "title": "Listos para Publicar",
+      "subtitle": "Publicaciones aprobadas esperando publicación",
+      "empty": "No hay publicaciones aprobadas. ¡Cree y apruebe borradores para verlos aquí!",
+      "preview": "Vista Previa",
+      "publishNow": "Publicar"
+    },
+    "preview": {
+      "title": "Vista Previa de Publicación",
+      "description": "Revise la publicación completa antes de enviar a Facebook",
+      "noImage": "Sin imagen adjunta",
+      "metadata": "Detalles de la Publicación",
+      "publishNow": "Publicar en Facebook",
+      "editFirst": "Editar Publicación",
+      "close": "Cerrar"
     }
   },
   "common": {

@@ -177,6 +177,8 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({
         title: "Published to Facebook!",
         description: `Post ID: ${data.facebook_post_id}`,
