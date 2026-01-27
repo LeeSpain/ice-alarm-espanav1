@@ -226,7 +226,10 @@ serve(async (req) => {
     const tempPassword = generateTempPassword();
     const referralCode = generateReferralCode();
 
-    // Create auth user
+    // Try to create auth user, or reuse existing orphaned user
+    let authUserId: string | undefined;
+    
+
     const { data: authUser, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: tempPassword,
@@ -237,31 +240,80 @@ serve(async (req) => {
       },
     });
 
-    if (createAuthError || !authUser.user) {
-      console.error("Error creating auth user:", createAuthError);
-      
-      // Provide user-friendly error messages
-      let userMessage = "Failed to create user account";
-      if (createAuthError?.message?.includes("already been registered") || 
-          createAuthError?.code === "email_exists") {
-        userMessage = "This email address is already registered in the system. Please use a different email or check if a partner account already exists.";
-      } else if (createAuthError?.message) {
-        userMessage = createAuthError.message;
+    if (createAuthError) {
+      // Check if this is an "email exists" error - try to reuse the orphaned auth user
+      if (createAuthError.code === "email_exists" || 
+          createAuthError.message?.includes("already been registered")) {
+        console.log("Auth user exists, checking if orphaned (no partner record)...");
+        
+        // Find the existing auth user by email
+        const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+        const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email);
+        
+        if (!existingUser) {
+          return new Response(
+            JSON.stringify({ error: "Email exists but could not find user. Please contact support." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check if this user already has a partner record
+        const { data: existingPartnerCheck } = await supabaseAdmin
+          .from("partners")
+          .select("id")
+          .eq("user_id", existingUser.id)
+          .maybeSingle();
+
+        if (existingPartnerCheck) {
+          return new Response(
+            JSON.stringify({ error: "This email is already associated with an active partner account." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Orphaned auth user - reset password and reuse
+        console.log("Found orphaned auth user, resetting password and reusing:", existingUser.id);
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: {
+            contact_name: body.contact_name,
+            role: "partner",
+          },
+        });
+
+        if (updateError) {
+          console.error("Error updating orphaned auth user:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Failed to reuse existing account. Please contact support." }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        authUserId = existingUser.id;
+        console.log("Reusing orphaned auth user:", authUserId);
+      } else {
+        console.error("Error creating auth user:", createAuthError);
+        return new Response(
+          JSON.stringify({ error: createAuthError.message || "Failed to create user account" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      
+    } else if (authUser?.user) {
+      authUserId = authUser.user.id;
+      console.log("Auth user created:", authUserId);
+    } else {
       return new Response(
-        JSON.stringify({ error: userMessage }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Failed to create user account" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("Auth user created:", authUser.user.id);
 
     // Create partner record
     const { data: partnerData, error: partnerError } = await supabaseAdmin
       .from("partners")
       .insert({
-        user_id: authUser.user.id,
+        user_id: authUserId,
         contact_name: body.contact_name,
         company_name: body.company_name || null,
         email: email,
@@ -279,8 +331,10 @@ serve(async (req) => {
 
     if (partnerError) {
       console.error("Error creating partner:", partnerError);
-      // Try to clean up auth user
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      // Try to clean up auth user only if we created it new (not reused)
+      if (authUserId) {
+        await supabaseAdmin.auth.admin.deleteUser(authUserId);
+      }
       return new Response(
         JSON.stringify({ error: partnerError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
