@@ -13,8 +13,8 @@ import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play,
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
+import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
 import { cn } from "@/lib/utils";
-
 const GOALS = [
   { value: "brand_awareness", label: "Brand Awareness" },
   { value: "lead_generation", label: "Lead Generation" },
@@ -56,10 +56,12 @@ export default function MediaManagerPage() {
   const [language, setLanguage] = useState<"en" | "es" | "both">("both");
   const [postText, setPostText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [aiOutput, setAiOutput] = useState<MediaDraftOutput | null>(null);
 
   const { posts, isLoading, createDraft, updateDraft, approvePost, deletePost, isCreating, isUpdating, isApproving } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
   const { uploadImage, isUploading } = useSocialPostImages();
+  const { generateDraft, isGenerating } = useMediaDraft();
 
   // Load selected post into form
   const handleSelectPost = (post: SocialPost) => {
@@ -117,6 +119,65 @@ export default function MediaManagerPage() {
     if (confirm("Are you sure you want to delete this post?")) {
       await deletePost(id);
       if (selectedPostId === id) handleClearForm();
+    }
+  };
+
+  // AI workflow handlers
+  const handleResearch = async () => {
+    const output = await generateDraft({
+      topic,
+      goal,
+      target_audience: audience,
+      language,
+      post_id: selectedPostId || undefined,
+      workflow_type: "research",
+    });
+    if (output) {
+      setAiOutput(output);
+    }
+  };
+
+  const handleWriteDraft = async () => {
+    const output = await generateDraft({
+      topic,
+      goal,
+      target_audience: audience,
+      language,
+      post_id: selectedPostId || undefined,
+      workflow_type: "write",
+    });
+    if (output) {
+      setAiOutput(output);
+      // Apply the generated text based on language
+      if (language === "en") {
+        setPostText(output.post_en);
+      } else if (language === "es") {
+        setPostText(output.post_es);
+      } else {
+        setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+      }
+    }
+  };
+
+  const handleFullWorkflow = async () => {
+    const output = await generateDraft({
+      topic,
+      goal,
+      target_audience: audience,
+      language,
+      post_id: selectedPostId || undefined,
+      workflow_type: "full",
+    });
+    if (output) {
+      setAiOutput(output);
+      // Apply the generated text based on language
+      if (language === "en") {
+        setPostText(output.post_en);
+      } else if (language === "es") {
+        setPostText(output.post_es);
+      } else {
+        setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+      }
     }
   };
 
@@ -197,27 +258,69 @@ export default function MediaManagerPage() {
 
             {/* AI Action Buttons */}
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button variant="outline" disabled className="gap-2">
-                <Search className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                disabled={isGenerating || !topic}
+                onClick={handleResearch}
+                className="gap-2"
+              >
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 Research
               </Button>
-              <Button variant="outline" disabled className="gap-2">
-                <Sparkles className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                disabled={isGenerating || !topic}
+                onClick={handleWriteDraft}
+                className="gap-2"
+              >
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Write Draft
               </Button>
-              <Button variant="outline" disabled className="gap-2">
+              <Button 
+                variant="outline" 
+                disabled
+                className="gap-2"
+                title="Image generation coming soon"
+              >
                 <ImageIcon className="h-4 w-4" />
                 Generate Image
               </Button>
-              <Button variant="outline" disabled className="gap-2">
-                <Play className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                disabled={isGenerating || !topic}
+                onClick={handleFullWorkflow}
+                className="gap-2"
+              >
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                 Full Workflow
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center">
-              AI features coming soon — for now, manually create posts below
-            </p>
+            {/* AI Output Preview */}
+            {aiOutput && (
+              <div className="border rounded-lg p-3 bg-muted/50 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">AI Research Summary</p>
+                <p className="text-sm">{aiOutput.research.topic_insights}</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {aiOutput.hashtags_en.slice(0, 5).map((tag, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
+                  ))}
+                </div>
+                {aiOutput.image_text && (
+                  <div className="mt-2 pt-2 border-t">
+                    <p className="text-xs font-medium text-muted-foreground">Suggested Image Text</p>
+                    <p className="text-sm font-semibold">{aiOutput.image_text.headline}</p>
+                    <p className="text-xs text-muted-foreground">{aiOutput.image_text.subheadline}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!topic && (
+              <p className="text-xs text-muted-foreground text-center">
+                Enter a topic to enable AI features
+              </p>
+            )}
           </CardContent>
         </Card>
 

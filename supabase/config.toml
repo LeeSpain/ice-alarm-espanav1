@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.track-invite-view]
 verify_jwt = false
+
+[functions.media-draft]
+verify_jwt = false
