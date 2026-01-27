@@ -1,245 +1,176 @@
 
-
-## First-Time Visitor Language Selection Popup
+## Member Dashboard Improvements Plan
 
 ### Overview
-Create a professional, welcoming popup that appears immediately when a first-time visitor lands on the site. The popup will display the ICE Alarm logo and two large clickable flag options (UK and Spain flags) for English and Spanish. Once selected, the language is set across the entire platform and the choice is remembered so the popup never shows again.
+This plan addresses two key requests for the Member Dashboard:
+1. **Dashboard**: Replace the large "Need Help?" card with a compact icon on the same line as the welcome message
+2. **My Account (Profile Page)**: Complete review and enable full editing functionality
 
 ---
 
-### Design Specification
+### Part 1: Dashboard "Need Help?" Redesign
+
+**Current State:**
+The "Need Help?" section is a large, full-width Card component (lines 242-271 in `ClientDashboard.tsx`) that takes up significant vertical space.
+
+**Proposed Change:**
+Replace the card with a compact help icon/button group positioned on the right side of the welcome header row.
 
 **Visual Design:**
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│                     [ICE Alarm Logo]                        │
-│                        España                               │
-│                                                             │
-│              Choose Your Preferred Language                 │
-│              Elija su idioma preferido                      │
-│                                                             │
-│     ┌─────────────────┐    ┌─────────────────┐             │
-│     │                 │    │                 │             │
-│     │    🇬🇧 / 🇪🇸     │    │    🇬🇧 / 🇪🇸     │             │
-│     │   (SVG Flag)    │    │   (SVG Flag)    │             │
-│     │                 │    │                 │             │
-│     │    English      │    │    Español      │             │
-│     │                 │    │                 │             │
-│     └─────────────────┘    └─────────────────┘             │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  Welcome back, John                          [📞] [💬]  ← Help icons        │
+│  Monday, 27 January 2026                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
-
-**Key Features:**
-- Modal overlay with blurred background
-- Logo prominently displayed at top
-- Bilingual heading (both languages shown)
-- Two large, hoverable flag cards
-- Smooth animations on hover
-- No close button - user must select a language
-- Professional, clean design matching brand identity
-
----
-
-### Phase 1: Create Language Selection Modal Component
-
-**File:** `src/components/LanguageSelectionModal.tsx`
-
-**Component Features:**
-- Uses Dialog component from Radix UI
-- Controlled by localStorage check for first-time visitors
-- Large clickable flag cards (not emoji - use proper SVG flags)
-- Bilingual header text (English and Spanish shown together)
-- Sets i18n language on selection
-- Stores `languageSelected: true` in localStorage
-- Smooth fade-in animation
-
-**Component Structure:**
-```typescript
-interface LanguageSelectionModalProps {
-  open: boolean;
-  onLanguageSelect: (lang: string) => void;
-}
-
-export function LanguageSelectionModal({ open, onLanguageSelect }: Props) {
-  return (
-    <Dialog open={open}>
-      <DialogContent hideCloseButton className="max-w-md text-center">
-        <Logo size="lg" className="mx-auto mb-4" />
-        
-        <DialogHeader>
-          <DialogTitle className="text-2xl">
-            Choose Your Language / Elija su Idioma
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-2 gap-4 mt-6">
-          {/* English Card */}
-          <button onClick={() => onLanguageSelect('en')} 
-            className="p-6 border rounded-xl hover:border-primary hover:bg-primary/5 transition-all">
-            {/* UK Flag SVG */}
-            <span className="text-lg font-medium mt-3">English</span>
-          </button>
-          
-          {/* Spanish Card */}
-          <button onClick={() => onLanguageSelect('es')}
-            className="p-6 border rounded-xl hover:border-primary hover:bg-primary/5 transition-all">
-            {/* Spain Flag SVG */}
-            <span className="text-lg font-medium mt-3">Español</span>
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-```
-
----
-
-### Phase 2: Create SVG Flag Components
-
-**File:** `src/components/flags/UKFlag.tsx`
-**File:** `src/components/flags/SpainFlag.tsx`
-
-High-quality SVG flag components that scale well and look professional:
-
-**UK Flag Example:**
-```typescript
-export function UKFlag({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 60 30" className={className}>
-      {/* Union Jack SVG paths */}
-    </svg>
-  );
-}
-```
-
-**Spain Flag Example:**
-```typescript
-export function SpainFlag({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 750 500" className={className}>
-      {/* Spanish flag SVG paths */}
-    </svg>
-  );
-}
-```
-
----
-
-### Phase 3: Integrate Modal into App Component
-
-**File:** `src/App.tsx`
-
-**Changes:**
-1. Add state to track if language selection popup should show
-2. Check localStorage on mount for `iceAlarmLanguageSelected`
-3. If not found, show the modal
-4. On language selection, set i18n language and store flag in localStorage
 
 **Implementation:**
-```typescript
-const App = () => {
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  
-  useEffect(() => {
-    // Check if this is a first-time visitor
-    const hasSelectedLanguage = localStorage.getItem('iceAlarmLanguageSelected');
-    if (!hasSelectedLanguage) {
-      setShowLanguageModal(true);
-    }
-  }, []);
-  
-  const handleLanguageSelect = async (langCode: string) => {
-    await i18n.changeLanguage(langCode);
-    localStorage.setItem('iceAlarmLanguageSelected', 'true');
-    setShowLanguageModal(false);
-  };
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {/* ... existing providers */}
-        <LanguageSelectionModal 
-          open={showLanguageModal} 
-          onLanguageSelect={handleLanguageSelect} 
-        />
-        {/* ... rest of app */}
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-};
-```
+- Modify the Welcome Section (lines 202-212) to use `flex justify-between`
+- Add a compact button group with Phone and WhatsApp icons
+- Include tooltips showing "Call ICE Alarm" and "WhatsApp Support"
+- Remove the large "Need Help?" Card component entirely
 
 ---
 
-### Phase 4: Add Translation Keys
+### Part 2: Profile Page Full Edit Functionality
 
-**File:** `src/i18n/locales/en.json`
-**File:** `src/i18n/locales/es.json`
+**Current State Analysis:**
+The current `ProfilePage.tsx` displays profile information in **read-only cards** and directs users to "Contact Support" for changes. However:
+- The RLS policy on the `members` table **allows members to update their own profile** (`Members can update own profile` policy)
+- The form validation schema and `onSubmit` handler already exist but are not connected to the UI
+- The UI uses static `<div>` elements instead of form inputs
 
-Add new translation keys for the language selection modal:
+**Issues Found:**
+1. Form is defined but not wrapped around the display cards
+2. All fields are displayed as read-only text, not editable inputs
+3. The "Contact Support" card suggests users cannot edit, but they actually can
+4. No save button is present in the UI
 
+**Proposed Changes:**
+Transform the read-only display into an editable form with the following structure:
+
+| Section | Editable Fields | Non-Editable Fields |
+|---------|-----------------|---------------------|
+| Personal Info | First Name, Last Name | Date of Birth, NIE/DNI |
+| Contact Info | Phone | Email (requires verification) |
+| Address | All address fields | - |
+| Preferences | Language | - |
+
+**Visual Design:**
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  My Account                                              [Save Changes]     │
+│  Manage your personal information and preferences                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────────────────────┐  ┌───────────────────────────────────────────┐│
+│  │ Profile Photo            │  │ Personal Information              [Edit] ││
+│  │    [Avatar]              │  │                                          ││
+│  │ Contact support to       │  │ First Name        Last Name              ││
+│  │ change photo             │  │ ┌─────────────┐   ┌─────────────┐        ││
+│  └──────────────────────────┘  │ │ John        │   │ Smith       │        ││
+│                                │ └─────────────┘   └─────────────┘        ││
+│  ┌──────────────────────────┐  │                                          ││
+│  │ Preferences              │  │ Date of Birth     NIE/DNI                ││
+│  │ Preferred Language       │  │ [Read-only]       [Read-only]            ││
+│  │ ┌──────────────────────┐ │  └───────────────────────────────────────────┘│
+│  │ │ English          ▼   │ │                                              │
+│  │ └──────────────────────┘ │  ┌───────────────────────────────────────────┐│
+│  └──────────────────────────┘  │ Contact Information                       ││
+│                                │ Email (read-only)  Phone                  ││
+│                                │ [john@email.com]   ┌─────────────┐        ││
+│                                │                    │ +34 612...  │        ││
+│                                │                    └─────────────┘        ││
+│                                └───────────────────────────────────────────┘│
+│                                                                              │
+│                                ┌───────────────────────────────────────────┐│
+│                                │ Address                                   ││
+│                                │ Street Address                            ││
+│                                │ ┌─────────────────────────────────────┐   ││
+│                                │ │ Calle Example 123                   │   ││
+│                                │ └─────────────────────────────────────┘   ││
+│                                │ City           Province     Postal Code   ││
+│                                │ ┌──────────┐  ┌──────────┐  ┌────────┐   ││
+│                                │ │ Madrid   │  │ Madrid   │  │ 28001  │   ││
+│                                │ └──────────┘  └──────────┘  └────────┘   ││
+│                                └───────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Details:**
+
+1. **Wrap form around cards**
+   - Use the existing `form` hook with `Form` component from shadcn
+   - Replace static `<div>` displays with `FormField` components containing `Input` elements
+
+2. **Editable fields with validation:**
+   - First Name, Last Name (required)
+   - Phone (required, with format validation)
+   - Address Line 1, Line 2, City, Province, Postal Code
+   - Preferred Language (dropdown)
+
+3. **Read-only fields (displayed but not editable):**
+   - Email (with note: "Contact support to change email")
+   - Date of Birth (sensitive data)
+   - NIE/DNI (legal document)
+   - Country (fixed to Spain for this service)
+
+4. **Add Save button:**
+   - Position in header row, aligned right
+   - Show loading state during save
+   - Display success/error toast messages
+
+5. **Remove "Contact Support to update" card:**
+   - Since editing is now enabled, replace with a subtle note for email/DOB changes only
+
+---
+
+### Technical Implementation
+
+**File: `src/pages/client/ClientDashboard.tsx`**
+- Lines 202-212: Modify welcome section to include help icons
+- Lines 242-271: Remove the large "Need Help?" Card component
+
+**File: `src/pages/client/ProfilePage.tsx`**
+- Lines 113-304: Complete refactor to use Form components
+- Add `Form` wrapper around the content
+- Replace read-only `<div>` with `FormField` + `Input` for editable fields
+- Keep Email, DOB, NIE/DNI as styled read-only displays with lock icons
+- Add header Save button connected to existing `onSubmit`
+- Add translations for new UI elements
+
+**Translation Keys to Add:**
 ```json
-// en.json - add to "languageSelection" section
 {
-  "languageSelection": {
-    "title": "Choose Your Language",
-    "titleSpanish": "Elija su Idioma", 
-    "english": "English",
-    "spanish": "Español"
-  }
-}
-
-// es.json - add matching section
-{
-  "languageSelection": {
-    "title": "Choose Your Language",
-    "titleSpanish": "Elija su Idioma",
-    "english": "English", 
-    "spanish": "Español"
+  "profile": {
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "emailChangeNote": "Contact support to change your email address",
+    "dobReadOnly": "Date of birth cannot be changed",
+    "nieReadOnly": "NIE/DNI cannot be changed"
+  },
+  "dashboard": {
+    "callUs": "Call Us",
+    "whatsappUs": "WhatsApp Us"
   }
 }
 ```
 
-Note: Both titles are shown simultaneously in the modal (bilingual display), so both languages see both texts.
+---
+
+### Summary of Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/client/ClientDashboard.tsx` | Redesign welcome header with compact help icons, remove large Need Help card |
+| `src/pages/client/ProfilePage.tsx` | Enable full form editing with save functionality |
+| `src/i18n/locales/en.json` | Add new translation keys |
+| `src/i18n/locales/es.json` | Add Spanish translation keys |
 
 ---
 
-### Summary of Files to Create/Modify
+### Security Considerations
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/LanguageSelectionModal.tsx` | Create | Main language selection modal component |
-| `src/components/flags/UKFlag.tsx` | Create | High-quality UK flag SVG component |
-| `src/components/flags/SpainFlag.tsx` | Create | High-quality Spain flag SVG component |
-| `src/App.tsx` | Modify | Add modal state, localStorage check, and render modal |
-| `src/i18n/locales/en.json` | Modify | Add languageSelection translation keys |
-| `src/i18n/locales/es.json` | Modify | Add languageSelection translation keys |
-
----
-
-### Technical Details
-
-**localStorage Key:** `iceAlarmLanguageSelected`
-- Value: `"true"` when user has made a selection
-- Checked on every app load
-- Combined with existing `i18nextLng` key for language persistence
-
-**Why Not Use i18nextLng Key Alone?**
-- The browser language detector sets `i18nextLng` automatically based on browser settings
-- We need a separate flag to distinguish between "auto-detected" and "user-selected"
-- This ensures the popup only shows once, even if user later clears just the language preference
-
-**Modal Behavior:**
-- Cannot be dismissed without selection (no X button, no backdrop click)
-- Blocks interaction with the rest of the site
-- Professional, welcoming design
-- Large touch-friendly buttons for elderly users
-
-**Performance:**
-- Modal component is loaded immediately (not lazy loaded)
-- Both language bundles already eagerly loaded
-- Instant language switch with no network delay
-
+- **RLS Policy Verified**: The existing `Members can update own profile` policy on the `members` table allows this functionality
+- **Field Restrictions**: Email and DOB remain read-only client-side as an additional safeguard (though the backend would also accept updates)
+- **Input Validation**: Using existing zod schema with proper length limits and format validation
