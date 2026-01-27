@@ -1,60 +1,50 @@
 
 
-## Fix: Shift Report "Generated At" Timestamp Not Updating
+## Fix: Duplicate `staffDashboard` Namespace in Translation Files
 
 ### Problem Identified
-The "Generated at" timestamp in the Shift Report modal never updates because it's calculated once when the component first mounts, not when the modal is opened.
+The translation key `staffDashboard.generateShiftNote` shows as raw text because the `staffDashboard` namespace is defined **twice** in both `en.json` and `es.json` files.
 
-**Current Code (Line 62-63):**
-```typescript
-const dateLocale = i18n.language === 'es' ? es : enGB;
-const generatedAt = format(new Date(), "EEEE, d MMMM yyyy 'at' HH:mm", { locale: dateLocale });
-```
+When i18next loads the JSON, the second definition overwrites the first one, and the second definition is missing all the shift report keys.
 
-This runs only once at component initialization, so reopening the modal shows the same stale timestamp.
+| File | First Definition | Second Definition | Result |
+|------|------------------|-------------------|--------|
+| `en.json` | Lines ~831-872 (has shift keys) | Lines ~997-1026 (missing shift keys) | Second overwrites first |
+| `es.json` | Lines ~799-840 (has shift keys) | Lines ~965-994 (missing shift keys) | Second overwrites first |
 
 ---
 
 ### Solution
-Move the `generatedAt` calculation inside the component state and update it when the modal opens (alongside the data fetch).
+Merge the duplicate `staffDashboard` objects into a single, complete namespace in both locale files.
 
 ---
 
 ### Changes Required
 
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/components/call-centre/ShiftReportModal.tsx` | Move timestamp to state, update on modal open |
+| `src/i18n/locales/en.json` | Merge both `staffDashboard` blocks into one, keeping all keys |
+| `src/i18n/locales/es.json` | Merge both `staffDashboard` blocks into one, keeping all keys |
 
 ---
 
 ### Implementation Details
 
-1. **Add state for the generated timestamp:**
-```typescript
-const [generatedAt, setGeneratedAt] = useState<string>("");
-```
+#### 1. English (`en.json`)
+Find the second `staffDashboard` block (~line 997) and merge its keys into the first block (~line 831), then delete the duplicate block.
 
-2. **Update timestamp when modal opens (inside fetchReportData or useEffect):**
-```typescript
-const fetchReportData = async () => {
-  setLoading(true);
-  
-  // Update the generated timestamp
-  const dateLocale = i18n.language === 'es' ? es : enGB;
-  setGeneratedAt(format(new Date(), "EEEE, d MMMM yyyy 'at' HH:mm", { locale: dateLocale }));
-  
-  // ... rest of the data fetching logic
-};
-```
+The merged `staffDashboard` should include:
+- `generateShiftNote`, `shiftSummaryReport`, `generatedAt`, `last12Hours`, etc. (from first block)
+- Any additional keys from the second block (e.g., `welcomeBack`, `yourShift`, etc.)
 
-3. **Keep dateLocale calculation for other uses (formatDistanceToNow):**
-```typescript
-const dateLocale = i18n.language === 'es' ? es : enGB;
-```
+#### 2. Spanish (`es.json`)
+Same process - merge both `staffDashboard` blocks into one complete namespace.
 
 ---
 
-### Result
-Each time the user clicks "Generate Shift Note", the report will show the current timestamp and fetch fresh data from the database.
+### Technical Notes
+- JSON does not allow duplicate keys at the same level
+- When parsed, the second occurrence overwrites the first
+- This is a common issue when multiple developers add keys to the same namespace
+- After merging, all shift report translations will work correctly
 
