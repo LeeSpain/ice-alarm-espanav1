@@ -87,6 +87,12 @@
       "published": "Published",
       "failed": "Failed"
     },
+    "actions": {
+      "retry": "Retry"
+    },
+    "errors": {
+      "publishFailed": "Publishing failed"
+    },
     "readyToPublish": {
       "title": "Ready to Publish",
       "subtitle": "Posts approved and waiting for publication",

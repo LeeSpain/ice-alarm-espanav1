@@ -87,6 +87,12 @@
       "published": "Publicados",
       "failed": "Fallidos"
     },
+    "actions": {
+      "retry": "Reintentar"
+    },
+    "errors": {
+      "publishFailed": "Error de publicación"
+    },
     "readyToPublish": {
       "title": "Listos para Publicar",
       "subtitle": "Publicaciones aprobadas esperando publicación",

@@ -38,7 +38,8 @@ type ActionType =
   | "approved"
   | "publish_attempted"
   | "publish_success"
-  | "publish_failed";
+  | "publish_failed"
+  | "retry_requested";
 
 interface AuditLogEntry {
   action: ActionType;
