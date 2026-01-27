@@ -1,176 +1,344 @@
 
-## Member Dashboard Improvements Plan
+## Complete Member Dashboard Translation Audit & Fixes
 
 ### Overview
-This plan addresses two key requests for the Member Dashboard:
-1. **Dashboard**: Replace the large "Need Help?" card with a compact icon on the same line as the welcome message
-2. **My Account (Profile Page)**: Complete review and enable full editing functionality
+A comprehensive code-by-code review of all member dashboard pages has been completed. The majority of the interface is correctly translated, but several hardcoded strings and missing translation keys were identified. This plan ensures 100% bilingual coverage without losing any existing functionality.
 
 ---
 
-### Part 1: Dashboard "Need Help?" Redesign
+### Issues Identified
 
-**Current State:**
-The "Need Help?" section is a large, full-width Card component (lines 242-271 in `ClientDashboard.tsx`) that takes up significant vertical space.
+#### Category 1: Date/Locale Formatting (Critical)
 
-**Proposed Change:**
-Replace the card with a compact help icon/button group positioned on the right side of the welcome header row.
+| File | Line | Issue | Fix |
+|------|------|-------|-----|
+| `ClientDashboard.tsx` | 146-151 | Date hardcoded to `'en-GB'` locale | Use i18n locale-aware formatting with `date-fns/locale` |
 
-**Visual Design:**
+**Current Code:**
+```typescript
+const currentDate = new Date().toLocaleDateString('en-GB', { 
+  weekday: 'long', 
+  year: 'numeric', 
+  month: 'long', 
+  day: 'numeric' 
+});
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  Welcome back, John                          [📞] [💬]  ← Help icons        │
-│  Monday, 27 January 2026                                                     │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
 
-**Implementation:**
-- Modify the Welcome Section (lines 202-212) to use `flex justify-between`
-- Add a compact button group with Phone and WhatsApp icons
-- Include tooltips showing "Call ICE Alarm" and "WhatsApp Support"
-- Remove the large "Need Help?" Card component entirely
+**Fixed Code:**
+```typescript
+import { es, enGB } from 'date-fns/locale';
+import { format } from 'date-fns';
+
+const locale = i18n.language === 'es' ? es : enGB;
+const currentDate = format(new Date(), 'EEEE, d MMMM yyyy', { locale });
+```
 
 ---
 
-### Part 2: Profile Page Full Edit Functionality
+#### Category 2: Hardcoded Plan/Billing Labels
 
-**Current State Analysis:**
-The current `ProfilePage.tsx` displays profile information in **read-only cards** and directs users to "Contact Support" for changes. However:
-- The RLS policy on the `members` table **allows members to update their own profile** (`Members can update own profile` policy)
-- The form validation schema and `onSubmit` handler already exist but are not connected to the UI
-- The UI uses static `<div>` elements instead of form inputs
+| File | Line | Issue | Fix |
+|------|------|-------|-----|
+| `ClientDashboard.tsx` | 155-166 | `formatPlanType()` and `formatBillingFrequency()` return hardcoded English | Use existing translation keys from `membership` namespace |
 
-**Issues Found:**
-1. Form is defined but not wrapped around the display cards
-2. All fields are displayed as read-only text, not editable inputs
-3. The "Contact Support" card suggests users cannot edit, but they actually can
-4. No save button is present in the UI
+**Current Code:**
+```typescript
+const formatPlanType = (type: string) => {
+  return type === "single" ? "Single Person" : type === "couple" ? "Couple" : type;
+};
 
-**Proposed Changes:**
-Transform the read-only display into an editable form with the following structure:
-
-| Section | Editable Fields | Non-Editable Fields |
-|---------|-----------------|---------------------|
-| Personal Info | First Name, Last Name | Date of Birth, NIE/DNI |
-| Contact Info | Phone | Email (requires verification) |
-| Address | All address fields | - |
-| Preferences | Language | - |
-
-**Visual Design:**
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  My Account                                              [Save Changes]     │
-│  Manage your personal information and preferences                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────────────────────┐  ┌───────────────────────────────────────────┐│
-│  │ Profile Photo            │  │ Personal Information              [Edit] ││
-│  │    [Avatar]              │  │                                          ││
-│  │ Contact support to       │  │ First Name        Last Name              ││
-│  │ change photo             │  │ ┌─────────────┐   ┌─────────────┐        ││
-│  └──────────────────────────┘  │ │ John        │   │ Smith       │        ││
-│                                │ └─────────────┘   └─────────────┘        ││
-│  ┌──────────────────────────┐  │                                          ││
-│  │ Preferences              │  │ Date of Birth     NIE/DNI                ││
-│  │ Preferred Language       │  │ [Read-only]       [Read-only]            ││
-│  │ ┌──────────────────────┐ │  └───────────────────────────────────────────┘│
-│  │ │ English          ▼   │ │                                              │
-│  │ └──────────────────────┘ │  ┌───────────────────────────────────────────┐│
-│  └──────────────────────────┘  │ Contact Information                       ││
-│                                │ Email (read-only)  Phone                  ││
-│                                │ [john@email.com]   ┌─────────────┐        ││
-│                                │                    │ +34 612...  │        ││
-│                                │                    └─────────────┘        ││
-│                                └───────────────────────────────────────────┘│
-│                                                                              │
-│                                ┌───────────────────────────────────────────┐│
-│                                │ Address                                   ││
-│                                │ Street Address                            ││
-│                                │ ┌─────────────────────────────────────┐   ││
-│                                │ │ Calle Example 123                   │   ││
-│                                │ └─────────────────────────────────────┘   ││
-│                                │ City           Province     Postal Code   ││
-│                                │ ┌──────────┐  ┌──────────┐  ┌────────┐   ││
-│                                │ │ Madrid   │  │ Madrid   │  │ 28001  │   ││
-│                                │ └──────────┘  └──────────┘  └────────┘   ││
-│                                └───────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
+const formatBillingFrequency = (freq: string) => {
+  switch (freq) {
+    case "monthly": return "/month";
+    case "quarterly": return "/quarter";
+    case "annual": return "/year";
+    default: return "";
+  }
+};
 ```
 
-**Implementation Details:**
+**Fixed Code:**
+```typescript
+const formatPlanType = (type: string) => {
+  return type === "single" ? t("membership.single") : type === "couple" ? t("membership.couple") : type;
+};
 
-1. **Wrap form around cards**
-   - Use the existing `form` hook with `Form` component from shadcn
-   - Replace static `<div>` displays with `FormField` components containing `Input` elements
-
-2. **Editable fields with validation:**
-   - First Name, Last Name (required)
-   - Phone (required, with format validation)
-   - Address Line 1, Line 2, City, Province, Postal Code
-   - Preferred Language (dropdown)
-
-3. **Read-only fields (displayed but not editable):**
-   - Email (with note: "Contact support to change email")
-   - Date of Birth (sensitive data)
-   - NIE/DNI (legal document)
-   - Country (fixed to Spain for this service)
-
-4. **Add Save button:**
-   - Position in header row, aligned right
-   - Show loading state during save
-   - Display success/error toast messages
-
-5. **Remove "Contact Support to update" card:**
-   - Since editing is now enabled, replace with a subtle note for email/DOB changes only
+const formatBillingFrequency = (freq: string) => {
+  switch (freq) {
+    case "monthly": return t("subscription.mo");
+    case "quarterly": return t("subscription.quarterly", "/quarter");
+    case "annual": return t("subscription.yr");
+    default: return "";
+  }
+};
+```
 
 ---
 
-### Technical Implementation
+#### Category 3: Hardcoded Placeholders & Labels
 
-**File: `src/pages/client/ClientDashboard.tsx`**
-- Lines 202-212: Modify welcome section to include help icons
-- Lines 242-271: Remove the large "Need Help?" Card component
+| File | Line | Issue | Key to Use/Add |
+|------|------|-------|----------------|
+| `ProfilePage.tsx` | 181 | `placeholder="Select language"` | `t("profile.selectLanguage")` |
+| `ProfilePage.tsx` | 334 | `"Address Line 2 (Optional)"` fallback | Key exists, remove fallback |
+| `ProfilePage.tsx` | 387 | `"Spain"` hardcoded default | `t("common.spain")` |
+| `EmergencyContactsPage.tsx` | 68-82 | `RELATIONSHIPS` array hardcoded in English | Use `t("contacts.relationships.*")` keys |
+| `EmergencyContactsPage.tsx` | 380 | `"Full name"` fallback placeholder | Key exists, remove fallback |
+| `MedicalInfoPage.tsx` | 327 | `"Dr. Name"` fallback placeholder | Key exists, remove fallback |
+| `MedicalInfoPage.tsx` | 331 | `"+34 000 000 000"` placeholder | Use `t("common.phonePlaceholder")` |
+| `MedicalInfoPage.tsx` | 345 | `"Hospital name"` fallback | Key exists, remove fallback |
+| `MedicalInfoPage.tsx` | 370 | `"Add condition..."` fallback | Key exists, remove fallback |
+| `MedicalInfoPage.tsx` | 405 | `"Add medication..."` fallback | Key exists, remove fallback |
+| `MedicalInfoPage.tsx` | 427 | `"Any other important..."` fallback | Key exists, remove fallback |
 
-**File: `src/pages/client/ProfilePage.tsx`**
-- Lines 113-304: Complete refactor to use Form components
-- Add `Form` wrapper around the content
-- Replace read-only `<div>` with `FormField` + `Input` for editable fields
-- Keep Email, DOB, NIE/DNI as styled read-only displays with lock icons
-- Add header Save button connected to existing `onSubmit`
-- Add translations for new UI elements
+---
 
-**Translation Keys to Add:**
+#### Category 4: Navigation Fallbacks (Low Priority but should clean up)
+
+| File | Lines | Issue |
+|------|-------|-------|
+| `ClientLayout.tsx` | 83-124 | All menu items have `|| "English Fallback"` patterns |
+
+These fallbacks are defensive but create inconsistency. The keys exist, so fallbacks can be removed.
+
+---
+
+#### Category 5: Missing Translation Keys
+
+**Keys to Add to `en.json`:**
+
 ```json
 {
-  "profile": {
-    "saveChanges": "Save Changes",
-    "saving": "Saving...",
-    "emailChangeNote": "Contact support to change your email address",
-    "dobReadOnly": "Date of birth cannot be changed",
-    "nieReadOnly": "NIE/DNI cannot be changed"
+  "common": {
+    "spain": "Spain",
+    "phonePlaceholder": "+34 000 000 000"
   },
-  "dashboard": {
-    "callUs": "Call Us",
-    "whatsappUs": "WhatsApp Us"
+  "profile": {
+    "selectLanguage": "Select language"
+  },
+  "subscription": {
+    "quarterly": "/quarter"
+  },
+  "contacts": {
+    "subtitle": "People we call if you need help",
+    "networkTitle": "Your Emergency Network",
+    "networkDesc": "These contacts will be called in order of priority if we can't reach you during an emergency. You can have up to 3 contacts.",
+    "addPrompt": "Add emergency contacts so we can reach your loved ones if needed.",
+    "addFirst": "Add Your First Contact",
+    "limitReached": "You've reached the maximum of 3 emergency contacts. Remove one to add another.",
+    "dialogDesc": "Enter the details for your emergency contact.",
+    "selectRelationship": "Select relationship",
+    "notesPlaceholder": "Any additional information...",
+    "deleteTitle": "Delete Contact",
+    "deleteConfirm": "Are you sure you want to remove this emergency contact? This action cannot be undone.",
+    "updated": "Contact updated successfully",
+    "added": "Contact added successfully",
+    "deleted": "Contact deleted"
+  },
+  "medical": {
+    "subtitle": "Important health details for emergencies",
+    "emergencyTitle": "Emergency Medical Data",
+    "emergencyDesc": "This information is shared with emergency services when you need help. Keep it up to date for your safety.",
+    "noData": "No Medical Information",
+    "addPrompt": "Add your medical details so we can provide better emergency care.",
+    "addInfo": "Add Medical Information",
+    "hospital": "Preferred Hospital",
+    "hospitalName": "Hospital name",
+    "conditions": "Medical Conditions",
+    "addCondition": "Add condition...",
+    "addMedication": "Add medication...",
+    "addAllergy": "Add allergy...",
+    "notesPlaceholder": "Any other important medical information...",
+    "selectBloodType": "Select blood type"
+  },
+  "support": {
+    "faq": {
+      "testPendant": "How do I test my pendant?",
+      "testPendantAnswer": "Press and hold the SOS button for 3 seconds. Our team will answer and confirm your device is working. We recommend testing monthly.",
+      "sosButton": "What happens when I press the SOS button?",
+      "sosButtonAnswer": "When you press and hold for 3 seconds, an alert goes to our 24/7 team. They'll speak to you through your pendant and coordinate any help needed.",
+      "fallDetection": "How does fall detection work?",
+      "fallDetectionAnswer": "Your pendant detects sudden movements like falls. If detected, we call through your pendant. No response? We follow your emergency protocol.",
+      "geoFencing": "What is geo-fencing?",
+      "geoFencingAnswer": "Geo-fencing creates a virtual boundary around a location. If you leave this area, designated contacts can be alerted.",
+      "updateMedical": "How do I update my medical information?",
+      "updateMedicalAnswer": "Go to 'Medical Info' in your dashboard and click 'Edit' to update your information directly.",
+      "addContacts": "How do I add emergency contacts?",
+      "addContactsAnswer": "Go to 'Emergency Contacts' in your dashboard. You can add up to 3 contacts who will be called if we can't reach you."
+    },
+    "title": "Support Hub",
+    "subtitle": "Get help from our AI assistant, message our team, or find answers",
+    "aiAssistant": "AI Assistant",
+    "staffMessages": "Messages",
+    "helpCenter": "Help Center",
+    "forEmergencies": "For Emergencies",
+    "pressSosButton": "Press your SOS button or call us directly",
+    "teamWithYou": "Our 24/7 team is here for you",
+    "enterSubjectAndMessage": "Please enter a subject and message",
+    "messageSent": "Message sent!",
+    "failedToSend": "Failed to send message",
+    "backToSupport": "Back to Support",
+    "conversation": "Conversation",
+    "started": "Started",
+    "you": "You",
+    "typeMessage": "Type your message...",
+    "status": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  }
+}
+```
+
+**Equivalent keys to add to `es.json`:**
+
+```json
+{
+  "common": {
+    "spain": "España",
+    "phonePlaceholder": "+34 000 000 000"
+  },
+  "profile": {
+    "selectLanguage": "Seleccionar idioma"
+  },
+  "subscription": {
+    "quarterly": "/trimestre"
+  },
+  "contacts": {
+    "subtitle": "Personas a las que llamamos si necesita ayuda",
+    "networkTitle": "Su Red de Emergencia",
+    "networkDesc": "Estos contactos serán llamados en orden de prioridad si no podemos localizarle durante una emergencia. Puede tener hasta 3 contactos.",
+    "addPrompt": "Añada contactos de emergencia para que podamos avisar a sus seres queridos si es necesario.",
+    "addFirst": "Añadir Su Primer Contacto",
+    "limitReached": "Ha alcanzado el máximo de 3 contactos de emergencia. Elimine uno para añadir otro.",
+    "dialogDesc": "Introduzca los datos de su contacto de emergencia.",
+    "selectRelationship": "Seleccionar relación",
+    "notesPlaceholder": "Cualquier información adicional...",
+    "deleteTitle": "Eliminar Contacto",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este contacto de emergencia? Esta acción no se puede deshacer.",
+    "updated": "Contacto actualizado correctamente",
+    "added": "Contacto añadido correctamente",
+    "deleted": "Contacto eliminado"
+  },
+  "medical": {
+    "subtitle": "Información de salud importante para emergencias",
+    "emergencyTitle": "Datos Médicos de Emergencia",
+    "emergencyDesc": "Esta información se comparte con los servicios de emergencia cuando necesita ayuda. Manténgala actualizada para su seguridad.",
+    "noData": "Sin Información Médica",
+    "addPrompt": "Añada sus datos médicos para que podamos proporcionar mejor atención de emergencia.",
+    "addInfo": "Añadir Información Médica",
+    "hospital": "Hospital Preferido",
+    "hospitalName": "Nombre del hospital",
+    "conditions": "Condiciones Médicas",
+    "addCondition": "Añadir condición...",
+    "addMedication": "Añadir medicación...",
+    "addAllergy": "Añadir alergia...",
+    "notesPlaceholder": "Cualquier otra información médica importante...",
+    "selectBloodType": "Seleccionar grupo sanguíneo"
+  },
+  "support": {
+    "faq": {
+      "testPendant": "¿Cómo pruebo mi colgante?",
+      "testPendantAnswer": "Mantenga pulsado el botón SOS durante 3 segundos. Nuestro equipo responderá y confirmará que su dispositivo funciona. Recomendamos probarlo mensualmente.",
+      "sosButton": "¿Qué pasa cuando pulso el botón SOS?",
+      "sosButtonAnswer": "Cuando lo mantiene pulsado 3 segundos, una alerta llega a nuestro equipo 24/7. Hablarán con usted a través de su colgante y coordinarán la ayuda necesaria.",
+      "fallDetection": "¿Cómo funciona la detección de caídas?",
+      "fallDetectionAnswer": "Su colgante detecta movimientos bruscos como caídas. Si se detecta, llamamos a través de su colgante. ¿Sin respuesta? Seguimos su protocolo de emergencia.",
+      "geoFencing": "¿Qué es el geo-cercado?",
+      "geoFencingAnswer": "El geo-cercado crea un límite virtual alrededor de una ubicación. Si sale de esta área, los contactos designados pueden ser alertados.",
+      "updateMedical": "¿Cómo actualizo mi información médica?",
+      "updateMedicalAnswer": "Vaya a 'Información Médica' en su panel y haga clic en 'Editar' para actualizar su información directamente.",
+      "addContacts": "¿Cómo añado contactos de emergencia?",
+      "addContactsAnswer": "Vaya a 'Contactos de Emergencia' en su panel. Puede añadir hasta 3 contactos que serán llamados si no podemos localizarle."
+    },
+    "title": "Centro de Soporte",
+    "subtitle": "Obtenga ayuda de nuestro asistente IA, contacte a nuestro equipo o encuentre respuestas",
+    "aiAssistant": "Asistente IA",
+    "staffMessages": "Mensajes",
+    "helpCenter": "Centro de Ayuda",
+    "forEmergencies": "Para Emergencias",
+    "pressSosButton": "Pulse su botón SOS o llámenos directamente",
+    "teamWithYou": "Nuestro equipo 24/7 está aquí para usted",
+    "enterSubjectAndMessage": "Por favor introduzca un asunto y mensaje",
+    "messageSent": "¡Mensaje enviado!",
+    "failedToSend": "Error al enviar mensaje",
+    "backToSupport": "Volver a Soporte",
+    "conversation": "Conversación",
+    "started": "Iniciada",
+    "you": "Usted",
+    "typeMessage": "Escriba su mensaje...",
+    "status": {
+      "open": "Abierto",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    }
   }
 }
 ```
 
 ---
 
-### Summary of Changes
+### Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/pages/client/ClientDashboard.tsx` | Redesign welcome header with compact help icons, remove large Need Help card |
-| `src/pages/client/ProfilePage.tsx` | Enable full form editing with save functionality |
-| `src/i18n/locales/en.json` | Add new translation keys |
-| `src/i18n/locales/es.json` | Add Spanish translation keys |
+| File | Changes |
+|------|---------|
+| `src/pages/client/ClientDashboard.tsx` | Fix date locale, fix `formatPlanType()`, fix `formatBillingFrequency()` |
+| `src/pages/client/ProfilePage.tsx` | Add `selectLanguage` placeholder key, remove hardcoded "Spain" |
+| `src/pages/client/EmergencyContactsPage.tsx` | Translate `RELATIONSHIPS` array using t() |
+| `src/pages/client/MedicalInfoPage.tsx` | Remove fallback strings from placeholders (keys already exist) |
+| `src/components/layout/ClientLayout.tsx` | Remove unnecessary English fallbacks (keys exist) |
+| `src/i18n/locales/en.json` | Add missing keys listed above |
+| `src/i18n/locales/es.json` | Add Spanish translations for all new keys |
 
 ---
 
-### Security Considerations
+### Implementation Sequence
 
-- **RLS Policy Verified**: The existing `Members can update own profile` policy on the `members` table allows this functionality
-- **Field Restrictions**: Email and DOB remain read-only client-side as an additional safeguard (though the backend would also accept updates)
-- **Input Validation**: Using existing zod schema with proper length limits and format validation
+1. **Update Translation Files First**
+   - Add all missing keys to `en.json`
+   - Add all Spanish translations to `es.json`
+
+2. **Fix ClientDashboard.tsx**
+   - Import date-fns locale helpers
+   - Refactor date formatting to be locale-aware
+   - Update `formatPlanType()` to use translation keys
+   - Update `formatBillingFrequency()` to use translation keys
+
+3. **Fix ProfilePage.tsx**
+   - Add translated placeholder for language selector
+   - Replace hardcoded "Spain" with translation key
+
+4. **Fix EmergencyContactsPage.tsx**
+   - Convert static `RELATIONSHIPS` array to use translation function
+
+5. **Fix MedicalInfoPage.tsx**
+   - Remove fallback strings where keys already exist
+   - Ensure all placeholders use translation keys
+
+6. **Clean Up ClientLayout.tsx**
+   - Remove defensive fallbacks (keys already exist in both locales)
+
+---
+
+### Verification Checklist
+
+After implementation:
+- [ ] Switch to Spanish and verify all dashboard text displays correctly
+- [ ] Switch to English and verify nothing is broken
+- [ ] Verify date displays in correct locale format
+- [ ] Verify all form placeholders translate
+- [ ] Verify relationship dropdown translates
+- [ ] Verify all toasts/success messages translate
+- [ ] Verify Support page FAQ displays in both languages
+
+---
+
+### No Content Loss Guarantee
+
+This plan only:
+- Replaces hardcoded strings with translation function calls
+- Adds missing keys to translation files
+- Removes unnecessary fallback strings where keys already exist
+
+No existing functionality, styling, or logic will be modified.
