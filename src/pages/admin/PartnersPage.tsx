@@ -77,18 +77,22 @@ export default function PartnersPage() {
     },
   });
 
-  // Mutation to delete partner
+  // Mutation to delete partner (uses edge function to also delete auth user)
   const deletePartnerMutation = useMutation({
     mutationFn: async (partnerId: string) => {
-      // Delete related data first (invites, commissions, attributions, agreements)
-      await supabase.from("partner_invites").delete().eq("partner_id", partnerId);
-      await supabase.from("partner_commissions").delete().eq("partner_id", partnerId);
-      await supabase.from("partner_attributions").delete().eq("partner_id", partnerId);
-      await supabase.from("partner_agreements").delete().eq("partner_id", partnerId);
-      
-      // Delete the partner
-      const { error } = await supabase.from("partners").delete().eq("id", partnerId);
-      if (error) throw error;
+      const response = await supabase.functions.invoke("partner-admin-delete", {
+        body: { partner_id: partnerId },
+      });
+
+      if (response.error) {
+        const errorData = response.data;
+        const errorMessage = errorData?.error || response.error.message || "Failed to delete partner";
+        throw new Error(errorMessage);
+      }
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to delete partner");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-partners"] });
