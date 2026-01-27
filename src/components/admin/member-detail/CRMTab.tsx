@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Tag, Users, ExternalLink, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { FileText, Tag, Users, ExternalLink, Loader2, Send } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { CourtesyCallsCard } from "./CourtesyCallsCard";
+import { MemberUpdateRequestModal } from "./MemberUpdateRequestModal";
+
 interface CRMProfile {
   member_id: string;
   stage: string | null;
@@ -36,20 +39,48 @@ interface ImportBatch {
   created_at: string;
 }
 
+interface MemberBasic {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  nie_dni: string | null;
+  address_line_2: string | null;
+  preferred_language: string;
+}
+
 interface CRMTabProps {
   memberId: string;
 }
 
 export function CRMTab({ memberId }: CRMTabProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<CRMProfile | null>(null);
   const [importRow, setImportRow] = useState<ImportRow | null>(null);
   const [importBatch, setImportBatch] = useState<ImportBatch | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [memberBasic, setMemberBasic] = useState<MemberBasic | null>(null);
 
   useEffect(() => {
     fetchCRMData();
+    fetchMemberBasic();
   }, [memberId]);
+
+  const fetchMemberBasic = async () => {
+    try {
+      const { data } = await supabase
+        .from("members")
+        .select("id, first_name, last_name, email, phone, nie_dni, address_line_2, preferred_language")
+        .eq("id", memberId)
+        .single();
+      if (data) setMemberBasic(data);
+    } catch (error) {
+      console.error("Error fetching member basic:", error);
+    }
+  };
 
   const fetchCRMData = async () => {
     try {
@@ -103,6 +134,27 @@ export function CRMTab({ memberId }: CRMTabProps) {
   if (!profile && !importRow) {
     return (
       <div className="space-y-6">
+        {/* Member Update Request Button */}
+        {memberBasic && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Send className="h-5 w-5" />
+                {t("crm.memberUpdateRequest", "Member Update Request")}
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setShowUpdateModal(true)}>
+                <Send className="h-4 w-4 mr-2" />
+                {t("crm.requestMemberUpdate", "Request Member Update")}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {t("crm.requestUpdateDescription", "Send an email to the member with a link to update their missing information.")}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Always show Courtesy Calls Card */}
         <CourtesyCallsCard memberId={memberId} />
         
@@ -110,18 +162,48 @@ export function CRMTab({ memberId }: CRMTabProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No CRM data available for this member</p>
+            <p className="text-muted-foreground">{t("crm.noCRMData", "No CRM data available for this member")}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              This member was not imported from CRM or has no CRM profile attached.
+              {t("crm.noCRMDataDesc", "This member was not imported from CRM or has no CRM profile attached.")}
             </p>
           </CardContent>
         </Card>
+
+        {/* Modal */}
+        {memberBasic && (
+          <MemberUpdateRequestModal
+            open={showUpdateModal}
+            onOpenChange={setShowUpdateModal}
+            member={memberBasic}
+          />
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Member Update Request Button */}
+      {memberBasic && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              {t("crm.memberUpdateRequest", "Member Update Request")}
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setShowUpdateModal(true)}>
+              <Send className="h-4 w-4 mr-2" />
+              {t("crm.requestMemberUpdate", "Request Member Update")}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {t("crm.requestUpdateDescription", "Send an email to the member with a link to update their missing information.")}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Courtesy Calls Card */}
       <CourtesyCallsCard memberId={memberId} />
 
@@ -267,6 +349,15 @@ export function CRMTab({ memberId }: CRMTabProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Modal */}
+      {memberBasic && (
+        <MemberUpdateRequestModal
+          open={showUpdateModal}
+          onOpenChange={setShowUpdateModal}
+          member={memberBasic}
+        />
       )}
     </div>
   );

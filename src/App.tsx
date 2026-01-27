@@ -105,6 +105,9 @@ const AlertHistoryPage = lazy(() => import("./pages/client/AlertHistoryPage"));
 const SupportPage = lazy(() => import("./pages/client/SupportPage"));
 const ClientMessagesPage = lazy(() => import("./pages/client/MessagesPage"));
 
+// Public Pages that don't require auth
+const MemberUpdatePage = lazy(() => import("./pages/MemberUpdatePage"));
+
 // Optimized QueryClient with global caching defaults
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -207,6 +210,7 @@ const App = () => {
                 <Route path="/register" element={<Navigate to="/join" replace />} />
                 <Route path="/complete-registration" element={<CompleteRegistration />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
+                <Route path="/member-update" element={<MemberUpdatePage />} />
 
                 {/* Admin Dashboard Routes - Require Admin Role */}
                 <Route
