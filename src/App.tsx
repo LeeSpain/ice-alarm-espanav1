@@ -69,6 +69,7 @@ const ImportBatchesPage = lazy(() => import("./pages/admin/ImportBatchesPage"));
 const FinanceDashboard = lazy(() => import("./pages/admin/FinanceDashboard"));
 const AnalyticsPage = lazy(() => import("./pages/admin/AnalyticsPage"));
 const ProductsPage = lazy(() => import("./pages/admin/ProductsPage"));
+const MediaManagerPage = lazy(() => import("./pages/admin/MediaManagerPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -251,6 +252,7 @@ const App = () => {
                   <Route path="crm-contacts/:id" element={<CRMContactDetailPage />} />
                   <Route path="ai" element={<AICommandCentre />} />
                   <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
+                  <Route path="media-manager" element={<MediaManagerPage />} />
                 </Route>
 
                 {/* Partner Public Routes */}

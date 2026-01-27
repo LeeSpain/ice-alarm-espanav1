@@ -1384,7 +1384,8 @@
     "backToPartners": "Volver a Partners",
     "shiftNotes": "Notas de turno",
     "aiCommandCentre": "Centro de Mando IA",
-    "aiOverview": "Vista General"
+    "aiOverview": "Vista General",
+    "mediaManager": "Gestor de Medios"
   },
   "ai": {
     "commandCentre": "Centro de Mando IA",
