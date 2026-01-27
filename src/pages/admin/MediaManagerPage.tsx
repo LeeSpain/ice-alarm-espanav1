@@ -15,6 +15,8 @@ import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSoci
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
 import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
 import { useBrandedImageGenerator } from "@/hooks/useBrandedImageGenerator";
+import { checkPostCompliance, ComplianceWarning } from "@/lib/complianceChecker";
+import { ComplianceWarningDialog } from "@/components/admin/media/ComplianceWarningDialog";
 import { cn } from "@/lib/utils";
 const GOALS = [
   { value: "brand_awareness", label: "Brand Awareness" },
@@ -58,6 +60,8 @@ export default function MediaManagerPage() {
   const [postText, setPostText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [aiOutput, setAiOutput] = useState<MediaDraftOutput | null>(null);
+  const [complianceWarnings, setComplianceWarnings] = useState<ComplianceWarning[]>([]);
+  const [showComplianceDialog, setShowComplianceDialog] = useState(false);
 
   const { posts, isLoading, createDraft, updateDraft, approvePost, publishPost, deletePost, isCreating, isUpdating, isApproving, isPublishing } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
@@ -105,8 +109,27 @@ export default function MediaManagerPage() {
   };
 
   const handleApprove = async () => {
+    if (!selectedPostId) return;
+    
+    // Check compliance before approving
+    const result = checkPostCompliance(postText);
+    
+    if (!result.isCompliant) {
+      // Show warning dialog
+      setComplianceWarnings(result.warnings);
+      setShowComplianceDialog(true);
+      return;
+    }
+    
+    // Compliant - proceed with approval
+    await approvePost(selectedPostId);
+  };
+
+  const handleForceApprove = async () => {
     if (selectedPostId) {
       await approvePost(selectedPostId);
+      setShowComplianceDialog(false);
+      setComplianceWarnings([]);
     }
   };
 
@@ -554,6 +577,15 @@ export default function MediaManagerPage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Compliance Warning Dialog */}
+      <ComplianceWarningDialog
+        open={showComplianceDialog}
+        onOpenChange={setShowComplianceDialog}
+        warnings={complianceWarnings}
+        onConfirm={handleForceApprove}
+        isLoading={isApproving}
+      />
     </div>
   );
 }
