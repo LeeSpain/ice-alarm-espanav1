@@ -22,7 +22,8 @@ import {
   Map,
   Image as ImageIcon,
   Percent,
-  Tag
+  Tag,
+  Facebook
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +82,13 @@ export default function SettingsPage() {
 
   const [googleMapsKey, setGoogleMapsKey] = useState("");
 
+  // Facebook settings state
+  const [facebookSettings, setFacebookSettings] = useState({
+    page_id: "",
+    page_access_token: ""
+  });
+
+  const [showFacebookToken, setShowFacebookToken] = useState(false);
   // Password visibility toggles
   const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [showTwilioToken, setShowTwilioToken] = useState(false);
@@ -140,6 +148,12 @@ export default function SettingsPage() {
       });
 
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
+
+      // Facebook settings
+      setFacebookSettings({
+        page_id: settingsMap.settings_facebook_page_id || "",
+        page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
+      });
 
       // Registration fee settings - keys are stored with 'settings_' prefix
       setRegistrationFeeSettings({
@@ -250,6 +264,26 @@ export default function SettingsPage() {
     if (googleMapsKey) {
       saveMutation.mutate({ google_maps_api_key: googleMapsKey });
     }
+  };
+
+  const handleSaveFacebook = () => {
+    const updates: Record<string, string> = {};
+    if (facebookSettings.page_id) {
+      updates.facebook_page_id = facebookSettings.page_id;
+    }
+    if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
+      updates.facebook_page_access_token = facebookSettings.page_access_token;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      toast({
+        title: "No changes to save",
+        description: "Enter new values to update the settings."
+      });
+      return;
+    }
+
+    saveMutation.mutate(updates);
   };
 
   const getIntegrationStatus = (keys: string[]) => {
@@ -847,6 +881,95 @@ export default function SettingsPage() {
                 )}
                 Save Google Maps Key
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Facebook / Meta */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Facebook className="h-5 w-5" />
+                Facebook Page Configuration
+                {getIntegrationStatus(["settings_facebook_page_id", "settings_facebook_page_access_token"]) ? (
+                  <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
+                    <Check className="mr-1 h-3 w-3" />
+                    Configured
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 ml-2">
+                    <AlertCircle className="mr-1 h-3 w-3" />
+                    Not Configured
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Connect your Facebook Page to publish social media posts. Get credentials from the{" "}
+                <a 
+                  href="https://developers.facebook.com/tools/explorer/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Meta Graph API Explorer
+                </a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Page ID</Label>
+                  <Input 
+                    value={facebookSettings.page_id}
+                    onChange={(e) => setFacebookSettings(prev => ({ ...prev, page_id: e.target.value }))}
+                    placeholder="123456789012345"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your Facebook Page ID (numeric). Find it in Page Settings → About → Page ID
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Page Access Token</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showFacebookToken ? "text" : "password"}
+                      value={facebookSettings.page_access_token}
+                      onChange={(e) => setFacebookSettings(prev => ({ ...prev, page_access_token: e.target.value }))}
+                      placeholder="EAA..."
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowFacebookToken(!showFacebookToken)}
+                    >
+                      {showFacebookToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    A long-lived Page Access Token with pages_manage_posts permission
+                  </p>
+                </div>
+              </div>
+              
+              <Button onClick={handleSaveFacebook} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save Facebook Configuration
+              </Button>
+
+              <div className="rounded-lg bg-muted p-4 space-y-2">
+                <h4 className="font-medium text-sm">Required Permissions</h4>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• <code>pages_manage_posts</code> - Publish and manage posts</li>
+                  <li>• <code>pages_read_engagement</code> - Read post metrics</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
 

@@ -147,6 +147,30 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
   });
 
+  // Publish to Facebook
+  const publishMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.functions.invoke("facebook-publish", {
+        body: { post_id: id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      toast({
+        title: "Published to Facebook!",
+        description: `Post ID: ${data.facebook_post_id}`,
+      });
+    },
+    onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      toast({ title: "Publishing failed", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Delete a post
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -169,10 +193,12 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     createDraft: createMutation.mutateAsync,
     updateDraft: updateMutation.mutateAsync,
     approvePost: approveMutation.mutateAsync,
+    publishPost: publishMutation.mutateAsync,
     deletePost: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isApproving: approveMutation.isPending,
+    isPublishing: publishMutation.isPending,
   };
 }
 
