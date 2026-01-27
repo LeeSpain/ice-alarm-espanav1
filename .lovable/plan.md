@@ -1,78 +1,94 @@
 
+# Fix Email Sending - Domain Verification Issue
 
-## Enable "Send Invite" for Admin View Mode
+## Problem Identified
+All emails from the system are failing because **the `icealarm.es` domain is not verified in Resend**. The edge function logs show:
 
-### Problem
-When viewing a partner's invites page as an admin (URL contains `?partnerId=`), the "Send Invite" button and dialog are hidden. This prevents admins from sending invites on behalf of partners.
+```
+Error: The icealarm.es domain is not verified.
+Please add and verify your domain on https://resend.com/domains
+```
 
-### Solution
-Remove the `isAdminViewMode` restriction on the Send Invite button and dialog, allowing admins to also send invites when viewing a partner's page.
+This affects:
+- Partner welcome emails (when admin creates partner)
+- Staff welcome emails
+- Partner invite emails
+- Member registration confirmation emails
+- Member welcome emails (after payment)
+- Member update request emails
 
 ---
 
-### Changes Required
+## Required Action: Verify Domain in Resend
 
-| File | Changes |
-|------|---------|
-| `src/pages/partner/PartnerInvitesPage.tsx` | Remove the `!isAdminViewMode &&` condition wrapping the Send Invite dialog (lines 299-495) |
-| `src/pages/partner/PartnerInvitesPage.tsx` | Remove the `!isAdminViewMode &&` condition wrapping the quick share buttons (lines 519-530) |
-| `src/pages/partner/PartnerInvitesPage.tsx` | Remove the `!isAdminViewMode &&` condition on the empty state message (line 551-553) |
+**You need to go to Resend and verify your domain:**
+
+1. Go to [https://resend.com/domains](https://resend.com/domains)
+2. Click "Add Domain"
+3. Enter `icealarm.es`
+4. Add the DNS records shown (typically TXT and MX records) to your domain's DNS settings
+5. Wait for verification (usually a few minutes)
 
 ---
 
-### Implementation Details
+## Inconsistency Found
 
-#### 1. Show Send Invite Button Always
+There's also an inconsistency - one function uses a different domain:
 
-**Before (line 298-299):**
-```tsx
-{/* Only show send invite button if not in admin view mode */}
-{!isAdminViewMode && (
-  <Dialog ...>
-```
+| Function | Current Domain | Recommended |
+|----------|---------------|-------------|
+| `send-member-update-request` | `icealarmespana.com` | `icealarm.es` |
 
-**After:**
-```tsx
-<Dialog ...>
-```
+---
 
-Remove the entire conditional wrapper so the button is always visible.
+## Code Changes (After Domain Verification)
 
-#### 2. Show Quick Share Buttons Always
+Once the domain is verified, I'll update the inconsistent email address:
 
-**Before (lines 519-530):**
-```tsx
-{!isAdminViewMode && (
-  <div className="flex gap-2">
-    <Button variant="outline" onClick={shareViaWhatsApp}>...
-```
+### Update `send-member-update-request`
 
-**After:**
-```tsx
-<div className="flex gap-2">
-  <Button variant="outline" onClick={shareViaWhatsApp}>...
-```
+**File:** `supabase/functions/send-member-update-request/index.ts`
 
-#### 3. Show Empty State Help Text Always
+Change line 173:
+```typescript
+// Before
+from: "ICE Alarm España <noreply@icealarmespana.com>"
 
-**Before (lines 551-553):**
-```tsx
-{!isAdminViewMode && (
-  <p className="text-sm">Start inviting people to earn commissions!</p>
-)}
-```
-
-**After:**
-```tsx
-<p className="text-sm">Start inviting people to earn commissions!</p>
+// After
+from: "ICE Alarm España <noreply@icealarm.es>"
 ```
 
 ---
 
-### Result
-After these changes:
-- The "Send Invite" button will appear in the header next to the page title
-- Clicking it opens a popup dialog to add contact details (name, email/phone, message)
-- Quick share buttons (WhatsApp, Email) will be visible below the referral link
-- Both partners and admins can send invites from this page
+## Summary
 
+| Step | Action | Owner |
+|------|--------|-------|
+| 1 | Verify `icealarm.es` domain in Resend | You |
+| 2 | Update DNS records as instructed by Resend | You |
+| 3 | Update inconsistent email domain in code | Me |
+
+---
+
+## Quick Workaround (If Domain Can't Be Verified)
+
+If you cannot verify `icealarm.es`, you could use Resend's free sandbox domain for testing:
+- Use `onboarding@resend.dev` as the sender
+- This only works for sending to your own email address
+
+However, for production, you **must verify your own domain**.
+
+---
+
+## Technical Details
+
+### Functions Affected
+
+1. **partner-admin-create** - Welcome email to new partners
+2. **staff-register** - Welcome email to new staff members  
+3. **partner-send-invite** - Partner invitation emails to leads
+4. **stripe-webhook** - Welcome email after payment completion
+5. **submit-registration** - Registration confirmation email
+6. **send-member-update-request** - Update request emails to members
+
+All these will work automatically once `icealarm.es` is verified in Resend.
