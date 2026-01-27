@@ -2352,6 +2352,101 @@ export type Database = {
           },
         ]
       }
+      social_post_research: {
+        Row: {
+          compliance_notes: string | null
+          created_at: string
+          id: string
+          key_points: string | null
+          post_id: string
+          sources: Json | null
+        }
+        Insert: {
+          compliance_notes?: string | null
+          created_at?: string
+          id?: string
+          key_points?: string | null
+          post_id: string
+          sources?: Json | null
+        }
+        Update: {
+          compliance_notes?: string | null
+          created_at?: string
+          id?: string
+          key_points?: string | null
+          post_id?: string
+          sources?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_post_research_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_posts: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          facebook_post_id: string | null
+          goal: string | null
+          id: string
+          image_url: string | null
+          language: string
+          platform: string
+          post_text: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: string
+          target_audience: string | null
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          goal?: string | null
+          id?: string
+          image_url?: string | null
+          language?: string
+          platform?: string
+          post_text?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          target_audience?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          facebook_post_id?: string | null
+          goal?: string | null
+          id?: string
+          image_url?: string | null
+          language?: string
+          platform?: string
+          post_text?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          target_audience?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff: {
         Row: {
           created_at: string | null
