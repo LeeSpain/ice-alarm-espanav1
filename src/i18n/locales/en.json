@@ -25,6 +25,11 @@
     "research": "Research",
     "writeDraft": "Write Draft",
     "generateImage": "Generate Image",
+    "quickBrandImage": "Quick Brand",
+    "generateAIImage": "Generate AI Image",
+    "aiImageGeneration": "AI Image Generation",
+    "selectImageStyle": "Select style",
+    "aiImageDescription": "Generate professional, realistic images using AI. These look more natural than branded graphics.",
     "fullWorkflow": "Full Workflow",
     "enterTopicToEnable": "Enter a topic to enable AI features",
     "runAIFirst": "Run AI workflow first to get image text",
@@ -99,6 +104,14 @@
       "empty": "No approved posts ready. Create and approve drafts to see them here!",
       "preview": "Preview",
       "publishNow": "Publish"
+    },
+    "imageStyles": {
+      "seniorActive": "Active Senior",
+      "familyPeace": "Family Moment",
+      "pendantFocus": "Pendant Focus",
+      "spanishLifestyle": "Spanish Lifestyle",
+      "independence": "Independence",
+      "peaceOfMind": "Peace of Mind"
     },
     "preview": {
       "title": "Post Preview",
