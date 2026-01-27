@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Users, DollarSign, Send, TrendingUp, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Search, Users, DollarSign, Send, TrendingUp, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Pencil, Ban, Trash2, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, isAfter } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
+import { toast } from "@/hooks/use-toast";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 
@@ -46,10 +49,57 @@ const statusColors: Record<PartnerStatus, string> = {
 
 export default function PartnersPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<PartnerStatus | "all">("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
+  const [partnerToSuspend, setPartnerToSuspend] = useState<Partner | null>(null);
+  const [partnerToActivate, setPartnerToActivate] = useState<Partner | null>(null);
+
+  // Mutation to update partner status
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ partnerId, status }: { partnerId: string; status: PartnerStatus }) => {
+      const { error } = await supabase
+        .from("partners")
+        .update({ status })
+        .eq("id", partnerId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-partners"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-global-stats"] });
+      toast({ title: "Partner status updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating partner", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Mutation to delete partner
+  const deletePartnerMutation = useMutation({
+    mutationFn: async (partnerId: string) => {
+      // Delete related data first (invites, commissions, attributions, agreements)
+      await supabase.from("partner_invites").delete().eq("partner_id", partnerId);
+      await supabase.from("partner_commissions").delete().eq("partner_id", partnerId);
+      await supabase.from("partner_attributions").delete().eq("partner_id", partnerId);
+      await supabase.from("partner_agreements").delete().eq("partner_id", partnerId);
+      
+      // Delete the partner
+      const { error } = await supabase.from("partners").delete().eq("id", partnerId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-partners"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-global-stats"] });
+      toast({ title: "Partner deleted successfully" });
+      setPartnerToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error deleting partner", description: error.message, variant: "destructive" });
+    },
+  });
 
   // Fetch partners with pagination
   const { data, isLoading } = useQuery({
@@ -351,17 +401,75 @@ export default function PartnersPage() {
                         {format(new Date(partner.created_at), "dd MMM yy")}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/partner-dashboard?partnerId=${partner.id}`);
-                          }}
-                          title="View Partner Dashboard"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-popover z-50">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/admin/partners/${partner.id}`);
+                            }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/admin/partners/${partner.id}?edit=true`);
+                            }}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit Partner
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/partner-dashboard?partnerId=${partner.id}`);
+                            }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Dashboard
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {partner.status === "active" ? (
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPartnerToSuspend(partner);
+                                }}
+                                className="text-yellow-600"
+                              >
+                                <Ban className="mr-2 h-4 w-4" />
+                                Suspend Partner
+                              </DropdownMenuItem>
+                            ) : partner.status === "suspended" ? (
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPartnerToActivate(partner);
+                                }}
+                                className="text-green-600"
+                              >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Reactivate Partner
+                              </DropdownMenuItem>
+                            ) : null}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPartnerToDelete(partner);
+                              }}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Partner
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );
@@ -401,6 +509,87 @@ export default function PartnersPage() {
           </div>
         </div>
       )}
+
+      {/* Suspend Confirmation Dialog */}
+      <AlertDialog open={!!partnerToSuspend} onOpenChange={() => setPartnerToSuspend(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Suspend Partner</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to suspend <strong>{partnerToSuspend?.contact_name}</strong>? 
+              They will no longer be able to access their partner dashboard or earn commissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (partnerToSuspend) {
+                  updateStatusMutation.mutate({ partnerId: partnerToSuspend.id, status: "suspended" });
+                  setPartnerToSuspend(null);
+                }
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              Suspend Partner
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Activate Confirmation Dialog */}
+      <AlertDialog open={!!partnerToActivate} onOpenChange={() => setPartnerToActivate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reactivate Partner</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reactivate <strong>{partnerToActivate?.contact_name}</strong>? 
+              They will regain access to their partner dashboard and can earn commissions again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (partnerToActivate) {
+                  updateStatusMutation.mutate({ partnerId: partnerToActivate.id, status: "active" });
+                  setPartnerToActivate(null);
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Reactivate Partner
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!partnerToDelete} onOpenChange={() => setPartnerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Partner</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete <strong>{partnerToDelete?.contact_name}</strong>? 
+              This will also delete all their invites, commissions, and attribution data. 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (partnerToDelete) {
+                  deletePartnerMutation.mutate(partnerToDelete.id);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete Partner
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
