@@ -1,6 +1,16 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMemberAlerts } from "@/hooks/useMemberProfile";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Loader2,
   Bell, 
@@ -9,40 +19,67 @@ import {
   MapPin, 
   Battery, 
   CheckCircle,
-  Clock
+  Clock,
+  Filter,
+  Calendar,
+  Shield
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const ALERT_CONFIG = {
   sos_button: { 
     icon: AlertTriangle, 
-    label: "SOS Alert", 
-    color: "bg-alert-sos text-alert-sos-foreground" 
+    labelKey: "alerts.sosAlert", 
+    color: "bg-alert-sos text-alert-sos-foreground",
+    bgLight: "bg-alert-sos/10"
   },
   fall_detected: { 
     icon: Activity, 
-    label: "Fall Detected", 
-    color: "bg-alert-fall text-alert-fall-foreground" 
+    labelKey: "alerts.fallDetected", 
+    color: "bg-alert-fall text-alert-fall-foreground",
+    bgLight: "bg-alert-fall/10"
   },
   geo_fence: { 
     icon: MapPin, 
-    label: "Geo-Fence Alert", 
-    color: "bg-alert-battery text-alert-battery-foreground" 
+    labelKey: "alerts.geoFenceAlert", 
+    color: "bg-alert-battery text-alert-battery-foreground",
+    bgLight: "bg-alert-battery/10"
   },
   low_battery: { 
     icon: Battery, 
-    label: "Low Battery", 
-    color: "bg-alert-checkin text-alert-checkin-foreground" 
+    labelKey: "alerts.lowBattery", 
+    color: "bg-alert-checkin text-alert-checkin-foreground",
+    bgLight: "bg-alert-checkin/10"
   },
   check_in: { 
     icon: CheckCircle, 
-    label: "Check-in", 
-    color: "bg-muted text-muted-foreground" 
+    labelKey: "alerts.checkIn", 
+    color: "bg-muted text-muted-foreground",
+    bgLight: "bg-muted"
   },
 };
 
+type AlertType = keyof typeof ALERT_CONFIG | "all";
+type AlertStatus = "all" | "resolved" | "incoming" | "in_progress";
+
 export default function AlertHistoryPage() {
+  const { t } = useTranslation();
   const { data: alerts, isLoading } = useMemberAlerts();
+  const [typeFilter, setTypeFilter] = useState<AlertType>("all");
+  const [statusFilter, setStatusFilter] = useState<AlertStatus>("all");
+
+  const filteredAlerts = alerts?.filter(alert => {
+    const matchesType = typeFilter === "all" || alert.alert_type === typeFilter;
+    const matchesStatus = statusFilter === "all" || alert.status === statusFilter;
+    return matchesType && matchesStatus;
+  }) || [];
+
+  const alertCounts = {
+    total: alerts?.length || 0,
+    resolved: alerts?.filter(a => a.status === "resolved").length || 0,
+    pending: alerts?.filter(a => a.status !== "resolved").length || 0,
+  };
 
   if (isLoading) {
     return (
@@ -57,70 +94,194 @@ export default function AlertHistoryPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Alert History</h1>
-          <p className="text-muted-foreground mt-1">Your past alerts and responses</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t("alerts.alertHistory")}</h1>
+          <p className="text-muted-foreground mt-1">{t("alertHistory.subtitle")}</p>
         </div>
       </div>
 
-      {!alerts || alerts.length === 0 ? (
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Bell className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{alertCounts.total}</p>
+                <p className="text-sm text-muted-foreground">{t("alertHistory.totalAlerts")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-alert-resolved/10 to-alert-resolved/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-alert-resolved" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{alertCounts.resolved}</p>
+                <p className="text-sm text-muted-foreground">{t("alerts.resolved")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-alert-battery/10 to-alert-battery/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-alert-battery/20 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-alert-battery" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{alertCounts.pending}</p>
+                <p className="text-sm text-muted-foreground">{t("common.pending")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{t("common.filter")}:</span>
+            </div>
+            <div className="flex flex-1 gap-3 flex-wrap">
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as AlertType)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t("alertHistory.allTypes")} />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  <SelectItem value="all">{t("alertHistory.allTypes")}</SelectItem>
+                  <SelectItem value="sos_button">{t("alerts.sosAlert")}</SelectItem>
+                  <SelectItem value="fall_detected">{t("alerts.fallDetected")}</SelectItem>
+                  <SelectItem value="geo_fence">{t("alerts.geoFenceAlert")}</SelectItem>
+                  <SelectItem value="low_battery">{t("alerts.lowBattery")}</SelectItem>
+                  <SelectItem value="check_in">{t("alerts.checkIn")}</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AlertStatus)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t("alertHistory.allStatuses")} />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  <SelectItem value="all">{t("alertHistory.allStatuses")}</SelectItem>
+                  <SelectItem value="resolved">{t("alerts.resolved")}</SelectItem>
+                  <SelectItem value="incoming">{t("alerts.incoming")}</SelectItem>
+                  <SelectItem value="in_progress">{t("alerts.inProgress")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(typeFilter !== "all" || statusFilter !== "all") && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => { setTypeFilter("all"); setStatusFilter("all"); }}
+                >
+                  {t("common.clear")}
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Alert List */}
+      {filteredAlerts.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No Alert History</h3>
-            <p className="text-muted-foreground">
-              Your alert history will appear here when you use your pendant.
+          <CardContent className="py-16 text-center">
+            <div className="h-20 w-20 mx-auto bg-muted rounded-full flex items-center justify-center mb-6">
+              <Shield className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-xl mb-2">{t("alertHistory.noAlerts")}</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              {t("alertHistory.noAlertsDesc")}
             </p>
+            <div className="mt-6 p-4 bg-alert-resolved/10 rounded-lg inline-flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-alert-resolved" />
+              <span className="text-sm font-medium text-alert-resolved">{t("alertHistory.allClear")}</span>
+            </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {alerts.map((alert) => {
+        <div className="space-y-4">
+          {filteredAlerts.map((alert) => {
             const config = ALERT_CONFIG[alert.alert_type as keyof typeof ALERT_CONFIG] 
               || ALERT_CONFIG.check_in;
             const Icon = config.icon;
             const isResolved = alert.status === "resolved";
 
             return (
-              <Card key={alert.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 ${config.color}`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <h4 className="font-semibold">{config.label}</h4>
-                        <Badge 
-                          variant={isResolved ? "default" : "secondary"}
-                          className={isResolved ? "bg-alert-resolved" : ""}
-                        >
-                          {isResolved ? (
-                            <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Resolved
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-3 w-3 mr-1" />
-                              {alert.status}
-                            </>
+              <Card key={alert.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex">
+                    {/* Left color stripe */}
+                    <div className={cn("w-1.5 shrink-0", config.color.split(" ")[0])} />
+                    
+                    <div className="flex-1 p-5">
+                      <div className="flex items-start gap-4">
+                        <div className={cn(
+                          "h-12 w-12 rounded-xl flex items-center justify-center shrink-0",
+                          config.bgLight
+                        )}>
+                          <Icon className={cn("h-6 w-6", config.color.split(" ")[1])} />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                              <h4 className="font-semibold text-lg">{t(config.labelKey)}</h4>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>{format(new Date(alert.received_at), "EEEE, dd MMMM yyyy")}</span>
+                                <span>•</span>
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{format(new Date(alert.received_at), "HH:mm")}</span>
+                              </div>
+                            </div>
+                            <Badge 
+                              className={cn(
+                                "shrink-0",
+                                isResolved 
+                                  ? "bg-alert-resolved text-alert-resolved-foreground" 
+                                  : "bg-alert-battery text-alert-battery-foreground"
+                              )}
+                            >
+                              {isResolved ? (
+                                <><CheckCircle className="h-3 w-3 mr-1" />{t("alerts.resolved")}</>
+                              ) : (
+                                <><Clock className="h-3 w-3 mr-1" />{alert.status}</>
+                              )}
+                            </Badge>
+                          </div>
+                          
+                          {/* Location */}
+                          {alert.location_address && (
+                            <div className="flex items-start gap-2 mt-3 p-3 bg-muted/50 rounded-lg">
+                              <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                              <span className="text-sm">{alert.location_address}</span>
+                            </div>
                           )}
-                        </Badge>
+                          
+                          {/* Resolution info */}
+                          {isResolved && alert.resolved_at && (
+                            <div className="flex items-center gap-2 mt-3 text-sm text-alert-resolved">
+                              <CheckCircle className="h-4 w-4" />
+                              <span>
+                                {t("alertHistory.resolvedIn")} {formatDistanceToNow(new Date(alert.received_at), { addSuffix: false })}
+                              </span>
+                            </div>
+                          )}
+
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(alert.received_at), "EEEE, dd MMMM yyyy 'at' HH:mm")}
-                      </p>
-                      {alert.location_address && (
-                        <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{alert.location_address}</span>
-                        </p>
-                      )}
-                      {isResolved && alert.resolved_at && (
-                        <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                          Resolved at {format(new Date(alert.resolved_at), "HH:mm")}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -129,6 +290,34 @@ export default function AlertHistoryPage() {
           })}
         </div>
       )}
+
+      {/* Understanding Your Alerts */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="text-lg">{t("alertHistory.understandingAlerts")}</CardTitle>
+          <CardDescription>{t("alertHistory.understandingAlertsDesc")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            {Object.entries(ALERT_CONFIG).map(([key, config]) => {
+              const Icon = config.icon;
+              return (
+                <div key={key} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center shrink-0", config.color)}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{t(config.labelKey)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t(`alertHistory.${key}Desc`)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
