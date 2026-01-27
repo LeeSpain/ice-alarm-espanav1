@@ -1154,6 +1154,13 @@
     "deleteError": "Failed to delete file",
     "openFile": "Open file"
   },
+  "partnerInvites": {
+    "viewed": "Viewed",
+    "viewedAt": "Viewed At",
+    "viewCount": "View Count",
+    "notViewedYet": "Not viewed yet",
+    "linkOpened": "Link Opened"
+  },
   "leads": {
     "title": "Leads",
     "newLead": "New Lead",

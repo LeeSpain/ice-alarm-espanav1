@@ -1106,6 +1106,13 @@
     "deleteError": "Error al eliminar el archivo",
     "openFile": "Abrir archivo"
   },
+  "partnerInvites": {
+    "viewed": "Visto",
+    "viewedAt": "Visto el",
+    "viewCount": "Veces visto",
+    "notViewedYet": "Aún no visto",
+    "linkOpened": "Enlace Abierto"
+  },
   "leads": {
     "title": "Leads",
     "newLead": "Nuevo lead",
