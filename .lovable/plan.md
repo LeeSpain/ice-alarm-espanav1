@@ -1,207 +1,159 @@
 
-# Ready to Publish Queue - Media Manager Enhancement
 
-## Overview
+# Fix Facebook Configuration Save and Failed Post Retry
 
-Add a prominent **"Ready to Publish"** section at the top of the Media Manager page that displays all posts with `approved` status. This provides a dedicated command center for quick publishing actions with real-time metrics that update throughout the page after each publish.
+## Problem Analysis
 
-## Current State Analysis
+After thorough investigation, I found **two separate issues**:
 
-- Posts with `approved` status are only visible via the filtered table at the bottom
-- No dedicated quick-action area for publishing workflow
-- Metrics (counts by status) are not prominently displayed
-- Publishing requires: find approved post → click to edit → click publish
+### Issue 1: Save IS Working (No Bug Here)
+The Facebook configuration **is saving correctly**. Database evidence:
+- `settings_facebook_page_id` = `107949497473966` (saved at 18:19:46)
+- `settings_facebook_page_access_token` = valid 280-char token (saved at 18:19:46)
 
-## Proposed Solution
+The error you're seeing in the UI (`#210: A page access token is required`) is from a **previous failed publish attempt** at 18:14:32 - which was BEFORE you saved the correct credentials at 18:19:46.
 
-Create an **"Approved & Ready"** section that:
-1. Shows summary metrics (total drafts, approved, published, failed counts)
-2. Displays approved posts as actionable cards with image preview + quick publish button
-3. Updates all metrics in real-time when a post is published
-4. Allows expanding post preview before publishing
+### Issue 2: Failed Posts Cannot Be Re-Published (BUG)
+Once a post fails, its status is `failed`. The `facebook-publish` edge function **rejects any post that isn't `approved`**:
 
-## Visual Design
-
-```text
-+-----------------------------------------------------------------------+
-|  Media Manager                                                        |
-|  Create and manage social media posts for Facebook                    |
-+-----------------------------------------------------------------------+
-
-+-----------------------------------------------------------------------+
-|  📊 POST METRICS                                                       |
-|  +------------+  +------------+  +------------+  +------------+       |
-|  | 5 Drafts   |  | 2 Approved |  | 12 Published|  | 1 Failed  |       |
-|  +------------+  +------------+  +------------+  +------------+       |
-+-----------------------------------------------------------------------+
-
-+-----------------------------------------------------------------------+
-|  🚀 READY TO PUBLISH (2)                                              |
-|  Posts approved and waiting for publication                           |
-|  +---------------------------+  +---------------------------+         |
-|  | [Image Preview]           |  | [Image Preview]           |         |
-|  | Topic: Summer Safety Tips |  | Topic: Fall Wellness      |         |
-|  | Goal: Brand Awareness     |  | Goal: Education           |         |
-|  | 🇬🇧🇪🇸 Both               |  | 🇬🇧 English               |         |
-|  |                           |  |                           |         |
-|  | [👁 Preview] [🚀 Publish]  |  | [👁 Preview] [🚀 Publish]  |         |
-|  +---------------------------+  +---------------------------+         |
-+-----------------------------------------------------------------------+
-
-[... existing Create/Edit panels and Existing Posts table below ...]
+```typescript
+// Line 86-93 of facebook-publish/index.ts
+if (post.status !== "approved") {
+  return new Response(JSON.stringify({ 
+    error: "Post must be approved before publishing",
+    current_status: post.status 
+  }), { status: 400 });
+}
 ```
+
+**There's no UI mechanism to re-approve a failed post** - the Approve button only shows for `draft` status posts.
+
+## Solution
+
+### Fix 1: Add "Retry" Functionality for Failed Posts
+Allow failed posts to be re-approved so they can be published again with corrected credentials.
+
+**Changes to `useSocialPosts.ts`:**
+- Modify `approveMutation` to also accept `failed` status posts (or create a separate `retryMutation`)
+- This allows changing `failed` → `approved` so publishing can be attempted again
+
+**Changes to `MediaManagerPage.tsx`:**
+- Add a "Retry" button for failed posts in the table
+- Show the error message to help users understand why it failed
+- Clear the error when re-approving
+
+### Fix 2: Improve Error Visibility
+When a post fails, the error message should be more visible:
+- Display `error_message` in a tooltip or inline in the table
+- Show it in the post preview dialog
+- Add a dedicated "Failed Posts" section or highlight them in the Ready to Publish area
 
 ## Implementation Steps
 
-### 1. Create New Hook for Approved Posts
+### Step 1: Update useSocialPosts Hook
 **File:** `src/hooks/useSocialPosts.ts`
 
-Add a dedicated query for approved posts only (separate from filtered list):
-- `useApprovedPosts()` - fetches posts where status = 'approved'
-- This allows the Ready to Publish section to always show approved posts regardless of the table filter
+Add a `retryPost` mutation that:
+1. Clears the `error_message` field
+2. Sets status back to `approved`
+3. Allows the post to be re-published
 
-### 2. Create Metrics Summary Hook
-**File:** `src/hooks/useSocialPosts.ts`
+```typescript
+// Add retryMutation after approveMutation
+const retryMutation = useMutation({
+  mutationFn: async (id: string) => {
+    const { data: post, error } = await supabase
+      .from("social_posts")
+      .update({
+        status: "approved",
+        error_message: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
 
-Add a query for post counts by status:
-- Returns: `{ drafts: number, approved: number, published: number, failed: number }`
-- Query groups by status and counts
+    if (error) throw error;
+    return post as SocialPost;
+  },
+  onSuccess: (post) => {
+    queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
+    toast({ title: "Post ready for retry", description: "You can now attempt to publish again." });
+  },
+  // ... error handling
+});
+```
 
-### 3. Create PostPreviewDialog Component
-**File:** `src/components/admin/media/PostPreviewDialog.tsx`
-
-A dialog to preview full post content before publishing:
-- Shows full image (if exists)
-- Displays complete post text with scroll
-- Shows metadata badges (goal, audience, language)
-- Action buttons: Close, Edit (loads into form), Publish
-
-### 4. Create ReadyToPublishSection Component
-**File:** `src/components/admin/media/ReadyToPublishSection.tsx`
-
-A dedicated component showing approved posts as cards:
-- Horizontal scrollable grid of post cards
-- Each card shows: image thumbnail, topic, goal, language flags
-- Quick action buttons: Preview (eye icon), Publish (rocket icon)
-- Empty state when no approved posts
-- Loading skeleton while fetching
-
-### 5. Create PostMetricsBar Component
-**File:** `src/components/admin/media/PostMetricsBar.tsx`
-
-A horizontal bar showing status counts:
-- Four stat cards: Drafts, Approved, Published, Failed
-- Color-coded to match status colors
-- Clickable to filter the table below (optional enhancement)
-- Updates automatically via React Query invalidation
-
-### 6. Update MediaManagerPage Layout
+### Step 2: Add Retry Button to MediaManagerPage
 **File:** `src/pages/admin/MediaManagerPage.tsx`
 
-Integrate new sections at the top:
-- Import new components
-- Add metrics bar after page title
-- Add Ready to Publish section before the Create/Edit panels
-- Wire up preview dialog state
-- Connect publish action with React Query cache invalidation
+In the existing posts table, add a "Retry" button for failed posts:
 
-### 7. Add Translation Keys
+```tsx
+{post.status === "failed" && (
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={() => retryPost(post.id)}
+    disabled={isRetrying}
+  >
+    <RefreshCw className="h-4 w-4 mr-1" />
+    Retry
+  </Button>
+)}
+```
+
+### Step 3: Show Error Message in Table
+**File:** `src/pages/admin/MediaManagerPage.tsx`
+
+Add a column or tooltip showing the error message for failed posts:
+
+```tsx
+{post.status === "failed" && post.error_message && (
+  <Tooltip>
+    <TooltipTrigger>
+      <AlertCircle className="h-4 w-4 text-destructive" />
+    </TooltipTrigger>
+    <TooltipContent>
+      <p className="max-w-xs">{post.error_message}</p>
+    </TooltipContent>
+  </Tooltip>
+)}
+```
+
+### Step 4: Add Translation Keys
 **Files:** `src/i18n/locales/en.json`, `src/i18n/locales/es.json`
 
-New keys under `mediaManager`:
-- `metrics.drafts`, `metrics.approved`, `metrics.published`, `metrics.failed`
-- `readyToPublish.title`, `readyToPublish.subtitle`, `readyToPublish.empty`
-- `readyToPublish.publishNow`, `readyToPublish.preview`
-- `preview.title`, `preview.close`, `preview.editPost`, `preview.publishNow`
-- `preview.noImage`, `preview.postDetails`
+Add keys for retry functionality:
+- `mediaManager.actions.retry`: "Retry"
+- `mediaManager.status.retryReady`: "Post ready for retry"
+- `mediaManager.errors.publishFailed`: "Publishing failed"
 
-## Technical Details
+### Step 5: Update PostPreviewDialog
+**File:** `src/components/admin/media/PostPreviewDialog.tsx`
 
-### Data Flow
-1. Page loads → `usePostMetrics()` fetches counts, `useApprovedPosts()` fetches approved posts
-2. User clicks Publish on a card → `publishPost(id)` is called
-3. On success, React Query invalidates:
-   - `["social-posts"]` (all queries)
-   - `["social-post-metrics"]`
-   - `["approved-posts"]`
-4. All components re-render with updated data
+Show error message if the post has one, and change the Publish button to "Retry" for failed posts.
 
-### New Hooks Structure
+## Files to Modify
 
-```typescript
-// In useSocialPosts.ts
+| File | Change |
+|------|--------|
+| `src/hooks/useSocialPosts.ts` | Add `retryPost` mutation with cache invalidation |
+| `src/pages/admin/MediaManagerPage.tsx` | Add Retry button, show error messages |
+| `src/components/admin/media/PostPreviewDialog.tsx` | Show error, support retry action |
+| `src/i18n/locales/en.json` | Add retry translation keys |
+| `src/i18n/locales/es.json` | Add retry translation keys (Spanish) |
 
-// Fetch only approved posts (for Ready to Publish section)
-export function useApprovedPosts() {
-  return useQuery({
-    queryKey: ["approved-posts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("social_posts")
-        .select("*")
-        .eq("status", "approved")
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return data as SocialPost[];
-    },
-  });
-}
+## Summary
 
-// Fetch metrics (counts by status)
-export function usePostMetrics() {
-  return useQuery({
-    queryKey: ["social-post-metrics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("social_posts")
-        .select("status");
-      if (error) throw error;
-      
-      const counts = { draft: 0, approved: 0, published: 0, failed: 0 };
-      data.forEach(post => {
-        if (counts[post.status] !== undefined) counts[post.status]++;
-      });
-      return counts;
-    },
-  });
-}
-```
+**Your Facebook credentials ARE saved correctly.** The issue is that:
+1. The post failed BEFORE you saved the correct credentials
+2. Failed posts currently cannot be re-published
 
-### Cache Invalidation Update
+The fix adds a "Retry" mechanism that:
+- Clears the error message
+- Sets the post back to "approved" status
+- Allows you to attempt publishing again with the now-correct credentials
 
-Modify `publishMutation` to invalidate all relevant queries:
-```typescript
-onSuccess: (data) => {
-  queryClient.invalidateQueries({ queryKey: ["social-posts"] });
-  queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
-  queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-  // ... existing toast
-}
-```
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/hooks/useSocialPosts.ts` | Modify | Add `useApprovedPosts()`, `usePostMetrics()`, update cache invalidation |
-| `src/components/admin/media/PostMetricsBar.tsx` | Create | Status count cards |
-| `src/components/admin/media/ReadyToPublishSection.tsx` | Create | Approved posts queue |
-| `src/components/admin/media/PostPreviewDialog.tsx` | Create | Full post preview modal |
-| `src/pages/admin/MediaManagerPage.tsx` | Modify | Integrate new sections |
-| `src/i18n/locales/en.json` | Modify | Add new translation keys |
-| `src/i18n/locales/es.json` | Modify | Add Spanish translations |
-
-## UX Considerations
-
-- **Empty State:** When no approved posts exist, show helpful message encouraging to create and approve drafts
-- **Loading States:** Skeleton cards while fetching approved posts
-- **Responsive:** Cards stack vertically on mobile, horizontal scroll on desktop
-- **Feedback:** Success toast with Facebook post ID after publish, immediate removal from Ready to Publish section
-- **Error Handling:** If publish fails, card shows error state with retry option
-
-## Future Enhancements (Out of Scope)
-
-- Scheduled publishing with date/time picker
-- Bulk publish all approved posts
-- Drag-and-drop reordering of publish queue
-- Analytics integration showing engagement metrics for published posts
