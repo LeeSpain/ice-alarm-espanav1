@@ -59,7 +59,7 @@ export default function MediaManagerPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [aiOutput, setAiOutput] = useState<MediaDraftOutput | null>(null);
 
-  const { posts, isLoading, createDraft, updateDraft, approvePost, deletePost, isCreating, isUpdating, isApproving } = useSocialPosts(statusFilter);
+  const { posts, isLoading, createDraft, updateDraft, approvePost, publishPost, deletePost, isCreating, isUpdating, isApproving, isPublishing } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
   const { uploadImage, isUploading } = useSocialPostImages();
   const { generateDraft, isGenerating } = useMediaDraft();
@@ -427,12 +427,21 @@ export default function MediaManagerPage() {
                 Approve
               </Button>
               <Button
-                disabled
+                onClick={async () => {
+                  if (selectedPostId) {
+                    await publishPost(selectedPostId);
+                  }
+                }}
+                disabled={!selectedPostId || isPublishing || selectedPost?.status !== "approved"}
                 variant="outline"
                 className="gap-2"
-                title="Publishing coming soon"
+                title={selectedPost?.status !== "approved" ? "Post must be approved first" : "Publish to Facebook"}
               >
-                <Send className="h-4 w-4" />
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
                 Publish
               </Button>
             </div>
