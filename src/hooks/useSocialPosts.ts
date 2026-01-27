@@ -93,6 +93,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({ title: "Draft created", description: "Your post draft has been saved." });
       // Audit log
       logSocialPostActivity("draft_created", post.id, undefined, {
@@ -121,6 +122,8 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({ title: "Draft updated", description: "Your changes have been saved." });
       // Audit log
       logSocialPostActivity("draft_edited", post.id, undefined, {
@@ -152,6 +155,8 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({ title: "Post approved", description: "The post is ready to publish." });
       // Audit log
       logSocialPostActivity("approved", post.id, { status: "draft" }, { status: "approved" });
@@ -235,6 +240,8 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({ title: "Post deleted", description: "The post has been removed." });
     },
     onError: (error: any) => {
