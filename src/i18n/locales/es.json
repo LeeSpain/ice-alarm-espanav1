@@ -1,4 +1,87 @@
 {
+  "mediaManager": {
+    "title": "Gestor de Medios",
+    "subtitle": "Crear y gestionar publicaciones en redes sociales para Facebook",
+    "createDraft": "Crear Borrador",
+    "editDraft": "Editar Borrador",
+    "newDraft": "Nuevo Borrador",
+    "configureParams": "Configure los parámetros de su publicación",
+    "draftPreview": "Vista Previa del Borrador",
+    "previewSubtitle": "Previsualice cómo aparecerá su publicación",
+    "existingPosts": "Publicaciones Existentes",
+    "existingPostsSubtitle": "Gestione sus borradores y publicaciones",
+    "goal": "Objetivo",
+    "selectGoal": "Seleccionar objetivo",
+    "targetAudience": "Audiencia Objetivo",
+    "selectAudience": "Seleccionar audiencia",
+    "topic": "Tema",
+    "topicPlaceholder": "ej., Consejos de seguridad en verano para expats mayores",
+    "language": "Idioma",
+    "postText": "Texto de la Publicación",
+    "postTextPlaceholder": "Escriba el contenido de su publicación aquí...",
+    "characters": "caracteres",
+    "image": "Imagen",
+    "clickToUpload": "Clic para subir imagen",
+    "research": "Investigar",
+    "writeDraft": "Escribir Borrador",
+    "generateImage": "Generar Imagen",
+    "fullWorkflow": "Flujo Completo",
+    "enterTopicToEnable": "Introduzca un tema para habilitar funciones de IA",
+    "runAIFirst": "Ejecute el flujo de IA primero para obtener texto de imagen",
+    "generateBrandedImage": "Generar imagen con marca",
+    "aiResearchSummary": "Resumen de Investigación IA",
+    "suggestedImageText": "Texto de Imagen Sugerido",
+    "saveDraft": "Guardar Borrador",
+    "approve": "Aprobar",
+    "publish": "Publicar",
+    "publishToFacebook": "Publicar en Facebook",
+    "mustBeApproved": "La publicación debe ser aprobada primero",
+    "noPostsFound": "No se encontraron publicaciones. ¡Cree su primer borrador arriba!",
+    "untitled": "Sin título",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta publicación?",
+    "goals": {
+      "brand_awareness": "Reconocimiento de Marca",
+      "lead_generation": "Generación de Leads",
+      "engagement": "Engagement",
+      "education": "Educación",
+      "promotion": "Promoción"
+    },
+    "audiences": {
+      "expats_spain": "Expats en España",
+      "elderly_care": "Cuidado de Mayores",
+      "family_caregivers": "Cuidadores Familiares",
+      "healthcare_pros": "Profesionales Sanitarios",
+      "general": "Audiencia General"
+    },
+    "languages": {
+      "en": "Inglés",
+      "es": "Español",
+      "both": "Ambos (EN + ES)"
+    },
+    "statuses": {
+      "all": "Todos",
+      "draft": "Borrador",
+      "drafts": "Borradores",
+      "approved": "Aprobado",
+      "published": "Publicado",
+      "failed": "Fallido"
+    },
+    "table": {
+      "topic": "Tema",
+      "goal": "Objetivo",
+      "language": "Idioma",
+      "status": "Estado",
+      "created": "Creado",
+      "actions": "Acciones"
+    },
+    "compliance": {
+      "warningTitle": "Advertencia de Cumplimiento",
+      "warningDescription": "Se detectaron los siguientes problemas de cumplimiento en su publicación:",
+      "confirmCheckbox": "He revisado estas advertencias y confirmo que este contenido es apropiado",
+      "approveAnyway": "Aprobar de Todos Modos",
+      "editPost": "Editar Publicación"
+    }
+  },
   "common": {
     "notSpecified": "No especificado",
     "loading": "Cargando...",

@@ -1,4 +1,87 @@
 {
+  "mediaManager": {
+    "title": "Media Manager",
+    "subtitle": "Create and manage social media posts for Facebook",
+    "createDraft": "Create Draft",
+    "editDraft": "Edit Draft",
+    "newDraft": "New Draft",
+    "configureParams": "Configure your post parameters",
+    "draftPreview": "Draft Preview",
+    "previewSubtitle": "Preview how your post will appear",
+    "existingPosts": "Existing Posts",
+    "existingPostsSubtitle": "Manage your drafts and published posts",
+    "goal": "Goal",
+    "selectGoal": "Select goal",
+    "targetAudience": "Target Audience",
+    "selectAudience": "Select audience",
+    "topic": "Topic",
+    "topicPlaceholder": "e.g., Summer safety tips for elderly expats",
+    "language": "Language",
+    "postText": "Post Text",
+    "postTextPlaceholder": "Write your post content here...",
+    "characters": "characters",
+    "image": "Image",
+    "clickToUpload": "Click to upload image",
+    "research": "Research",
+    "writeDraft": "Write Draft",
+    "generateImage": "Generate Image",
+    "fullWorkflow": "Full Workflow",
+    "enterTopicToEnable": "Enter a topic to enable AI features",
+    "runAIFirst": "Run AI workflow first to get image text",
+    "generateBrandedImage": "Generate branded image",
+    "aiResearchSummary": "AI Research Summary",
+    "suggestedImageText": "Suggested Image Text",
+    "saveDraft": "Save Draft",
+    "approve": "Approve",
+    "publish": "Publish",
+    "publishToFacebook": "Publish to Facebook",
+    "mustBeApproved": "Post must be approved first",
+    "noPostsFound": "No posts found. Create your first draft above!",
+    "untitled": "Untitled",
+    "deleteConfirm": "Are you sure you want to delete this post?",
+    "goals": {
+      "brand_awareness": "Brand Awareness",
+      "lead_generation": "Lead Generation",
+      "engagement": "Engagement",
+      "education": "Education",
+      "promotion": "Promotion"
+    },
+    "audiences": {
+      "expats_spain": "Expats in Spain",
+      "elderly_care": "Elderly Care",
+      "family_caregivers": "Family Caregivers",
+      "healthcare_pros": "Healthcare Professionals",
+      "general": "General Audience"
+    },
+    "languages": {
+      "en": "English",
+      "es": "Spanish",
+      "both": "Both (EN + ES)"
+    },
+    "statuses": {
+      "all": "All",
+      "draft": "Draft",
+      "drafts": "Drafts",
+      "approved": "Approved",
+      "published": "Published",
+      "failed": "Failed"
+    },
+    "table": {
+      "topic": "Topic",
+      "goal": "Goal",
+      "language": "Language",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "compliance": {
+      "warningTitle": "Compliance Warning",
+      "warningDescription": "The following compliance issues were detected in your post:",
+      "confirmCheckbox": "I have reviewed these warnings and confirm this content is appropriate",
+      "approveAnyway": "Approve Anyway",
+      "editPost": "Edit Post"
+    }
+  },
   "common": {
     "notSpecified": "Not specified",
     "loading": "Loading...",

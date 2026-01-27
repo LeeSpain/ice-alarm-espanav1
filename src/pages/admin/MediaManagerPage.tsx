@@ -18,27 +18,9 @@ import { useBrandedImageGenerator } from "@/hooks/useBrandedImageGenerator";
 import { checkPostCompliance, ComplianceWarning } from "@/lib/complianceChecker";
 import { ComplianceWarningDialog } from "@/components/admin/media/ComplianceWarningDialog";
 import { cn } from "@/lib/utils";
-const GOALS = [
-  { value: "brand_awareness", label: "Brand Awareness" },
-  { value: "lead_generation", label: "Lead Generation" },
-  { value: "engagement", label: "Engagement" },
-  { value: "education", label: "Education" },
-  { value: "promotion", label: "Promotion" },
-];
-
-const AUDIENCES = [
-  { value: "expats_spain", label: "Expats in Spain" },
-  { value: "elderly_care", label: "Elderly Care" },
-  { value: "family_caregivers", label: "Family Caregivers" },
-  { value: "healthcare_pros", label: "Healthcare Professionals" },
-  { value: "general", label: "General Audience" },
-];
-
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "both", label: "Both (EN + ES)" },
-];
+const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
+const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
+const LANGUAGE_VALUES = ["en", "es", "both"] as const;
 
 const STATUS_COLORS: Record<SocialPostStatus, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -141,7 +123,7 @@ export default function MediaManagerPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this post?")) {
+    if (confirm(t("mediaManager.deleteConfirm"))) {
       await deletePost(id);
       if (selectedPostId === id) handleClearForm();
     }
@@ -209,8 +191,8 @@ export default function MediaManagerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{t("sidebar.mediaManager", "Media Manager")}</h1>
-        <p className="text-muted-foreground">Create and manage social media posts for Facebook</p>
+        <h1 className="text-2xl font-bold">{t("mediaManager.title")}</h1>
+        <p className="text-muted-foreground">{t("mediaManager.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -218,40 +200,40 @@ export default function MediaManagerPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>{selectedPostId ? "Edit Draft" : "Create Draft"}</span>
+              <span>{selectedPostId ? t("mediaManager.editDraft") : t("mediaManager.createDraft")}</span>
               {selectedPostId && (
                 <Button variant="ghost" size="sm" onClick={handleClearForm}>
-                  New Draft
+                  {t("mediaManager.newDraft")}
                 </Button>
               )}
             </CardTitle>
-            <CardDescription>Configure your post parameters</CardDescription>
+            <CardDescription>{t("mediaManager.configureParams")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Goal</Label>
+                <Label>{t("mediaManager.goal")}</Label>
                 <Select value={goal} onValueChange={setGoal}>
                   <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Select goal" />
+                    <SelectValue placeholder={t("mediaManager.selectGoal")} />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
-                    {GOALS.map((g) => (
-                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                    {GOAL_VALUES.map((g) => (
+                      <SelectItem key={g} value={g}>{t(`mediaManager.goals.${g}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Target Audience</Label>
+                <Label>{t("mediaManager.targetAudience")}</Label>
                 <Select value={audience} onValueChange={setAudience}>
                   <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Select audience" />
+                    <SelectValue placeholder={t("mediaManager.selectAudience")} />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
-                    {AUDIENCES.map((a) => (
-                      <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                    {AUDIENCE_VALUES.map((a) => (
+                      <SelectItem key={a} value={a}>{t(`mediaManager.audiences.${a}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -259,23 +241,23 @@ export default function MediaManagerPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Topic</Label>
+              <Label>{t("mediaManager.topic")}</Label>
               <Input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Summer safety tips for elderly expats"
+                placeholder={t("mediaManager.topicPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>{t("mediaManager.language")}</Label>
               <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "es" | "both")}>
                 <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                  {LANGUAGE_VALUES.map((l) => (
+                    <SelectItem key={l} value={l}>{t(`mediaManager.languages.${l}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -290,7 +272,7 @@ export default function MediaManagerPage() {
                 className="gap-2"
               >
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                Research
+                {t("mediaManager.research")}
               </Button>
               <Button 
                 variant="outline" 
@@ -299,7 +281,7 @@ export default function MediaManagerPage() {
                 className="gap-2"
               >
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Write Draft
+                {t("mediaManager.writeDraft")}
               </Button>
               <Button 
                 variant="outline" 
@@ -312,7 +294,7 @@ export default function MediaManagerPage() {
                     imageText: {
                       headline: aiOutput.image_text.headline,
                       subheadline: aiOutput.image_text.subheadline,
-                      cta: aiOutput.image_text.cta || "Learn More",
+                      cta: aiOutput.image_text.cta || t("common.learnMore"),
                     },
                   });
                   if (url) {
@@ -320,10 +302,10 @@ export default function MediaManagerPage() {
                   }
                 }}
                 className="gap-2"
-                title={!aiOutput?.image_text ? "Run AI workflow first to get image text" : "Generate branded image"}
+                title={!aiOutput?.image_text ? t("mediaManager.runAIFirst") : t("mediaManager.generateBrandedImage")}
               >
                 {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                Generate Image
+                {t("mediaManager.generateImage")}
               </Button>
               <Button 
                 variant="outline" 
@@ -332,14 +314,14 @@ export default function MediaManagerPage() {
                 className="gap-2"
               >
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                Full Workflow
+                {t("mediaManager.fullWorkflow")}
               </Button>
             </div>
 
             {/* AI Output Preview */}
             {aiOutput && (
               <div className="border rounded-lg p-3 bg-muted/50 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">AI Research Summary</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("mediaManager.aiResearchSummary")}</p>
                 <p className="text-sm">{aiOutput.research.topic_insights}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {aiOutput.hashtags_en.slice(0, 5).map((tag, i) => (
@@ -348,7 +330,7 @@ export default function MediaManagerPage() {
                 </div>
                 {aiOutput.image_text && (
                   <div className="mt-2 pt-2 border-t">
-                    <p className="text-xs font-medium text-muted-foreground">Suggested Image Text</p>
+                    <p className="text-xs font-medium text-muted-foreground">{t("mediaManager.suggestedImageText")}</p>
                     <p className="text-sm font-semibold">{aiOutput.image_text.headline}</p>
                     <p className="text-xs text-muted-foreground">{aiOutput.image_text.subheadline}</p>
                   </div>
@@ -358,7 +340,7 @@ export default function MediaManagerPage() {
 
             {!topic && (
               <p className="text-xs text-muted-foreground text-center">
-                Enter a topic to enable AI features
+                {t("mediaManager.enterTopicToEnable")}
               </p>
             )}
           </CardContent>
@@ -367,25 +349,25 @@ export default function MediaManagerPage() {
         {/* Right Panel - Draft Preview */}
         <Card>
           <CardHeader>
-            <CardTitle>Draft Preview</CardTitle>
-            <CardDescription>Preview how your post will appear</CardDescription>
+            <CardTitle>{t("mediaManager.draftPreview")}</CardTitle>
+            <CardDescription>{t("mediaManager.previewSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Post Text</Label>
+              <Label>{t("mediaManager.postText")}</Label>
               <Textarea
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                placeholder="Write your post content here..."
+                placeholder={t("mediaManager.postTextPlaceholder")}
                 rows={6}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {postText.length} / 63,206 characters
+                {postText.length} / 63,206 {t("mediaManager.characters")}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Image</Label>
+              <Label>{t("mediaManager.image")}</Label>
               {imageUrl ? (
                 <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
                   <img src={imageUrl} alt="Post preview" className="w-full h-full object-cover" />
@@ -415,7 +397,7 @@ export default function MediaManagerPage() {
                       <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     )}
                     <p className="text-sm text-muted-foreground">
-                      {isUploading ? "Uploading..." : "Click to upload image"}
+                      {isUploading ? t("common.uploading") : t("mediaManager.clickToUpload")}
                     </p>
                   </label>
                 </div>
@@ -434,7 +416,7 @@ export default function MediaManagerPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Save Draft
+                {t("mediaManager.saveDraft")}
               </Button>
               <Button
                 onClick={handleApprove}
@@ -447,7 +429,7 @@ export default function MediaManagerPage() {
                 ) : (
                   <Check className="h-4 w-4" />
                 )}
-                Approve
+                {t("mediaManager.approve")}
               </Button>
               <Button
                 onClick={async () => {
@@ -458,14 +440,14 @@ export default function MediaManagerPage() {
                 disabled={!selectedPostId || isPublishing || selectedPost?.status !== "approved"}
                 variant="outline"
                 className="gap-2"
-                title={selectedPost?.status !== "approved" ? "Post must be approved first" : "Publish to Facebook"}
+                title={selectedPost?.status !== "approved" ? t("mediaManager.mustBeApproved") : t("mediaManager.publishToFacebook")}
               >
                 {isPublishing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-                Publish
+                {t("mediaManager.publish")}
               </Button>
             </div>
           </CardContent>
@@ -477,19 +459,19 @@ export default function MediaManagerPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Existing Posts</CardTitle>
-              <CardDescription>Manage your drafts and published posts</CardDescription>
+              <CardTitle>{t("mediaManager.existingPosts")}</CardTitle>
+              <CardDescription>{t("mediaManager.existingPostsSubtitle")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as SocialPostStatus | "all")}>
             <TabsList className="mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="draft">Drafts</TabsTrigger>
-              <TabsTrigger value="approved">Approved</TabsTrigger>
-              <TabsTrigger value="published">Published</TabsTrigger>
-              <TabsTrigger value="failed">Failed</TabsTrigger>
+              <TabsTrigger value="all">{t("mediaManager.statuses.all")}</TabsTrigger>
+              <TabsTrigger value="draft">{t("mediaManager.statuses.drafts")}</TabsTrigger>
+              <TabsTrigger value="approved">{t("mediaManager.statuses.approved")}</TabsTrigger>
+              <TabsTrigger value="published">{t("mediaManager.statuses.published")}</TabsTrigger>
+              <TabsTrigger value="failed">{t("mediaManager.statuses.failed")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value={statusFilter} className="mt-0">
@@ -499,19 +481,19 @@ export default function MediaManagerPage() {
                 </div>
               ) : posts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No posts found. Create your first draft above!
+                  {t("mediaManager.noPostsFound")}
                 </div>
               ) : (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Goal</TableHead>
-                        <TableHead>Language</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("mediaManager.table.topic")}</TableHead>
+                        <TableHead>{t("mediaManager.table.goal")}</TableHead>
+                        <TableHead>{t("mediaManager.table.language")}</TableHead>
+                        <TableHead>{t("mediaManager.table.status")}</TableHead>
+                        <TableHead>{t("mediaManager.table.created")}</TableHead>
+                        <TableHead className="text-right">{t("mediaManager.table.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -525,17 +507,17 @@ export default function MediaManagerPage() {
                           onClick={() => handleSelectPost(post)}
                         >
                           <TableCell className="font-medium max-w-[200px] truncate">
-                            {post.topic || "Untitled"}
+                            {post.topic || t("mediaManager.untitled")}
                           </TableCell>
                           <TableCell>
-                            {GOALS.find((g) => g.value === post.goal)?.label || "-"}
+                            {post.goal ? t(`mediaManager.goals.${post.goal}`) : "-"}
                           </TableCell>
                           <TableCell>
-                            {LANGUAGES.find((l) => l.value === post.language)?.label}
+                            {t(`mediaManager.languages.${post.language}`)}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={STATUS_COLORS[post.status]}>
-                              {post.status}
+                              {t(`mediaManager.statuses.${post.status}`)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
