@@ -19,6 +19,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
+import i18n from "@/i18n";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 
 interface AlertStats {
@@ -100,6 +102,7 @@ export default function StaffDashboard() {
   const { user } = useAuth();
   
   const [staffId, setStaffId] = useState<string | null>(null);
+  const [staffName, setStaffName] = useState<string>("");
   const [stats, setStats] = useState<AlertStats>({ incoming: 0, inProgress: 0, resolvedToday: 0 });
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [myTasksCount, setMyTasksCount] = useState(0);
@@ -111,16 +114,23 @@ export default function StaffDashboard() {
   const [courtesyCalls, setCourtesyCalls] = useState<CourtesyCall[]>([]);
   const [isCompletingCall, setIsCompletingCall] = useState<string | null>(null);
 
-  // Fetch staff ID on mount
+  // Locale-aware date formatting
+  const dateLocale = i18n.language === 'es' ? es : enGB;
+  const currentDate = format(new Date(), 'EEEE, d MMMM yyyy', { locale: dateLocale });
+
+  // Fetch staff ID and name on mount
   useEffect(() => {
     const fetchStaffId = async () => {
       if (!user?.id) return;
       const { data } = await supabase
         .from('staff')
-        .select('id')
+        .select('id, first_name')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (data) setStaffId(data.id);
+      if (data) {
+        setStaffId(data.id);
+        setStaffName(data.first_name || '');
+      }
     };
     fetchStaffId();
   }, [user?.id]);
@@ -378,83 +388,95 @@ export default function StaffDashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Welcome Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t('staffDashboard.welcomeBack')}, {staffName || t('common.staff')}
+          </h1>
+          <p className="text-sm text-muted-foreground capitalize">{currentDate}</p>
+        </div>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/call-centre/alerts')}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${stats.incoming > 0 ? 'bg-destructive/20' : 'bg-muted'}`}>
-                <AlertTriangle className={`h-5 w-5 ${stats.incoming > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+      <div className="bg-gradient-to-r from-primary/5 via-background to-accent/5 p-4 rounded-lg border">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/alerts')}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${stats.incoming > 0 ? 'bg-destructive/20' : 'bg-muted'}`}>
+                  <AlertTriangle className={`h-5 w-5 ${stats.incoming > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.incoming}</p>
+                  <p className="text-xs text-muted-foreground">{t('staffDashboard.incomingAlerts')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.incoming}</p>
-                <p className="text-xs text-muted-foreground">{t('staffDashboard.incomingAlerts')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/call-centre/alerts')}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/20">
-                <Clock className="h-5 w-5 text-orange-500" />
+          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/alerts')}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/20">
+                  <Clock className="h-5 w-5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                  <p className="text-xs text-muted-foreground">{t('staffDashboard.inProgress')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.inProgress}</p>
-                <p className="text-xs text-muted-foreground">{t('staffDashboard.inProgress')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/call-centre/messages')}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${unreadMessages > 0 ? 'bg-primary/20' : 'bg-muted'}`}>
-                <MessageSquare className={`h-5 w-5 ${unreadMessages > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/messages')}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${unreadMessages > 0 ? 'bg-primary/20' : 'bg-muted'}`}>
+                  <MessageSquare className={`h-5 w-5 ${unreadMessages > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{unreadMessages}</p>
+                  <p className="text-xs text-muted-foreground">{t('staffDashboard.unreadMessages')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{unreadMessages}</p>
-                <p className="text-xs text-muted-foreground">{t('staffDashboard.unreadMessages')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-status-active/20">
-                <CheckCircle className="h-5 w-5 text-status-active" />
+          <Card className="shadow-sm bg-background/80 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-status-active/20">
+                  <CheckCircle className="h-5 w-5 text-status-active" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.resolvedToday}</p>
+                  <p className="text-xs text-muted-foreground">{t('staffDashboard.resolvedToday')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.resolvedToday}</p>
-                <p className="text-xs text-muted-foreground">{t('staffDashboard.resolvedToday')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/call-centre/tasks')}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${myTasksCount > 0 ? 'bg-blue-500/20' : 'bg-muted'}`}>
-                <ClipboardList className={`h-5 w-5 ${myTasksCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
+          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/tasks')}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${myTasksCount > 0 ? 'bg-blue-500/20' : 'bg-muted'}`}>
+                  <ClipboardList className={`h-5 w-5 ${myTasksCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{myTasksCount}</p>
+                  <p className="text-xs text-muted-foreground">{t('staffDashboard.myTasksDue')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{myTasksCount}</p>
-                <p className="text-xs text-muted-foreground">{t('staffDashboard.myTasksDue')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Main Content Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Active Alerts */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">{t('staffDashboard.activeAlerts')}</CardTitle>
@@ -497,7 +519,7 @@ export default function StaffDashboard() {
         </Card>
 
         {/* Courtesy Calls */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -573,7 +595,7 @@ export default function StaffDashboard() {
         </Card>
 
         {/* My Tasks Due Today */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">{t('staffDashboard.myTasksDueToday')}</CardTitle>
@@ -614,7 +636,7 @@ export default function StaffDashboard() {
         </Card>
 
         {/* Recent Messages */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">{t('staffDashboard.recentMessages')}</CardTitle>
@@ -659,7 +681,7 @@ export default function StaffDashboard() {
         {/* Leads Widget */}
         <LeadsWidget variant="staff" />
         {/* Today's Birthdays */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -718,7 +740,7 @@ export default function StaffDashboard() {
         </Card>
 
         {/* Shift Notes */}
-        <Card>
+        <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">{t('staffDashboard.todaysShiftNotes')}</CardTitle>

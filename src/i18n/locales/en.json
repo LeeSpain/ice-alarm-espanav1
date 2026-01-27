@@ -105,7 +105,8 @@
     "goBack": "Go Back",
     "create": "Create",
     "spain": "Spain",
-    "phonePlaceholder": "+34 000 000 000"
+    "phonePlaceholder": "+34 000 000 000",
+    "staff": "Staff"
   },
   "auth": {
     "login": "Login",
@@ -828,6 +829,7 @@
     "orders": "Orders"
   },
   "staffDashboard": {
+    "welcomeBack": "Welcome back",
     "incomingAlerts": "Incoming Alerts",
     "inProgress": "In Progress",
     "unreadMessages": "Unread Messages",
@@ -980,6 +982,7 @@
     "latestActions": "Latest actions by staff members"
   },
   "staffDashboard": {
+    "welcomeBack": "Welcome back",
     "incomingAlerts": "Incoming Alerts",
     "inProgress": "In Progress",
     "unreadMessages": "Unread Messages",
