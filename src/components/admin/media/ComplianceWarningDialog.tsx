@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { ComplianceWarning } from "@/lib/complianceChecker";
 import { Label } from "@/components/ui/label";
 
@@ -29,6 +30,7 @@ export function ComplianceWarningDialog({
   onConfirm,
   isLoading,
 }: ComplianceWarningDialogProps) {
+  const { t } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
 
   const handleConfirm = () => {
@@ -51,10 +53,10 @@ export function ComplianceWarningDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            Compliance Warning
+            {t("mediaManager.compliance.warningTitle")}
           </DialogTitle>
           <DialogDescription>
-            This post contains language that may violate medical advertising guidelines.
+            {t("mediaManager.compliance.warningDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -63,7 +65,7 @@ export function ComplianceWarningDialog({
             <Alert key={index} variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle className="text-sm">
-                Found: "{warning.matchedText}"
+                {t("common.found", "Found")}: "{warning.matchedText}"
               </AlertTitle>
               <AlertDescription className="text-xs mt-1">
                 {warning.suggestion}
@@ -82,8 +84,7 @@ export function ComplianceWarningDialog({
             htmlFor="compliance-confirm"
             className="text-sm leading-relaxed cursor-pointer"
           >
-            I have reviewed these warnings and confirm that the content is compliant 
-            with medical advertising regulations. I take responsibility for this post.
+            {t("mediaManager.compliance.confirmCheckbox")}
           </Label>
         </div>
 
@@ -92,14 +93,21 @@ export function ComplianceWarningDialog({
             variant="outline"
             onClick={() => handleOpenChange(false)}
           >
-            Cancel & Edit
+            {t("mediaManager.compliance.editPost")}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!confirmed || isLoading}
             variant="destructive"
           >
-            {isLoading ? "Approving..." : "Approve Anyway"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("common.processing")}
+              </>
+            ) : (
+              t("mediaManager.compliance.approveAnyway")
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
