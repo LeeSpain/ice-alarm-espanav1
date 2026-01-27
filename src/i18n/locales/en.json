@@ -103,7 +103,9 @@
     "created": "Created",
     "deleted": "Deleted",
     "goBack": "Go Back",
-    "create": "Create"
+    "create": "Create",
+    "spain": "Spain",
+    "phonePlaceholder": "+34 000 000 000"
   },
   "auth": {
     "login": "Login",
@@ -432,6 +434,21 @@
     "noContacts": "No Emergency Contacts",
     "noContactsDesc": "Add contacts so we can reach your loved ones in an emergency.",
     "addFirstContact": "Add Your First Contact",
+    "subtitle": "People we call if you need help",
+    "networkTitle": "Your Emergency Network",
+    "networkDesc": "These contacts will be called in order of priority if we can't reach you during an emergency. You can have up to 3 contacts.",
+    "addPrompt": "Add emergency contacts so we can reach your loved ones if needed.",
+    "addFirst": "Add Your First Contact",
+    "limitReached": "You've reached the maximum of 3 emergency contacts. Remove one to add another.",
+    "dialogDesc": "Enter the details for your emergency contact.",
+    "selectRelationship": "Select relationship",
+    "notesPlaceholder": "Any additional information...",
+    "deleteTitle": "Delete Contact",
+    "deleteConfirm": "Are you sure you want to remove this emergency contact? This action cannot be undone.",
+    "updated": "Contact updated successfully",
+    "added": "Contact added successfully",
+    "deleted": "Contact deleted",
+    "namePlaceholder": "Full name",
     "relationships": {
       "spouse": "Spouse",
       "partner": "Partner",
@@ -469,7 +486,22 @@
     "safetyNote": "Medical changes are reviewed by our team for your safety",
     "noConditions": "No conditions on record",
     "noMedications": "No medications on record",
-    "notSpecified": "Not specified"
+    "notSpecified": "Not specified",
+    "subtitle": "Important health details for emergencies",
+    "emergencyTitle": "Emergency Medical Data",
+    "emergencyDesc": "This information is shared with emergency services when you need help. Keep it up to date for your safety.",
+    "noData": "No Medical Information",
+    "addPrompt": "Add your medical details so we can provide better emergency care.",
+    "addInfo": "Add Medical Information",
+    "hospital": "Preferred Hospital",
+    "hospitalName": "Hospital name",
+    "conditions": "Medical Conditions",
+    "addCondition": "Add condition...",
+    "addMedication": "Add medication...",
+    "addAllergy": "Add allergy...",
+    "notesPlaceholder": "Any other important medical information...",
+    "selectBloodType": "Select blood type",
+    "noneRecorded": "None recorded"
   },
   "subscription": {
     "title": "Subscription & Billing",
@@ -499,8 +531,9 @@
     "paid": "Paid",
     "failed": "Failed",
     "refunded": "Refunded",
-    "mo": "mo",
-    "yr": "yr",
+    "mo": "/mo",
+    "yr": "/yr",
+    "quarterly": "/quarter",
     "cardEnding": "Visa ending in ****4242",
     "expires": "Expires 12/26",
     "changePlanNote": "To change between Single and Couple plans, please contact our support team."
@@ -598,7 +631,8 @@
     "phoneNumber": "Phone Number",
     "streetAddress": "Street Address",
     "nieDni": "NIE/DNI",
-    "contactInfo": "Contact Information"
+    "contactInfo": "Contact Information",
+    "selectLanguage": "Select language"
   },
   "dashboard": {
     "welcomeBack": "Welcome back",
