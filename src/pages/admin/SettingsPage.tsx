@@ -188,6 +188,18 @@ export default function SettingsPage() {
       return response.data;
     },
     onSuccess: () => {
+      // If we just saved the Facebook token, mask it *after* success.
+      // (Do not mask immediately on click; that looks like the value was replaced.)
+      if (recentlySavedSection === "facebook") {
+        setFacebookDirty(false);
+        setFacebookSettings((prev) => ({
+          ...prev,
+          page_access_token: prev.page_access_token && !prev.page_access_token.includes("•")
+            ? "••••••••••••"
+            : prev.page_access_token,
+        }));
+      }
+
       queryClient.invalidateQueries({ queryKey: ["system-settings"] });
       queryClient.invalidateQueries({ queryKey: ["company-settings"] });
       queryClient.invalidateQueries({ queryKey: ["pricing-settings"] });
@@ -297,16 +309,8 @@ export default function SettingsPage() {
 
     // Set flag to prevent useEffect from immediately resetting the form
     setRecentlySavedSection("facebook");
-    // We are committing these edits now
-    setFacebookDirty(false);
-    
-    // Immediately show masked value for the token to confirm it's being saved
-    if (hasNewToken) {
-      setFacebookSettings(prev => ({
-        ...prev,
-        page_access_token: "••••••••••••"
-      }));
-    }
+    // Keep dirty=true while saving so background sync can't overwrite the long token mid-flight.
+    setFacebookDirty(true);
 
     saveMutation.mutate(updates);
   };
