@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -21,25 +20,36 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
+    // Validate user authentication
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData } = await supabase.auth.getClaims(token);
-    if (!claimsData?.claims) {
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // Check if user is staff
+    const userId = claimsData.claims.sub;
+    const { data: staffData, error: staffError } = await supabase
+      .from("staff")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (staffError || !staffData) {
+      return new Response(JSON.stringify({ error: "Forbidden - Staff access required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { post_id } = await req.json();
     if (!post_id) {
@@ -49,88 +59,130 @@ serve(async (req) => {
       });
     }
 
-    const { data: post } = await adminClient
+    // Admin client
+    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Fetch post
+    const { data: post, error: postError } = await adminClient
       .from("social_posts")
       .select("*")
       .eq("id", post_id)
       .single();
 
-    if (!post || post.status !== "approved") {
-      return new Response(JSON.stringify({ error: "Post not approved" }), {
-        status: 400,
+    if (postError || !post) {
+      return new Response(JSON.stringify({ error: "Post not found" }), {
+        status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: settings } = await adminClient
+    if (post.status !== "approved") {
+      return new Response(
+        JSON.stringify({
+          error: "Post must be approved before publishing",
+          current_status: post.status,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    // Fetch Facebook settings
+    const { data: settings, error: settingsError } = await adminClient
       .from("system_settings")
       .select("key,value")
-      .in("key", [
-        "settings_facebook_page_id",
-        "settings_facebook_page_access_token",
-      ]);
+      .in("key", ["settings_facebook_page_id", "settings_facebook_page_access_token"]);
 
-    const map = Object.fromEntries((settings || []).map(s => [s.key, s.value]));
-    const pageId = map.settings_facebook_page_id;
-    const tokenPage = map.settings_facebook_page_access_token;
-
-    if (!pageId || !tokenPage) {
-      return new Response(JSON.stringify({ error: "Facebook not configured" }), {
-        status: 400,
+    if (settingsError || !settings) {
+      return new Response(JSON.stringify({ error: "Failed to fetch Facebook settings" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    let fbRes;
-    let fbJson;
+    const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]));
 
-    if (post.image_url) {
+    const pageId = settingsMap.settings_facebook_page_id;
+    const accessToken = settingsMap.settings_facebook_page_access_token;
+
+    if (!pageId || !accessToken) {
+      return new Response(
+        JSON.stringify({
+          error: "Facebook credentials not configured. Please add Page ID and Access Token in Settings.",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const postText = post.post_text || "";
+    const imageUrl = post.image_url;
+
+    let fbResponse;
+    let fbResult;
+
+    // Publish to Facebook
+    if (imageUrl) {
       const params = new URLSearchParams({
-        url: post.image_url,
-        caption: post.post_text || "",
-        access_token: tokenPage,
+        url: imageUrl,
+        caption: postText,
+        access_token: accessToken,
       });
 
-      fbRes = await fetch(
-        `https://graph.facebook.com/v24.0/${pageId}/photos`,
-        { method: "POST", body: params }
-      );
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/photos`, {
+        method: "POST",
+        body: params,
+      });
     } else {
       const params = new URLSearchParams({
-        message: post.post_text || "",
-        access_token: tokenPage,
+        message: postText,
+        access_token: accessToken,
       });
 
-      fbRes = await fetch(
-        `https://graph.facebook.com/v24.0/${pageId}/feed`,
-        { method: "POST", body: params }
-      );
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/feed`, {
+        method: "POST",
+        body: params,
+      });
     }
 
-    fbJson = await fbRes.json();
+    fbResult = await fbResponse.json();
 
-    if (!fbRes.ok) {
-      throw new Error(fbJson?.error?.message || JSON.stringify(fbJson));
+    if (!fbResponse.ok) {
+      throw new Error(fbResult?.error?.message || JSON.stringify(fbResult));
     }
 
+    const facebookPostId = fbResult.post_id || fbResult.id;
+
+    // Update post as published
     await adminClient
       .from("social_posts")
       .update({
         status: "published",
-        facebook_post_id: fbJson.id,
+        facebook_post_id: facebookPostId,
         published_at: new Date().toISOString(),
+        error_message: null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", post_id);
 
     return new Response(
-      JSON.stringify({ success: true, facebook_post_id: fbJson.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: true,
+        facebook_post_id: facebookPostId,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("facebook-publish error:", message);
+
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
