@@ -12,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    // ───────────────────────── AUTH ─────────────────────────
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -24,7 +25,6 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Validate user authentication
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
 
@@ -35,7 +35,7 @@ serve(async (req) => {
       });
     }
 
-    // Check if user is staff
+    // ───────────────────────── STAFF CHECK ─────────────────────────
     const userId = claimsData.claims.sub;
     const { data: staffData, error: staffError } = await supabase
       .from("staff")
@@ -51,7 +51,18 @@ serve(async (req) => {
       });
     }
 
-    const { post_id } = await req.json();
+    // ───────────────────────── SAFE JSON PARSE ─────────────────────────
+    let post_id: string | null = null;
+    try {
+      const body = await req.json();
+      post_id = body?.post_id;
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!post_id) {
       return new Response(JSON.stringify({ error: "post_id is required" }), {
         status: 400,
@@ -59,10 +70,10 @@ serve(async (req) => {
       });
     }
 
-    // Admin client
+    // ───────────────────────── ADMIN CLIENT ─────────────────────────
     const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Fetch post
+    // ───────────────────────── FETCH POST ─────────────────────────
     const { data: post, error: postError } = await adminClient
       .from("social_posts")
       .select("*")
@@ -89,7 +100,7 @@ serve(async (req) => {
       );
     }
 
-    // Fetch Facebook settings
+    // ───────────────────────── FACEBOOK SETTINGS ─────────────────────────
     const { data: settings, error: settingsError } = await adminClient
       .from("system_settings")
       .select("key,value")
@@ -119,13 +130,13 @@ serve(async (req) => {
       );
     }
 
+    // ───────────────────────── FACEBOOK PUBLISH ─────────────────────────
     const postText = post.post_text || "";
     const imageUrl = post.image_url;
 
-    let fbResponse;
-    let fbResult;
+    let fbResponse: Response;
+    let fbResult: any;
 
-    // Publish to Facebook
     if (imageUrl) {
       const params = new URLSearchParams({
         url: imageUrl,
@@ -133,20 +144,14 @@ serve(async (req) => {
         access_token: accessToken,
       });
 
-      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/photos`, {
-        method: "POST",
-        body: params,
-      });
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/photos`, { method: "POST", body: params });
     } else {
       const params = new URLSearchParams({
         message: postText,
         access_token: accessToken,
       });
 
-      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/feed`, {
-        method: "POST",
-        body: params,
-      });
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/feed`, { method: "POST", body: params });
     }
 
     fbResult = await fbResponse.json();
@@ -157,7 +162,7 @@ serve(async (req) => {
 
     const facebookPostId = fbResult.post_id || fbResult.id;
 
-    // Update post as published
+    // ───────────────────────── UPDATE POST ─────────────────────────
     await adminClient
       .from("social_posts")
       .update({
