@@ -59,10 +59,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
   const postsQuery = useQuery({
     queryKey: ["social-posts", statusFilter],
     queryFn: async () => {
-      let query = supabase
-        .from("social_posts")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("social_posts").select("*").order("created_at", { ascending: false });
 
       if (statusFilter && statusFilter !== "all") {
         query = query.eq("status", statusFilter);
@@ -103,7 +100,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       });
     },
     onError: (error: any) => {
-      toast({ title: "Error creating draft", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error creating draft",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -132,7 +133,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       });
     },
     onError: (error: any) => {
-      toast({ title: "Error updating draft", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error updating draft",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -162,7 +167,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       logSocialPostActivity("approved", post.id, { status: "draft" }, { status: "approved" });
     },
     onError: (error: any) => {
-      toast({ title: "Error approving post", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error approving post",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -191,22 +200,39 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       logSocialPostActivity("retry_requested", post.id, { status: "failed" }, { status: "approved" });
     },
     onError: (error: any) => {
-      toast({ title: "Error preparing retry", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error preparing retry",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  // Publish to Facebook
+  // Publish to Facebook (FIXED: force Authorization header)
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
       // Log publish attempt
       logSocialPostActivity("publish_attempted", id);
-      
+
+      // Force-get a fresh session token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (sessionError || !accessToken) {
+        throw new Error("Not authenticated. Please log in again.");
+      }
+
       const { data, error } = await supabase.functions.invoke("facebook-publish", {
         body: { post_id: id },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
       return { ...data, post_id: id };
     },
     onSuccess: (data) => {
@@ -245,7 +271,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       toast({ title: "Post deleted", description: "The post has been removed." });
     },
     onError: (error: any) => {
-      toast({ title: "Error deleting post", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error deleting post",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -272,11 +302,7 @@ export function useSocialPost(id: string | null) {
     queryKey: ["social-post", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("social_posts")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+      const { data, error } = await supabase.from("social_posts").select("*").eq("id", id).maybeSingle();
 
       if (error) throw error;
       return data as SocialPost | null;
