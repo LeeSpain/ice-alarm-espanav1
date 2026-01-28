@@ -82,17 +82,14 @@ export default function SettingsPage() {
 
   const [googleMapsKey, setGoogleMapsKey] = useState("");
 
-  // Facebook settings state
-  const [facebookSettings, setFacebookSettings] = useState({
-    page_id: "",
-    page_access_token: ""
-  });
+  // Facebook settings state - split into stored flag + new input
+  const [facebookPageId, setFacebookPageId] = useState("");
+  const [facebookTokenInput, setFacebookTokenInput] = useState("");
+  const [facebookTokenStored, setFacebookTokenStored] = useState(false);
 
   const [showFacebookToken, setShowFacebookToken] = useState(false);
   // Track recently saved sections to prevent useEffect from resetting form values
   const [recentlySavedSection, setRecentlySavedSection] = useState<string | null>(null);
-  // Prevent background refetch/state sync from overwriting in-progress edits
-  const [facebookDirty, setFacebookDirty] = useState(false);
   // Password visibility toggles
   const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [showTwilioToken, setShowTwilioToken] = useState(false);
@@ -157,11 +154,10 @@ export default function SettingsPage() {
       setGoogleMapsKey(settingsMap.google_maps_api_key || "");
 
       // Facebook settings - only update if we haven't just saved them
-      if (recentlySavedSection !== "facebook" && !facebookDirty) {
-        setFacebookSettings({
-          page_id: settingsMap.settings_facebook_page_id || "",
-          page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
-        });
+      if (recentlySavedSection !== "facebook") {
+        setFacebookPageId(settingsMap.settings_facebook_page_id || "");
+        // Only set stored flag - never put masked dots into the input field
+        setFacebookTokenStored(!!settingsMap.settings_facebook_page_access_token);
       }
 
       // Registration fee settings - keys are stored with 'settings_' prefix
@@ -170,7 +166,7 @@ export default function SettingsPage() {
         discount: parseFloat(settingsMap.settings_registration_fee_discount || "0")
       });
     }
-  }, [settings, recentlySavedSection, facebookDirty]);
+  }, [settings, recentlySavedSection]);
 
   // Save settings mutation
   const saveMutation = useMutation({
@@ -188,16 +184,10 @@ export default function SettingsPage() {
       return response.data;
     },
     onSuccess: () => {
-      // If we just saved the Facebook token, mask it *after* success.
-      // (Do not mask immediately on click; that looks like the value was replaced.)
+      // If we just saved the Facebook token, clear the input and update stored flag
       if (recentlySavedSection === "facebook") {
-        setFacebookDirty(false);
-        setFacebookSettings((prev) => ({
-          ...prev,
-          page_access_token: prev.page_access_token && !prev.page_access_token.includes("•")
-            ? "••••••••••••"
-            : prev.page_access_token,
-        }));
+        setFacebookTokenInput("");
+        setFacebookTokenStored(true);
       }
 
       queryClient.invalidateQueries({ queryKey: ["system-settings"] });
@@ -291,26 +281,28 @@ export default function SettingsPage() {
 
   const handleSaveFacebook = () => {
     const updates: Record<string, string> = {};
-    if (facebookSettings.page_id) {
-      updates.facebook_page_id = facebookSettings.page_id;
+    
+    // Always save page ID if present
+    if (facebookPageId.trim()) {
+      updates.facebook_page_id = facebookPageId.trim();
     }
-    const hasNewToken = facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•");
-    if (hasNewToken) {
-      updates.facebook_page_access_token = facebookSettings.page_access_token;
+    
+    // Only save token if user has entered a new one (non-empty input)
+    const newToken = facebookTokenInput.trim();
+    if (newToken.length > 0) {
+      updates.facebook_page_access_token = newToken;
     }
 
     if (Object.keys(updates).length === 0) {
       toast({
         title: "No changes to save",
-        description: "Enter new values to update the settings."
+        description: "Enter a Page ID or paste a new token to save."
       });
       return;
     }
 
     // Set flag to prevent useEffect from immediately resetting the form
     setRecentlySavedSection("facebook");
-    // Keep dirty=true while saving so background sync can't overwrite the long token mid-flight.
-    setFacebookDirty(true);
 
     saveMutation.mutate(updates);
   };
@@ -948,11 +940,8 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Page ID</Label>
                   <Input 
-                    value={facebookSettings.page_id}
-                    onChange={(e) => {
-                      setFacebookDirty(true);
-                      setFacebookSettings(prev => ({ ...prev, page_id: e.target.value }));
-                    }}
+                    value={facebookPageId}
+                    onChange={(e) => setFacebookPageId(e.target.value)}
                     placeholder="123456789012345"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -962,23 +951,27 @@ export default function SettingsPage() {
                 
                 <div className="space-y-2">
                   <Label>Page Access Token</Label>
+                  {facebookTokenStored && !facebookTokenInput && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span>Token saved (hidden for security). Paste a new token below to replace it.</span>
+                    </div>
+                  )}
                   <div className="relative">
                     <Input 
                       type={showFacebookToken ? "text" : "password"}
-                      value={facebookSettings.page_access_token}
-                      onChange={(e) => {
-                        setFacebookDirty(true);
-                        setFacebookSettings(prev => ({ ...prev, page_access_token: e.target.value }));
-                      }}
-                      placeholder="EAA..."
+                      value={facebookTokenInput}
+                      onChange={(e) => setFacebookTokenInput(e.target.value)}
+                      placeholder={facebookTokenStored ? "Paste new token to replace..." : "EAA..."}
                       className="pr-10"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowFacebookToken(!showFacebookToken)}
+                      className="absolute right-0 top-0 h-full px-3 z-10"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowFacebookToken((prev) => !prev)}
                     >
                       {showFacebookToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
