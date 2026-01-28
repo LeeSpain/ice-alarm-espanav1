@@ -1,138 +1,138 @@
 
+## Goal
+Make the **Facebook Page Access Token** field reliably accept and save very long tokens, and fix the **eye icon** so it actually toggles visibility. Also remove the confusing “flick back to a short value” behavior after saving.
 
-# Fix Facebook Page Access Token "Not Saving" Issue
+## What’s really happening (complete review of likely causes)
 
-## Problem Analysis
+### A) The “flick back to a short value” is currently expected masking behavior
+- After a successful save, the UI intentionally replaces the token with `"••••••••••••"` to avoid showing secrets on screen.
+- That looks like the long token “didn’t save” even when it did.
+- Because you confirmed you get a **Success toast**, the backend call is completing.
 
-After thorough investigation, I found that the **data IS being saved correctly to the database**:
+### B) The token input currently mixes two different meanings in one field
+Right now the same `facebookSettings.page_access_token` state is used for:
+1) A real, newly pasted token (long string)
+2) A masked “token exists” placeholder (`••••••••••••`)
 
-```sql
--- Database shows these records exist with the correct values:
-settings_facebook_page_id = "107949497473966"
-settings_facebook_page_access_token = "EAA5U5iMwv1IBQ..." (full token stored)
+This causes multiple edge-cases:
+- Save logic has to guess whether it’s a real token by checking for `"•"`.
+- After save, it intentionally masks (which looks like replacement).
+- On refresh, it masks again.
+
+### C) The eye button “does nothing” is almost certainly a UI layering / click-target issue
+You already have:
+```tsx
+<Button className="absolute right-0 top-0 h-full px-3" ...>
 ```
+But:
+- The input can still “win” the click due to stacking/overlay in some browsers/styles.
+- This is common when an absolutely positioned element doesn’t have an explicit `z-index`.
+- Result: clicks hit the input instead of the button.
 
-**The actual problem is a UX issue:**
+### D) Background state sync can still overwrite the user value at the wrong moment
+You already added `facebookDirty` and disabled `refetchOnWindowFocus/refetchOnReconnect` which helps a lot.
+But the cleanest fix is to avoid syncing a masked token into the editable field at all.
 
-When you click "Save Facebook Configuration":
-1. The token is sent to the edge function ✅
-2. It's saved to `system_settings` table ✅
-3. A success toast appears ✅
-4. `queryClient.invalidateQueries({ queryKey: ["system-settings"] })` runs
-5. This triggers the `useEffect` that fetches settings from the database
-6. The `useEffect` immediately **resets the input field** to `"••••••••••••"` (masked value)
+### E) Backend/truncation is NOT the culprit
+- The `system_settings.value` column is `text` (no length limit).
+- The saving function upserts the string as-is.
+So this is overwhelmingly a frontend UX/state problem, not database length.
 
-This makes it **appear** as if the token wasn't saved, when in reality:
-- It WAS saved to the database
-- The UI just reset to show the masked dots again
+## Fix approach (what will change)
+### 1) Split the token into “stored” vs “new input” (key change)
+Instead of storing masked dots in the input value, we’ll implement:
 
-## Root Cause
+- `facebookTokenStored: boolean` (derived from backend settings: token exists or not)
+- `facebookTokenInput: string` (the actual editable/pasteable field; starts empty)
 
-The `useEffect` (lines 110-164) runs every time the `settings` query data changes. After saving and invalidating, it overwrites the form state with freshly fetched data, which masks the token again.
+UI behavior:
+- If a token exists in the backend: show a small status line like “Token saved (hidden). Paste a new token to replace.”
+- The input remains empty unless you paste a new token.
+- After saving, we clear the input (so it doesn’t “flip” to dots).
+- The eye toggle now only applies to `facebookTokenInput`.
 
-## Solution
+This eliminates:
+- “It changed to a short value”
+- “Did my token save?”
+- The brittle `includes("•")` logic
 
-Add a flag to track when we're actively saving, and prevent the `useEffect` from overwriting form fields during that time. This gives the user clear feedback that their save was successful.
+### 2) Make the eye button reliably clickable
+Add:
+- `z-10` (or `z-20`) to the button
+- optionally `type="button"` (already present)
+- optionally `onMouseDown={(e) => e.preventDefault()}` to prevent focus/blur weirdness while clicking
 
-### Changes Required
+Example styling change:
+- from: `className="absolute right-0 top-0 h-full px-3"`
+- to:   `className="absolute right-0 top-0 h-full px-3 z-10"`
 
-**File: `src/pages/admin/SettingsPage.tsx`**
+### 3) Make “Save” only send a token when you actually pasted one
+- Page ID: can save anytime if present
+- Token: only saved if `facebookTokenInput.trim().length > 0`
+- After success: clear `facebookTokenInput`, set `facebookTokenStored = true`
 
-1. **Add a "just saved" tracking state** to prevent immediate form reset:
+### 4) Improve feedback so it’s obvious it worked
+- After successful save, show:
+  - “Token saved (hidden).”
+  - Optionally show “Last updated: <timestamp>” using `settingsMap.settings_facebook_page_access_token_updated_at` if available (if not, we can display the `system_settings` row’s `updated_at` by capturing it in the query mapping).
 
-```typescript
-const [recentlySavedSection, setRecentlySavedSection] = useState<string | null>(null);
-```
+## Files to change
+### Frontend
+- `src/pages/admin/SettingsPage.tsx`
+  - Refactor the Facebook section state:
+    - Replace `facebookSettings.page_access_token` usage with `facebookTokenInput` + `facebookTokenStored`
+  - Update `useEffect`:
+    - Stop writing `"••••••••••••"` into the editable input value
+    - Instead set `facebookTokenStored = Boolean(settingsMap.settings_facebook_page_access_token)`
+  - Update `handleSaveFacebook`:
+    - Use `facebookTokenInput` for updates
+    - Clear `facebookTokenInput` on success
+  - Fix eye button:
+    - Add z-index class (and possibly `onMouseDown` preventDefault)
 
-2. **Update `handleSaveFacebook` to track the save**:
+## Detailed implementation steps (sequenced)
+1) Update Facebook-related React state
+   - Add `facebookTokenInput` and `facebookTokenStored`
+   - Keep `facebookSettings.page_id` as-is (or split similarly for consistency)
 
-```typescript
-const handleSaveFacebook = () => {
-  const updates: Record<string, string> = {};
-  if (facebookSettings.page_id) {
-    updates.facebook_page_id = facebookSettings.page_id;
-  }
-  if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
-    updates.facebook_page_access_token = facebookSettings.page_access_token;
-  }
+2) Update the settings sync `useEffect`
+   - When settings load:
+     - `setFacebookSettings({ page_id: ... })`
+     - `setFacebookTokenStored(!!settingsMap.settings_facebook_page_access_token)`
+     - Do NOT set any masked value into the input
 
-  if (Object.keys(updates).length === 0) {
-    toast({
-      title: "No changes to save",
-      description: "Enter new values to update the settings."
-    });
-    return;
-  }
+3) Update the Facebook token input UI
+   - Input `value={facebookTokenInput}`
+   - Placeholder:
+     - if `facebookTokenStored` true: “Token saved. Paste a new token to replace…”
+     - else: “EAA…”
+   - Add helper text “Stored tokens are hidden for security.”
 
-  setRecentlySavedSection("facebook");
-  saveMutation.mutate(updates);
-};
-```
+4) Fix the eye icon click handling
+   - Add `z-10`
+   - Use functional state toggle: `setShowFacebookToken((prev) => !prev)`
 
-3. **Update the `useEffect` to skip resetting recently saved sections**:
+5) Update save logic
+   - Build updates:
+     - `facebook_page_id` from `facebookSettings.page_id`
+     - `facebook_page_access_token` from `facebookTokenInput.trim()` only if non-empty
+   - On success:
+     - `setFacebookTokenStored(true)`
+     - `setFacebookTokenInput("")`
+     - Keep existing query invalidations
 
-In the Facebook settings portion of the `useEffect`:
-```typescript
-// Only update Facebook settings if we haven't just saved them
-if (recentlySavedSection !== "facebook") {
-  setFacebookSettings({
-    page_id: settingsMap.settings_facebook_page_id || "",
-    page_access_token: settingsMap.settings_facebook_page_access_token ? "••••••••••••" : ""
-  });
-}
-```
+6) Manual verification checklist (end-to-end)
+   - Paste a very long token → it remains in the field (no unexpected change)
+   - Click the eye → it toggles to show/hide the long token
+   - Click Save → success toast, input clears, status shows “Token saved (hidden)”
+   - Refresh page → status still shows token saved; you can paste a replacement and save again
 
-4. **Clear the flag after a delay** (in the mutation's onSuccess):
+## Notes / Edge cases handled
+- Works even if you only want to update Page ID (token left empty means “don’t change token”).
+- Eliminates the entire “dots in the field” pattern that is confusing you right now.
+- Removes reliance on checking for `"•"` which is brittle and can mis-detect.
 
-```typescript
-onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: ["system-settings"] });
-  queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-  queryClient.invalidateQueries({ queryKey: ["pricing-settings"] });
-  toast({
-    title: "Settings saved",
-    description: "Your changes have been saved successfully."
-  });
-  // Clear the recently saved flag after a delay to allow the toast to show
-  setTimeout(() => setRecentlySavedSection(null), 2000);
-},
-```
-
-5. **Alternative simpler fix** - Just show the masked value immediately after save to confirm it's saved:
-
-Instead of the above, we can update the success handler to explicitly set the masked value with a "Saved!" indicator:
-
-```typescript
-// In handleSaveFacebook success path
-if (facebookSettings.page_access_token && !facebookSettings.page_access_token.includes("•")) {
-  // After successful save, show the masked value to confirm it's stored
-  setFacebookSettings(prev => ({
-    ...prev,
-    page_access_token: "••••••••••••"  // Show masked after save
-  }));
-}
-```
-
-## Recommended Approach
-
-The **simplest fix** is option 5 above - when a token is successfully saved, immediately update the local state to show the masked value. This:
-- Confirms to the user the token was saved
-- Prevents confusion from the form "resetting"
-- Requires minimal code changes
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/pages/admin/SettingsPage.tsx` | Add recently-saved tracking OR update local state after successful save to show masked value |
-
-## Testing After Fix
-
-1. Go to Settings → Communications
-2. Scroll to Facebook Page Configuration
-3. Enter a Page Access Token
-4. Click "Save Facebook Configuration"
-5. Observe: Token field shows `••••••••••••` (confirms saved)
-6. Toast shows "Settings saved"
-7. Refresh page - token field still shows `••••••••••••` (confirms persistence)
-
+## Success criteria
+- You can paste and save a full long-lived token like `EAA...` without it being “blocked”.
+- The eye button reliably toggles visibility.
+- After saving, UI no longer “flicks back to a short code” in a way that implies failure.
