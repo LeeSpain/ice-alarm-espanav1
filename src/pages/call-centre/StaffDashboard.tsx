@@ -27,6 +27,7 @@ import { ShiftReportModal } from "@/components/call-centre/ShiftReportModal";
 import { EV07BLiveStatusCard } from "@/components/call-centre/EV07BLiveStatusCard";
 import { DeviceIssuesQueue } from "@/components/call-centre/DeviceIssuesQueue";
 import { DeviceOfflineAlertsCard } from "@/components/call-centre/DeviceOfflineAlertsCard";
+import { useOpsRealtime } from "@/hooks/useOpsRealtime";
 
 interface AlertStats {
   incoming: number;
@@ -105,6 +106,9 @@ export default function StaffDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Enable realtime updates for devices and alerts
+  useOpsRealtime();
   
   const [staffId, setStaffId] = useState<string | null>(null);
   const [staffName, setStaffName] = useState<string>("");
