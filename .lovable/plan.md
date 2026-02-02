@@ -1,196 +1,134 @@
 
 
-## Test Mode for Free Registration Flow
+## Complete Review: EV-07B Implementation
 
-### Overview
-Add a "Test Mode" option to the Join Wizard payment step that allows completing the full registration flow without actual payment. This is useful for testing the end-to-end process (member creation, order creation, subscription setup, confirmation page) without going through Stripe.
+After a thorough examination of all EV-07B related changes across database, edge functions, admin dashboards, client pages, and realtime subscriptions, I've identified the current status and issues that need to be fixed.
 
-### How It Works
+---
 
-When test mode is enabled:
-1. A "Complete Order (FREE - Test Mode)" button appears on the payment step
-2. Clicking it bypasses Stripe checkout entirely
-3. The registration is still created in the database with all member/order/subscription records
-4. The order is marked as a test order
-5. User is redirected to the confirmation page as if payment succeeded
+### Current Implementation Status
 
-### Implementation
+#### Database & Types
+- **Devices table** - All required fields present: `is_online`, `offline_since`, `model`, `collected_at`, `live_at`, `reserved_order_id`, `reserved_at`
+- **Device status enum** - Supports full lifecycle: `in_stock`, `reserved`, `allocated`, `with_staff`, `live`, `faulty`, `returned`, `inactive`
+- **Alerts table** - Has `device_offline` alert type, `message` column, and all necessary fields
 
-#### 1. Add Admin Setting for Test Mode
-Create a new `system_settings` entry: `registration_test_mode_enabled`
-- Default: `false`
-- When `true`: Shows the free test button in the payment step
-- Controlled from Admin Settings → Pricing tab
+#### Edge Functions (Deployed)
+1. **ev07b-checkin** - Accepts telemetry with API key authentication, updates `is_online`, `last_checkin_at`, `battery_level`, location
+2. **ev07b-offline-monitor** - Checks devices, marks offline after 15 minutes, creates alerts
 
-#### 2. Update `usePricingSettings` Hook
-Add a new field `testModeEnabled` that reads the `registration_test_mode_enabled` setting.
+#### Realtime Subscriptions
+- **useDeviceRealtime** hook - Properly invalidates `device-stock`, `device-stock-stats`, `member-device` queries
+- **useAlertsRealtime** hook - Properly invalidates `device-offline-alerts`, `ev07b-status-summary`, `admin-alerts-list`, `admin-dashboard-stats` queries
 
-#### 3. Update `JoinPaymentStep` Component
-- Import the new `testModeEnabled` flag from `usePricingSettings`
-- Add a second button: "Complete FREE (Test Mode)" 
-- This button calls `submit-registration` but skips `create-checkout`
-- Instead, directly marks payment as complete and redirects to confirmation
+#### Integration Points
+| Component | useDeviceRealtime | useAlertsRealtime | Status |
+|-----------|------------------|-------------------|--------|
+| AdminDashboard | Yes | Yes | Working |
+| EV07BPage | Yes | Yes | Working |
+| DevicesPage | Yes | Yes | Working |
+| DeviceDetailPage | Yes | No | Working |
+| DeviceTab (member) | Yes | No | Working |
+| DevicePage (client) | Yes | No | Working |
+| EV07BStatusWidget | Yes | No | Working |
+| DeviceAlertsPanel | No | Yes | Working |
 
-#### 4. Update `submit-registration` Edge Function
-- Accept an optional `testMode: boolean` parameter
-- When `testMode = true`:
-  - Mark payment status as `completed` (not `pending`)
-  - Mark order status as `completed`
-  - Mark subscription as `active`
-  - Mark member as `active`
-  - Add a note indicating this was a test order
-  - Skip Stripe checkout step
+---
 
-#### 5. Add Settings UI Control
-In Admin Settings → Pricing tab, add a toggle:
-- "Enable Test Mode (allows free registration for testing)"
-- Warning text explaining this should only be used in test environments
+### Issues Found
 
-### Files to Modify
+#### Issue 1: Badge Component Missing forwardRef (Console Warning)
+**File**: `src/components/ui/badge.tsx`
 
-| File | Changes |
-|------|---------|
-| `src/hooks/usePricingSettings.ts` | Add `testModeEnabled` field |
-| `src/components/join/steps/JoinPaymentStep.tsx` | Add test mode button and handler |
-| `supabase/functions/submit-registration/index.ts` | Handle `testMode` flag to auto-complete |
-| `src/pages/admin/SettingsPage.tsx` | Add test mode toggle in Pricing tab |
+The Badge component is a function component that doesn't use `React.forwardRef()`, causing React warnings when used inside Radix UI components (like ScrollArea) that try to pass refs.
 
-### Database Changes
-Insert new setting via migration:
-```sql
-INSERT INTO system_settings (key, value, updated_at)
-VALUES ('registration_test_mode_enabled', 'false', now())
-ON CONFLICT (key) DO NOTHING;
+**Error message**:
+```
+Warning: Function components cannot be given refs. Attempts to access this ref will fail. 
+Did you mean to use React.forwardRef()?
+Check the render method of `AISalesDesk`.
+Check the render method of `EV07BStatusWidget`.
 ```
 
-### Detailed Code Changes
-
-#### A. Update `usePricingSettings.ts`
+**Fix**: Update Badge to use `forwardRef`:
 ```typescript
-// Add to query keys array
-.in("key", ["registration_fee_enabled", "registration_fee_discount", "registration_test_mode_enabled"])
-
-// Add to return object
-testModeEnabled: settings?.testModeEnabled ?? false,
-```
-
-#### B. Update `JoinPaymentStep.tsx`
-```tsx
-const { registrationFeeEnabled, registrationFeeDiscount, testModeEnabled } = usePricingSettings();
-
-const handleTestModeComplete = async () => {
-  setIsProcessing(true);
-  setError(null);
-  try {
-    // Submit registration with testMode flag
-    const { data: registrationResult, error: registrationError } = await supabase.functions.invoke(
-      "submit-registration", 
-      { body: { ...registrationData, testMode: true } }
-    );
-    
-    if (registrationError) throw new Error(registrationError.message);
-    if (!registrationResult?.success) throw new Error(registrationResult?.error);
-    
-    onUpdate({ 
-      memberId: registrationResult.memberId, 
-      orderId: registrationResult.orderNumber,
-      paymentComplete: true 
-    });
-    
-    onPaymentInitiated();
-    clearReferralData();
-    
-    // Navigate directly to success
-    window.location.href = `${window.location.origin}/join?success=true&order=${registrationResult.orderNumber}`;
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "An unexpected error occurred");
-  } finally {
-    setIsProcessing(false);
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, ...props }, ref) => {
+    return <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
   }
-};
-
-// In render, add test mode button if enabled
-{testModeEnabled && (
-  <Button 
-    onClick={handleTestModeComplete}
-    variant="outline"
-    className="w-full h-12 text-base gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
-    disabled={isProcessing}
-  >
-    <Gift className="h-5 w-5" />
-    Complete FREE (Test Mode)
-  </Button>
-)}
+);
+Badge.displayName = "Badge";
 ```
 
-#### C. Update `submit-registration/index.ts`
+#### Issue 2: Missing Query Key Invalidation in useAlertsRealtime
+**File**: `src/hooks/useAlertsRealtime.ts`
+
+The `ev07b-open-alerts-count` query key (used in EV07BPage) is not being invalidated when alerts change.
+
+**Fix**: Add missing invalidation:
 ```typescript
-interface RegistrationRequest {
-  // ... existing fields
-  testMode?: boolean; // NEW
-}
-
-// After creating all records, if testMode:
-if (body.testMode) {
-  // Mark everything as completed
-  await supabase.from("payments").update({ 
-    status: "completed", 
-    paid_at: new Date().toISOString(),
-    notes: "TEST MODE - No payment collected"
-  }).eq("id", paymentData.id);
-  
-  await supabase.from("orders").update({ 
-    status: "completed" 
-  }).eq("id", orderData.id);
-  
-  await supabase.from("subscriptions").update({ 
-    status: "active",
-    registration_fee_paid: true
-  }).eq("id", subscriptionData.id);
-  
-  await supabase.from("members").update({ 
-    status: "active" 
-  }).eq("id", primaryMemberData.id);
-  
-  if (partnerMemberData) {
-    await supabase.from("members").update({ 
-      status: "active" 
-    }).eq("id", partnerMemberData.id);
-  }
-  
-  console.log("TEST MODE: All records marked as completed without payment");
-}
+queryClient.invalidateQueries({ queryKey: ["ev07b-open-alerts-count"] });
 ```
 
-#### D. Add Settings Toggle
-In the Pricing tab of SettingsPage, add:
-```tsx
-<div className="flex items-center justify-between p-4 border rounded-lg bg-orange-50 border-orange-200">
-  <div>
-    <Label htmlFor="test-mode">Enable Test Mode</Label>
-    <p className="text-sm text-muted-foreground">
-      Allow completing registrations for free (testing only)
-    </p>
-  </div>
-  <Switch 
-    id="test-mode"
-    checked={testModeEnabled}
-    onCheckedChange={(checked) => handleSaveTestMode(checked)}
-  />
-</div>
-```
+#### Issue 3: DeviceTab Not Refreshing on Realtime Updates
+**File**: `src/components/admin/member-detail/DeviceTab.tsx`
 
-### Security Considerations
-- Test mode button is only visible when enabled in admin settings
-- All test orders are clearly marked in the database
-- The toggle is only accessible to super_admin users
-- Consider adding an audit log entry when test mode is used
+The DeviceTab uses a local `useEffect` + `fetchDevice()` pattern instead of React Query, so it doesn't automatically refresh when realtime updates occur.
 
-### Testing Flow
-1. Go to Admin Settings → Pricing
-2. Enable "Test Mode"
-3. Go to /join and complete the wizard
-4. On payment step, click "Complete FREE (Test Mode)"
-5. Verify you reach the confirmation page
-6. Check database: member is active, order is completed, payment shows "TEST MODE" note
+**Fix**: The component should use React Query for the device fetch so it benefits from the realtime invalidation.
+
+---
+
+### Implementation Plan
+
+#### Step 1: Fix Badge forwardRef (High Priority)
+Update `src/components/ui/badge.tsx` to use `React.forwardRef` to eliminate console warnings.
+
+#### Step 2: Add Missing Query Key Invalidation
+Update `src/hooks/useAlertsRealtime.ts` to include `ev07b-open-alerts-count` in the invalidation list.
+
+#### Step 3: Refactor DeviceTab to Use React Query
+Update `src/components/admin/member-detail/DeviceTab.tsx` to use React Query instead of local state/useEffect for fetching the device, ensuring it automatically refreshes on realtime updates.
+
+#### Step 4: Add Device Workflow Status to Client Dashboard
+The client dashboard at `src/pages/client/ClientDashboard.tsx` uses a `MOCK_DEVICE` constant. Ensure it properly uses the real device data with `is_online` status.
+
+---
+
+### Technical Details
+
+#### Files to Modify
+
+1. **src/components/ui/badge.tsx**
+   - Add `React.forwardRef` wrapper
+   - Add `displayName`
+
+2. **src/hooks/useAlertsRealtime.ts**
+   - Add `queryClient.invalidateQueries({ queryKey: ["ev07b-open-alerts-count"] })`
+
+3. **src/components/admin/member-detail/DeviceTab.tsx**
+   - Convert from local state to React Query for device fetching
+   - Use `useQuery` with queryKey `["admin-member-device", memberId]`
+   - Let realtime invalidation handle refreshes
+
+---
+
+### Verification Checklist
+
+After fixes are applied, verify:
+
+1. **No console warnings** - Badge ref warning should be eliminated
+2. **EV07BPage alerts count updates** - When offline monitor creates an alert, the count updates instantly
+3. **DeviceTab updates in real-time** - When device status changes, the member detail view updates without refresh
+4. **All dashboards refresh** - Device allocation, status changes, and check-ins reflect immediately
+
+### Test Flow
+1. Add EV-07B device to stock
+2. Complete test order (or manually allocate)
+3. Verify device shows as "Allocated" in member DeviceTab
+4. Mark device as "Collected" - verify workflow step updates
+5. Mark device as "Live" - verify all dashboards show the change
+6. Simulate check-in via API - verify `is_online` updates
+7. Wait 15+ minutes (or manually trigger offline monitor) - verify alert created
+8. Close alert - verify dashboard alert count decrements
 
