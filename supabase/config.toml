@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.generate-ai-image]
 verify_jwt = false
+
+[functions.ev07b-checkin]
+verify_jwt = false
+
+[functions.ev07b-offline-monitor]
+verify_jwt = false

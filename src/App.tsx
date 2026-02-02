@@ -42,6 +42,7 @@ const Unauthorized = lazy(() => import("./pages/auth/Unauthorized"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const MembersPage = lazy(() => import("./pages/admin/MembersPage"));
 const DevicesPage = lazy(() => import("./pages/admin/DevicesPage"));
+const DeviceDetailPage = lazy(() => import("./pages/admin/DeviceDetailPage"));
 const OrdersPage = lazy(() => import("./pages/admin/OrdersPage"));
 const SubscriptionsPage = lazy(() => import("./pages/admin/SubscriptionsPage"));
 const PaymentsPage = lazy(() => import("./pages/admin/PaymentsPage"));
@@ -225,6 +226,7 @@ const App = () => {
                   <Route index element={<AdminDashboard />} />
                   <Route path="members" element={<MembersPage />} />
                   <Route path="devices" element={<DevicesPage />} />
+                  <Route path="devices/:id" element={<DeviceDetailPage />} />
                   <Route path="finance" element={<FinanceDashboard />} />
                   <Route path="orders" element={<OrdersPage />} />
                   <Route path="subscriptions" element={<SubscriptionsPage />} />
