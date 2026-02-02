@@ -40,7 +40,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
-type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
+type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
 
 interface AlertDetailPanelProps {
   isOpen: boolean;
@@ -113,6 +113,7 @@ const alertTypeConfig = {
   geo_fence: { label: "Geo-Fence Alert", color: "bg-yellow-500", icon: Navigation },
   check_in: { label: "Check-in", color: "bg-alert-checkin", icon: CheckCircle },
   manual: { label: "Manual Alert", color: "bg-gray-500", icon: AlertTriangle },
+  device_offline: { label: "Device Offline", color: "bg-destructive", icon: AlertTriangle },
 };
 
 const smsTemplates = [

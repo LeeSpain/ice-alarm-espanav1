@@ -14,7 +14,8 @@ import {
   ArrowRight,
   FileText,
   Plus,
-  Cake
+  Cake,
+  WifiOff
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,9 @@ import { es, enGB } from "date-fns/locale";
 import i18n from "@/i18n";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 import { ShiftReportModal } from "@/components/call-centre/ShiftReportModal";
+import { EV07BLiveStatusCard } from "@/components/call-centre/EV07BLiveStatusCard";
+import { DeviceIssuesQueue } from "@/components/call-centre/DeviceIssuesQueue";
+import { DeviceOfflineAlertsCard } from "@/components/call-centre/DeviceOfflineAlertsCard";
 
 interface AlertStats {
   incoming: number;
@@ -170,11 +174,21 @@ export default function StaffDashboard() {
       })
       .subscribe();
 
+    // Subscribe to device updates for realtime EV-07B status
+    const devicesChannel = supabase
+      .channel('dashboard-devices')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'devices' }, () => {
+        // Device updates are handled by the individual EV-07B components
+        // which have their own realtime subscriptions
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(alertsChannel);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(membersChannel);
       supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(devicesChannel);
     };
   }, [staffId]);
 
@@ -371,6 +385,8 @@ export default function StaffDashboard() {
         return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case 'fall_detected':
         return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case 'device_offline':
+        return <WifiOff className="h-4 w-4 text-destructive" />;
       default:
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
@@ -383,6 +399,7 @@ export default function StaffDashboard() {
       case 'low_battery': return t('alerts.lowBattery');
       case 'geo_fence': return t('alerts.geoFenceAlert');
       case 'check_in': return t('alerts.checkIn');
+      case 'device_offline': return 'Device Offline';
       default: return type;
     }
   };
@@ -473,6 +490,13 @@ export default function StaffDashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* EV-07B Status Row */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <EV07BLiveStatusCard />
+        <DeviceOfflineAlertsCard />
+        <DeviceIssuesQueue />
       </div>
 
       {/* Main Content Grid */}

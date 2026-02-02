@@ -9,7 +9,7 @@ type Alert = Tables<"alerts">;
 
 export interface EnrichedAlert {
   id: string;
-  type: "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
+  type: "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
   status: "incoming" | "in_progress" | "resolved" | "escalated";
   memberName: string;
   location?: string;
@@ -60,7 +60,7 @@ export interface EnrichedAlert {
   };
   previousAlerts?: {
     id: string;
-    type: "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
+    type: "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
     receivedAt: Date;
     resolvedAt?: Date;
   }[];
