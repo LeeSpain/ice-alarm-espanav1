@@ -7,13 +7,14 @@ import {
   Plus, 
   MoreHorizontal,
   Eye,
-  Edit,
   Battery,
   MapPin,
   Smartphone,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -42,6 +42,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
+import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -51,6 +53,10 @@ export default function DevicesPage() {
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
+
+  // Subscribe to realtime updates
+  useDeviceRealtime();
+  useAlertsRealtime();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-devices", searchQuery, statusFilter, assignmentFilter, page],
@@ -89,16 +95,24 @@ export default function DevicesPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Active</Badge>;
-      case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>;
       case "in_stock":
         return <Badge variant="outline">In Stock</Badge>;
+      case "reserved":
+        return <Badge variant="secondary">Reserved</Badge>;
+      case "allocated":
+        return <Badge className="bg-blue-500 text-white">Allocated</Badge>;
+      case "with_staff":
+        return <Badge className="bg-amber-500 text-white">With Staff</Badge>;
+      case "live":
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Live</Badge>;
       case "faulty":
         return <Badge variant="destructive">Faulty</Badge>;
       case "returned":
         return <Badge variant="secondary">Returned</Badge>;
+      case "inactive":
+        return <Badge variant="secondary">Inactive</Badge>;
+      case "active":
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Active (Legacy)</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -176,9 +190,11 @@ export default function DevicesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="in_stock">In Stock</SelectItem>
+                <SelectItem value="reserved">Reserved</SelectItem>
+                <SelectItem value="allocated">Allocated</SelectItem>
+                <SelectItem value="with_staff">With Staff</SelectItem>
+                <SelectItem value="live">Live</SelectItem>
                 <SelectItem value="faulty">Faulty</SelectItem>
                 <SelectItem value="returned">Returned</SelectItem>
               </SelectContent>
@@ -207,6 +223,7 @@ export default function DevicesPage() {
                 <TableHead>SIM Number</TableHead>
                 <TableHead>Member</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Online</TableHead>
                 <TableHead>Battery</TableHead>
                 <TableHead>Last Check-in</TableHead>
                 <TableHead className="w-[70px]">Actions</TableHead>
@@ -215,7 +232,7 @@ export default function DevicesPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Loading devices...
                   </TableCell>
                 </TableRow>
@@ -242,6 +259,19 @@ export default function DevicesPage() {
                       )}
                     </TableCell>
                     <TableCell>{getStatusBadge(device.status)}</TableCell>
+                    <TableCell>
+                      {device.is_online ? (
+                        <Badge className="bg-green-500 text-white gap-1">
+                          <Wifi className="h-3 w-3" />
+                          Online
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1">
+                          <WifiOff className="h-3 w-3" />
+                          Offline
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{getBatteryIndicator(device.battery_level)}</TableCell>
                     <TableCell>
                       {device.last_checkin_at ? (
@@ -282,7 +312,7 @@ export default function DevicesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No devices found
                   </TableCell>
                 </TableRow>
