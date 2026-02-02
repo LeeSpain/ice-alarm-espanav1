@@ -1,168 +1,196 @@
 
 
-## Complete Review: Recent Changes Analysis
+## Test Mode for Free Registration Flow
 
-### Files Reviewed
-1. `src/pages/admin/SettingsPage.tsx` - Facebook token handling UI
-2. `supabase/functions/facebook-publish/index.ts` - Facebook publishing edge function
-3. `supabase/functions/save-api-keys/index.ts` - Settings save edge function
-4. `src/components/admin/settings/ImagesSettingsTab.tsx` - Images settings tab
-5. `src/components/admin/settings/ImageUploadCard.tsx` - Image upload component
+### Overview
+Add a "Test Mode" option to the Join Wizard payment step that allows completing the full registration flow without actual payment. This is useful for testing the end-to-end process (member creation, order creation, subscription setup, confirmation page) without going through Stripe.
 
----
+### How It Works
 
-## Issues Found
+When test mode is enabled:
+1. A "Complete Order (FREE - Test Mode)" button appears on the payment step
+2. Clicking it bypasses Stripe checkout entirely
+3. The registration is still created in the database with all member/order/subscription records
+4. The order is marked as a test order
+5. User is redirected to the confirmation page as if payment succeeded
 
-### Issue 1: Critical Key Prefix Bug in `save-api-keys` Edge Function
+### Implementation
 
-**Problem**: The edge function prepends `${service}_` to all keys, but the frontend already sends keys with the `settings_` prefix for Facebook (e.g., `settings_facebook_page_id`).
+#### 1. Add Admin Setting for Test Mode
+Create a new `system_settings` entry: `registration_test_mode_enabled`
+- Default: `false`
+- When `true`: Shows the free test button in the payment step
+- Controlled from Admin Settings → Pricing tab
 
-**Current Flow**:
-```text
-Frontend sends: { service: "settings", keys: { "settings_facebook_page_id": "123" } }
-Edge function creates: "settings_settings_facebook_page_id" ← DOUBLE PREFIX!
+#### 2. Update `usePricingSettings` Hook
+Add a new field `testModeEnabled` that reads the `registration_test_mode_enabled` setting.
+
+#### 3. Update `JoinPaymentStep` Component
+- Import the new `testModeEnabled` flag from `usePricingSettings`
+- Add a second button: "Complete FREE (Test Mode)" 
+- This button calls `submit-registration` but skips `create-checkout`
+- Instead, directly marks payment as complete and redirects to confirmation
+
+#### 4. Update `submit-registration` Edge Function
+- Accept an optional `testMode: boolean` parameter
+- When `testMode = true`:
+  - Mark payment status as `completed` (not `pending`)
+  - Mark order status as `completed`
+  - Mark subscription as `active`
+  - Mark member as `active`
+  - Add a note indicating this was a test order
+  - Skip Stripe checkout step
+
+#### 5. Add Settings UI Control
+In Admin Settings → Pricing tab, add a toggle:
+- "Enable Test Mode (allows free registration for testing)"
+- Warning text explaining this should only be used in test environments
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/hooks/usePricingSettings.ts` | Add `testModeEnabled` field |
+| `src/components/join/steps/JoinPaymentStep.tsx` | Add test mode button and handler |
+| `supabase/functions/submit-registration/index.ts` | Handle `testMode` flag to auto-complete |
+| `src/pages/admin/SettingsPage.tsx` | Add test mode toggle in Pricing tab |
+
+### Database Changes
+Insert new setting via migration:
+```sql
+INSERT INTO system_settings (key, value, updated_at)
+VALUES ('registration_test_mode_enabled', 'false', now())
+ON CONFLICT (key) DO NOTHING;
 ```
 
-**Database Expectation**: Keys should be `settings_facebook_page_id` (single prefix).
+### Detailed Code Changes
 
-**Evidence**: The database currently has the correct keys because they were likely inserted before this edge function was in use, or via a different method.
-
-**Fix Required**: Modify `save-api-keys/index.ts` to either:
-- Option A: Pass keys as-is without prepending service (for keys that already have prefixes)
-- Option B: Update frontend KEY constants to remove `settings_` prefix for Facebook keys
-
-**Recommended Solution**: Option A - Make the edge function smarter by not prepending when the key already starts with `${service}_`:
-
+#### A. Update `usePricingSettings.ts`
 ```typescript
-// Line 70 in save-api-keys/index.ts
-const finalKey = key.startsWith(`${service}_`) ? key : `${service}_${key}`;
+// Add to query keys array
+.in("key", ["registration_fee_enabled", "registration_fee_discount", "registration_test_mode_enabled"])
+
+// Add to return object
+testModeEnabled: settings?.testModeEnabled ?? false,
 ```
 
----
+#### B. Update `JoinPaymentStep.tsx`
+```tsx
+const { registrationFeeEnabled, registrationFeeDiscount, testModeEnabled } = usePricingSettings();
 
-### Issue 2: Minor - Missing CORS Headers
-
-**File**: `supabase/functions/save-api-keys/index.ts` (line 7)
-
-**Problem**: The CORS `Access-Control-Allow-Headers` is missing newer Supabase client headers which can cause issues in some scenarios.
-
-**Fix**: Update to include full header set:
-```typescript
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+const handleTestModeComplete = async () => {
+  setIsProcessing(true);
+  setError(null);
+  try {
+    // Submit registration with testMode flag
+    const { data: registrationResult, error: registrationError } = await supabase.functions.invoke(
+      "submit-registration", 
+      { body: { ...registrationData, testMode: true } }
+    );
+    
+    if (registrationError) throw new Error(registrationError.message);
+    if (!registrationResult?.success) throw new Error(registrationResult?.error);
+    
+    onUpdate({ 
+      memberId: registrationResult.memberId, 
+      orderId: registrationResult.orderNumber,
+      paymentComplete: true 
+    });
+    
+    onPaymentInitiated();
+    clearReferralData();
+    
+    // Navigate directly to success
+    window.location.href = `${window.location.origin}/join?success=true&order=${registrationResult.orderNumber}`;
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "An unexpected error occurred");
+  } finally {
+    setIsProcessing(false);
+  }
 };
+
+// In render, add test mode button if enabled
+{testModeEnabled && (
+  <Button 
+    onClick={handleTestModeComplete}
+    variant="outline"
+    className="w-full h-12 text-base gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+    disabled={isProcessing}
+  >
+    <Gift className="h-5 w-5" />
+    Complete FREE (Test Mode)
+  </Button>
+)}
 ```
 
----
-
-### Issue 3: Twilio Eye Button Missing z-index (Consistency)
-
-**File**: `src/pages/admin/SettingsPage.tsx` (lines 776-785)
-
-**Problem**: The Twilio auth token eye button lacks the `z-10` and `onMouseDown` fix that was applied to the Facebook token button.
-
-**Current**:
-```tsx
-<Button
-  className="absolute right-0 top-0 h-full px-3"
-  onClick={() => setShowTwilioToken(!showTwilioToken)}
->
-```
-
-**Fix**: Add consistency with Facebook button:
-```tsx
-<Button
-  type="button"
-  variant="ghost"
-  size="icon"
-  className="absolute right-0 top-0 h-full px-3 z-10"
-  onMouseDown={(e) => e.preventDefault()}
-  onClick={() => setShowTwilioToken((prev) => !prev)}
->
-```
-
----
-
-### Issue 4: Stripe Secret Eye Button Missing z-index (Consistency)
-
-**File**: `src/pages/admin/SettingsPage.tsx` (around line 620-640)
-
-**Problem**: Same issue as Twilio - the Stripe secret key eye toggle likely lacks `z-10` and `onMouseDown`.
-
-**Fix**: Apply the same pattern as Facebook.
-
----
-
-### Issue 5: `facebook-publish` Edge Function - Already Fixed
-
-**Status**: ✅ **GOOD** - The function correctly:
-- Reads `settings_facebook_page_id` and `settings_facebook_page_access_token` from `system_settings`
-- Uses Facebook Graph API v24.0
-- Handles both image and text-only posts
-- Clears error_message on successful publish
-
----
-
-### Issue 6: `ImagesSettingsTab` - Already Fixed
-
-**Status**: ✅ **GOOD** - The component:
-- Properly exports `ImagesSettingsTab` as a named export
-- Correctly uses `useWebsiteImages` hook
-- Maps `WEBSITE_IMAGE_CONFIGS` to `ImageUploadCard` components
-- Handles loading state
-
----
-
-### Issue 7: `ImageUploadCard` - Already Good
-
-**Status**: ✅ **GOOD** - The component:
-- Properly handles file selection, upload, and reset
-- Invalidates correct query keys on update
-- Has proper validation for file type and size
-
----
-
-## Summary of Required Fixes
-
-| Priority | File | Issue | Status |
-|----------|------|-------|--------|
-| HIGH | `save-api-keys/index.ts` | Double prefix bug | Needs fix |
-| MEDIUM | `save-api-keys/index.ts` | Missing CORS headers | Needs fix |
-| LOW | `SettingsPage.tsx` | Twilio eye button z-index | Needs fix |
-| LOW | `SettingsPage.tsx` | Stripe eye button z-index | Needs fix |
-
----
-
-## Technical Implementation
-
-### Step 1: Fix `save-api-keys` Edge Function
-
-Update the key building logic to avoid double prefixes:
-
+#### C. Update `submit-registration/index.ts`
 ```typescript
-// Replace line 70
-const finalKey = key.startsWith(`${service}_`) ? key : `${service}_${key}`;
-// Use finalKey instead of `${service}_${key}`
+interface RegistrationRequest {
+  // ... existing fields
+  testMode?: boolean; // NEW
+}
+
+// After creating all records, if testMode:
+if (body.testMode) {
+  // Mark everything as completed
+  await supabase.from("payments").update({ 
+    status: "completed", 
+    paid_at: new Date().toISOString(),
+    notes: "TEST MODE - No payment collected"
+  }).eq("id", paymentData.id);
+  
+  await supabase.from("orders").update({ 
+    status: "completed" 
+  }).eq("id", orderData.id);
+  
+  await supabase.from("subscriptions").update({ 
+    status: "active",
+    registration_fee_paid: true
+  }).eq("id", subscriptionData.id);
+  
+  await supabase.from("members").update({ 
+    status: "active" 
+  }).eq("id", primaryMemberData.id);
+  
+  if (partnerMemberData) {
+    await supabase.from("members").update({ 
+      status: "active" 
+    }).eq("id", partnerMemberData.id);
+  }
+  
+  console.log("TEST MODE: All records marked as completed without payment");
+}
 ```
 
-Also update CORS headers to the full set.
+#### D. Add Settings Toggle
+In the Pricing tab of SettingsPage, add:
+```tsx
+<div className="flex items-center justify-between p-4 border rounded-lg bg-orange-50 border-orange-200">
+  <div>
+    <Label htmlFor="test-mode">Enable Test Mode</Label>
+    <p className="text-sm text-muted-foreground">
+      Allow completing registrations for free (testing only)
+    </p>
+  </div>
+  <Switch 
+    id="test-mode"
+    checked={testModeEnabled}
+    onCheckedChange={(checked) => handleSaveTestMode(checked)}
+  />
+</div>
+```
 
-### Step 2: Fix Eye Button Consistency in SettingsPage
+### Security Considerations
+- Test mode button is only visible when enabled in admin settings
+- All test orders are clearly marked in the database
+- The toggle is only accessible to super_admin users
+- Consider adding an audit log entry when test mode is used
 
-Apply `z-10`, `onMouseDown={(e) => e.preventDefault()}`, and functional state toggle to:
-- Twilio auth token eye button
-- Stripe secret key eye button  
-- Stripe webhook secret eye button
-
----
-
-## Verification After Fix
-
-1. Navigate to Settings → Communications → Facebook
-2. Paste a long Facebook token
-3. Click eye icon → should toggle visibility
-4. Click "Save Facebook Configuration" → should show success toast
-5. Refresh page → "Token saved (hidden)" message should appear
-6. Test publishing a social post → should work with saved credentials
+### Testing Flow
+1. Go to Admin Settings → Pricing
+2. Enable "Test Mode"
+3. Go to /join and complete the wizard
+4. On payment step, click "Complete FREE (Test Mode)"
+5. Verify you reach the confirmation page
+6. Check database: member is active, order is completed, payment shows "TEST MODE" note
 
