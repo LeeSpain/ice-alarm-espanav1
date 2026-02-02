@@ -1,10 +1,10 @@
-import { Clock, MapPin, AlertTriangle, Heart, Battery, CheckCircle, Navigation, Radio } from "lucide-react";
+import { Clock, MapPin, AlertTriangle, Heart, Battery, CheckCircle, Navigation, Radio, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual";
+type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
 type AlertStatus = "incoming" | "in_progress" | "resolved" | "escalated";
 
 interface AlertCardProps {
@@ -60,6 +60,13 @@ const alertConfig = {
     color: "bg-gray-500 text-white",
     borderColor: "border-l-gray-500",
     badge: "secondary" as const,
+  },
+  device_offline: {
+    icon: WifiOff,
+    label: "Device Offline",
+    color: "bg-destructive text-destructive-foreground",
+    borderColor: "border-l-destructive",
+    badge: "destructive" as const,
   },
 };
 
