@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
   Loader2, Smartphone, Battery, MapPin, Clock, Settings, 
@@ -53,22 +54,19 @@ interface DeviceTabProps {
 }
 
 export function DeviceTab({ memberId }: DeviceTabProps) {
-  const [device, setDevice] = useState<Device | null>(null);
   const [availableDevices, setAvailableDevices] = useState<Device[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const queryClient = useQueryClient();
 
   // Realtime subscription for device updates
   useDeviceRealtime(memberId);
 
-  useEffect(() => {
-    fetchDevice();
-  }, [memberId]);
-
-  const fetchDevice = async () => {
-    try {
+  // Use React Query for device fetching - benefits from realtime invalidation
+  const { data: device, isLoading, refetch } = useQuery({
+    queryKey: ["admin-member-device", memberId],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("devices")
         .select("*")
@@ -76,14 +74,9 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
-      setDevice(data);
-    } catch (error) {
-      console.error("Error fetching device:", error);
-      toast.error("Failed to load device info");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return data as Device | null;
+    },
+  });
 
   const fetchAvailableDevices = async () => {
     try {
@@ -125,7 +118,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
       if (error) throw error;
       toast.success("EV-07B device allocated successfully");
       setIsDialogOpen(false);
-      fetchDevice();
+      refetch();
     } catch (error) {
       console.error("Error assigning device:", error);
       toast.error("Failed to assign device");
@@ -148,7 +141,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
       if (error) throw error;
       toast.success("Device marked as collected by staff");
-      fetchDevice();
+      refetch();
     } catch (error) {
       console.error("Error marking collected:", error);
       toast.error("Failed to update device status");
@@ -170,7 +163,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
       if (error) throw error;
       toast.success("Device marked as live");
-      fetchDevice();
+      refetch();
     } catch (error) {
       console.error("Error marking live:", error);
       toast.error("Failed to update device status");
@@ -191,7 +184,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
       if (error) throw error;
       toast.success("Device marked as faulty");
-      setDevice(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
       console.error("Error marking faulty:", error);
       toast.error("Failed to update device status");
@@ -213,7 +206,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
       if (error) throw error;
       toast.success("Device unassigned");
-      setDevice(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
       console.error("Error unassigning device:", error);
       toast.error("Failed to unassign device");
