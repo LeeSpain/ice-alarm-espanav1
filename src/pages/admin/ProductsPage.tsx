@@ -22,11 +22,15 @@ import { useOperationalCosts, useCreateOperationalCost, useUpdateOperationalCost
 import { ProductForm } from "@/components/admin/products/ProductForm";
 import { CostForm } from "@/components/admin/products/CostForm";
 import { DeviceStockSection } from "@/components/admin/products/DeviceStockSection";
+import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { format } from "date-fns";
 
 export default function ProductsPage() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("products");
+  
+  // Realtime subscription for device updates
+  useDeviceRealtime();
   
   // Products state
   const { data: products, isLoading: productsLoading } = useProducts();
