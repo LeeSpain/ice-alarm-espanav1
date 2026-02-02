@@ -297,7 +297,8 @@
     "crm": "CRM",
     "tasks": "Tareas",
     "tickets": "Tickets",
-    "pendant": "Colgante"
+    "pendant": "Colgante",
+    "ev07b": "EV-07B"
   },
   "landing": {
     "emergencyResponse": "Respuesta de emergencia 24/7 en España",
@@ -1496,6 +1497,7 @@
     "payments": "Pagos",
     "commissions": "Comisiones",
     "products": "Productos",
+    "ev07b": "EV-07B",
     "analytics": "Analítica",
     "reports": "Informes",
     "system": "Sistema",

@@ -107,7 +107,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
       <div className="text-center mb-8"><h2 className="text-2xl font-bold mb-2">{t("joinWizard.payment.title")}</h2><p className="text-muted-foreground">{t("joinWizard.payment.subtitle")}</p></div>
       <Card><CardHeader><CardTitle className="text-lg">{t("joinWizard.payment.orderSummary")}</CardTitle></CardHeader><CardContent className="space-y-3">
         <div className="flex justify-between"><span className="text-muted-foreground">{data.membershipType === "couple" ? "Couple" : "Individual"} Membership{data.billingFrequency === "annual" && " (Annual)"}</span><span>{formatPrice(order.subscriptionFinal)}</span></div>
-        {order.pendantCount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">GPS Safety Pendant {order.pendantCount > 1 && `(×${order.pendantCount})`}</span><span>{formatPrice(order.pendantFinal)}</span></div>}
+        {order.pendantCount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">EV-07B Pendant {order.pendantCount > 1 && `(×${order.pendantCount})`}</span><span>{formatPrice(order.pendantFinal)}</span></div>}
         {order.shipping > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("joinWizard.summary.shipping")}</span><span>{formatPrice(order.shipping)}</span></div>}
         {/* Registration Fee - with discount display */}
         {order.registrationFeeEnabled && (

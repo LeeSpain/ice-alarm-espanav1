@@ -124,7 +124,7 @@ const menuGroups: MenuGroup[] = [
       { icon: CreditCard, labelKey: "sidebar.subscriptions", path: "/admin/subscriptions" },
       { icon: DollarSign, labelKey: "sidebar.payments", path: "/admin/payments" },
       { icon: DollarSign, labelKey: "sidebar.commissions", path: "/admin/commissions" },
-      { icon: Package, labelKey: "sidebar.products", path: "/admin/products" },
+      { icon: Smartphone, labelKey: "sidebar.ev07b", path: "/admin/ev07b" },
       { icon: Activity, labelKey: "sidebar.analytics", path: "/admin/analytics" },
       { icon: BarChart3, labelKey: "sidebar.reports", path: "/admin/reports" }
     ]
