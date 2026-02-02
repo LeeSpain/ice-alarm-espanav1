@@ -23,6 +23,9 @@ import { PaidSalesFeed } from "@/components/admin/dashboard/PaidSalesFeed";
 import { AISalesDesk } from "@/components/admin/dashboard/AISalesDesk";
 import { NotificationSettings } from "@/components/admin/dashboard/NotificationSettings";
 import { NotificationLog } from "@/components/admin/dashboard/NotificationLog";
+import { EV07BStatusWidget } from "@/components/admin/dashboard/EV07BStatusWidget";
+import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
+import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 
 interface DashboardStats {
   active_members: number;
@@ -37,6 +40,10 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
+
+  // Subscribe to realtime updates for devices and alerts
+  useDeviceRealtime();
+  useAlertsRealtime();
 
   // Single RPC call replaces 7 separate queries
   const { data: stats } = useQuery({
@@ -196,6 +203,9 @@ export default function AdminDashboard() {
         <PaidSalesFeed />
         <AISalesDesk />
       </div>
+
+      {/* EV-07B Status Widget */}
+      <EV07BStatusWidget />
 
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">

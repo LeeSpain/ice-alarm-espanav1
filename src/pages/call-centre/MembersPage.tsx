@@ -38,6 +38,7 @@ interface Member {
   device?: {
     status: string;
     device_type: string;
+    is_online: boolean;
   };
 }
 
@@ -68,7 +69,7 @@ export default function MembersPage() {
         status,
         preferred_language,
         subscriptions(plan_type, status),
-        devices(status, device_type)
+        devices(status, device_type, is_online)
       `)
       .order('last_name', { ascending: true });
 
@@ -216,12 +217,14 @@ export default function MembersPage() {
                     <TableCell>{getStatusBadge(member.status)}</TableCell>
                     <TableCell>
                       {member.device ? (
-                        <Badge 
-                          variant={member.device.status === 'active' ? 'default' : 'secondary'}
-                          className="capitalize"
-                        >
-                          {member.device.device_type}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={member.device.is_online ? 'default' : 'secondary'}
+                            className="capitalize"
+                          >
+                            {member.device.is_online ? 'Online' : 'Offline'}
+                          </Badge>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">No device</span>
                       )}

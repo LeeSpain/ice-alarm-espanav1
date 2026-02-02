@@ -21,7 +21,8 @@ const MOCK_MEMBER = {
 
 const MOCK_DEVICE = {
   id: "demo-device",
-  status: "active",
+  status: "live",
+  is_online: true,
   battery_level: 85,
   last_checkin_at: new Date().toISOString(),
   last_location_address: "Calle Demo 123, Madrid",
@@ -68,16 +69,16 @@ export default function ClientDashboard() {
     enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
-  // Fetch device data
+  // Fetch device data - look for EV-07B devices in any active lifecycle status
   const { data: device, isLoading: deviceLoading } = useQuery({
     queryKey: ["member-device", effectiveMemberId],
     queryFn: async () => {
       if (!effectiveMemberId) return null;
       const { data, error } = await supabase
         .from("devices")
-        .select("*")
+        .select("id, status, is_online, battery_level, last_checkin_at, last_location_address, offline_since")
         .eq("member_id", effectiveMemberId)
-        .eq("status", "active")
+        .in("status", ["allocated", "with_staff", "live", "active"])
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -244,7 +245,7 @@ export default function ClientDashboard() {
       ) : displayDevice ? (
         <DeviceStatusCard
           batteryLevel={displayDevice.battery_level || 0}
-          isConnected={displayDevice.status === "active"}
+          isConnected={displayDevice.is_online === true}
           lastCheckIn={displayDevice.last_checkin_at ? new Date(displayDevice.last_checkin_at) : undefined}
           location={displayDevice.last_location_address || undefined}
         />
