@@ -25,6 +25,7 @@ export function useAlertsRealtime() {
           // Invalidate all alert-related queries
           queryClient.invalidateQueries({ queryKey: ["device-offline-alerts"] });
           queryClient.invalidateQueries({ queryKey: ["ev07b-status-summary"] });
+          queryClient.invalidateQueries({ queryKey: ["ev07b-open-alerts-count"] });
           queryClient.invalidateQueries({ queryKey: ["admin-alerts-list"] });
           queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
         }
