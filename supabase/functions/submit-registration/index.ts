@@ -179,6 +179,7 @@ interface RegistrationRequest {
     utm_term?: string;
     utm_content?: string;
   };
+  testMode?: boolean; // If true, skip Stripe and mark everything as completed
 }
 
 // Pricing constants (NET prices)
@@ -748,7 +749,71 @@ serve(async (req) => {
       );
     }
 
-    // 13. SEND REGISTRATION CONFIRMATION EMAIL
+    // 13. HANDLE TEST MODE - Mark everything as completed without payment
+    if (body.testMode) {
+      console.log("TEST MODE: Auto-completing registration without payment");
+      
+      // Update payment to completed
+      const { error: paymentUpdateError } = await supabase
+        .from("payments")
+        .update({ 
+          status: "completed", 
+          paid_at: new Date().toISOString(),
+          notes: "TEST MODE - No payment collected"
+        })
+        .eq("id", paymentData.id);
+      if (paymentUpdateError) console.error("Test mode: Error updating payment:", paymentUpdateError);
+      
+      // Update order to completed
+      const { error: orderUpdateError } = await supabase
+        .from("orders")
+        .update({ status: "completed" })
+        .eq("id", orderData.id);
+      if (orderUpdateError) console.error("Test mode: Error updating order:", orderUpdateError);
+      
+      // Update subscription to active
+      const { error: subUpdateError } = await supabase
+        .from("subscriptions")
+        .update({ 
+          status: "active",
+          registration_fee_paid: true
+        })
+        .eq("id", subscriptionData.id);
+      if (subUpdateError) console.error("Test mode: Error updating subscription:", subUpdateError);
+      
+      // Update primary member to active
+      const { error: memberUpdateError } = await supabase
+        .from("members")
+        .update({ status: "active" })
+        .eq("id", primaryMemberData.id);
+      if (memberUpdateError) console.error("Test mode: Error updating primary member:", memberUpdateError);
+      
+      // Update partner member to active if exists
+      if (partnerMemberData) {
+        const { error: partnerUpdateError } = await supabase
+          .from("members")
+          .update({ status: "active" })
+          .eq("id", partnerMemberData.id);
+        if (partnerUpdateError) console.error("Test mode: Error updating partner member:", partnerUpdateError);
+      }
+      
+      // Log audit entry for test mode usage
+      await supabase.from("activity_logs").insert({
+        action: "create",
+        entity_type: "order",
+        entity_id: orderData.id,
+        new_values: {
+          test_mode: true,
+          order_number: orderNumber,
+          member_id: primaryMemberData.id,
+          total: total,
+        },
+      });
+      
+      console.log("TEST MODE: All records marked as completed");
+    }
+
+    // 14. SEND REGISTRATION CONFIRMATION EMAIL
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (RESEND_API_KEY && body.primaryMember.email) {
       try {
@@ -794,6 +859,7 @@ serve(async (req) => {
         orderNumber: orderNumber,
         paymentId: paymentData.id,
         total: total,
+        testMode: body.testMode || false,
         lineItems: [
           {
             name: `${body.membershipType === "couple" ? "Couple" : "Individual"} Membership - ${body.billingFrequency === "annual" ? "Annual" : "Monthly"}`,
