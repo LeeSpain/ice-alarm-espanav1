@@ -857,6 +857,8 @@ export type Database = {
         Row: {
           assigned_at: string | null
           battery_level: number | null
+          collected_at: string | null
+          collected_by_staff_id: string | null
           configuration_status:
             | Database["public"]["Enums"]["device_config_status"]
             | null
@@ -864,19 +866,29 @@ export type Database = {
           device_type: string | null
           id: string
           imei: string
+          is_online: boolean | null
           last_checkin_at: string | null
           last_location_address: string | null
           last_location_lat: number | null
           last_location_lng: number | null
+          live_at: string | null
           member_id: string | null
+          model: string | null
           notes: string | null
+          offline_since: string | null
           purchased_at: string | null
+          reserved_at: string | null
+          reserved_order_id: string | null
+          serial_number: string | null
+          sim_iccid: string | null
           sim_phone_number: string
           status: Database["public"]["Enums"]["device_status"] | null
         }
         Insert: {
           assigned_at?: string | null
           battery_level?: number | null
+          collected_at?: string | null
+          collected_by_staff_id?: string | null
           configuration_status?:
             | Database["public"]["Enums"]["device_config_status"]
             | null
@@ -884,19 +896,29 @@ export type Database = {
           device_type?: string | null
           id?: string
           imei: string
+          is_online?: boolean | null
           last_checkin_at?: string | null
           last_location_address?: string | null
           last_location_lat?: number | null
           last_location_lng?: number | null
+          live_at?: string | null
           member_id?: string | null
+          model?: string | null
           notes?: string | null
+          offline_since?: string | null
           purchased_at?: string | null
+          reserved_at?: string | null
+          reserved_order_id?: string | null
+          serial_number?: string | null
+          sim_iccid?: string | null
           sim_phone_number: string
           status?: Database["public"]["Enums"]["device_status"] | null
         }
         Update: {
           assigned_at?: string | null
           battery_level?: number | null
+          collected_at?: string | null
+          collected_by_staff_id?: string | null
           configuration_status?:
             | Database["public"]["Enums"]["device_config_status"]
             | null
@@ -904,22 +926,44 @@ export type Database = {
           device_type?: string | null
           id?: string
           imei?: string
+          is_online?: boolean | null
           last_checkin_at?: string | null
           last_location_address?: string | null
           last_location_lat?: number | null
           last_location_lng?: number | null
+          live_at?: string | null
           member_id?: string | null
+          model?: string | null
           notes?: string | null
+          offline_since?: string | null
           purchased_at?: string | null
+          reserved_at?: string | null
+          reserved_order_id?: string | null
+          serial_number?: string | null
+          sim_iccid?: string | null
           sim_phone_number?: string
           status?: Database["public"]["Enums"]["device_status"] | null
         }
         Relationships: [
           {
+            foreignKeyName: "devices_collected_by_staff_id_fkey"
+            columns: ["collected_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "devices_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devices_reserved_order_id_fkey"
+            columns: ["reserved_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -2899,7 +2943,16 @@ export type Database = {
       cost_frequency: "one_time" | "monthly" | "annual"
       cost_status: "pending" | "paid" | "overdue"
       device_config_status: "pending" | "configured" | "failed"
-      device_status: "active" | "inactive" | "faulty" | "returned" | "in_stock"
+      device_status:
+        | "active"
+        | "inactive"
+        | "faulty"
+        | "returned"
+        | "in_stock"
+        | "reserved"
+        | "allocated"
+        | "with_staff"
+        | "live"
       import_batch_status:
         | "uploaded"
         | "parsed"
@@ -3106,7 +3159,17 @@ export const Constants = {
       cost_frequency: ["one_time", "monthly", "annual"],
       cost_status: ["pending", "paid", "overdue"],
       device_config_status: ["pending", "configured", "failed"],
-      device_status: ["active", "inactive", "faulty", "returned", "in_stock"],
+      device_status: [
+        "active",
+        "inactive",
+        "faulty",
+        "returned",
+        "in_stock",
+        "reserved",
+        "allocated",
+        "with_staff",
+        "live",
+      ],
       import_batch_status: [
         "uploaded",
         "parsed",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Package, Plus, Pencil, Trash2, Check, AlertCircle, Clock, DollarSign, TrendingUp, Receipt } from "lucide-react";
+import { Package, Plus, Pencil, Trash2, Check, AlertCircle, Clock, DollarSign, TrendingUp, Receipt, Smartphone } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, calc
 import { useOperationalCosts, useCreateOperationalCost, useUpdateOperationalCost, useMarkCostPaid, useDeleteOperationalCost, type OperationalCost, type OperationalCostInput } from "@/hooks/useOperationalCosts";
 import { ProductForm } from "@/components/admin/products/ProductForm";
 import { CostForm } from "@/components/admin/products/CostForm";
+import { DeviceStockSection } from "@/components/admin/products/DeviceStockSection";
 import { format } from "date-fns";
 
 export default function ProductsPage() {
@@ -178,6 +179,10 @@ export default function ProductsPage() {
             <Package className="w-4 h-4 mr-2" />
             {t("admin.products.productsTab", "Products")}
           </TabsTrigger>
+          <TabsTrigger value="stock">
+            <Smartphone className="w-4 h-4 mr-2" />
+            EV-07B Stock
+          </TabsTrigger>
           <TabsTrigger value="costs">
             <DollarSign className="w-4 h-4 mr-2" />
             {t("admin.products.costsTab", "Operational Costs")}
@@ -269,6 +274,11 @@ export default function ProductsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Stock Tab */}
+        <TabsContent value="stock" className="mt-4">
+          <DeviceStockSection />
         </TabsContent>
 
         {/* Costs Tab */}
