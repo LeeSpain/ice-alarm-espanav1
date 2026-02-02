@@ -8,7 +8,6 @@ import {
   Loader2, 
   Smartphone, 
   Battery, 
-  MapPin, 
   Clock, 
   CheckCircle, 
   XCircle,
@@ -17,15 +16,23 @@ import {
   MessageCircle,
   ShoppingCart,
   Wrench,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DevicePage() {
   const { t } = useTranslation();
+  const { memberId } = useAuth();
   const { data: device, isLoading: deviceLoading } = useMemberDevice();
   const { data: subscription, isLoading: subLoading } = useMemberSubscription();
   const { settings: companySettings } = useCompanySettings();
+  
+  // Realtime subscription for device updates
+  useDeviceRealtime(memberId ?? undefined);
   
   const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
 
@@ -210,9 +217,13 @@ export default function DevicePage() {
 
   // Has Pendant View
   const batteryLevel = device?.battery_level || 0;
-  const isConnected = device?.status === "active";
+  // Use real is_online field instead of status check
+  const isConnected = device?.is_online === true;
   const lastCheckin = device?.last_checkin_at 
     ? new Date(device.last_checkin_at) 
+    : null;
+  const offlineSince = device?.offline_since 
+    ? new Date(device.offline_since) 
     : null;
 
   const getBatteryColor = () => {
@@ -278,6 +289,14 @@ export default function DevicePage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   {t('device.lastCheckIn')}: {formatRelativeTime(lastCheckin)}
+                </div>
+              )}
+
+              {/* Offline Since indicator */}
+              {!isConnected && offlineSince && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  {t('device.offlineSince', 'Offline since')}: {formatRelativeTime(offlineSince)}
                 </div>
               )}
             </div>

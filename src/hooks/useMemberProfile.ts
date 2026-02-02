@@ -62,6 +62,10 @@ export interface DeviceInfo {
   last_location_lat: number | null;
   last_location_lng: number | null;
   last_location_address: string | null;
+  // EV-07B monitoring fields
+  is_online: boolean | null;
+  offline_since: string | null;
+  model: string | null;
 }
 
 export interface SubscriptionInfo {

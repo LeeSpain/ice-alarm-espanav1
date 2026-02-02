@@ -1,23 +1,15 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { Tables } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
 
-type Device = Tables<"devices">;
-
-export interface DeviceUpdate {
-  id: string;
-  batteryLevel: number | null;
-  lastCheckinAt: Date | null;
-  locationLat: number | null;
-  locationLng: number | null;
-  locationAddress: string | null;
-  status: string;
-}
-
+/**
+ * Hook to subscribe to realtime device updates and invalidate React Query caches.
+ * Subscribes to INSERT/UPDATE/DELETE on public.devices.
+ * @param memberId - Optional member ID to filter updates (for client device page)
+ */
 export function useDeviceRealtime(memberId?: string) {
-  const [deviceUpdates, setDeviceUpdates] = useState<Map<string, DeviceUpdate>>(new Map());
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Set up realtime subscription for device updates
@@ -26,37 +18,53 @@ export function useDeviceRealtime(memberId?: string) {
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*", // Listen to INSERT, UPDATE, DELETE
           schema: "public",
           table: "devices",
           ...(memberId ? { filter: `member_id=eq.${memberId}` } : {}),
         },
-        (payload: RealtimePostgresChangesPayload<Device>) => {
-          const device = payload.new as Device | null;
-          
-          if (device && 'id' in device) {
-            const update: DeviceUpdate = {
-              id: device.id,
-              batteryLevel: device.battery_level,
-              lastCheckinAt: device.last_checkin_at ? new Date(device.last_checkin_at) : null,
-              locationLat: device.last_location_lat ? Number(device.last_location_lat) : null,
-              locationLng: device.last_location_lng ? Number(device.last_location_lng) : null,
-              locationAddress: device.last_location_address,
-              status: device.status || "unknown",
-            };
+        (payload) => {
+          console.log("Device realtime update:", payload.eventType, payload.new);
 
-            setDeviceUpdates(prev => {
-              const newMap = new Map(prev);
-              newMap.set(device.id, update);
-              return newMap;
-            });
+          // Invalidate all device-related queries
+          queryClient.invalidateQueries({ queryKey: ["device-stock"] });
+          queryClient.invalidateQueries({ queryKey: ["device-stock-stats"] });
+          queryClient.invalidateQueries({ queryKey: ["member-device"] });
 
-            // Notify on low battery
-            if (device.battery_level !== null && device.battery_level <= 20) {
+          // Handle low battery toast for UPDATE events
+          if (payload.eventType === "UPDATE" && payload.new) {
+            const device = payload.new as Record<string, unknown>;
+            const batteryLevel = device.battery_level as number | null;
+            
+            if (batteryLevel !== null && batteryLevel <= 20) {
               toast({
                 title: "Low Battery Alert",
-                description: `Device battery is at ${device.battery_level}%`,
+                description: `Device battery is at ${batteryLevel}%`,
                 variant: "destructive",
+              });
+            }
+
+            // Notify on device going offline
+            if (device.is_online === false && payload.old) {
+              const oldDevice = payload.old as Record<string, unknown>;
+              if (oldDevice.is_online === true) {
+                toast({
+                  title: "Device Offline",
+                  description: "An EV-07B device has gone offline",
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+
+          // Notify on new device allocation
+          if (payload.eventType === "UPDATE" && payload.new && payload.old) {
+            const newDevice = payload.new as Record<string, unknown>;
+            const oldDevice = payload.old as Record<string, unknown>;
+            if (oldDevice.status === "in_stock" && newDevice.status === "allocated") {
+              toast({
+                title: "Device Allocated",
+                description: "An EV-07B device has been allocated from stock",
               });
             }
           }
@@ -67,14 +75,5 @@ export function useDeviceRealtime(memberId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [memberId]);
-
-  const getDeviceUpdate = useCallback((deviceId: string): DeviceUpdate | undefined => {
-    return deviceUpdates.get(deviceId);
-  }, [deviceUpdates]);
-
-  return {
-    deviceUpdates,
-    getDeviceUpdate,
-  };
+  }, [memberId, queryClient]);
 }

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   Loader2, Smartphone, Battery, MapPin, Clock, Settings, 
-  Send, X, AlertTriangle
+  Send, X, AlertTriangle, Wifi, WifiOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
 import { LocationMap } from "@/components/maps/LocationMap";
+import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 
 interface Device {
   id: string;
@@ -40,6 +41,9 @@ interface Device {
   last_location_lng: number | null;
   last_location_address: string | null;
   configuration_status: string;
+  is_online: boolean | null;
+  offline_since: string | null;
+  model: string | null;
 }
 
 interface DeviceTabProps {
@@ -53,6 +57,9 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+
+  // Realtime subscription for device updates
+  useDeviceRealtime(memberId);
 
   useEffect(() => {
     fetchDevice();

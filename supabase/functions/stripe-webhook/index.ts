@@ -194,6 +194,85 @@ serve(async (req) => {
             .eq("member_id", session.metadata.member_id);
         }
 
+        // AUTO-ALLOCATE EV-07B devices from stock
+        if (session.metadata?.order_id && session.metadata?.member_id) {
+          try {
+            // Load order items with pendant type
+            const { data: pendantItems, error: itemsError } = await supabase
+              .from("order_items")
+              .select("id, quantity, device_id")
+              .eq("order_id", session.metadata.order_id)
+              .eq("item_type", "pendant");
+
+            if (itemsError) {
+              console.error("Error fetching pendant items:", itemsError);
+            } else if (pendantItems && pendantItems.length > 0) {
+              console.log(`Found ${pendantItems.length} pendant order items to allocate`);
+
+              for (const item of pendantItems) {
+                // Skip if already allocated (idempotency)
+                if (item.device_id) {
+                  console.log(`Order item ${item.id} already has device ${item.device_id} allocated`);
+                  continue;
+                }
+
+                const quantityNeeded = item.quantity || 1;
+                
+                for (let i = 0; i < quantityNeeded; i++) {
+                  // Atomically pick 1 device from stock
+                  const { data: availableDevice, error: pickError } = await supabase
+                    .from("devices")
+                    .select("id")
+                    .eq("model", "EV-07B")
+                    .eq("status", "in_stock")
+                    .is("member_id", null)
+                    .limit(1)
+                    .single();
+
+                  if (pickError || !availableDevice) {
+                    console.warn(`No EV-07B devices available in stock for allocation`);
+                    // Mark order as awaiting stock
+                    await supabase
+                      .from("orders")
+                      .update({ status: "awaiting_stock" })
+                      .eq("id", session.metadata.order_id);
+                    break;
+                  }
+
+                  // Update device to allocated status
+                  const { error: updateDeviceError } = await supabase
+                    .from("devices")
+                    .update({
+                      status: "allocated",
+                      member_id: session.metadata.member_id,
+                      assigned_at: new Date().toISOString(),
+                      reserved_order_id: session.metadata.order_id,
+                      reserved_at: new Date().toISOString(),
+                    })
+                    .eq("id", availableDevice.id)
+                    .eq("status", "in_stock"); // Extra safety check
+
+                  if (updateDeviceError) {
+                    console.error(`Error allocating device ${availableDevice.id}:`, updateDeviceError);
+                    continue;
+                  }
+
+                  // Update order_items with allocated device_id
+                  await supabase
+                    .from("order_items")
+                    .update({ device_id: availableDevice.id })
+                    .eq("id", item.id);
+
+                  console.log(`Allocated device ${availableDevice.id} to order item ${item.id}`);
+                }
+              }
+            }
+          } catch (allocError) {
+            console.error("Device allocation error:", allocError);
+            // Don't throw - webhook must succeed
+          }
+        }
+
         // Log CRM event for order_paid (checkout completed means paid)
         if (session.metadata?.order_id && session.metadata?.member_id) {
           // Check if this member has partner attribution
