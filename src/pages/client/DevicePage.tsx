@@ -256,12 +256,12 @@ export default function DevicePage() {
                   {isConnected ? (
                     <>
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      {t('device.connected')}
+                      {t('device.connected')} {lastCheckin && `(${formatRelativeTime(lastCheckin)})`}
                     </>
                   ) : (
                     <>
                       <XCircle className="h-3 w-3 mr-1" />
-                      {t('device.offline')}
+                      {t('device.offline')} {lastCheckin && `(${t('device.lastCheckIn')}: ${formatRelativeTime(lastCheckin)})`}
                     </>
                   )}
                 </Badge>

@@ -17,8 +17,15 @@ interface CheckinPayload {
 /**
  * EV-07B Check-in Edge Function
  * 
- * Accepts telemetry data from EV-07B devices and updates their status.
+ * Accepts telemetry data from EV-07B devices (ping every 30 seconds) and updates their status.
  * Requires x-api-key header matching EV07B_CHECKIN_KEY environment variable.
+ * 
+ * On successful check-in:
+ * - Always sets last_checkin_at = now()
+ * - Always sets is_online = true
+ * - Always clears offline_since = null
+ * - Validates battery_level 0-100 if provided
+ * - Does NOT create devices for unknown IMEI (returns error)
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -75,9 +82,10 @@ serve(async (req) => {
       );
     }
 
+    // Do NOT create devices for unknown IMEI - return error
     if (!device) {
       return new Response(
-        JSON.stringify({ success: false, error: "Device not found" }),
+        JSON.stringify({ success: false, error: "Device not found. Unknown IMEI." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -89,7 +97,7 @@ serve(async (req) => {
       );
     }
 
-    // Build update object
+    // Build update object - always set these on check-in
     const now = new Date().toISOString();
     const updateData: Record<string, unknown> = {
       last_checkin_at: now,
@@ -97,18 +105,23 @@ serve(async (req) => {
       offline_since: null, // Clear offline status on check-in
     };
 
-    // Add optional fields if provided
+    // Add optional fields if provided with validation
     if (typeof body.battery_level === "number") {
-      updateData.battery_level = Math.max(0, Math.min(100, body.battery_level));
+      // Validate battery level is 0-100
+      const validatedBattery = Math.max(0, Math.min(100, Math.round(body.battery_level)));
+      updateData.battery_level = validatedBattery;
     }
 
     if (typeof body.lat === "number" && typeof body.lng === "number") {
-      updateData.last_location_lat = body.lat;
-      updateData.last_location_lng = body.lng;
+      // Validate latitude and longitude ranges
+      if (body.lat >= -90 && body.lat <= 90 && body.lng >= -180 && body.lng <= 180) {
+        updateData.last_location_lat = body.lat;
+        updateData.last_location_lng = body.lng;
+      }
     }
 
-    if (body.address) {
-      updateData.last_location_address = body.address;
+    if (body.address && typeof body.address === "string") {
+      updateData.last_location_address = body.address.substring(0, 500); // Limit address length
     }
 
     // Update the device
@@ -127,7 +140,7 @@ serve(async (req) => {
 
     console.log(`EV-07B check-in successful for IMEI: ${body.imei}`, {
       device_id: device.id,
-      battery_level: body.battery_level,
+      battery_level: updateData.battery_level,
       has_location: !!(body.lat && body.lng),
     });
 
@@ -135,7 +148,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         device_id: device.id,
-        checked_in_at: now 
+        checked_in_at: now,
+        is_online: true,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -195,12 +195,12 @@ export default function DeviceDetailPage() {
           {isOnline ? (
             <Badge className="bg-alert-resolved text-alert-resolved-foreground">
               <Wifi className="mr-1 h-3 w-3" />
-              Online
+              Online {device.last_checkin_at && `(${formatDistanceToNow(new Date(device.last_checkin_at))} ago)`}
             </Badge>
           ) : (
             <Badge variant="destructive">
               <WifiOff className="mr-1 h-3 w-3" />
-              Offline
+              Offline {device.last_checkin_at && `(last: ${formatDistanceToNow(new Date(device.last_checkin_at))} ago)`}
             </Badge>
           )}
         </div>

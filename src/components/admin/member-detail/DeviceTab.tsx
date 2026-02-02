@@ -367,16 +367,16 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
             <CardDescription>Device assigned to this member</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            {/* Online/Offline status */}
+            {/* Online/Offline status with check-in time */}
             {device.is_online ? (
               <Badge variant="default" className="bg-green-600">
                 <Wifi className="h-3 w-3 mr-1" />
-                Online
+                Online {device.last_checkin_at && `(${formatDistanceToNow(new Date(device.last_checkin_at))} ago)`}
               </Badge>
             ) : (
               <Badge variant="destructive">
                 <WifiOff className="h-3 w-3 mr-1" />
-                Offline
+                Offline {device.last_checkin_at && `(last: ${formatDistanceToNow(new Date(device.last_checkin_at))} ago)`}
               </Badge>
             )}
             <Badge 
