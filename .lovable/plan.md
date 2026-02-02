@@ -1,138 +1,168 @@
 
-## Goal
-Make the **Facebook Page Access Token** field reliably accept and save very long tokens, and fix the **eye icon** so it actually toggles visibility. Also remove the confusing “flick back to a short value” behavior after saving.
 
-## What’s really happening (complete review of likely causes)
+## Complete Review: Recent Changes Analysis
 
-### A) The “flick back to a short value” is currently expected masking behavior
-- After a successful save, the UI intentionally replaces the token with `"••••••••••••"` to avoid showing secrets on screen.
-- That looks like the long token “didn’t save” even when it did.
-- Because you confirmed you get a **Success toast**, the backend call is completing.
+### Files Reviewed
+1. `src/pages/admin/SettingsPage.tsx` - Facebook token handling UI
+2. `supabase/functions/facebook-publish/index.ts` - Facebook publishing edge function
+3. `supabase/functions/save-api-keys/index.ts` - Settings save edge function
+4. `src/components/admin/settings/ImagesSettingsTab.tsx` - Images settings tab
+5. `src/components/admin/settings/ImageUploadCard.tsx` - Image upload component
 
-### B) The token input currently mixes two different meanings in one field
-Right now the same `facebookSettings.page_access_token` state is used for:
-1) A real, newly pasted token (long string)
-2) A masked “token exists” placeholder (`••••••••••••`)
+---
 
-This causes multiple edge-cases:
-- Save logic has to guess whether it’s a real token by checking for `"•"`.
-- After save, it intentionally masks (which looks like replacement).
-- On refresh, it masks again.
+## Issues Found
 
-### C) The eye button “does nothing” is almost certainly a UI layering / click-target issue
-You already have:
-```tsx
-<Button className="absolute right-0 top-0 h-full px-3" ...>
+### Issue 1: Critical Key Prefix Bug in `save-api-keys` Edge Function
+
+**Problem**: The edge function prepends `${service}_` to all keys, but the frontend already sends keys with the `settings_` prefix for Facebook (e.g., `settings_facebook_page_id`).
+
+**Current Flow**:
+```text
+Frontend sends: { service: "settings", keys: { "settings_facebook_page_id": "123" } }
+Edge function creates: "settings_settings_facebook_page_id" ← DOUBLE PREFIX!
 ```
-But:
-- The input can still “win” the click due to stacking/overlay in some browsers/styles.
-- This is common when an absolutely positioned element doesn’t have an explicit `z-index`.
-- Result: clicks hit the input instead of the button.
 
-### D) Background state sync can still overwrite the user value at the wrong moment
-You already added `facebookDirty` and disabled `refetchOnWindowFocus/refetchOnReconnect` which helps a lot.
-But the cleanest fix is to avoid syncing a masked token into the editable field at all.
+**Database Expectation**: Keys should be `settings_facebook_page_id` (single prefix).
 
-### E) Backend/truncation is NOT the culprit
-- The `system_settings.value` column is `text` (no length limit).
-- The saving function upserts the string as-is.
-So this is overwhelmingly a frontend UX/state problem, not database length.
+**Evidence**: The database currently has the correct keys because they were likely inserted before this edge function was in use, or via a different method.
 
-## Fix approach (what will change)
-### 1) Split the token into “stored” vs “new input” (key change)
-Instead of storing masked dots in the input value, we’ll implement:
+**Fix Required**: Modify `save-api-keys/index.ts` to either:
+- Option A: Pass keys as-is without prepending service (for keys that already have prefixes)
+- Option B: Update frontend KEY constants to remove `settings_` prefix for Facebook keys
 
-- `facebookTokenStored: boolean` (derived from backend settings: token exists or not)
-- `facebookTokenInput: string` (the actual editable/pasteable field; starts empty)
+**Recommended Solution**: Option A - Make the edge function smarter by not prepending when the key already starts with `${service}_`:
 
-UI behavior:
-- If a token exists in the backend: show a small status line like “Token saved (hidden). Paste a new token to replace.”
-- The input remains empty unless you paste a new token.
-- After saving, we clear the input (so it doesn’t “flip” to dots).
-- The eye toggle now only applies to `facebookTokenInput`.
+```typescript
+// Line 70 in save-api-keys/index.ts
+const finalKey = key.startsWith(`${service}_`) ? key : `${service}_${key}`;
+```
 
-This eliminates:
-- “It changed to a short value”
-- “Did my token save?”
-- The brittle `includes("•")` logic
+---
 
-### 2) Make the eye button reliably clickable
-Add:
-- `z-10` (or `z-20`) to the button
-- optionally `type="button"` (already present)
-- optionally `onMouseDown={(e) => e.preventDefault()}` to prevent focus/blur weirdness while clicking
+### Issue 2: Minor - Missing CORS Headers
 
-Example styling change:
-- from: `className="absolute right-0 top-0 h-full px-3"`
-- to:   `className="absolute right-0 top-0 h-full px-3 z-10"`
+**File**: `supabase/functions/save-api-keys/index.ts` (line 7)
 
-### 3) Make “Save” only send a token when you actually pasted one
-- Page ID: can save anytime if present
-- Token: only saved if `facebookTokenInput.trim().length > 0`
-- After success: clear `facebookTokenInput`, set `facebookTokenStored = true`
+**Problem**: The CORS `Access-Control-Allow-Headers` is missing newer Supabase client headers which can cause issues in some scenarios.
 
-### 4) Improve feedback so it’s obvious it worked
-- After successful save, show:
-  - “Token saved (hidden).”
-  - Optionally show “Last updated: <timestamp>” using `settingsMap.settings_facebook_page_access_token_updated_at` if available (if not, we can display the `system_settings` row’s `updated_at` by capturing it in the query mapping).
+**Fix**: Update to include full header set:
+```typescript
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+```
 
-## Files to change
-### Frontend
-- `src/pages/admin/SettingsPage.tsx`
-  - Refactor the Facebook section state:
-    - Replace `facebookSettings.page_access_token` usage with `facebookTokenInput` + `facebookTokenStored`
-  - Update `useEffect`:
-    - Stop writing `"••••••••••••"` into the editable input value
-    - Instead set `facebookTokenStored = Boolean(settingsMap.settings_facebook_page_access_token)`
-  - Update `handleSaveFacebook`:
-    - Use `facebookTokenInput` for updates
-    - Clear `facebookTokenInput` on success
-  - Fix eye button:
-    - Add z-index class (and possibly `onMouseDown` preventDefault)
+---
 
-## Detailed implementation steps (sequenced)
-1) Update Facebook-related React state
-   - Add `facebookTokenInput` and `facebookTokenStored`
-   - Keep `facebookSettings.page_id` as-is (or split similarly for consistency)
+### Issue 3: Twilio Eye Button Missing z-index (Consistency)
 
-2) Update the settings sync `useEffect`
-   - When settings load:
-     - `setFacebookSettings({ page_id: ... })`
-     - `setFacebookTokenStored(!!settingsMap.settings_facebook_page_access_token)`
-     - Do NOT set any masked value into the input
+**File**: `src/pages/admin/SettingsPage.tsx` (lines 776-785)
 
-3) Update the Facebook token input UI
-   - Input `value={facebookTokenInput}`
-   - Placeholder:
-     - if `facebookTokenStored` true: “Token saved. Paste a new token to replace…”
-     - else: “EAA…”
-   - Add helper text “Stored tokens are hidden for security.”
+**Problem**: The Twilio auth token eye button lacks the `z-10` and `onMouseDown` fix that was applied to the Facebook token button.
 
-4) Fix the eye icon click handling
-   - Add `z-10`
-   - Use functional state toggle: `setShowFacebookToken((prev) => !prev)`
+**Current**:
+```tsx
+<Button
+  className="absolute right-0 top-0 h-full px-3"
+  onClick={() => setShowTwilioToken(!showTwilioToken)}
+>
+```
 
-5) Update save logic
-   - Build updates:
-     - `facebook_page_id` from `facebookSettings.page_id`
-     - `facebook_page_access_token` from `facebookTokenInput.trim()` only if non-empty
-   - On success:
-     - `setFacebookTokenStored(true)`
-     - `setFacebookTokenInput("")`
-     - Keep existing query invalidations
+**Fix**: Add consistency with Facebook button:
+```tsx
+<Button
+  type="button"
+  variant="ghost"
+  size="icon"
+  className="absolute right-0 top-0 h-full px-3 z-10"
+  onMouseDown={(e) => e.preventDefault()}
+  onClick={() => setShowTwilioToken((prev) => !prev)}
+>
+```
 
-6) Manual verification checklist (end-to-end)
-   - Paste a very long token → it remains in the field (no unexpected change)
-   - Click the eye → it toggles to show/hide the long token
-   - Click Save → success toast, input clears, status shows “Token saved (hidden)”
-   - Refresh page → status still shows token saved; you can paste a replacement and save again
+---
 
-## Notes / Edge cases handled
-- Works even if you only want to update Page ID (token left empty means “don’t change token”).
-- Eliminates the entire “dots in the field” pattern that is confusing you right now.
-- Removes reliance on checking for `"•"` which is brittle and can mis-detect.
+### Issue 4: Stripe Secret Eye Button Missing z-index (Consistency)
 
-## Success criteria
-- You can paste and save a full long-lived token like `EAA...` without it being “blocked”.
-- The eye button reliably toggles visibility.
-- After saving, UI no longer “flicks back to a short code” in a way that implies failure.
+**File**: `src/pages/admin/SettingsPage.tsx` (around line 620-640)
+
+**Problem**: Same issue as Twilio - the Stripe secret key eye toggle likely lacks `z-10` and `onMouseDown`.
+
+**Fix**: Apply the same pattern as Facebook.
+
+---
+
+### Issue 5: `facebook-publish` Edge Function - Already Fixed
+
+**Status**: ✅ **GOOD** - The function correctly:
+- Reads `settings_facebook_page_id` and `settings_facebook_page_access_token` from `system_settings`
+- Uses Facebook Graph API v24.0
+- Handles both image and text-only posts
+- Clears error_message on successful publish
+
+---
+
+### Issue 6: `ImagesSettingsTab` - Already Fixed
+
+**Status**: ✅ **GOOD** - The component:
+- Properly exports `ImagesSettingsTab` as a named export
+- Correctly uses `useWebsiteImages` hook
+- Maps `WEBSITE_IMAGE_CONFIGS` to `ImageUploadCard` components
+- Handles loading state
+
+---
+
+### Issue 7: `ImageUploadCard` - Already Good
+
+**Status**: ✅ **GOOD** - The component:
+- Properly handles file selection, upload, and reset
+- Invalidates correct query keys on update
+- Has proper validation for file type and size
+
+---
+
+## Summary of Required Fixes
+
+| Priority | File | Issue | Status |
+|----------|------|-------|--------|
+| HIGH | `save-api-keys/index.ts` | Double prefix bug | Needs fix |
+| MEDIUM | `save-api-keys/index.ts` | Missing CORS headers | Needs fix |
+| LOW | `SettingsPage.tsx` | Twilio eye button z-index | Needs fix |
+| LOW | `SettingsPage.tsx` | Stripe eye button z-index | Needs fix |
+
+---
+
+## Technical Implementation
+
+### Step 1: Fix `save-api-keys` Edge Function
+
+Update the key building logic to avoid double prefixes:
+
+```typescript
+// Replace line 70
+const finalKey = key.startsWith(`${service}_`) ? key : `${service}_${key}`;
+// Use finalKey instead of `${service}_${key}`
+```
+
+Also update CORS headers to the full set.
+
+### Step 2: Fix Eye Button Consistency in SettingsPage
+
+Apply `z-10`, `onMouseDown={(e) => e.preventDefault()}`, and functional state toggle to:
+- Twilio auth token eye button
+- Stripe secret key eye button  
+- Stripe webhook secret eye button
+
+---
+
+## Verification After Fix
+
+1. Navigate to Settings → Communications → Facebook
+2. Paste a long Facebook token
+3. Click eye icon → should toggle visibility
+4. Click "Save Facebook Configuration" → should show success toast
+5. Refresh page → "Token saved (hidden)" message should appear
+6. Test publishing a social post → should work with saved credentials
+
