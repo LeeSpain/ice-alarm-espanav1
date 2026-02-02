@@ -406,6 +406,7 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           member_id: string
+          message: string | null
           next_of_kin_notified: boolean | null
           received_at: string | null
           resolution_notes: string | null
@@ -423,6 +424,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           member_id: string
+          message?: string | null
           next_of_kin_notified?: boolean | null
           received_at?: string | null
           resolution_notes?: string | null
@@ -440,6 +442,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           member_id?: string
+          message?: string | null
           next_of_kin_notified?: boolean | null
           received_at?: string | null
           resolution_notes?: string | null
@@ -2924,6 +2927,7 @@ export type Database = {
         | "geo_fence"
         | "check_in"
         | "manual"
+        | "device_offline"
       app_role:
         | "super_admin"
         | "admin"
@@ -3137,6 +3141,7 @@ export const Constants = {
         "geo_fence",
         "check_in",
         "manual",
+        "device_offline",
       ],
       app_role: [
         "super_admin",

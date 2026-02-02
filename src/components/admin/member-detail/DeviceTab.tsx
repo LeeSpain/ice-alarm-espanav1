@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   Loader2, Smartphone, Battery, MapPin, Clock, Settings, 
-  Send, X, AlertTriangle, Wifi, WifiOff
+  Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,8 @@ interface Device {
   is_online: boolean | null;
   offline_since: string | null;
   model: string | null;
+  collected_at: string | null;
+  live_at: string | null;
 }
 
 interface DeviceTabProps {
@@ -85,9 +87,11 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
   const fetchAvailableDevices = async () => {
     try {
+      // Only fetch EV-07B devices that are in stock
       const { data, error } = await supabase
         .from("devices")
         .select("*")
+        .eq("model", "EV-07B")
         .eq("status", "in_stock")
         .is("member_id", null);
 
@@ -108,17 +112,18 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
     
     setIsAssigning(true);
     try {
+      // Assign EV-07B device with allocated status
       const { error } = await supabase
         .from("devices")
         .update({ 
           member_id: memberId, 
-          status: "active",
+          status: "allocated",
           assigned_at: new Date().toISOString()
         })
         .eq("id", selectedDeviceId);
 
       if (error) throw error;
-      toast.success("Device assigned successfully");
+      toast.success("EV-07B device allocated successfully");
       setIsDialogOpen(false);
       fetchDevice();
     } catch (error) {
@@ -126,6 +131,70 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
       toast.error("Failed to assign device");
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  // Workflow action: Mark device as collected by staff
+  const markCollected = async () => {
+    if (!device) return;
+    try {
+      const { error } = await supabase
+        .from("devices")
+        .update({
+          status: "with_staff",
+          collected_at: new Date().toISOString(),
+        })
+        .eq("id", device.id);
+
+      if (error) throw error;
+      toast.success("Device marked as collected by staff");
+      fetchDevice();
+    } catch (error) {
+      console.error("Error marking collected:", error);
+      toast.error("Failed to update device status");
+    }
+  };
+
+  // Workflow action: Mark device as live (installed with member)
+  const markLive = async () => {
+    if (!device) return;
+    try {
+      const { error } = await supabase
+        .from("devices")
+        .update({
+          status: "live",
+          live_at: new Date().toISOString(),
+          is_online: true,
+        })
+        .eq("id", device.id);
+
+      if (error) throw error;
+      toast.success("Device marked as live");
+      fetchDevice();
+    } catch (error) {
+      console.error("Error marking live:", error);
+      toast.error("Failed to update device status");
+    }
+  };
+
+  // Workflow action: Mark device as faulty
+  const markFaulty = async () => {
+    if (!device || !confirm("Mark this device as faulty? This will remove it from the member.")) return;
+    try {
+      const { error } = await supabase
+        .from("devices")
+        .update({
+          status: "faulty",
+          member_id: null,
+        })
+        .eq("id", device.id);
+
+      if (error) throw error;
+      toast.success("Device marked as faulty");
+      setDevice(null);
+    } catch (error) {
+      console.error("Error marking faulty:", error);
+      toast.error("Failed to update device status");
     }
   };
 
@@ -164,12 +233,22 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
     );
   }
 
+  // Status timeline helper
+  const getStatusStep = (status: string) => {
+    switch (status) {
+      case "allocated": return 1;
+      case "with_staff": return 2;
+      case "live": return 3;
+      default: return 0;
+    }
+  };
+
   if (!device) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Device</CardTitle>
-          <CardDescription>No pendant or device assigned to this member.</CardDescription>
+          <CardTitle>EV-07B Device</CardTitle>
+          <CardDescription>No EV-07B pendant assigned to this member.</CardDescription>
         </CardHeader>
         <CardContent className="text-center py-8">
           <Smartphone className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
@@ -179,14 +258,14 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openAssignDialog}>
-                Assign Pendant
+                Assign EV-07B Pendant
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Assign Device</DialogTitle>
+                <DialogTitle>Assign EV-07B Device</DialogTitle>
                 <DialogDescription>
-                  Select an available device to assign to this member.
+                  Select an available EV-07B device from stock to assign to this member.
                 </DialogDescription>
               </DialogHeader>
               <Select value={selectedDeviceId} onValueChange={setSelectedDeviceId}>
@@ -195,11 +274,11 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {availableDevices.length === 0 ? (
-                    <SelectItem value="" disabled>No devices available</SelectItem>
+                    <SelectItem value="" disabled>No EV-07B devices in stock</SelectItem>
                   ) : (
                     availableDevices.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
-                        {d.device_type} - IMEI: {d.imei}
+                        EV-07B - IMEI: {d.imei}
                       </SelectItem>
                     ))
                   )}
@@ -221,29 +300,114 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
     );
   }
 
+  const currentStep = getStatusStep(device.status);
+
   const batteryLevel = device.battery_level ?? 0;
   const batteryColor = batteryLevel > 50 ? "bg-alert-resolved" : batteryLevel > 20 ? "bg-yellow-500" : "bg-destructive";
 
   return (
     <div className="space-y-6">
+      {/* Status Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Device Workflow Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            {/* Step 1: Allocated */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                <Package className="h-5 w-5" />
+              </div>
+              <span className="text-xs mt-1">Allocated</span>
+            </div>
+            <div className={`flex-1 h-1 mx-2 ${currentStep >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+            {/* Step 2: With Staff */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                <Truck className="h-5 w-5" />
+              </div>
+              <span className="text-xs mt-1">With Staff</span>
+            </div>
+            <div className={`flex-1 h-1 mx-2 ${currentStep >= 3 ? 'bg-primary' : 'bg-muted'}`} />
+            {/* Step 3: Live */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-muted text-muted-foreground'}`}>
+                <CheckCircle className="h-5 w-5" />
+              </div>
+              <span className="text-xs mt-1">Live</span>
+            </div>
+          </div>
+          
+          {/* Workflow Action Buttons */}
+          <div className="flex flex-wrap gap-2 pt-4 border-t">
+            {device.status === "allocated" && (
+              <Button onClick={markCollected} size="sm">
+                <Truck className="mr-2 h-4 w-4" />
+                Mark Collected
+              </Button>
+            )}
+            {device.status === "with_staff" && (
+              <Button onClick={markLive} size="sm" className="bg-green-600 hover:bg-green-700">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Mark Live
+              </Button>
+            )}
+            {device.status !== "faulty" && (
+              <Button variant="outline" onClick={markFaulty} size="sm" className="text-destructive">
+                <Wrench className="mr-2 h-4 w-4" />
+                Mark Faulty
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Device Info Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
-              {device.device_type === "pendant" ? "SOS Pendant" : "Smart Watch"}
+              EV-07B Pendant
             </CardTitle>
             <CardDescription>Device assigned to this member</CardDescription>
           </div>
-          <Badge 
-            variant={device.status === "active" ? "default" : "secondary"}
-            className="capitalize"
-          >
-            {device.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* Online/Offline status */}
+            {device.is_online ? (
+              <Badge variant="default" className="bg-green-600">
+                <Wifi className="h-3 w-3 mr-1" />
+                Online
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <WifiOff className="h-3 w-3 mr-1" />
+                Offline
+              </Badge>
+            )}
+            <Badge 
+              variant={device.status === "live" ? "default" : "secondary"}
+              className="capitalize"
+            >
+              {device.status.replace("_", " ")}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Offline warning */}
+          {!device.is_online && device.offline_since && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <WifiOff className="h-5 w-5 text-destructive" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Device Offline</p>
+                <p className="text-xs text-muted-foreground">
+                  Offline since {formatDistanceToNow(new Date(device.offline_since), { addSuffix: true })}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Device Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
