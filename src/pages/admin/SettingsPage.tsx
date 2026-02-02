@@ -668,8 +668,9 @@ export default function SettingsPage() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowStripeSecret(!showStripeSecret)}
+                      className="absolute right-0 top-0 h-full px-3 z-10"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowStripeSecret((prev) => !prev)}
                     >
                       {showStripeSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
@@ -777,8 +778,9 @@ export default function SettingsPage() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowTwilioToken(!showTwilioToken)}
+                      className="absolute right-0 top-0 h-full px-3 z-10"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowTwilioToken((prev) => !prev)}
                     >
                       {showTwilioToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
