@@ -9,12 +9,18 @@ const corsHeaders = {
 /**
  * EV-07B Offline Monitor
  * 
- * This function checks all active EV-07B devices and updates their online/offline status
- * based on their last check-in time. If a device hasn't checked in within 15 minutes,
- * it's marked as offline.
+ * Monitoring thresholds for devices that ping every 30 seconds:
+ * - ONLINE: last check-in within 2 minutes (120s)
+ * - OFFLINE: last check-in older than 2 minutes
+ * - ALERT: only created after 5 minutes (300s) offline
  * 
- * Should be run every 5 minutes via cron job or external scheduler.
+ * Should be run every 1 minute via cron job or external scheduler.
  */
+
+// Threshold constants (in seconds)
+const ONLINE_WINDOW_SECONDS = 120;      // 2 minutes - device considered online if checked in within this window
+const OFFLINE_ALERT_SECONDS = 300;       // 5 minutes - create alert only after this duration offline
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,7 +33,8 @@ serve(async (req) => {
     );
 
     const now = new Date();
-    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    const onlineThreshold = new Date(now.getTime() - ONLINE_WINDOW_SECONDS * 1000);
+    const alertThreshold = new Date(now.getTime() - OFFLINE_ALERT_SECONDS * 1000);
 
     // Fetch all EV-07B devices that are in active statuses
     const { data: devices, error: fetchError } = await supabase
@@ -43,13 +50,14 @@ serve(async (req) => {
     let onlineCount = 0;
     let offlineCount = 0;
     let newlyOfflineCount = 0;
+    let alertsCreatedCount = 0;
     const newlyOfflineDevices: { id: string; imei: string; member_id: string | null }[] = [];
 
     for (const device of devices || []) {
       const lastCheckin = device.last_checkin_at ? new Date(device.last_checkin_at) : null;
-      const isCurrentlyOnline = lastCheckin && lastCheckin >= fifteenMinutesAgo;
+      const isCurrentlyOnline = lastCheckin && lastCheckin >= onlineThreshold;
 
-      // Device is online
+      // Device is online (checked in within 2 minutes)
       if (isCurrentlyOnline) {
         // Only update if status has changed
         if (device.is_online !== true || device.offline_since !== null) {
@@ -63,10 +71,11 @@ serve(async (req) => {
         }
         onlineCount++;
       } else {
-        // Device is offline
+        // Device is offline (no check-in within 2 minutes)
         const wasOnline = device.is_online === true;
         const offlineSinceNotSet = device.offline_since === null;
 
+        // Set offline status and record when it went offline
         if (wasOnline || offlineSinceNotSet) {
           const offlineSince = device.offline_since || now.toISOString();
           await supabase
@@ -77,7 +86,6 @@ serve(async (req) => {
             })
             .eq("id", device.id);
 
-          // Track newly offline devices for alert creation
           if (wasOnline) {
             newlyOfflineCount++;
             newlyOfflineDevices.push({
@@ -88,43 +96,56 @@ serve(async (req) => {
           }
         }
         offlineCount++;
-      }
-    }
 
-    // Create alerts for newly offline devices
-    for (const device of newlyOfflineDevices) {
-      // Check if there's already an open alert for this device
-      const { data: existingAlert } = await supabase
-        .from("alerts")
-        .select("id")
-        .eq("device_id", device.id)
-        .eq("alert_type", "device_offline")
-        .eq("status", "incoming")
-        .maybeSingle();
+        // Check if we should create an alert (5+ minutes offline)
+        const deviceOfflineSince = device.offline_since 
+          ? new Date(device.offline_since) 
+          : (lastCheckin || now);
+        
+        const offlineDurationMs = now.getTime() - deviceOfflineSince.getTime();
+        const shouldCreateAlert = offlineDurationMs >= OFFLINE_ALERT_SECONDS * 1000;
 
-      if (!existingAlert) {
-        // Create new alert
-        await supabase.from("alerts").insert({
-          device_id: device.id,
-          member_id: device.member_id,
-          alert_type: "device_offline",
-          status: "incoming",
-          message: `EV-07B device (IMEI: ${device.imei}) has gone offline`,
-          received_at: now.toISOString(),
-        });
-        console.log(`Created offline alert for device ${device.imei}`);
+        if (shouldCreateAlert && device.member_id) {
+          // Check if there's already an open alert for this device
+          const { data: existingAlert } = await supabase
+            .from("alerts")
+            .select("id")
+            .eq("device_id", device.id)
+            .eq("alert_type", "device_offline")
+            .eq("status", "incoming")
+            .maybeSingle();
+
+          if (!existingAlert) {
+            // Create new alert - device has been offline for 5+ minutes
+            const offlineMinutes = Math.floor(offlineDurationMs / 60000);
+            await supabase.from("alerts").insert({
+              device_id: device.id,
+              member_id: device.member_id,
+              alert_type: "device_offline",
+              status: "incoming",
+              message: `EV-07B device (IMEI: ${device.imei}) has been offline for ${offlineMinutes} minutes`,
+              received_at: now.toISOString(),
+            });
+            console.log(`Created offline alert for device ${device.imei} (offline ${offlineMinutes} min)`);
+            alertsCreatedCount++;
+          }
+        }
       }
     }
 
     const result = {
       success: true,
       timestamp: now.toISOString(),
+      thresholds: {
+        onlineWindowSeconds: ONLINE_WINDOW_SECONDS,
+        offlineAlertSeconds: OFFLINE_ALERT_SECONDS,
+      },
       stats: {
         total: devices?.length || 0,
         online: onlineCount,
         offline: offlineCount,
         newlyOffline: newlyOfflineCount,
-        alertsCreated: newlyOfflineDevices.length,
+        alertsCreated: alertsCreatedCount,
       },
     };
 

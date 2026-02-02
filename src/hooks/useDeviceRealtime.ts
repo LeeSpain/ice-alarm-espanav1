@@ -30,6 +30,9 @@ export function useDeviceRealtime(memberId?: string) {
           queryClient.invalidateQueries({ queryKey: ["device-stock"] });
           queryClient.invalidateQueries({ queryKey: ["device-stock-stats"] });
           queryClient.invalidateQueries({ queryKey: ["member-device"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-member-device"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-device-detail"] });
+          queryClient.invalidateQueries({ queryKey: ["ev07b-status-summary"] });
 
           // Handle low battery toast for UPDATE events
           if (payload.eventType === "UPDATE" && payload.new) {

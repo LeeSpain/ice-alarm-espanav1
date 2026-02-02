@@ -44,7 +44,8 @@ export function EV07BStatusWidget() {
       const with_staff = devices?.filter(d => d.status === "with_staff").length || 0;
       const live = devices?.filter(d => d.status === "live").length || 0;
       
-      // Offline = devices that should be online but aren't
+      // Offline = devices that should be online but aren't (using 2-minute threshold)
+      // Note: is_online is set by the offline monitor running every minute
       const monitoredStatuses = ["allocated", "with_staff", "live"];
       const offline = devices?.filter(
         d => monitoredStatuses.includes(d.status || "") && d.is_online === false
