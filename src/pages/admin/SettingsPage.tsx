@@ -23,6 +23,7 @@ import {
   Percent,
   Tag,
   Facebook,
+  FlaskConical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,7 @@ const KEY = {
   // Registration fee settings (stored with settings_ prefix)
   REG_FEE_ENABLED: "settings_registration_fee_enabled",
   REG_FEE_DISCOUNT: "settings_registration_fee_discount",
+  TEST_MODE_ENABLED: "registration_test_mode_enabled",
 
   // Stripe (no settings_ prefix in your current DB usage)
   STRIPE_SECRET: "stripe_secret_key",
@@ -97,6 +99,9 @@ export default function SettingsPage() {
     enabled: true,
     discount: 0,
   });
+
+  // Test mode state
+  const [testModeEnabled, setTestModeEnabled] = useState(false);
 
   // Integration keys state
   const [stripeKeys, setStripeKeys] = useState({
@@ -202,6 +207,9 @@ export default function SettingsPage() {
       enabled: (settingsMap[KEY.REG_FEE_ENABLED] ?? "true") !== "false",
       discount: parseFloat(settingsMap[KEY.REG_FEE_DISCOUNT] || "0"),
     });
+
+    // Test mode
+    setTestModeEnabled(settingsMap[KEY.TEST_MODE_ENABLED] === "true");
   }, [settings, recentlySavedSection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Save settings mutation (writes through your edge function save-api-keys)
@@ -262,6 +270,13 @@ export default function SettingsPage() {
     saveMutation.mutate({
       [KEY.REG_FEE_ENABLED]: registrationFeeSettings.enabled.toString(),
       [KEY.REG_FEE_DISCOUNT]: registrationFeeSettings.discount.toString(),
+    });
+  };
+
+  const handleToggleTestMode = (checked: boolean) => {
+    setTestModeEnabled(checked);
+    saveMutation.mutate({
+      [KEY.TEST_MODE_ENABLED]: checked.toString(),
     });
   };
 
@@ -605,6 +620,49 @@ export default function SettingsPage() {
                   Save Registration Fee Settings
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Test Mode Card */}
+          <Card className="mt-6 border-orange-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FlaskConical className="h-5 w-5 text-orange-500" />
+                Test Mode
+                {testModeEnabled && (
+                  <Badge className="bg-orange-500/20 text-orange-600 border-0 ml-2">
+                    Active
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Allow completing registrations without payment for testing purposes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-orange-50 border-orange-200">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Enable Test Mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Shows a "Complete FREE (Test Mode)" button on the payment step
+                  </p>
+                </div>
+                <Switch
+                  checked={testModeEnabled}
+                  onCheckedChange={handleToggleTestMode}
+                />
+              </div>
+              {testModeEnabled && (
+                <div className="mt-4 p-4 rounded-lg border border-orange-300 bg-orange-100">
+                  <p className="text-sm text-orange-700 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Warning:</strong> Test mode is enabled. Orders completed via test mode will be marked 
+                      with "TEST MODE - No payment collected" and all records will be set to active/completed status.
+                    </span>
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

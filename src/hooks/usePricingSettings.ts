@@ -7,6 +7,7 @@ interface PricingSettings {
   registrationFeeDiscount: number; // 0-100
   registrationFeeBase: number;
   registrationFeeFinal: number;
+  testModeEnabled: boolean;
   isLoading: boolean;
 }
 
@@ -17,7 +18,7 @@ export function usePricingSettings(): PricingSettings {
       const { data, error } = await supabase
         .from("system_settings")
         .select("key, value")
-        .in("key", ["registration_fee_enabled", "registration_fee_discount"]);
+        .in("key", ["registration_fee_enabled", "registration_fee_discount", "registration_test_mode_enabled"]);
 
       if (error) throw error;
 
@@ -29,6 +30,7 @@ export function usePricingSettings(): PricingSettings {
       return {
         registrationFeeEnabled: settingsMap.registration_fee_enabled !== "false",
         registrationFeeDiscount: parseFloat(settingsMap.registration_fee_discount || "0"),
+        testModeEnabled: settingsMap.registration_test_mode_enabled === "true",
       };
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -36,6 +38,7 @@ export function usePricingSettings(): PricingSettings {
 
   const registrationFeeEnabled = settings?.registrationFeeEnabled ?? true;
   const registrationFeeDiscount = settings?.registrationFeeDiscount ?? 0;
+  const testModeEnabled = settings?.testModeEnabled ?? false;
   const registrationFeeBase = PRICING.registration.amount;
 
   // Calculate final fee
@@ -49,6 +52,7 @@ export function usePricingSettings(): PricingSettings {
     registrationFeeDiscount,
     registrationFeeBase,
     registrationFeeFinal,
+    testModeEnabled,
     isLoading,
   };
 }
