@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Package, Plus, Pencil, Trash2, Check, AlertCircle, Clock, DollarSign, TrendingUp, Receipt, Smartphone } from "lucide-react";
+import { Package, Plus, Pencil, Trash2, Check, AlertCircle, Clock, DollarSign, TrendingUp, Receipt, Smartphone, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { useOperationalCosts, useCreateOperationalCost, useUpdateOperationalCost
 import { ProductForm } from "@/components/admin/products/ProductForm";
 import { CostForm } from "@/components/admin/products/CostForm";
 import { DeviceStockSection } from "@/components/admin/products/DeviceStockSection";
+import { DeviceAlertsPanel } from "@/components/admin/products/DeviceAlertsPanel";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { format } from "date-fns";
 
@@ -281,7 +282,10 @@ export default function ProductsPage() {
         </TabsContent>
 
         {/* Stock Tab */}
-        <TabsContent value="stock" className="mt-4">
+        <TabsContent value="stock" className="mt-4 space-y-6">
+          {/* Open Device Alerts */}
+          <DeviceAlertsPanel />
+          {/* Device Stock Management */}
           <DeviceStockSection />
         </TabsContent>
 
