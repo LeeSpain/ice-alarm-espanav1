@@ -321,7 +321,8 @@
     "crm": "CRM",
     "tasks": "Tasks",
     "tickets": "Tickets",
-    "pendant": "Pendant"
+    "pendant": "Pendant",
+    "ev07b": "EV-07B"
   },
   "landing": {
     "emergencyResponse": "24/7 Emergency Response in Spain",
@@ -1544,6 +1545,7 @@
     "payments": "Payments",
     "commissions": "Commissions",
     "products": "Products",
+    "ev07b": "EV-07B",
     "analytics": "Analytics",
     "reports": "Reports",
     "system": "System",

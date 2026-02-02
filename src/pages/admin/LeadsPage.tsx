@@ -1050,7 +1050,7 @@ export default function LeadsPage() {
                     )}
                     {selectedDraft.wizard_data.includePendant !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">GPS Pendant:</span>
+                        <span className="text-muted-foreground">EV-07B Pendant:</span>
                         <span>{selectedDraft.wizard_data.includePendant ? 'Yes' : 'No'}</span>
                       </div>
                     )}
