@@ -23,6 +23,7 @@ import { ProductForm } from "@/components/admin/products/ProductForm";
 import { CostForm } from "@/components/admin/products/CostForm";
 import { DeviceStockSection } from "@/components/admin/products/DeviceStockSection";
 import { DeviceAlertsPanel } from "@/components/admin/products/DeviceAlertsPanel";
+import { DeviceApiKeyConfig } from "@/components/admin/products/DeviceApiKeyConfig";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { format } from "date-fns";
 
@@ -287,6 +288,8 @@ export default function ProductsPage() {
           <DeviceAlertsPanel />
           {/* Device Stock Management */}
           <DeviceStockSection />
+          {/* API Configuration */}
+          <DeviceApiKeyConfig />
         </TabsContent>
 
         {/* Costs Tab */}
