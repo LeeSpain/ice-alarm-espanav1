@@ -3030,19 +3030,39 @@
       "title": "Campaigns",
       "subtitle": "Create and manage outreach email campaigns",
       "newCampaign": "New Campaign",
+      "editCampaign": "Edit Campaign",
+      "createDescription": "Configure your new outreach campaign settings",
+      "editDescription": "Update your campaign settings and targeting",
       "noCampaigns": "No campaigns yet",
+      "noResults": "No campaigns match this filter",
+      "results": "results",
       "create": "Create Campaign",
       "created": "Campaign created successfully",
       "updated": "Campaign updated successfully",
       "deleted": "Campaign deleted successfully",
+      "deleteTitle": "Delete Campaign",
+      "deleteDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "deleteWarning": "This campaign has {{leads}} leads and {{emails}} emails sent. Deleting will remove all associated data.",
       "deleteConfirm": "Are you sure you want to delete this campaign?",
-      "pause": "Pause",
-      "activate": "Activate",
+      "pause": "Pause Campaign",
+      "activate": "Activate Campaign",
+      "followUps": "follow-ups",
       "status": {
         "draft": "Draft",
         "active": "Active",
         "paused": "Paused",
         "completed": "Completed"
+      },
+      "filters": {
+        "all": "All Campaigns"
+      },
+      "stats": {
+        "total": "Total",
+        "leads": "Leads",
+        "sent": "Sent",
+        "replies": "Replies",
+        "conversions": "Conversions",
+        "totalLeads": "Total Leads"
       },
       "sections": {
         "basic": "Basic Information",

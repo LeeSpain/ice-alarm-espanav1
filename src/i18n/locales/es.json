@@ -3006,19 +3006,39 @@
       "title": "Campañas",
       "subtitle": "Crear y gestionar campañas de email outreach",
       "newCampaign": "Nueva Campaña",
+      "editCampaign": "Editar Campaña",
+      "createDescription": "Configura los ajustes de tu nueva campaña de outreach",
+      "editDescription": "Actualiza los ajustes y segmentación de tu campaña",
       "noCampaigns": "Aún no hay campañas",
+      "noResults": "Ninguna campaña coincide con este filtro",
+      "results": "resultados",
       "create": "Crear Campaña",
       "created": "Campaña creada correctamente",
       "updated": "Campaña actualizada correctamente",
       "deleted": "Campaña eliminada correctamente",
+      "deleteTitle": "Eliminar Campaña",
+      "deleteDescription": "¿Está seguro de que desea eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+      "deleteWarning": "Esta campaña tiene {{leads}} leads y {{emails}} emails enviados. Eliminar borrará todos los datos asociados.",
       "deleteConfirm": "¿Está seguro de que desea eliminar esta campaña?",
-      "pause": "Pausar",
-      "activate": "Activar",
+      "pause": "Pausar Campaña",
+      "activate": "Activar Campaña",
+      "followUps": "seguimientos",
       "status": {
         "draft": "Borrador",
         "active": "Activa",
         "paused": "Pausada",
         "completed": "Completada"
+      },
+      "filters": {
+        "all": "Todas las Campañas"
+      },
+      "stats": {
+        "total": "Total",
+        "leads": "Leads",
+        "sent": "Enviados",
+        "replies": "Respuestas",
+        "conversions": "Conversiones",
+        "totalLeads": "Total Leads"
       },
       "sections": {
         "basic": "Información Básica",
