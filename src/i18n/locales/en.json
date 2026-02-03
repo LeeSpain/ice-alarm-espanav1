@@ -3018,11 +3018,23 @@
     },
     "help": {
       "title": "AI Outreach Guide",
+      "subtitle": "Master automated lead discovery and outreach campaigns",
       "howToUse": "How to Use",
       "gotIt": "Got It",
+      "tabGuides": "Tab-by-Tab Guide",
+      "proTipLabel": "Pro Tip:",
+      "workflow": {
+        "title": "The Outreach Workflow",
+        "import": "Import",
+        "rate": "AI Rate",
+        "qualify": "Qualify",
+        "research": "Research",
+        "email": "Email",
+        "convert": "Convert"
+      },
       "overview": {
-        "title": "Overview",
-        "content": "AI Outreach automates lead discovery and email campaigns for sales and partner acquisition. The workflow is simple: Import leads, let AI rate them, move qualified leads to CRM, research their business, generate personalized emails, and convert to members or partners."
+        "title": "What is AI Outreach?",
+        "content": "AI Outreach automates lead discovery and email campaigns for sales and partner acquisition. Import leads from any source, let AI score them for fit, research their business automatically, generate personalized emails, and convert qualified prospects into members or partners."
       },
       "leads": {
         "title": "Leads Tab",
@@ -3033,18 +3045,20 @@
           "Optionally assign leads to a campaign",
           "Click 'Rate All New' to let AI score leads 1-10",
           "Leads scoring 7+ can be moved to CRM"
-        ]
+        ],
+        "proTip": "Import leads in batches and rate them together for efficient processing."
       },
       "crm": {
         "title": "CRM Tab",
         "intro": "Work qualified leads through your pipeline with AI assistance.",
         "steps": [
-          "Leads appear in the 'New' column",
-          "Click 'Research Business' for AI company insights",
+          "Leads appear in the 'New' column after qualification",
+          "Click 'Research Business' for AI-generated company insights",
           "Click 'Generate Intro Email' for personalized outreach",
-          "Drag cards to update status as relationships progress",
+          "Drag cards between columns to update status",
           "Convert successful leads to Members or Partners"
-        ]
+        ],
+        "proTip": "Always research a business before generating the intro email for better personalization."
       },
       "campaigns": {
         "title": "Campaigns Tab",
@@ -3055,27 +3069,29 @@
           "Configure email tone and outreach goals",
           "Enable follow-up sequences for non-responders",
           "Assign leads to campaigns for organized outreach"
-        ]
+        ],
+        "proTip": "Create separate campaigns for different regions or industries for better targeting."
       },
       "inbox": {
         "title": "Inbox Tab",
         "intro": "Manage email conversations and responses.",
         "steps": [
           "View all email threads in one unified inbox",
-          "AI classifies replies: Interested, Question, Not Interested",
-          "Review AI-suggested responses",
-          "Edit and send personalized replies"
-        ]
+          "AI automatically classifies replies by intent",
+          "Review AI-suggested responses before sending",
+          "Edit and personalize replies as needed"
+        ],
+        "proTip": "Respond to interested leads within 24 hours for best conversion rates."
       },
       "analytics": {
         "title": "Analytics Tab",
         "intro": "Track outreach performance and conversions.",
         "metrics": [
-          "Leads Discovered: Total leads imported",
-          "Leads Qualified: Leads moved to CRM",
-          "Emails Sent: Total outreach emails",
-          "Replies Received: Response count",
-          "Conversions: Successful member/partner signups"
+          "Leads Discovered: Total leads imported into the system",
+          "Leads Qualified: Leads that passed AI rating and moved to CRM",
+          "Emails Sent: Total outreach emails dispatched",
+          "Replies Received: Number of responses received",
+          "Conversions: Successful member or partner signups"
         ]
       },
       "bestPractices": {
@@ -3085,8 +3101,19 @@
           "Rate all new leads before moving to CRM for better qualification",
           "Always review and personalize AI-generated emails before sending",
           "Follow up within 3-5 days if no response",
-          "Document notes on each lead for better context"
+          "Document notes on each lead for better context and team collaboration"
         ]
+      },
+      "quickActions": {
+        "title": "Quick Actions Reference",
+        "rateAll": "Rate All New",
+        "rateAllDesc": "AI scores all unrated leads",
+        "moveQualified": "Move Qualified",
+        "moveQualifiedDesc": "Send 7+ leads to CRM",
+        "research": "Research",
+        "researchDesc": "Get AI company insights",
+        "generateEmail": "Generate Email",
+        "generateEmailDesc": "Create personalized intro"
       }
     }
   }
