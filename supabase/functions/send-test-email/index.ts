@@ -169,6 +169,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate email format before attempting to send
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(toEmail)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format. Please provide a valid email address." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Determine provider
     const provider = settings.provider || "resend";
     const fromName = settings.from_name || "ICE Alarm España";

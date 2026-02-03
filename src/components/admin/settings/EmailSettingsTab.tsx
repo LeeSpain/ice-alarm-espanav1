@@ -76,9 +76,15 @@ export function EmailSettingsTab() {
     updateSettings(formState);
   };
 
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSendTest = () => {
-    if (testEmail.trim()) {
-      sendTestEmail(testEmail.trim());
+    const email = testEmail.trim();
+    if (email && isValidEmail(email)) {
+      sendTestEmail(email);
     }
   };
 
