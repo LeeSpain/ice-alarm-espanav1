@@ -1,233 +1,269 @@
 
-# AI Outreach Lead Rating Implementation Plan
+# Complete Email System Implementation Plan
 
-## Overview
+## Current State Analysis
 
-This plan implements a complete end-to-end campaign assignment and AI rating system for outreach leads in three stages, as requested.
+| Stage | Status | What Exists | What's Missing |
+|-------|--------|-------------|----------------|
+| **Stage 1** | ~90% | `email_settings` table, `EmailSettingsTab.tsx`, `useEmailSettings.ts` | `send-test-email` edge function |
+| **Stage 2** | ~15% | DB columns for tokens exist | OAuth flow, Connect/Disconnect logic, token refresh |
+| **Stage 3** | 0% | Nothing | `email_log` table, central `sendEmail()` function, Gmail API integration |
+| **Stage 4** | 0% | Nothing | `inbound_email_log` table, sync edge function, inbox UI |
+| **Stage 5** | 0% | Nothing | Routing rules, custom headers logic |
+| **Stage 6** | 0% | Nothing | `email_templates` table, templates management UI |
 
 ---
 
-## STAGE 1: Add campaign_id to Raw Leads
+## Stage 1: Complete Send Test Email
 
-### Database Changes
+### Edge Function Creation
 
-| Change | Details |
-|--------|---------|
-| Add column | `campaign_id uuid NULL` to `outreach_raw_leads` |
-| Add foreign key | References `outreach_campaigns(id)` with `ON DELETE SET NULL` |
-| Add index | `idx_outreach_raw_leads_campaign_id` for performance |
+Create `supabase/functions/send-test-email/index.ts`:
+- Fetch email settings from database
+- Use Resend API with configured from_name/from_email
+- Apply signature if configured
+- Return success/error status
 
+### Config Update
+
+Add to `supabase/config.toml`:
 ```text
-outreach_raw_leads
-├── id
-├── company_name
-├── campaign_id (NEW) ──────► outreach_campaigns(id)
-├── ai_score
-├── ai_reasoning
-├── ai_rated_at
-└── ...
-```
-
-### Frontend Changes
-
-**Files to modify:**
-
-| File | Changes |
-|------|---------|
-| `src/hooks/useOutreachRawLeads.ts` | Add `campaign_id` to `NewLead` interface and insert/bulk operations |
-| `src/components/admin/outreach/AddOutreachLeadModal.tsx` | Pass `campaign_id` to `addLead()` function |
-| `src/components/admin/outreach/ImportLeadsModal.tsx` | Pass `campaign_id` to bulk import |
-| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add "Campaign" column to table, join with campaigns for display |
-
-### Table Column Display
-
-The leads table will show campaign names:
-
-```text
-┌─────┬──────────────┬─────────┬──────────┬────────────────┬───────┬────────┐
-│  ✓  │ Company      │ Contact │ Pipeline │ Campaign       │ Score │ Status │
-├─────┼──────────────┼─────────┼──────────┼────────────────┼───────┼────────┤
-│ [ ] │ Acme Corp    │ John    │ Sales    │ Q1 Healthcare  │ ★★★★☆ │ New    │
-│ [ ] │ Beta Inc     │ Jane    │ Partner  │ —              │ —     │ New    │
-└─────┴──────────────┴─────────┴──────────┴────────────────┴───────┴────────┘
+[functions.send-test-email]
+verify_jwt = false
 ```
 
 ---
 
-## STAGE 2: AI Rating System
+## Stage 2: Gmail OAuth Connection
 
-### Edge Function
+### Important Note on Gmail OAuth
 
-**Create:** `supabase/functions/rate-outreach-leads/index.ts`
+Gmail OAuth for sending and reading emails requires:
+1. Google Cloud Console project with Gmail API enabled
+2. OAuth 2.0 credentials (Client ID + Client Secret)
+3. Verified OAuth consent screen
 
-This function will:
-1. Accept lead IDs (or "all_new" flag)
-2. For each lead, build an AI prompt including:
-   - Lead fields: company_name, category, location, website_url, email
-   - If campaign_id is set: fetch campaign's `target_description`, `target_locations`, `pipeline_type`
-3. Call Lovable AI Gateway to get a rating
-4. Write results to database: `ai_score`, `ai_reasoning`, `ai_rated_at`
+Since we're using Resend for email sending (already configured with `RESEND_API_KEY`), and full Gmail OAuth requires Google Cloud credentials that need to be configured by the admin, this stage will be implemented as:
 
-**AI Prompt Structure:**
-```text
-You are a B2B lead qualification specialist. Rate this lead from 1.0 to 5.0.
+**Option A (Recommended - Resend Mode):** Continue using Resend for sending emails. The "Connect Gmail" button will be replaced with a simpler configuration approach that doesn't require OAuth.
 
-Lead Information:
-- Company: {company_name}
-- Category: {category}
-- Location: {location}
-- Website: {website_url}
-- Email: {email}
+**Option B (Full Gmail OAuth):** Requires adding `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets. Will implement the full OAuth flow.
 
-[If campaign is set:]
-Campaign Target:
-- Description: {target_description}
-- Target Regions: {target_locations}
-- Pipeline: {pipeline_type}
+### Implementation (Option A - Resend-based)
 
-Rate based on:
-1. Business fit for our emergency response service
-2. Location match (Spain preferred)
-3. Contact information quality
-4. Industry relevance
-
-Respond in JSON: {"score": 4.2, "reasoning": "Brief explanation"}
-```
-
-### Frontend Changes
-
-**Files to modify:**
-
-| File | Changes |
-|------|---------|
-| `src/hooks/useOutreachRawLeads.ts` | Add `rateLeads()` mutation that calls edge function |
-| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add "AI Rate Selected" and "AI Rate All New" buttons |
-| `src/i18n/locales/en.json` | Add translation keys for rating buttons |
-| `src/i18n/locales/es.json` | Add Spanish translations |
-
-### UI for Rating Buttons
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  Raw Leads                                                                  │
-│                                                                             │
-│  [Import] [+ Add Lead]        [⚡ Rate Selected] [⚡ Rate All New]          │
-│                                                                             │
-│  ┌─ Filters ──────────────────────────────────────────────────────────────┐ │
-│  │ Status: [All ▼]  Pipeline: [All ▼]  Source: [All ▼]  Campaign: [All ▼] │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Rating Flow
-
-```text
-User clicks "Rate All New"
-         │
-         ▼
-    ┌─────────────┐
-    │ Get leads   │
-    │ status=new  │
-    │ no ai_score │
-    └─────┬───────┘
-          │
-          ▼
-    ┌─────────────┐
-    │ For each    │──────────────┐
-    │ lead        │              │
-    └─────┬───────┘              │
-          │                      │
-          ▼                      │
-    ┌─────────────┐              │
-    │ If has      │              │
-    │ campaign_id │              │
-    │ → fetch     │              │
-    │   campaign  │              │
-    └─────┬───────┘              │
-          │                      │
-          ▼                      │
-    ┌─────────────┐              │
-    │ Build AI    │              │
-    │ prompt with │              │
-    │ lead +      │              │
-    │ campaign    │              │
-    │ context     │              │
-    └─────┬───────┘              │
-          │                      │
-          ▼                      │
-    ┌─────────────┐              │
-    │ Call Lovable│              │
-    │ AI Gateway  │              │
-    └─────┬───────┘              │
-          │                      │
-          ▼                      │
-    ┌─────────────┐              │
-    │ Update lead │              │
-    │ ai_score    │              │
-    │ ai_reasoning│              │
-    │ ai_rated_at │              │
-    └─────┬───────┘              │
-          │                      │
-          ▼                      │
-    ┌─────────────┐              │
-    │ Next lead   │◄─────────────┘
-    └─────────────┘
-```
-
----
-
-## STAGE 3: Campaign Threshold Qualification
-
-### Logic Change
-
-Currently `handleMoveQualified` in OutreachLeadsTab uses:
-```javascript
-Number(l.ai_score) >= 3.5  // Hard-coded
-```
-
-New logic:
-```javascript
-// For each lead:
-// 1. If lead.campaign_id exists → get campaign.min_ai_score
-// 2. Else use default 3.5
-// 3. Check if lead.ai_score >= threshold
-```
+Since `RESEND_API_KEY` is already configured, I'll:
+1. Update the UI to show "Email Service: Resend" as connected
+2. Allow configuring from_email (must match verified Resend domain)
+3. Hide the Gmail-specific OAuth UI elements
+4. Keep the architecture extensible for future Gmail support
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useOutreachRawLeads.ts` | Update `qualifyLeadsMutation` to: 1) Check campaign thresholds, 2) Copy `campaign_id` to CRM leads |
-| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Remove hard-coded 3.5 check, let hook handle threshold logic |
+| `src/components/admin/settings/EmailSettingsTab.tsx` | Show Resend as the connected provider, update UI messaging |
+| `src/hooks/useEmailSettings.ts` | Add method to test Resend connection |
 
-### Updated Qualification Logic
+---
+
+## Stage 3: Central Email Service
+
+### Database: Create `email_log` Table
 
 ```text
-┌───────────────────────────────────────────────────────────────────────────┐
-│  qualifyLeads(selectedLeadIds)                                            │
-├───────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  1. Fetch selected leads from outreach_raw_leads                          │
-│                                                                           │
-│  2. Group leads by campaign_id                                            │
-│     ├── Leads with campaign_id → fetch campaign.min_ai_score              │
-│     └── Leads without campaign → use default threshold (3.5)              │
-│                                                                           │
-│  3. Filter leads where ai_score >= threshold                              │
-│                                                                           │
-│  4. Create CRM leads (INCLUDING campaign_id!)                             │
-│     {                                                                     │
-│       raw_lead_id,                                                        │
-│       company_name,                                                       │
-│       campaign_id,  ◄── NEW: Copy from raw lead                           │
-│       ai_score,                                                           │
-│       ...                                                                 │
-│     }                                                                     │
-│                                                                           │
-│  5. Update raw leads status → 'qualified'                                 │
-│                                                                           │
-└───────────────────────────────────────────────────────────────────────────┘
+email_log
+├── id (uuid, PK)
+├── to_email (text)
+├── from_email (text)
+├── subject (text)
+├── body_html (text)
+├── body_text (text, nullable)
+├── module (text: 'member', 'outreach', 'support', 'system')
+├── related_entity_id (uuid, nullable)
+├── related_entity_type (text, nullable)
+├── template_id (uuid, FK → email_templates, nullable)
+├── status (text: 'pending', 'sent', 'failed', 'bounced')
+├── provider_message_id (text, nullable) 
+├── error_message (text, nullable)
+├── headers_json (jsonb, nullable)
+├── sent_at (timestamptz, nullable)
+├── created_at (timestamptz)
 ```
+
+### Edge Function: Create `send-email/index.ts`
+
+Central email sending function that:
+1. Checks email toggles (enable_member_emails, etc.)
+2. Enforces hourly/daily send limits
+3. Applies from_name, from_email, signature from settings
+4. Adds custom headers (X-ICE-Module, X-ICE-Entity-ID)
+5. Sends via Resend API
+6. Logs to `email_log` table
+7. Returns provider message ID
+
+### Function Signature
+
+```text
+POST /send-email
+{
+  to: string,
+  subject: string,
+  html_body: string,
+  text_body?: string,
+  module: 'member' | 'outreach' | 'support' | 'system',
+  related_entity_id?: string,
+  related_entity_type?: string,
+  template_id?: string,
+  reply_to?: string,
+  thread_id?: string,
+  in_reply_to?: string
+}
+
+Response:
+{
+  success: boolean,
+  message_id?: string,
+  log_id?: string,
+  error?: string
+}
+```
+
+### Update Existing Edge Functions
+
+Modify these functions to use the central email service:
+- `partner-admin-create`
+- `staff-register`
+- `send-member-update-request`
+- `stripe-webhook`
+- `partner-send-invite`
+
+---
+
+## Stage 4: Inbound Email Sync
+
+### Implementation Approach
+
+Since we're using Resend (not Gmail) for sending, inbound email handling will be implemented using **Resend Webhooks** rather than Gmail inbox polling.
+
+### Database: Create `inbound_email_log` Table
+
+```text
+inbound_email_log
+├── id (uuid, PK)
+├── from_email (text)
+├── to_email (text)
+├── subject (text)
+├── body_snippet (text)
+├── body_html (text, nullable)
+├── provider_message_id (text)
+├── provider_thread_id (text, nullable)
+├── received_at (timestamptz)
+├── module_matched (text, nullable)
+├── linked_entity_id (uuid, nullable)
+├── linked_entity_type (text, nullable)
+├── is_reply (boolean)
+├── original_email_log_id (uuid, FK → email_log, nullable)
+├── processed_at (timestamptz, nullable)
+├── created_at (timestamptz)
+```
+
+### Edge Function: Create `email-inbound-webhook/index.ts`
+
+Webhook handler that:
+1. Receives inbound email notifications
+2. Parses headers to identify the original email (via X-ICE-* headers)
+3. Links replies to outreach leads or member tickets
+4. Stores in `inbound_email_log`
+5. Triggers appropriate UI updates
+
+### UI Updates
+
+Add inbox display to:
+- `OutreachInboxTab.tsx` - Show replies to outreach emails
+- Member detail page - Show email correspondence
+
+---
+
+## Stage 5: Email Routing Rules
+
+### Routing Logic
+
+Implement in `send-email/index.ts`:
+
+| Module | Headers Added | Purpose |
+|--------|---------------|---------|
+| `member` | `X-ICE-Module: member`, `X-ICE-Entity-ID: {member_id}` | Registration, welcome, verification |
+| `outreach` | `X-ICE-Module: outreach`, `X-ICE-Entity-ID: {lead_id}` | AI Outreach campaigns |
+| `support` | `X-ICE-Module: support`, `X-ICE-Entity-ID: {ticket_id}` | Support tickets |
+| `system` | `X-ICE-Module: system` | Internal notifications |
+
+### Inbound Matching Logic
+
+In `email-inbound-webhook/index.ts`:
+1. Check `In-Reply-To` and `References` headers
+2. Look up original email in `email_log` by `provider_message_id`
+3. Use the `module` and `related_entity_id` from original email
+4. Link inbound to the same entity
+
+---
+
+## Stage 6: Email Templates
+
+### Database: Create `email_templates` Table
+
+```text
+email_templates
+├── id (uuid, PK)
+├── slug (text, unique) 
+├── name (text)
+├── description (text, nullable)
+├── module (text: 'member', 'outreach', 'support', 'system')
+├── subject_en (text)
+├── subject_es (text)
+├── body_html_en (text)
+├── body_html_es (text)
+├── body_text_en (text, nullable)
+├── body_text_es (text, nullable)
+├── variables (jsonb) 
+├── is_active (boolean)
+├── created_at (timestamptz)
+├── updated_at (timestamptz)
+```
+
+### Seed Default Templates
+
+| Slug | Module | Purpose |
+|------|--------|---------|
+| `member-welcome` | member | Welcome email after registration |
+| `member-verification` | member | Email verification |
+| `member-password-reset` | member | Password reset request |
+| `member-billing-notice` | member | Billing/payment notices |
+| `support-ticket-created` | support | Support ticket confirmation |
+| `outreach-intro` | outreach | Initial outreach email |
+| `outreach-followup-1` | outreach | First follow-up |
+| `outreach-followup-2` | outreach | Second follow-up |
+
+### UI: Email Templates Management
+
+Create new component `EmailTemplatesTab.tsx`:
+- List all templates with module badges
+- Edit template subject and body (EN/ES)
+- Preview with sample variables
+- Activate/deactivate templates
+
+Add tab to Settings page under Communications.
+
+### Hook: Create `useEmailTemplates.ts`
+
+CRUD operations for email templates.
+
+### Update `send-email/index.ts`
+
+Add template rendering:
+1. Accept optional `template_slug` and `variables`
+2. Fetch template from database
+3. Replace variables in subject and body
+4. Support language-based template selection
 
 ---
 
@@ -237,30 +273,88 @@ New logic:
 
 | File | Purpose |
 |------|---------|
-| `supabase/functions/rate-outreach-leads/index.ts` | Edge function for AI rating |
+| `supabase/functions/send-test-email/index.ts` | Test email sending |
+| `supabase/functions/send-email/index.ts` | Central email service |
+| `supabase/functions/email-inbound-webhook/index.ts` | Inbound email handler |
+| `src/hooks/useEmailTemplates.ts` | Templates CRUD hook |
+| `src/components/admin/settings/EmailTemplatesTab.tsx` | Templates management UI |
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useOutreachRawLeads.ts` | Add campaign_id to types, add rateLeads mutation, update qualify logic |
-| `src/components/admin/outreach/AddOutreachLeadModal.tsx` | Pass campaign_id to addLead |
-| `src/components/admin/outreach/ImportLeadsModal.tsx` | Pass campaign_id to bulk import |
-| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add rating buttons, campaign column, campaign filter, remove hard-coded threshold |
-| `src/i18n/locales/en.json` | Add translation keys |
-| `src/i18n/locales/es.json` | Add Spanish translations |
+| `src/components/admin/settings/EmailSettingsTab.tsx` | Update connection UI for Resend |
+| `src/hooks/useEmailSettings.ts` | Add connection test method |
+| `src/pages/admin/SettingsPage.tsx` | Add Templates tab |
+| `supabase/functions/partner-admin-create/index.ts` | Use central email service |
+| `supabase/functions/staff-register/index.ts` | Use central email service |
+| `supabase/functions/send-member-update-request/index.ts` | Use central email service |
+| `supabase/functions/stripe-webhook/index.ts` | Use central email service |
+| `supabase/config.toml` | Add new function configs |
 
-### Database Migration
+### Database Migrations
 
 ```sql
--- Add campaign_id to outreach_raw_leads
-ALTER TABLE outreach_raw_leads 
-ADD COLUMN campaign_id uuid NULL 
-REFERENCES outreach_campaigns(id) ON DELETE SET NULL;
+-- Stage 1: No DB changes needed
 
--- Add index for performance
-CREATE INDEX idx_outreach_raw_leads_campaign_id 
-ON outreach_raw_leads(campaign_id);
+-- Stage 3: email_log table
+CREATE TABLE public.email_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  to_email text NOT NULL,
+  from_email text NOT NULL,
+  subject text NOT NULL,
+  body_html text NOT NULL,
+  body_text text,
+  module text NOT NULL,
+  related_entity_id uuid,
+  related_entity_type text,
+  template_id uuid,
+  status text NOT NULL DEFAULT 'pending',
+  provider_message_id text,
+  error_message text,
+  headers_json jsonb,
+  sent_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Stage 4: inbound_email_log table  
+CREATE TABLE public.inbound_email_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_email text NOT NULL,
+  to_email text NOT NULL,
+  subject text,
+  body_snippet text,
+  body_html text,
+  provider_message_id text,
+  provider_thread_id text,
+  received_at timestamptz NOT NULL,
+  module_matched text,
+  linked_entity_id uuid,
+  linked_entity_type text,
+  is_reply boolean DEFAULT false,
+  original_email_log_id uuid REFERENCES email_log(id),
+  processed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Stage 6: email_templates table
+CREATE TABLE public.email_templates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug text UNIQUE NOT NULL,
+  name text NOT NULL,
+  description text,
+  module text NOT NULL,
+  subject_en text NOT NULL,
+  subject_es text NOT NULL,
+  body_html_en text NOT NULL,
+  body_html_es text NOT NULL,
+  body_text_en text,
+  body_text_es text,
+  variables jsonb DEFAULT '[]',
+  is_active boolean DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 ```
 
 ---
@@ -269,16 +363,43 @@ ON outreach_raw_leads(campaign_id);
 
 ```json
 {
-  "outreach": {
-    "leads": {
-      "rateSelected": "AI Rate Selected",
-      "rateAllNew": "AI Rate All New",
-      "rating": "Rating leads...",
-      "ratingComplete": "Successfully rated {{count}} leads",
-      "noLeadsToRate": "No unrated leads to process",
-      "columns": {
-        "campaign": "Campaign"
-      }
+  "settings": {
+    "email": {
+      "title": "Email Settings",
+      "provider": "Email Provider",
+      "resendConnected": "Resend API Connected",
+      "resendNotConnected": "Resend API Not Connected",
+      "fromName": "From Name",
+      "fromEmail": "From Email",
+      "replyTo": "Reply-To Email",
+      "signature": "Email Signature (HTML)",
+      "dailyLimit": "Daily Send Limit",
+      "hourlyLimit": "Hourly Send Limit",
+      "memberEmails": "Member Emails",
+      "outreachEmails": "Outreach Emails",
+      "systemEmails": "System Emails",
+      "testEmail": "Send Test Email",
+      "testEmailSent": "Test email sent successfully",
+      "testEmailFailed": "Failed to send test email",
+      "saveSettings": "Save Email Settings",
+      "settingsSaved": "Email settings saved"
+    },
+    "templates": {
+      "title": "Email Templates",
+      "subtitle": "Manage email templates used across the platform",
+      "name": "Template Name",
+      "slug": "Slug",
+      "module": "Module",
+      "subjectEn": "Subject (English)",
+      "subjectEs": "Subject (Spanish)",
+      "bodyEn": "Body (English)",
+      "bodyEs": "Body (Spanish)",
+      "variables": "Available Variables",
+      "preview": "Preview",
+      "active": "Active",
+      "inactive": "Inactive",
+      "save": "Save Template",
+      "saved": "Template saved"
     }
   }
 }
@@ -289,22 +410,49 @@ ON outreach_raw_leads(campaign_id);
 ## Done Criteria Checklist
 
 ### Stage 1
-- [ ] campaign_id column added to outreach_raw_leads
-- [ ] Foreign key constraint to outreach_campaigns
-- [ ] Index created for performance
-- [ ] AddOutreachLeadModal saves campaign_id
-- [ ] ImportLeadsModal saves campaign_id
-- [ ] Campaign column displays in table
+- [ ] `send-test-email` edge function created
+- [ ] Test email sends successfully from UI
+- [ ] Uses configured from_name and from_email
 
 ### Stage 2
-- [ ] Edge function created for AI rating
-- [ ] "AI Rate Selected" button works
-- [ ] "AI Rate All New" button works
-- [ ] AI considers campaign context when rating
-- [ ] ai_score, ai_reasoning, ai_rated_at populated
+- [ ] Connection status shows correctly
+- [ ] UI explains Resend is the email provider
+- [ ] From email validation for Resend domain
 
 ### Stage 3
-- [ ] Qualification uses campaign.min_ai_score when available
-- [ ] Default 3.5 used for leads without campaign
-- [ ] campaign_id copied to outreach_crm_leads
-- [ ] Hard-coded 3.5 removed from UI
+- [ ] `email_log` table created with RLS
+- [ ] `send-email` central function works
+- [ ] All existing email functions migrated
+- [ ] Send limits enforced
+- [ ] All emails logged
+
+### Stage 4
+- [ ] `inbound_email_log` table created
+- [ ] Inbound webhook receives emails
+- [ ] Replies linked to original emails
+- [ ] Replies display in Outreach inbox
+
+### Stage 5
+- [ ] Custom headers added to all outbound emails
+- [ ] Routing correctly identifies module
+- [ ] Inbound emails linked to correct entities
+
+### Stage 6
+- [ ] `email_templates` table created
+- [ ] Default templates seeded
+- [ ] Template management UI works
+- [ ] Templates support variables
+- [ ] EN/ES language versions work
+
+---
+
+## Implementation Order
+
+1. **Stage 1** - Create `send-test-email` function (quick win)
+2. **Stage 2** - Update UI for Resend provider display
+3. **Stage 6** - Create templates system (needed by Stage 3)
+4. **Stage 3** - Create central email service with templates
+5. **Stage 5** - Add routing headers (part of Stage 3)
+6. **Stage 4** - Inbound email handling (after outbound works)
+
+This order ensures each stage builds on the previous, and templates are available before the central service needs them.
