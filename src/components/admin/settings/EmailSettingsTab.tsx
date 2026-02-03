@@ -44,7 +44,7 @@ export function EmailSettingsTab() {
     enable_system_emails: true,
     gmail_mode: "smtp",
     gmail_smtp_host: "smtp.gmail.com",
-    gmail_smtp_port: 587,
+    gmail_smtp_port: 465,
     gmail_smtp_user: "",
   });
 
@@ -66,7 +66,7 @@ export function EmailSettingsTab() {
         enable_system_emails: settings.enable_system_emails,
         gmail_mode: settings.gmail_mode || "smtp",
         gmail_smtp_host: settings.gmail_smtp_host || "smtp.gmail.com",
-        gmail_smtp_port: settings.gmail_smtp_port || 587,
+        gmail_smtp_port: settings.gmail_smtp_port || 465,
         gmail_smtp_user: settings.gmail_smtp_user || "",
       });
     }
@@ -184,12 +184,12 @@ export function EmailSettingsTab() {
                   <Label>SMTP Port</Label>
                   <Input
                     type="number"
-                    value={formState.gmail_smtp_port || 587}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, gmail_smtp_port: parseInt(e.target.value) || 587 }))}
-                    placeholder="587"
+                    value={formState.gmail_smtp_port || 465}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, gmail_smtp_port: parseInt(e.target.value) || 465 }))}
+                    placeholder="465"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Use 587 for TLS (recommended) or 465 for SSL
+                    Use 465 (SSL). Port 587 (STARTTLS) is not supported in this environment.
                   </p>
                 </div>
 
