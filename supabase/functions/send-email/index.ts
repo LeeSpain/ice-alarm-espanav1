@@ -56,11 +56,13 @@ async function sendViaGmailSMTP(
   }
 
   try {
+    // Use port 465 with direct SSL for reliable Gmail SMTP
+    const port = settings.gmail_smtp_port || 465;
     const client = new SMTPClient({
       connection: {
         hostname: settings.gmail_smtp_host || "smtp.gmail.com",
-        port: settings.gmail_smtp_port || 587,
-        tls: true,
+        port: port,
+        tls: port === 465,
         auth: {
           username: settings.gmail_smtp_user,
           password: appPassword,
