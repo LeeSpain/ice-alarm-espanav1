@@ -2994,11 +2994,23 @@
     },
     "help": {
       "title": "Guía de AI Outreach",
+      "subtitle": "Domina el descubrimiento automatizado de leads y campañas de contacto",
       "howToUse": "Cómo Usar",
       "gotIt": "Entendido",
+      "tabGuides": "Guía Pestaña por Pestaña",
+      "proTipLabel": "Consejo Pro:",
+      "workflow": {
+        "title": "El Flujo de Outreach",
+        "import": "Importar",
+        "rate": "IA Califica",
+        "qualify": "Cualificar",
+        "research": "Investigar",
+        "email": "Email",
+        "convert": "Convertir"
+      },
       "overview": {
-        "title": "Visión General",
-        "content": "AI Outreach automatiza el descubrimiento de leads y campañas de email para ventas y adquisición de socios. El flujo es simple: Importar leads, dejar que la IA los califique, mover leads calificados al CRM, investigar su negocio, generar emails personalizados y convertir a miembros o socios."
+        "title": "¿Qué es AI Outreach?",
+        "content": "AI Outreach automatiza el descubrimiento de leads y campañas de email para ventas y adquisición de socios. Importa leads de cualquier fuente, deja que la IA los puntúe, investiga su negocio automáticamente, genera emails personalizados y convierte prospectos cualificados en miembros o socios."
       },
       "leads": {
         "title": "Pestaña Leads",
@@ -3009,18 +3021,20 @@
           "Opcionalmente asigna leads a una campaña",
           "Haz clic en 'Calificar Todos' para que la IA puntúe leads del 1-10",
           "Leads con puntuación 7+ pueden moverse al CRM"
-        ]
+        ],
+        "proTip": "Importa leads en lotes y califícalos juntos para un procesamiento eficiente."
       },
       "crm": {
         "title": "Pestaña CRM",
         "intro": "Trabaja leads calificados a través de tu pipeline con asistencia de IA.",
         "steps": [
-          "Los leads aparecen en la columna 'Nuevo'",
-          "Haz clic en 'Investigar Negocio' para insights de la empresa",
+          "Los leads aparecen en la columna 'Nuevo' tras la cualificación",
+          "Haz clic en 'Investigar Negocio' para insights generados por IA",
           "Haz clic en 'Generar Email Intro' para contacto personalizado",
-          "Arrastra tarjetas para actualizar estado según avanza la relación",
+          "Arrastra tarjetas entre columnas para actualizar el estado",
           "Convierte leads exitosos a Miembros o Socios"
-        ]
+        ],
+        "proTip": "Siempre investiga un negocio antes de generar el email intro para mejor personalización."
       },
       "campaigns": {
         "title": "Pestaña Campañas",
@@ -3031,27 +3045,29 @@
           "Configura tono de email y objetivos de contacto",
           "Activa secuencias de seguimiento para no respondedores",
           "Asigna leads a campañas para contacto organizado"
-        ]
+        ],
+        "proTip": "Crea campañas separadas para diferentes regiones o industrias para mejor segmentación."
       },
       "inbox": {
         "title": "Pestaña Bandeja",
         "intro": "Gestiona conversaciones de email y respuestas.",
         "steps": [
           "Ve todos los hilos de email en una bandeja unificada",
-          "La IA clasifica respuestas: Interesado, Pregunta, No Interesado",
-          "Revisa respuestas sugeridas por IA",
-          "Edita y envía respuestas personalizadas"
-        ]
+          "La IA clasifica automáticamente respuestas por intención",
+          "Revisa respuestas sugeridas por IA antes de enviar",
+          "Edita y personaliza respuestas según necesites"
+        ],
+        "proTip": "Responde a leads interesados en 24 horas para mejores tasas de conversión."
       },
       "analytics": {
         "title": "Pestaña Analíticas",
         "intro": "Rastrea rendimiento de contactos y conversiones.",
         "metrics": [
-          "Leads Descubiertos: Total de leads importados",
-          "Leads Calificados: Leads movidos al CRM",
-          "Emails Enviados: Total de emails de contacto",
-          "Respuestas Recibidas: Conteo de respuestas",
-          "Conversiones: Registros exitosos de miembros/socios"
+          "Leads Descubiertos: Total de leads importados al sistema",
+          "Leads Calificados: Leads que pasaron la calificación IA y fueron al CRM",
+          "Emails Enviados: Total de emails de contacto despachados",
+          "Respuestas Recibidas: Número de respuestas recibidas",
+          "Conversiones: Registros exitosos de miembros o socios"
         ]
       },
       "bestPractices": {
@@ -3061,8 +3077,19 @@
           "Califica todos los leads nuevos antes de moverlos al CRM",
           "Siempre revisa y personaliza emails generados por IA antes de enviar",
           "Haz seguimiento en 3-5 días si no hay respuesta",
-          "Documenta notas en cada lead para mejor contexto"
+          "Documenta notas en cada lead para mejor contexto y colaboración del equipo"
         ]
+      },
+      "quickActions": {
+        "title": "Referencia de Acciones Rápidas",
+        "rateAll": "Calificar Todos",
+        "rateAllDesc": "IA puntúa todos los leads",
+        "moveQualified": "Mover Calificados",
+        "moveQualifiedDesc": "Envía leads 7+ al CRM",
+        "research": "Investigar",
+        "researchDesc": "Obtén insights de la empresa",
+        "generateEmail": "Generar Email",
+        "generateEmailDesc": "Crea intro personalizada"
       }
     }
   }
