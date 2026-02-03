@@ -1105,6 +1105,72 @@ export type Database = {
           },
         ]
       }
+      email_settings: {
+        Row: {
+          created_at: string
+          daily_send_limit: number
+          enable_member_emails: boolean
+          enable_outreach_emails: boolean
+          enable_system_emails: boolean
+          from_email: string | null
+          from_name: string | null
+          gmail_access_token: string | null
+          gmail_connected: boolean
+          gmail_connected_email: string | null
+          gmail_last_sync_at: string | null
+          gmail_refresh_token: string | null
+          gmail_token_expires_at: string | null
+          hourly_send_limit: number
+          id: string
+          provider: string
+          reply_to_email: string | null
+          signature_html: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_send_limit?: number
+          enable_member_emails?: boolean
+          enable_outreach_emails?: boolean
+          enable_system_emails?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          gmail_access_token?: string | null
+          gmail_connected?: boolean
+          gmail_connected_email?: string | null
+          gmail_last_sync_at?: string | null
+          gmail_refresh_token?: string | null
+          gmail_token_expires_at?: string | null
+          hourly_send_limit?: number
+          id?: string
+          provider?: string
+          reply_to_email?: string | null
+          signature_html?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_send_limit?: number
+          enable_member_emails?: boolean
+          enable_outreach_emails?: boolean
+          enable_system_emails?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          gmail_access_token?: string | null
+          gmail_connected?: boolean
+          gmail_connected_email?: string | null
+          gmail_last_sync_at?: string | null
+          gmail_refresh_token?: string | null
+          gmail_token_expires_at?: string | null
+          hourly_send_limit?: number
+          id?: string
+          provider?: string
+          reply_to_email?: string | null
+          signature_html?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           contact_name: string
