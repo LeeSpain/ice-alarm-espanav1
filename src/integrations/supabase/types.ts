@@ -2318,6 +2318,341 @@ export type Database = {
           },
         ]
       }
+      outreach_campaigns: {
+        Row: {
+          conversions_count: number | null
+          created_at: string | null
+          days_between_emails: number | null
+          description: string | null
+          email_sequence: Json | null
+          emails_sent: number | null
+          id: string
+          leads_count: number | null
+          max_emails_per_lead: number | null
+          min_ai_score: number | null
+          name: string
+          pipeline_type: string
+          replies_count: number | null
+          status: string
+          target_categories: string[] | null
+          target_locations: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          conversions_count?: number | null
+          created_at?: string | null
+          days_between_emails?: number | null
+          description?: string | null
+          email_sequence?: Json | null
+          emails_sent?: number | null
+          id?: string
+          leads_count?: number | null
+          max_emails_per_lead?: number | null
+          min_ai_score?: number | null
+          name: string
+          pipeline_type?: string
+          replies_count?: number | null
+          status?: string
+          target_categories?: string[] | null
+          target_locations?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          conversions_count?: number | null
+          created_at?: string | null
+          days_between_emails?: number | null
+          description?: string | null
+          email_sequence?: Json | null
+          emails_sent?: number | null
+          id?: string
+          leads_count?: number | null
+          max_emails_per_lead?: number | null
+          min_ai_score?: number | null
+          name?: string
+          pipeline_type?: string
+          replies_count?: number | null
+          status?: string
+          target_categories?: string[] | null
+          target_locations?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      outreach_crm_leads: {
+        Row: {
+          ai_score: number | null
+          assigned_ai_agent: string | null
+          campaign_id: string | null
+          category: string | null
+          company_name: string
+          contact_name: string | null
+          converted_at: string | null
+          converted_to_member_id: string | null
+          converted_to_partner_id: string | null
+          created_at: string | null
+          email: string | null
+          email_count: number | null
+          id: string
+          last_contacted_at: string | null
+          last_reply_at: string | null
+          location: string | null
+          personalization_hooks: Json | null
+          phone: string | null
+          pipeline_type: string
+          raw_lead_id: string | null
+          research_summary: string | null
+          source: string
+          status: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          ai_score?: number | null
+          assigned_ai_agent?: string | null
+          campaign_id?: string | null
+          category?: string | null
+          company_name: string
+          contact_name?: string | null
+          converted_at?: string | null
+          converted_to_member_id?: string | null
+          converted_to_partner_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_count?: number | null
+          id?: string
+          last_contacted_at?: string | null
+          last_reply_at?: string | null
+          location?: string | null
+          personalization_hooks?: Json | null
+          phone?: string | null
+          pipeline_type?: string
+          raw_lead_id?: string | null
+          research_summary?: string | null
+          source: string
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          ai_score?: number | null
+          assigned_ai_agent?: string | null
+          campaign_id?: string | null
+          category?: string | null
+          company_name?: string
+          contact_name?: string | null
+          converted_at?: string | null
+          converted_to_member_id?: string | null
+          converted_to_partner_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_count?: number | null
+          id?: string
+          last_contacted_at?: string | null
+          last_reply_at?: string | null
+          location?: string | null
+          personalization_hooks?: Json | null
+          phone?: string | null
+          pipeline_type?: string
+          raw_lead_id?: string | null
+          research_summary?: string | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_outreach_crm_leads_campaign"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_crm_leads_raw_lead_id_fkey"
+            columns: ["raw_lead_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_raw_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_email_drafts: {
+        Row: {
+          body_html: string | null
+          body_text: string
+          campaign_id: string | null
+          created_at: string | null
+          crm_lead_id: string
+          external_message_id: string | null
+          id: string
+          scheduled_for: string | null
+          sent_at: string | null
+          sequence_number: number | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_text: string
+          campaign_id?: string | null
+          created_at?: string | null
+          crm_lead_id: string
+          external_message_id?: string | null
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_number?: number | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string
+          campaign_id?: string | null
+          created_at?: string | null
+          crm_lead_id?: string
+          external_message_id?: string | null
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_number?: number | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_email_drafts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_email_drafts_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_email_threads: {
+        Row: {
+          ai_classification: string | null
+          ai_suggested_reply: string | null
+          created_at: string | null
+          crm_lead_id: string
+          direction: string
+          id: string
+          message_body: string
+          requires_action: boolean | null
+          resolved_at: string | null
+          subject: string
+          thread_id: string | null
+        }
+        Insert: {
+          ai_classification?: string | null
+          ai_suggested_reply?: string | null
+          created_at?: string | null
+          crm_lead_id: string
+          direction: string
+          id?: string
+          message_body: string
+          requires_action?: boolean | null
+          resolved_at?: string | null
+          subject: string
+          thread_id?: string | null
+        }
+        Update: {
+          ai_classification?: string | null
+          ai_suggested_reply?: string | null
+          created_at?: string | null
+          crm_lead_id?: string
+          direction?: string
+          id?: string
+          message_body?: string
+          requires_action?: boolean | null
+          resolved_at?: string | null
+          subject?: string
+          thread_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_email_threads_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_raw_leads: {
+        Row: {
+          ai_rated_at: string | null
+          ai_reasoning: string | null
+          ai_score: number | null
+          category: string | null
+          company_name: string
+          contact_name: string | null
+          created_at: string | null
+          discovered_at: string | null
+          email: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          phone: string | null
+          pipeline_type: string
+          raw_data: Json | null
+          source: string
+          status: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          ai_rated_at?: string | null
+          ai_reasoning?: string | null
+          ai_score?: number | null
+          category?: string | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string | null
+          discovered_at?: string | null
+          email?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          phone?: string | null
+          pipeline_type?: string
+          raw_data?: Json | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          ai_rated_at?: string | null
+          ai_reasoning?: string | null
+          ai_score?: number | null
+          category?: string | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string | null
+          discovered_at?: string | null
+          email?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          phone?: string | null
+          pipeline_type?: string
+          raw_data?: Json | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       partner_agreements: {
         Row: {
           agreement_html: string
