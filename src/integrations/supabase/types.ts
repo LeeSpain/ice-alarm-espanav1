@@ -1330,11 +1330,27 @@ export type Database = {
       media_content_calendar: {
         Row: {
           audience_id: string | null
+          blog_post_id: string | null
           created_at: string
+          facebook_post_id: string | null
+          generated_at: string | null
+          generated_blog_content: string | null
+          generated_blog_intro: string | null
+          generated_image_prompt: string | null
+          generated_image_url: string | null
+          generated_post_text: string | null
+          generated_post_text_es: string | null
           goal_id: string | null
           id: string
           image_style_id: string | null
+          is_approved: boolean | null
+          is_disabled: boolean | null
           notes: string | null
+          publish_error: string | null
+          publish_to_blog: boolean | null
+          publish_to_facebook: boolean | null
+          publish_to_instagram: boolean | null
+          published_at: string | null
           scheduled_date: string
           scheduled_time: string
           social_post_id: string | null
@@ -1344,11 +1360,27 @@ export type Database = {
         }
         Insert: {
           audience_id?: string | null
+          blog_post_id?: string | null
           created_at?: string
+          facebook_post_id?: string | null
+          generated_at?: string | null
+          generated_blog_content?: string | null
+          generated_blog_intro?: string | null
+          generated_image_prompt?: string | null
+          generated_image_url?: string | null
+          generated_post_text?: string | null
+          generated_post_text_es?: string | null
           goal_id?: string | null
           id?: string
           image_style_id?: string | null
+          is_approved?: boolean | null
+          is_disabled?: boolean | null
           notes?: string | null
+          publish_error?: string | null
+          publish_to_blog?: boolean | null
+          publish_to_facebook?: boolean | null
+          publish_to_instagram?: boolean | null
+          published_at?: string | null
           scheduled_date: string
           scheduled_time?: string
           social_post_id?: string | null
@@ -1358,11 +1390,27 @@ export type Database = {
         }
         Update: {
           audience_id?: string | null
+          blog_post_id?: string | null
           created_at?: string
+          facebook_post_id?: string | null
+          generated_at?: string | null
+          generated_blog_content?: string | null
+          generated_blog_intro?: string | null
+          generated_image_prompt?: string | null
+          generated_image_url?: string | null
+          generated_post_text?: string | null
+          generated_post_text_es?: string | null
           goal_id?: string | null
           id?: string
           image_style_id?: string | null
+          is_approved?: boolean | null
+          is_disabled?: boolean | null
           notes?: string | null
+          publish_error?: string | null
+          publish_to_blog?: boolean | null
+          publish_to_facebook?: boolean | null
+          publish_to_instagram?: boolean | null
+          published_at?: string | null
           scheduled_date?: string
           scheduled_time?: string
           social_post_id?: string | null
@@ -1376,6 +1424,13 @@ export type Database = {
             columns: ["audience_id"]
             isOneToOne: false
             referencedRelation: "media_audiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_content_calendar_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
             referencedColumns: ["id"]
           },
           {
@@ -1464,6 +1519,87 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      media_publishing_history: {
+        Row: {
+          audience_id: string | null
+          calendar_item_id: string | null
+          created_at: string | null
+          external_post_id: string | null
+          goal_id: string | null
+          id: string
+          image_style_id: string | null
+          image_url: string | null
+          platform: string
+          post_text: string | null
+          published_at: string
+          topic_id: string | null
+        }
+        Insert: {
+          audience_id?: string | null
+          calendar_item_id?: string | null
+          created_at?: string | null
+          external_post_id?: string | null
+          goal_id?: string | null
+          id?: string
+          image_style_id?: string | null
+          image_url?: string | null
+          platform: string
+          post_text?: string | null
+          published_at?: string
+          topic_id?: string | null
+        }
+        Update: {
+          audience_id?: string | null
+          calendar_item_id?: string | null
+          created_at?: string | null
+          external_post_id?: string | null
+          goal_id?: string | null
+          id?: string
+          image_style_id?: string | null
+          image_url?: string | null
+          platform?: string
+          post_text?: string | null
+          published_at?: string
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_publishing_history_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "media_audiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_publishing_history_calendar_item_id_fkey"
+            columns: ["calendar_item_id"]
+            isOneToOne: false
+            referencedRelation: "media_content_calendar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_publishing_history_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "media_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_publishing_history_image_style_id_fkey"
+            columns: ["image_style_id"]
+            isOneToOne: false
+            referencedRelation: "media_image_styles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_publishing_history_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "media_topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_schedule_settings: {
         Row: {
