@@ -1,165 +1,215 @@
 
-# AI Outreach Module - Complete Review Report
 
-## Summary: ✅ 100% Complete
+# Complete Staff Documentation - Implementation Plan
 
-After a thorough page-by-page, component-by-component, and code-by-code review, the AI Outreach module implementation is **100% complete** and ready for use.
+## Overview
 
----
-
-## Verification Checklist
-
-### 1. Navigation & Routing ✅
-
-| Item | Status | Location |
-|------|--------|----------|
-| Sidebar Navigation Entry | ✅ Complete | `AdminSidebar.tsx:116` - Megaphone icon with `sidebar.aiOutreach` key |
-| Lazy Import | ✅ Complete | `App.tsx:76` |
-| Route Definition | ✅ Complete | `App.tsx:265` - `/admin/ai-outreach` |
-| Sidebar Translation (EN) | ✅ Complete | `en.json:1604` - "AI Outreach" |
-| Sidebar Translation (ES) | ✅ Complete | `es.json:1580` - "AI Outreach" |
+Populate the `documentation` table with comprehensive, professionally-written documents across all 6 categories for ICE Alarm España's staff and AI systems. All documents will be created in both English and Spanish, published status, with appropriate visibility and importance ratings.
 
 ---
 
-### 2. Database Tables ✅
+## Document Categories & Content Plan
 
-| Table | Status | Migration | RLS | Realtime |
-|-------|--------|-----------|-----|----------|
-| `outreach_raw_leads` | ✅ Created | `20260203135753_*.sql` | ✅ Staff-only | ✅ Enabled |
-| `outreach_crm_leads` | ✅ Created | `20260203135753_*.sql` | ✅ Staff-only | ✅ Enabled |
-| `outreach_campaigns` | ✅ Created | `20260203135753_*.sql` + `20260203140858_*.sql` | ✅ Staff-only | — |
-| `outreach_email_drafts` | ✅ Created | `20260203135753_*.sql` | ✅ Staff-only | — |
-| `outreach_email_threads` | ✅ Created | `20260203135753_*.sql` | ✅ Staff-only | ✅ Enabled |
+### 1. Emergency Protocols (category: `emergency`)
+**Importance: 9-10** | **Visibility: staff, ai** | **Priority: Highest**
 
-**Additional Database Features:**
-- ✅ Indexes on `email`, `pipeline_type`, `status`, `created_at` for all tables
-- ✅ FK constraints linking CRM leads to raw leads and campaigns
-- ✅ `updated_at` triggers for automatic timestamp updates
-- ✅ System setting `outreach_min_score_threshold` inserted
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| SOS Alert Response Protocol | EN/ES | 10 | sos, emergency, response |
+| Fall Detection Alert Protocol | EN/ES | 10 | fall, detection, response |
+| Device Offline Alert Procedure | EN/ES | 9 | offline, device, troubleshooting |
+| Emergency Escalation Guidelines | EN/ES | 10 | escalation, supervisor, 112 |
+| Member Non-Response Protocol | EN/ES | 9 | non-response, safety-check |
 
----
-
-### 3. TypeScript Types ✅
-
-All 5 outreach tables are correctly typed in `src/integrations/supabase/types.ts`:
-- `outreach_campaigns` (lines 2321-2395) - includes all campaign config fields
-- `outreach_crm_leads` (lines 2396-2494)
-- `outreach_email_drafts` (lines 2495-2553)
-- `outreach_email_threads` (lines 2555-2604)
-- `outreach_raw_leads` (lines 2605-2695)
+**Content includes:**
+- Step-by-step response procedures
+- Response time requirements (<30 seconds)
+- When to call 112 (Spanish emergency number)
+- Supervisor escalation triggers
+- Documentation requirements
 
 ---
 
-### 4. Components ✅
+### 2. Device Guides (category: `device`)
+**Importance: 7-9** | **Visibility: staff, ai, member**
 
-| Component | Status | Features |
-|-----------|--------|----------|
-| `AIOutreachPage.tsx` | ✅ Complete | 5-tab layout with icons and translations |
-| `OutreachLeadsTab.tsx` | ✅ Complete | Table, filters, bulk actions, selection |
-| `OutreachCRMTab.tsx` | ✅ Complete | Kanban board with 6 status columns |
-| `OutreachCampaignsTab.tsx` | ✅ Complete | Campaign table with stats and actions |
-| `OutreachInboxTab.tsx` | ✅ Complete | Placeholder ready for email integration |
-| `OutreachAnalyticsTab.tsx` | ✅ Complete | Metrics grid with 5 KPIs |
-| `AddOutreachLeadModal.tsx` | ✅ Complete | Form with campaign selection |
-| `ImportLeadsModal.tsx` | ✅ Complete | CSV upload + paste list with campaign selection |
-| `CreateCampaignModal.tsx` | ✅ Complete | Full form with 4 sections: Basic, Targeting, Messaging, Follow-up |
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| EV-07B Pendant Complete Guide | EN/ES | 9 | ev07b, pendant, setup |
+| Pendant Charging & Battery Care | EN/ES | 8 | battery, charging, maintenance |
+| Pendant Troubleshooting Guide | EN/ES | 8 | troubleshooting, issues, support |
+| GPS & Location Features | EN/ES | 7 | gps, location, tracking |
+| Fall Detection Settings | EN/ES | 8 | fall-detection, sensitivity |
 
----
-
-### 5. Hooks ✅
-
-| Hook | Status | Features |
-|------|--------|----------|
-| `useOutreachRawLeads.ts` | ✅ Complete | Query, add, bulk add, qualify, reject mutations |
-| `useOutreachCRMLeads.ts` | ✅ Complete | Query, status updates, research updates |
-| `useOutreachCampaigns.ts` | ✅ Complete | Query, create, update, delete mutations |
+**Content includes:**
+- Device specifications (IP67, LTE, 5-day battery)
+- Setup instructions
+- Charging procedures (magnetic USB, 2-hour full charge)
+- Common issues and solutions
+- Care and maintenance tips
 
 ---
 
-### 6. Translations ✅
+### 3. Staff Instructions (category: `staff`)
+**Importance: 7-9** | **Visibility: staff, ai**
 
-| Namespace | English | Spanish |
-|-----------|---------|---------|
-| `sidebar.aiOutreach` | ✅ "AI Outreach" | ✅ "AI Outreach" |
-| `outreach.title` | ✅ Present | ✅ Present |
-| `outreach.tabs.*` (5 keys) | ✅ Complete | ✅ Complete |
-| `outreach.leads.*` (~40 keys) | ✅ Complete | ✅ Complete |
-| `outreach.crm.*` (~20 keys) | ✅ Complete | ✅ Complete |
-| `outreach.campaigns.*` (~50 keys) | ✅ Complete | ✅ Complete |
-| `outreach.inbox.*` (~10 keys) | ✅ Complete | ✅ Complete |
-| `outreach.analytics.*` (~10 keys) | ✅ Complete | ✅ Complete |
-| `outreach.settings.*` | ✅ Complete | ✅ Complete |
-| `outreach.rating.*` | ✅ Complete | ✅ Complete |
-| `common.day/days` | ✅ Present | ✅ Present |
-| `common.languages.*` | ✅ Present | ✅ Present |
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| Daily Shift Procedures | EN/ES | 9 | shift, procedures, daily |
+| Member Information Lookup | EN/ES | 8 | member, lookup, crm |
+| Courtesy Call Guidelines | EN/ES | 7 | courtesy-calls, check-in |
+| Shift Handover Protocol | EN/ES | 8 | handover, shift-change |
+| Communication Standards | EN/ES | 7 | communication, professionalism |
 
-**Total Translation Keys Added:** ~140 keys in both locales
-
----
-
-### 7. Campaign Features ✅
-
-The CreateCampaignModal includes all required fields:
-
-| Field | Type | Status |
-|-------|------|--------|
-| Campaign name | Required text | ✅ |
-| Description | Optional text | ✅ |
-| Pipeline type | Sales/Partner select | ✅ |
-| Status | Active/Paused select | ✅ |
-| Target description | Optional textarea | ✅ |
-| Target locations | Optional comma-separated | ✅ |
-| Default language | EN/ES select | ✅ |
-| Email tone | Professional/Friendly/Neutral | ✅ |
-| Outreach goal | Intro/Partnership/Meeting | ✅ |
-| Follow-up enabled | Toggle switch | ✅ |
-| Max emails per lead | 1-5 select | ✅ |
-| Days between follow-ups | 1-14 select | ✅ |
+**Content includes:**
+- Start/end shift checklists
+- How to search and access member profiles
+- Courtesy call scripts and timing
+- Handover documentation requirements
+- Professional communication guidelines (bilingual EN/ES)
 
 ---
 
-### 8. Campaign Integration ✅
+### 4. General (category: `general`)
+**Importance: 5-7** | **Visibility: admin, staff, ai**
 
-| Feature | Status |
-|---------|--------|
-| Campaign selectable in Add Lead modal | ✅ Implemented |
-| Campaign selectable in Import modal | ✅ Implemented |
-| Campaigns filtered by pipeline type | ✅ Implemented |
-| Only active campaigns shown | ✅ Implemented |
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| Company Overview | EN/ES | 7 | company, about, mission |
+| Service Pricing & Plans | EN/ES | 8 | pricing, membership, plans |
+| Data Privacy & GDPR Compliance | EN/ES | 8 | gdpr, privacy, data-protection |
+| Working Hours & Contact Information | EN/ES | 6 | hours, contact, support |
+| Glossary of Terms | EN/ES | 5 | glossary, terminology |
 
----
-
-## Data Isolation Verification ✅
-
-The AI Outreach module is **completely isolated** from Members CRM:
-
-- ❌ No FK references to `members` table
-- ❌ No FK references to `leads` table (Members CRM)
-- ❌ No FK references to `crm_contacts` table
-- ✅ Uses separate `outreach_raw_leads` table
-- ✅ Uses separate `outreach_crm_leads` table
-- ✅ RLS policies restrict to staff only
-- ✅ Explicit conversion logic required to move to Members CRM (Stage 6 - future)
+**Content includes:**
+- ICE Alarm España company background
+- Pricing structure (Single €27.49/mo, Couple €38.49/mo, Pendant €151.25)
+- GDPR/LOPD compliance information
+- 24/7 support center details
+- Common terminology definitions
 
 ---
 
-## Console Errors Check ✅
+### 5. Member Guides (category: `member_guide`)
+**Importance: 6-8** | **Visibility: member, staff, ai**
 
-No console errors detected during the review.
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| Getting Started with ICE Alarm | EN/ES | 8 | getting-started, onboarding |
+| Managing Your Emergency Contacts | EN/ES | 8 | contacts, emergency, update |
+| Updating Medical Information | EN/ES | 8 | medical, health, update |
+| Using the Member Dashboard | EN/ES | 7 | dashboard, account, profile |
+| How to Test Your Pendant | EN/ES | 7 | testing, pendant, functionality |
+| Billing & Subscription FAQ | EN/ES | 6 | billing, subscription, payment |
+
+**Content includes:**
+- First-time setup guide
+- How to add/edit up to 3 emergency contacts
+- Medical profile management (conditions, medications, allergies)
+- Dashboard navigation
+- Monthly test procedures
+- Subscription management
 
 ---
 
-## Conclusion
+### 6. Partner Info (category: `partner`)
+**Importance: 6-8** | **Visibility: staff, ai**
 
-The AI Outreach module implementation is **100% complete** with:
+| Document Title | Language | Importance | Tags |
+|---------------|----------|------------|------|
+| Partner Program Overview | EN/ES | 8 | partner, referral, program |
+| Commission Structure & Payments | EN/ES | 8 | commission, payment, earnings |
+| Partner Dashboard Guide | EN/ES | 7 | dashboard, tools, referrals |
+| Marketing Materials & Guidelines | EN/ES | 7 | marketing, branding, materials |
+| Partner Agreement Requirements | EN/ES | 8 | agreement, legal, compliance |
 
-- ✅ Full navigation and routing
-- ✅ 5 database tables with proper RLS
-- ✅ 9 React components
-- ✅ 3 custom hooks
-- ✅ ~140 translation keys in both EN and ES
-- ✅ Complete campaign creation with all required fields
-- ✅ Lead import with campaign assignment
-- ✅ Complete data isolation from Members CRM
+**Content includes:**
+- €50 commission per referral
+- 7-day holding period before payment approval
+- Referral link and QR code generation
+- Marketing presentation downloads (PDF/PPTX)
+- Spanish ID (NIF/NIE/CIF) requirement
+- Legal agreement signing process
 
-**The module is ready for testing and use at: Admin → Communication → AI Outreach**
+---
+
+## Database Migration
+
+Create a single migration to insert all documentation records:
+
+```sql
+-- Insert all documentation records
+-- Each document includes:
+--   - Unique slug
+--   - Category (emergency/device/staff/general/member_guide/partner)
+--   - Full professional content
+--   - Visibility array
+--   - Importance (1-10)
+--   - Tags array
+--   - Language (en/es)
+--   - Status: published
+```
+
+---
+
+## Document Content Standards
+
+### Formatting
+- Use Markdown formatting for structure
+- Include headers (##, ###) for sections
+- Use bullet points for lists
+- Include numbered steps for procedures
+- Add **bold** for emphasis on critical points
+
+### Length Guidelines
+- Emergency protocols: 400-600 words (detailed procedures)
+- Device guides: 300-500 words (practical instructions)
+- Staff instructions: 300-400 words (clear procedures)
+- General: 200-400 words (informational)
+- Member guides: 250-400 words (user-friendly)
+- Partner info: 300-400 words (professional)
+
+### Bilingual Requirement
+- Each document created in both EN and ES
+- Total: ~60 documents (30 in each language)
+
+---
+
+## Implementation Summary
+
+| Category | Documents (EN) | Documents (ES) | Total |
+|----------|----------------|----------------|-------|
+| Emergency Protocols | 5 | 5 | 10 |
+| Device Guides | 5 | 5 | 10 |
+| Staff Instructions | 5 | 5 | 10 |
+| General | 5 | 5 | 10 |
+| Member Guides | 6 | 6 | 12 |
+| Partner Info | 5 | 5 | 10 |
+| **TOTAL** | **31** | **31** | **62** |
+
+---
+
+## Technical Implementation
+
+### Migration File
+- Single SQL migration file with all INSERT statements
+- Uses proper escaping for content with apostrophes
+- Sets `status = 'published'` for immediate availability
+- Sets `created_by` and `updated_by` to NULL (system-generated)
+
+### Content Delivery
+After migration runs:
+- Staff can view documents at `/call-centre/documents`
+- Documents with `member` visibility appear in member Help Center
+- AI agents receive documents with `ai` visibility in their context
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/[timestamp]_seed_documentation.sql` | Insert all 62 documents |
+
+No code changes required - documentation system is already fully functional.
+
