@@ -1,458 +1,327 @@
 
-# Complete Email System Implementation Plan
+
+# Dual Email Provider Implementation Plan (Resend + Gmail SMTP)
 
 ## Current State Analysis
 
-| Stage | Status | What Exists | What's Missing |
-|-------|--------|-------------|----------------|
-| **Stage 1** | ~90% | `email_settings` table, `EmailSettingsTab.tsx`, `useEmailSettings.ts` | `send-test-email` edge function |
-| **Stage 2** | ~15% | DB columns for tokens exist | OAuth flow, Connect/Disconnect logic, token refresh |
-| **Stage 3** | 0% | Nothing | `email_log` table, central `sendEmail()` function, Gmail API integration |
-| **Stage 4** | 0% | Nothing | `inbound_email_log` table, sync edge function, inbox UI |
-| **Stage 5** | 0% | Nothing | Routing rules, custom headers logic |
-| **Stage 6** | 0% | Nothing | `email_templates` table, templates management UI |
+| Component | Status | Details |
+|-----------|--------|---------|
+| `email_settings` table | Exists | Has `provider` column (default 'gmail') but no SMTP fields |
+| Edge functions | Resend-only | `send-email` and `send-test-email` only support Resend |
+| UI | Resend-only | Shows "Resend Connected" with no provider toggle |
+| Secrets | Resend only | `RESEND_API_KEY` is configured, no Gmail SMTP secret |
 
 ---
 
-## Stage 1: Complete Send Test Email
+## Stage 1: Database Schema Update
 
-### Edge Function Creation
+### Add Gmail SMTP Fields to `email_settings`
 
-Create `supabase/functions/send-test-email/index.ts`:
-- Fetch email settings from database
-- Use Resend API with configured from_name/from_email
-- Apply signature if configured
-- Return success/error status
+| New Column | Type | Default | Purpose |
+|------------|------|---------|---------|
+| `gmail_mode` | text | 'smtp' | Mode selector: 'smtp' or 'oauth' |
+| `gmail_smtp_host` | text | 'smtp.gmail.com' | SMTP server |
+| `gmail_smtp_port` | integer | 587 | SMTP port (587 for TLS) |
+| `gmail_smtp_user` | text | null | Gmail username/email |
+| `gmail_smtp_password_secret_name` | text | null | Reference to secret storing App Password |
 
-### Config Update
-
-Add to `supabase/config.toml`:
-```text
-[functions.send-test-email]
-verify_jwt = false
-```
-
----
-
-## Stage 2: Gmail OAuth Connection
-
-### Important Note on Gmail OAuth
-
-Gmail OAuth for sending and reading emails requires:
-1. Google Cloud Console project with Gmail API enabled
-2. OAuth 2.0 credentials (Client ID + Client Secret)
-3. Verified OAuth consent screen
-
-Since we're using Resend for email sending (already configured with `RESEND_API_KEY`), and full Gmail OAuth requires Google Cloud credentials that need to be configured by the admin, this stage will be implemented as:
-
-**Option A (Recommended - Resend Mode):** Continue using Resend for sending emails. The "Connect Gmail" button will be replaced with a simpler configuration approach that doesn't require OAuth.
-
-**Option B (Full Gmail OAuth):** Requires adding `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets. Will implement the full OAuth flow.
-
-### Implementation (Option A - Resend-based)
-
-Since `RESEND_API_KEY` is already configured, I'll:
-1. Update the UI to show "Email Service: Resend" as connected
-2. Allow configuring from_email (must match verified Resend domain)
-3. Hide the Gmail-specific OAuth UI elements
-4. Keep the architecture extensible for future Gmail support
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/admin/settings/EmailSettingsTab.tsx` | Show Resend as the connected provider, update UI messaging |
-| `src/hooks/useEmailSettings.ts` | Add method to test Resend connection |
-
----
-
-## Stage 3: Central Email Service
-
-### Database: Create `email_log` Table
-
-```text
-email_log
-├── id (uuid, PK)
-├── to_email (text)
-├── from_email (text)
-├── subject (text)
-├── body_html (text)
-├── body_text (text, nullable)
-├── module (text: 'member', 'outreach', 'support', 'system')
-├── related_entity_id (uuid, nullable)
-├── related_entity_type (text, nullable)
-├── template_id (uuid, FK → email_templates, nullable)
-├── status (text: 'pending', 'sent', 'failed', 'bounced')
-├── provider_message_id (text, nullable) 
-├── error_message (text, nullable)
-├── headers_json (jsonb, nullable)
-├── sent_at (timestamptz, nullable)
-├── created_at (timestamptz)
-```
-
-### Edge Function: Create `send-email/index.ts`
-
-Central email sending function that:
-1. Checks email toggles (enable_member_emails, etc.)
-2. Enforces hourly/daily send limits
-3. Applies from_name, from_email, signature from settings
-4. Adds custom headers (X-ICE-Module, X-ICE-Entity-ID)
-5. Sends via Resend API
-6. Logs to `email_log` table
-7. Returns provider message ID
-
-### Function Signature
-
-```text
-POST /send-email
-{
-  to: string,
-  subject: string,
-  html_body: string,
-  text_body?: string,
-  module: 'member' | 'outreach' | 'support' | 'system',
-  related_entity_id?: string,
-  related_entity_type?: string,
-  template_id?: string,
-  reply_to?: string,
-  thread_id?: string,
-  in_reply_to?: string
-}
-
-Response:
-{
-  success: boolean,
-  message_id?: string,
-  log_id?: string,
-  error?: string
-}
-```
-
-### Update Existing Edge Functions
-
-Modify these functions to use the central email service:
-- `partner-admin-create`
-- `staff-register`
-- `send-member-update-request`
-- `stripe-webhook`
-- `partner-send-invite`
-
----
-
-## Stage 4: Inbound Email Sync
-
-### Implementation Approach
-
-Since we're using Resend (not Gmail) for sending, inbound email handling will be implemented using **Resend Webhooks** rather than Gmail inbox polling.
-
-### Database: Create `inbound_email_log` Table
-
-```text
-inbound_email_log
-├── id (uuid, PK)
-├── from_email (text)
-├── to_email (text)
-├── subject (text)
-├── body_snippet (text)
-├── body_html (text, nullable)
-├── provider_message_id (text)
-├── provider_thread_id (text, nullable)
-├── received_at (timestamptz)
-├── module_matched (text, nullable)
-├── linked_entity_id (uuid, nullable)
-├── linked_entity_type (text, nullable)
-├── is_reply (boolean)
-├── original_email_log_id (uuid, FK → email_log, nullable)
-├── processed_at (timestamptz, nullable)
-├── created_at (timestamptz)
-```
-
-### Edge Function: Create `email-inbound-webhook/index.ts`
-
-Webhook handler that:
-1. Receives inbound email notifications
-2. Parses headers to identify the original email (via X-ICE-* headers)
-3. Links replies to outreach leads or member tickets
-4. Stores in `inbound_email_log`
-5. Triggers appropriate UI updates
-
-### UI Updates
-
-Add inbox display to:
-- `OutreachInboxTab.tsx` - Show replies to outreach emails
-- Member detail page - Show email correspondence
-
----
-
-## Stage 5: Email Routing Rules
-
-### Routing Logic
-
-Implement in `send-email/index.ts`:
-
-| Module | Headers Added | Purpose |
-|--------|---------------|---------|
-| `member` | `X-ICE-Module: member`, `X-ICE-Entity-ID: {member_id}` | Registration, welcome, verification |
-| `outreach` | `X-ICE-Module: outreach`, `X-ICE-Entity-ID: {lead_id}` | AI Outreach campaigns |
-| `support` | `X-ICE-Module: support`, `X-ICE-Entity-ID: {ticket_id}` | Support tickets |
-| `system` | `X-ICE-Module: system` | Internal notifications |
-
-### Inbound Matching Logic
-
-In `email-inbound-webhook/index.ts`:
-1. Check `In-Reply-To` and `References` headers
-2. Look up original email in `email_log` by `provider_message_id`
-3. Use the `module` and `related_entity_id` from original email
-4. Link inbound to the same entity
-
----
-
-## Stage 6: Email Templates
-
-### Database: Create `email_templates` Table
-
-```text
-email_templates
-├── id (uuid, PK)
-├── slug (text, unique) 
-├── name (text)
-├── description (text, nullable)
-├── module (text: 'member', 'outreach', 'support', 'system')
-├── subject_en (text)
-├── subject_es (text)
-├── body_html_en (text)
-├── body_html_es (text)
-├── body_text_en (text, nullable)
-├── body_text_es (text, nullable)
-├── variables (jsonb) 
-├── is_active (boolean)
-├── created_at (timestamptz)
-├── updated_at (timestamptz)
-```
-
-### Seed Default Templates
-
-| Slug | Module | Purpose |
-|------|--------|---------|
-| `member-welcome` | member | Welcome email after registration |
-| `member-verification` | member | Email verification |
-| `member-password-reset` | member | Password reset request |
-| `member-billing-notice` | member | Billing/payment notices |
-| `support-ticket-created` | support | Support ticket confirmation |
-| `outreach-intro` | outreach | Initial outreach email |
-| `outreach-followup-1` | outreach | First follow-up |
-| `outreach-followup-2` | outreach | Second follow-up |
-
-### UI: Email Templates Management
-
-Create new component `EmailTemplatesTab.tsx`:
-- List all templates with module badges
-- Edit template subject and body (EN/ES)
-- Preview with sample variables
-- Activate/deactivate templates
-
-Add tab to Settings page under Communications.
-
-### Hook: Create `useEmailTemplates.ts`
-
-CRUD operations for email templates.
-
-### Update `send-email/index.ts`
-
-Add template rendering:
-1. Accept optional `template_slug` and `variables`
-2. Fetch template from database
-3. Replace variables in subject and body
-4. Support language-based template selection
-
----
-
-## Files Summary
-
-### New Files to Create
-
-| File | Purpose |
-|------|---------|
-| `supabase/functions/send-test-email/index.ts` | Test email sending |
-| `supabase/functions/send-email/index.ts` | Central email service |
-| `supabase/functions/email-inbound-webhook/index.ts` | Inbound email handler |
-| `src/hooks/useEmailTemplates.ts` | Templates CRUD hook |
-| `src/components/admin/settings/EmailTemplatesTab.tsx` | Templates management UI |
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/admin/settings/EmailSettingsTab.tsx` | Update connection UI for Resend |
-| `src/hooks/useEmailSettings.ts` | Add connection test method |
-| `src/pages/admin/SettingsPage.tsx` | Add Templates tab |
-| `supabase/functions/partner-admin-create/index.ts` | Use central email service |
-| `supabase/functions/staff-register/index.ts` | Use central email service |
-| `supabase/functions/send-member-update-request/index.ts` | Use central email service |
-| `supabase/functions/stripe-webhook/index.ts` | Use central email service |
-| `supabase/config.toml` | Add new function configs |
-
-### Database Migrations
+### Migration SQL
 
 ```sql
--- Stage 1: No DB changes needed
+ALTER TABLE public.email_settings
+ADD COLUMN IF NOT EXISTS gmail_mode text DEFAULT 'smtp',
+ADD COLUMN IF NOT EXISTS gmail_smtp_host text DEFAULT 'smtp.gmail.com',
+ADD COLUMN IF NOT EXISTS gmail_smtp_port integer DEFAULT 587,
+ADD COLUMN IF NOT EXISTS gmail_smtp_user text,
+ADD COLUMN IF NOT EXISTS gmail_smtp_password_secret_name text;
 
--- Stage 3: email_log table
-CREATE TABLE public.email_log (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  to_email text NOT NULL,
-  from_email text NOT NULL,
-  subject text NOT NULL,
-  body_html text NOT NULL,
-  body_text text,
-  module text NOT NULL,
-  related_entity_id uuid,
-  related_entity_type text,
-  template_id uuid,
-  status text NOT NULL DEFAULT 'pending',
-  provider_message_id text,
-  error_message text,
-  headers_json jsonb,
-  sent_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Stage 4: inbound_email_log table  
-CREATE TABLE public.inbound_email_log (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  from_email text NOT NULL,
-  to_email text NOT NULL,
-  subject text,
-  body_snippet text,
-  body_html text,
-  provider_message_id text,
-  provider_thread_id text,
-  received_at timestamptz NOT NULL,
-  module_matched text,
-  linked_entity_id uuid,
-  linked_entity_type text,
-  is_reply boolean DEFAULT false,
-  original_email_log_id uuid REFERENCES email_log(id),
-  processed_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Stage 6: email_templates table
-CREATE TABLE public.email_templates (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug text UNIQUE NOT NULL,
-  name text NOT NULL,
-  description text,
-  module text NOT NULL,
-  subject_en text NOT NULL,
-  subject_es text NOT NULL,
-  body_html_en text NOT NULL,
-  body_html_es text NOT NULL,
-  body_text_en text,
-  body_text_es text,
-  variables jsonb DEFAULT '[]',
-  is_active boolean DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+COMMENT ON COLUMN email_settings.gmail_mode IS 'Gmail mode: smtp or oauth';
+COMMENT ON COLUMN email_settings.gmail_smtp_password_secret_name IS 'Name of the secret storing Gmail App Password';
 ```
 
 ---
 
-## Translation Keys to Add
+## Stage 2: Update UI - Provider Selection
 
-```json
-{
-  "settings": {
-    "email": {
-      "title": "Email Settings",
-      "provider": "Email Provider",
-      "resendConnected": "Resend API Connected",
-      "resendNotConnected": "Resend API Not Connected",
-      "fromName": "From Name",
-      "fromEmail": "From Email",
-      "replyTo": "Reply-To Email",
-      "signature": "Email Signature (HTML)",
-      "dailyLimit": "Daily Send Limit",
-      "hourlyLimit": "Hourly Send Limit",
-      "memberEmails": "Member Emails",
-      "outreachEmails": "Outreach Emails",
-      "systemEmails": "System Emails",
-      "testEmail": "Send Test Email",
-      "testEmailSent": "Test email sent successfully",
-      "testEmailFailed": "Failed to send test email",
-      "saveSettings": "Save Email Settings",
-      "settingsSaved": "Email settings saved"
-    },
-    "templates": {
-      "title": "Email Templates",
-      "subtitle": "Manage email templates used across the platform",
-      "name": "Template Name",
-      "slug": "Slug",
-      "module": "Module",
-      "subjectEn": "Subject (English)",
-      "subjectEs": "Subject (Spanish)",
-      "bodyEn": "Body (English)",
-      "bodyEs": "Body (Spanish)",
-      "variables": "Available Variables",
-      "preview": "Preview",
-      "active": "Active",
-      "inactive": "Inactive",
-      "save": "Save Template",
-      "saved": "Template saved"
-    }
-  }
+### EmailSettingsTab.tsx Changes
+
+**Add Provider Selector UI:**
+- Radio group or dropdown to switch between "Resend" and "Gmail"
+- When "Resend" is selected: Show current Resend configuration
+- When "Gmail" is selected: Show Gmail SMTP fields
+
+**Gmail SMTP Configuration Fields:**
+- SMTP Host (default: smtp.gmail.com)
+- SMTP Port (default: 587)
+- Gmail User (email address)
+- App Password input (stored as secret, masked after save)
+
+**UI Flow:**
+
+```text
+┌─────────────────────────────────────────────┐
+│ Email Provider                              │
+│                                             │
+│  ○ Resend (API-based)                       │
+│    └── Status: Connected ✓                  │
+│                                             │
+│  ● Gmail SMTP                               │
+│    ├── SMTP Host: smtp.gmail.com            │
+│    ├── SMTP Port: 587                       │
+│    ├── Gmail User: your@gmail.com           │
+│    └── App Password: ••••••••••             │
+│                                             │
+│  💡 Use Gmail temporarily until DNS          │
+│     verification for Resend is complete.    │
+└─────────────────────────────────────────────┘
+```
+
+### Update useEmailSettings.ts
+
+**Add to EmailSettings interface:**
+```typescript
+gmail_mode: 'smtp' | 'oauth';
+gmail_smtp_host: string | null;
+gmail_smtp_port: number;
+gmail_smtp_user: string | null;
+gmail_smtp_password_secret_name: string | null;
+```
+
+**Add to EmailSettingsUpdate interface:**
+```typescript
+provider?: 'resend' | 'gmail';
+gmail_mode?: 'smtp' | 'oauth';
+gmail_smtp_host?: string;
+gmail_smtp_port?: number;
+gmail_smtp_user?: string;
+```
+
+**Add new mutation for saving Gmail App Password:**
+- Invoke edge function to securely store password as a secret
+- Update `gmail_smtp_password_secret_name` in email_settings
+
+---
+
+## Stage 3: Update Edge Functions for Dual Provider
+
+### send-email/index.ts Changes
+
+**Add Gmail SMTP Sending Logic:**
+
+```typescript
+// Pseudocode for provider branching
+if (settings.provider === 'gmail') {
+  // Fetch App Password from secrets
+  const appPassword = Deno.env.get(settings.gmail_smtp_password_secret_name);
+  
+  // Use Deno SMTP client or nodemailer-style library
+  await sendViaGmailSMTP({
+    host: settings.gmail_smtp_host,
+    port: settings.gmail_smtp_port,
+    user: settings.gmail_smtp_user,
+    password: appPassword,
+    from: `${fromName} <${fromEmail}>`,
+    to,
+    subject,
+    html: html_body,
+    headers: customHeaders,
+  });
+} else {
+  // Existing Resend logic
+  const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+  await resend.emails.send({ ... });
 }
+```
+
+**SMTP Library for Deno:**
+- Use `https://deno.land/x/smtp` or `https://deno.land/x/denomailer`
+- Both support TLS/STARTTLS on port 587
+
+### send-test-email/index.ts Changes
+
+Apply same dual-provider logic:
+1. Check `settings.provider`
+2. Route to appropriate sending method
+3. Update test email content to show active provider
+
+### Maintain Consistent Behavior Across Providers
+
+| Feature | Resend | Gmail SMTP |
+|---------|--------|------------|
+| Logging to `email_log` | ✓ | ✓ |
+| Apply templates + signature | ✓ | ✓ |
+| X-ICE-Module headers | ✓ | ✓ |
+| Rate limiting | ✓ | ✓ |
+| Error handling | ✓ | ✓ |
+
+---
+
+## Stage 4: Secure App Password Storage
+
+### New Edge Function: save-gmail-password
+
+**Purpose:** Securely store Gmail App Password as a Supabase secret
+
+**Approach:** 
+Since we can't create environment secrets dynamically, we'll use a fixed secret name:
+- Secret name: `GMAIL_APP_PASSWORD`
+- Admin must manually add this secret via Lovable UI
+
+**Alternative Approach (Database Storage with Encryption):**
+Store encrypted password in `email_settings.gmail_smtp_password_encrypted` using Supabase Vault or symmetric encryption.
+
+**Recommended:** Use fixed secret name `GMAIL_APP_PASSWORD` for simplicity.
+
+### UI Flow for Password Setup
+
+1. Admin enters Gmail App Password in settings
+2. System validates it's not empty and follows format (16 chars, no spaces)
+3. Show instructions: "Add this password as GMAIL_APP_PASSWORD secret in Lovable settings"
+4. Once secret is configured, system can verify by attempting SMTP connection
+
+---
+
+## Stage 5: Update UI Copy (Stage 4 from original request)
+
+### Changes to EmailSettingsTab.tsx
+
+**Current Text → Updated Text:**
+
+| Current | Updated |
+|---------|---------|
+| "Email Service" | "Email Provider" |
+| "Resend Connected" | Provider-specific status |
+| "Verified domain: icealarm.es" | Dynamic based on provider |
+
+**Add Helper Text:**
+```
+💡 Use Gmail SMTP temporarily until DNS verification 
+   for Resend is complete. Gmail requires an App Password 
+   (not your regular password).
+```
+
+**Add Gmail Setup Instructions:**
+```
+To use Gmail:
+1. Enable 2-Step Verification on your Google account
+2. Generate an App Password at security.google.com
+3. Enter the 16-character App Password above
+4. Add it as GMAIL_APP_PASSWORD in your project secrets
+```
+
+---
+
+## Files to Create/Modify
+
+### New Files
+| File | Purpose |
+|------|---------|
+| - | No new files needed |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `src/components/admin/settings/EmailSettingsTab.tsx` | Add provider toggle, Gmail SMTP fields, updated copy |
+| `src/hooks/useEmailSettings.ts` | Add Gmail fields to interfaces, add provider update |
+| `supabase/functions/send-email/index.ts` | Add Gmail SMTP sending logic with provider branching |
+| `supabase/functions/send-test-email/index.ts` | Add Gmail SMTP test email logic |
+
+### Database Migration
+| Migration | Changes |
+|-----------|---------|
+| `add_gmail_smtp_fields.sql` | Add gmail_mode, gmail_smtp_host, gmail_smtp_port, gmail_smtp_user columns |
+
+---
+
+## Implementation Order
+
+1. **Database Migration** - Add Gmail SMTP columns
+2. **Update useEmailSettings.ts** - Add new fields to interfaces
+3. **Update EmailSettingsTab.tsx** - Add provider toggle and Gmail SMTP form
+4. **Update send-email/index.ts** - Add SMTP sending logic
+5. **Update send-test-email/index.ts** - Add SMTP test logic
+6. **Deploy and Test** - Verify both providers work
+
+---
+
+## Technical Details
+
+### Gmail SMTP Configuration
+
+**Connection Settings:**
+```
+Host: smtp.gmail.com
+Port: 587 (STARTTLS) or 465 (SSL)
+Security: STARTTLS
+Auth: Username + App Password
+```
+
+**App Password Requirements:**
+- Google Account must have 2-Step Verification enabled
+- Generate at: https://security.google.com/settings/security/apppasswords
+- Format: 16 characters, no spaces
+
+### Deno SMTP Library Usage
+
+```typescript
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+const client = new SMTPClient({
+  connection: {
+    hostname: "smtp.gmail.com",
+    port: 587,
+    tls: true,
+    auth: {
+      username: "your@gmail.com",
+      password: "xxxx xxxx xxxx xxxx", // App Password
+    },
+  },
+});
+
+await client.send({
+  from: "Your Name <your@gmail.com>",
+  to: "recipient@example.com",
+  subject: "Test",
+  html: "<p>Hello!</p>",
+});
+
+await client.close();
 ```
 
 ---
 
 ## Done Criteria Checklist
 
-### Stage 1
-- [ ] `send-test-email` edge function created
-- [ ] Test email sends successfully from UI
-- [ ] Uses configured from_name and from_email
+### Stage 1 - Database & Provider Toggle
+- [ ] `email_settings` table has Gmail SMTP columns
+- [ ] Provider can be switched between 'resend' and 'gmail'
+- [ ] Provider selection persists to database
 
-### Stage 2
-- [ ] Connection status shows correctly
-- [ ] UI explains Resend is the email provider
-- [ ] From email validation for Resend domain
+### Stage 2 - Gmail SMTP Sending
+- [ ] `send-email` function supports Gmail SMTP
+- [ ] `send-test-email` function supports Gmail SMTP
+- [ ] Rate limits still enforced
+- [ ] All emails logged to `email_log`
+- [ ] Routing headers (X-ICE-*) applied
 
-### Stage 3
-- [ ] `email_log` table created with RLS
-- [ ] `send-email` central function works
-- [ ] All existing email functions migrated
-- [ ] Send limits enforced
-- [ ] All emails logged
+### Stage 3 - Gmail OAuth (Optional/Future)
+- [ ] OAuth flow implemented (defer to later if needed)
+- [ ] Token refresh handled
+- [ ] Connect/Disconnect buttons work
 
-### Stage 4
-- [ ] `inbound_email_log` table created
-- [ ] Inbound webhook receives emails
-- [ ] Replies linked to original emails
-- [ ] Replies display in Outreach inbox
-
-### Stage 5
-- [ ] Custom headers added to all outbound emails
-- [ ] Routing correctly identifies module
-- [ ] Inbound emails linked to correct entities
-
-### Stage 6
-- [ ] `email_templates` table created
-- [ ] Default templates seeded
-- [ ] Template management UI works
-- [ ] Templates support variables
-- [ ] EN/ES language versions work
+### Stage 4 - UI Copy Updates
+- [ ] Neutral language: "Email Provider" not "Gmail"
+- [ ] Helper text about temporary Gmail usage
+- [ ] Connection status reflects active provider
+- [ ] Gmail setup instructions included
 
 ---
 
-## Implementation Order
+## Security Considerations
 
-1. **Stage 1** - Create `send-test-email` function (quick win)
-2. **Stage 2** - Update UI for Resend provider display
-3. **Stage 6** - Create templates system (needed by Stage 3)
-4. **Stage 3** - Create central email service with templates
-5. **Stage 5** - Add routing headers (part of Stage 3)
-6. **Stage 4** - Inbound email handling (after outbound works)
+1. **App Password Storage**: Use Supabase secrets (GMAIL_APP_PASSWORD), never store in database
+2. **TLS/STARTTLS**: Always use encrypted SMTP connection
+3. **Rate Limiting**: Apply same limits regardless of provider
+4. **Logging**: Log all attempts with error details (never log passwords)
 
-This order ensures each stage builds on the previous, and templates are available before the central service needs them.
