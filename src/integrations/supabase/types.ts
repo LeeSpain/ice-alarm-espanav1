@@ -2323,18 +2323,23 @@ export type Database = {
           conversions_count: number | null
           created_at: string | null
           days_between_emails: number | null
+          default_language: string
           description: string | null
           email_sequence: Json | null
+          email_tone: string
           emails_sent: number | null
+          follow_up_enabled: boolean
           id: string
           leads_count: number | null
           max_emails_per_lead: number | null
           min_ai_score: number | null
           name: string
+          outreach_goal: string
           pipeline_type: string
           replies_count: number | null
           status: string
           target_categories: string[] | null
+          target_description: string | null
           target_locations: string[] | null
           updated_at: string | null
         }
@@ -2342,18 +2347,23 @@ export type Database = {
           conversions_count?: number | null
           created_at?: string | null
           days_between_emails?: number | null
+          default_language?: string
           description?: string | null
           email_sequence?: Json | null
+          email_tone?: string
           emails_sent?: number | null
+          follow_up_enabled?: boolean
           id?: string
           leads_count?: number | null
           max_emails_per_lead?: number | null
           min_ai_score?: number | null
           name: string
+          outreach_goal?: string
           pipeline_type?: string
           replies_count?: number | null
           status?: string
           target_categories?: string[] | null
+          target_description?: string | null
           target_locations?: string[] | null
           updated_at?: string | null
         }
@@ -2361,18 +2371,23 @@ export type Database = {
           conversions_count?: number | null
           created_at?: string | null
           days_between_emails?: number | null
+          default_language?: string
           description?: string | null
           email_sequence?: Json | null
+          email_tone?: string
           emails_sent?: number | null
+          follow_up_enabled?: boolean
           id?: string
           leads_count?: number | null
           max_emails_per_lead?: number | null
           min_ai_score?: number | null
           name?: string
+          outreach_goal?: string
           pipeline_type?: string
           replies_count?: number | null
           status?: string
           target_categories?: string[] | null
+          target_description?: string | null
           target_locations?: string[] | null
           updated_at?: string | null
         }

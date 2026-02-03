@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOutreachRawLeads } from "@/hooks/useOutreachRawLeads";
+import { useOutreachCampaigns } from "@/hooks/useOutreachCampaigns";
 
 const leadSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -33,6 +34,7 @@ const leadSchema = z.object({
   location: z.string().optional(),
   category: z.string().optional(),
   pipeline_type: z.enum(["sales", "partner"]),
+  campaign_id: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -46,6 +48,7 @@ interface AddOutreachLeadModalProps {
 export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModalProps) {
   const { t } = useTranslation();
   const { addLead, isAdding } = useOutreachRawLeads();
+  const { campaigns } = useOutreachCampaigns();
 
   const {
     register,
@@ -58,8 +61,13 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
     resolver: zodResolver(leadSchema),
     defaultValues: {
       pipeline_type: "sales",
+      campaign_id: "",
     },
   });
+
+  const selectedPipeline = watch("pipeline_type");
+  const selectedCampaignId = watch("campaign_id");
+  const filteredCampaigns = campaigns?.filter(c => c.pipeline_type === selectedPipeline && c.status === "active") || [];
 
   const onSubmit = async (data: LeadFormData) => {
     await addLead({
@@ -166,8 +174,11 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
             <div className="space-y-2">
               <Label>{t("outreach.leads.columns.pipeline")}</Label>
               <Select
-                value={watch("pipeline_type")}
-                onValueChange={(v) => setValue("pipeline_type", v as "sales" | "partner")}
+                value={selectedPipeline}
+                onValueChange={(v) => {
+                  setValue("pipeline_type", v as "sales" | "partner");
+                  setValue("campaign_id", ""); // Reset campaign when pipeline changes
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -177,6 +188,31 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
                   <SelectItem value="partner">{t("outreach.leads.pipeline.partner")}</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label>{t("outreach.leads.columns.campaign")}</Label>
+              <Select
+                value={selectedCampaignId}
+                onValueChange={(v) => setValue("campaign_id", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("outreach.leads.noCampaign")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("outreach.leads.noCampaign")}</SelectItem>
+                  {filteredCampaigns.map((campaign) => (
+                    <SelectItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {filteredCampaigns.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t("outreach.leads.noActiveCampaigns")}
+                </p>
+              )}
             </div>
           </div>
 
