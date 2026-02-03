@@ -3015,6 +3015,79 @@
       "success": "Leads rated successfully",
       "error": "Failed to rate leads",
       "noLeadsToRate": "No leads to rate"
+    },
+    "help": {
+      "title": "AI Outreach Guide",
+      "howToUse": "How to Use",
+      "gotIt": "Got It",
+      "overview": {
+        "title": "Overview",
+        "content": "AI Outreach automates lead discovery and email campaigns for sales and partner acquisition. The workflow is simple: Import leads, let AI rate them, move qualified leads to CRM, research their business, generate personalized emails, and convert to members or partners."
+      },
+      "leads": {
+        "title": "Leads Tab",
+        "intro": "Manage raw leads before they enter your sales pipeline.",
+        "steps": [
+          "Add leads manually or import via CSV/paste list",
+          "Select pipeline type: Sales or Partner",
+          "Optionally assign leads to a campaign",
+          "Click 'Rate All New' to let AI score leads 1-10",
+          "Leads scoring 7+ can be moved to CRM"
+        ]
+      },
+      "crm": {
+        "title": "CRM Tab",
+        "intro": "Work qualified leads through your pipeline with AI assistance.",
+        "steps": [
+          "Leads appear in the 'New' column",
+          "Click 'Research Business' for AI company insights",
+          "Click 'Generate Intro Email' for personalized outreach",
+          "Drag cards to update status as relationships progress",
+          "Convert successful leads to Members or Partners"
+        ]
+      },
+      "campaigns": {
+        "title": "Campaigns Tab",
+        "intro": "Create and manage automated email campaigns.",
+        "steps": [
+          "Click 'New Campaign' to create a targeted campaign",
+          "Define the ideal lead profile for AI personalization",
+          "Configure email tone and outreach goals",
+          "Enable follow-up sequences for non-responders",
+          "Assign leads to campaigns for organized outreach"
+        ]
+      },
+      "inbox": {
+        "title": "Inbox Tab",
+        "intro": "Manage email conversations and responses.",
+        "steps": [
+          "View all email threads in one unified inbox",
+          "AI classifies replies: Interested, Question, Not Interested",
+          "Review AI-suggested responses",
+          "Edit and send personalized replies"
+        ]
+      },
+      "analytics": {
+        "title": "Analytics Tab",
+        "intro": "Track outreach performance and conversions.",
+        "metrics": [
+          "Leads Discovered: Total leads imported",
+          "Leads Qualified: Leads moved to CRM",
+          "Emails Sent: Total outreach emails",
+          "Replies Received: Response count",
+          "Conversions: Successful member/partner signups"
+        ]
+      },
+      "bestPractices": {
+        "title": "Best Practices",
+        "tips": [
+          "Start with focused campaigns targeting specific regions or industries",
+          "Rate all new leads before moving to CRM for better qualification",
+          "Always review and personalize AI-generated emails before sending",
+          "Follow up within 3-5 days if no response",
+          "Document notes on each lead for better context"
+        ]
+      }
     }
   }
 }
