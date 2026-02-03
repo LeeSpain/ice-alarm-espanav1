@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2, Settings } from "lucide-react";
+import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2, Settings, HelpCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
@@ -24,6 +24,7 @@ import { ReadyToPublishSection } from "@/components/admin/media/ReadyToPublishSe
 import { PostPreviewDialog } from "@/components/admin/media/PostPreviewDialog";
 import { PublishedPostsSection } from "@/components/admin/media/PublishedPostsSection";
 import { MediaStrategySection } from "@/components/admin/media/strategy/MediaStrategySection";
+import { MediaHelpDialog } from "@/components/admin/media/MediaHelpDialog";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -43,6 +44,7 @@ export default function MediaManagerPage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [previewPost, setPreviewPost] = useState<SocialPost | null>(null);
   const [publishingFromQueue, setPublishingFromQueue] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   
   // Form state
   const [goal, setGoal] = useState("");
@@ -245,6 +247,10 @@ export default function MediaManagerPage() {
           <p className="text-muted-foreground">{t("mediaManager.subtitle")}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+            <HelpCircle className="h-4 w-4 mr-2" />
+            {t("mediaManager.help.howToUse")}
+          </Button>
           <Button
             variant={mainTab === "posts" ? "default" : "outline"}
             onClick={() => setMainTab("posts")}
@@ -261,6 +267,8 @@ export default function MediaManagerPage() {
           </Button>
         </div>
       </div>
+
+      <MediaHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
 
       {mainTab === "strategy" ? (
         <MediaStrategySection />
