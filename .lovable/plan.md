@@ -1,54 +1,50 @@
-# Published Posts Tab with Facebook Engagement Metrics
+# Media Strategy & Content Generation System
 
 ## ✅ COMPLETED
 
-All stages implemented successfully.
+All stages (1-6) implemented successfully.
 
 ---
 
 ## Implementation Summary
 
-### Stage 1: Database ✅
-- Created `social_post_metrics` table with RLS policies for staff access
-- Stores reactions_total, reactions_breakdown, comments_count, shares_count, impressions
-- Foreign key to social_posts with cascade delete
+### Stages 1-3 (Previous): Strategy Configuration & Planning
+- Goals, Audiences, Topics, Image Styles management
+- Schedule settings with anti-repetition rules
+- AI-powered content calendar planner
 
-### Stage 2: Edge Function ✅
-- Created `facebook-metrics` edge function
-- Fetches engagement data from Facebook Graph API v24.0
-- Supports single post refresh or refresh_all mode
-- Caches results in social_post_metrics table
+### Stage 4: Content Generation ✅
+- Created `generate-slot-content` edge function
+- AI generates: post text (EN/ES), blog intro, blog content, image prompt
+- Content stored in `media_content_calendar` table
+- Admin can preview, edit, approve, disable posts via ContentReviewSection
 
-### Stage 3: Data Hook ✅
-- Created `usePublishedPosts` hook
-- Fetches published posts with cached metrics
-- Provides refreshMetrics() and refreshAllMetrics() functions
-- Auto-refresh when metrics are stale (>15 min)
-- Calculates aggregated totals
+### Stage 5: Scheduler & Auto-Publishing ✅
+- Created `publish-scheduled` edge function
+- Publishes to Blog (mandatory) and Facebook (toggle)
+- Instagram toggle ready (not implemented)
+- Platform-independent failure handling
+- Publishing history recorded
 
-### Stage 4: UI Components ✅
-- `PublishedOverviewCard` - Aggregated metrics dashboard
-- `PublishedPostCard` - Individual post with engagement metrics
-- `PublishedPostsSection` - Container component
-
-### Stage 5: Media Manager Integration ✅
-- Updated MediaManagerPage to show PublishedPostsSection when "Published" tab is selected
-- All existing functionality preserved
-
-### Stage 6: Translations ✅
-- Added English and Spanish translations for all new labels
+### Stage 6: Publishing History & Memory ✅
+- Created `media_publishing_history` table
+- Tracks goal, audience, topic, style, platform, date
+- PublishingHistorySection with filters by date/goal/audience
+- History used for anti-repetition in future planning
 
 ---
 
 ## Files Created
-- `supabase/functions/facebook-metrics/index.ts`
-- `src/hooks/usePublishedPosts.ts`
-- `src/components/admin/media/PublishedOverviewCard.tsx`
-- `src/components/admin/media/PublishedPostCard.tsx`
-- `src/components/admin/media/PublishedPostsSection.tsx`
+- `supabase/functions/generate-slot-content/index.ts`
+- `supabase/functions/publish-scheduled/index.ts`
+- `src/hooks/useScheduledContent.ts`
+- `src/hooks/usePublishingHistory.ts`
+- `src/components/admin/media/strategy/ContentReviewSection.tsx`
+- `src/components/admin/media/strategy/ContentPreviewDialog.tsx`
+- `src/components/admin/media/strategy/PublishingHistorySection.tsx`
 
 ## Files Modified
-- `src/pages/admin/MediaManagerPage.tsx`
-- `src/i18n/locales/en.json`
-- `src/i18n/locales/es.json`
-- `supabase/config.toml`
+- `src/components/admin/media/strategy/MediaStrategySection.tsx` (added Review & History tabs)
+- `src/components/admin/media/strategy/ContentPlanner.tsx` (added content generation)
+- `supabase/config.toml` (new edge functions)
+- `src/i18n/locales/en.json` & `es.json` (new translations)

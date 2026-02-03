@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Users, MessageSquare, Image, Settings, Calendar } from "lucide-react";
+import { Target, Users, MessageSquare, Image, Settings, Calendar, FileText, History } from "lucide-react";
 import { useMediaGoals, useMediaAudiences, useMediaTopics, useMediaImageStyles, useMediaScheduleSettings } from "@/hooks/useMediaStrategy";
 import { StrategyItemList } from "./StrategyItemList";
 import { TopicsList } from "./TopicsList";
 import { ScheduleSettings } from "./ScheduleSettings";
 import { ContentPlanner } from "./ContentPlanner";
+import { ContentReviewSection } from "./ContentReviewSection";
+import { PublishingHistorySection } from "./PublishingHistorySection";
 
 export function MediaStrategySection() {
   const { t } = useTranslation();
@@ -60,7 +62,7 @@ export function MediaStrategySection() {
 
   return (
     <Tabs defaultValue="goals" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+      <TabsList className="grid w-full grid-cols-8 lg:w-auto lg:inline-grid">
         <TabsTrigger value="goals" className="gap-2">
           <Target className="h-4 w-4" />
           <span className="hidden sm:inline">{t("mediaStrategy.goals")}</span>
@@ -84,6 +86,14 @@ export function MediaStrategySection() {
         <TabsTrigger value="planner" className="gap-2">
           <Calendar className="h-4 w-4" />
           <span className="hidden sm:inline">{t("mediaStrategy.planner")}</span>
+        </TabsTrigger>
+        <TabsTrigger value="review" className="gap-2">
+          <FileText className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("mediaStrategy.review")}</span>
+        </TabsTrigger>
+        <TabsTrigger value="history" className="gap-2">
+          <History className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("mediaStrategy.history")}</span>
         </TabsTrigger>
       </TabsList>
 
@@ -161,6 +171,14 @@ export function MediaStrategySection() {
           imageStyles={imageStyles}
           scheduleSettings={scheduleSettings}
         />
+      </TabsContent>
+
+      <TabsContent value="review">
+        <ContentReviewSection />
+      </TabsContent>
+
+      <TabsContent value="history">
+        <PublishingHistorySection />
       </TabsContent>
     </Tabs>
   );
