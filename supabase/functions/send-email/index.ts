@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,106 @@ function replaceVariables(text: string, variables: Record<string, string>): stri
   return result;
 }
 
+// Send email via Gmail SMTP
+async function sendViaGmailSMTP(
+  settings: any,
+  to: string,
+  subject: string,
+  html: string,
+  text: string | undefined,
+  customHeaders: Record<string, string>,
+  replyTo?: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD secret is not configured" };
+  }
+
+  if (!settings.gmail_smtp_user) {
+    return { success: false, error: "Gmail SMTP user not configured in email settings" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: settings.gmail_smtp_host || "smtp.gmail.com",
+        port: settings.gmail_smtp_port || 587,
+        tls: true,
+        auth: {
+          username: settings.gmail_smtp_user,
+          password: appPassword,
+        },
+      },
+    });
+
+    const fromName = settings.from_name || "ICE Alarm España";
+    const fromEmail = settings.from_email || settings.gmail_smtp_user;
+
+    await client.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: to,
+      subject: subject,
+      html: html,
+      content: text || "",
+      replyTo: replyTo || settings.reply_to_email,
+      headers: customHeaders,
+    });
+
+    await client.close();
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Gmail SMTP error:", error);
+    return { success: false, error: error.message || "SMTP connection failed" };
+  }
+}
+
+// Send email via Resend
+async function sendViaResend(
+  settings: any,
+  to: string,
+  subject: string,
+  html: string,
+  text: string | undefined,
+  customHeaders: Record<string, string>,
+  replyTo?: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+  if (!resendApiKey) {
+    return { success: false, error: "RESEND_API_KEY is not configured" };
+  }
+
+  const resend = new Resend(resendApiKey);
+  const fromName = settings.from_name || "ICE Alarm España";
+  const fromEmail = settings.from_email || "noreply@icealarm.es";
+
+  const emailPayload: any = {
+    from: `${fromName} <${fromEmail}>`,
+    to: [to],
+    subject,
+    html,
+    headers: customHeaders,
+  };
+
+  if (text) {
+    emailPayload.text = text;
+  }
+
+  if (replyTo || settings.reply_to_email) {
+    emailPayload.reply_to = replyTo || settings.reply_to_email;
+  }
+
+  const { data, error } = await resend.emails.send(emailPayload);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, messageId: data?.id };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -42,14 +143,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-
-    if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: "RESEND_API_KEY is not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -203,28 +296,37 @@ const handler = async (req: Request): Promise<Response> => {
       customHeaders["References"] = thread_id;
     }
 
-    // Send email via Resend
-    const fromName = settings.from_name || "ICE Alarm España";
-    const fromEmail = settings.from_email || "noreply@icealarm.es";
-    const resend = new Resend(resendApiKey);
+    // Determine provider and send
+    const provider = settings.provider || "resend";
+    let sendResult: { success: boolean; messageId?: string; error?: string };
 
-    const emailPayload: any = {
-      from: `${fromName} <${fromEmail}>`,
-      to: [to],
-      subject,
-      html: html_body,
-      headers: customHeaders,
-    };
-
-    if (text_body) {
-      emailPayload.text = text_body;
+    if (provider === "gmail") {
+      console.log("Sending via Gmail SMTP...");
+      sendResult = await sendViaGmailSMTP(
+        settings,
+        to,
+        subject,
+        html_body,
+        text_body,
+        customHeaders,
+        reply_to
+      );
+    } else {
+      console.log("Sending via Resend...");
+      sendResult = await sendViaResend(
+        settings,
+        to,
+        subject,
+        html_body,
+        text_body,
+        customHeaders,
+        reply_to
+      );
     }
 
-    if (reply_to || settings.reply_to_email) {
-      emailPayload.reply_to = reply_to || settings.reply_to_email;
-    }
-
-    const { data: emailResult, error: emailError } = await resend.emails.send(emailPayload);
+    // Determine from email for logging
+    const fromEmail = settings.from_email || 
+      (provider === "gmail" ? settings.gmail_smtp_user : "noreply@icealarm.es");
 
     // Log to email_log
     const logEntry = {
@@ -237,11 +339,11 @@ const handler = async (req: Request): Promise<Response> => {
       related_entity_id: related_entity_id || null,
       related_entity_type: related_entity_type || null,
       template_id: templateId,
-      status: emailError ? "failed" : "sent",
-      provider_message_id: emailResult?.id || null,
-      error_message: emailError?.message || null,
-      headers_json: customHeaders,
-      sent_at: emailError ? null : new Date().toISOString(),
+      status: sendResult.success ? "sent" : "failed",
+      provider_message_id: sendResult.messageId || null,
+      error_message: sendResult.error || null,
+      headers_json: { ...customHeaders, "X-ICE-Provider": provider },
+      sent_at: sendResult.success ? new Date().toISOString() : null,
     };
 
     const { data: logData, error: logError } = await supabase
@@ -254,21 +356,22 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error logging email:", logError);
     }
 
-    if (emailError) {
-      console.error("Error sending email:", emailError);
+    if (!sendResult.success) {
+      console.error("Error sending email:", sendResult.error);
       return new Response(
-        JSON.stringify({ success: false, error: emailError.message, log_id: logData?.id }),
+        JSON.stringify({ success: false, error: sendResult.error, log_id: logData?.id }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Email sent successfully:", emailResult?.id);
+    console.log(`Email sent successfully via ${provider}:`, sendResult.messageId || "no-id");
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message_id: emailResult?.id,
+        message_id: sendResult.messageId,
         log_id: logData?.id,
+        provider,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

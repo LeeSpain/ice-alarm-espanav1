@@ -1183,7 +1183,12 @@ export type Database = {
           gmail_connected: boolean
           gmail_connected_email: string | null
           gmail_last_sync_at: string | null
+          gmail_mode: string | null
           gmail_refresh_token: string | null
+          gmail_smtp_host: string | null
+          gmail_smtp_password_secret_name: string | null
+          gmail_smtp_port: number | null
+          gmail_smtp_user: string | null
           gmail_token_expires_at: string | null
           hourly_send_limit: number
           id: string
@@ -1204,7 +1209,12 @@ export type Database = {
           gmail_connected?: boolean
           gmail_connected_email?: string | null
           gmail_last_sync_at?: string | null
+          gmail_mode?: string | null
           gmail_refresh_token?: string | null
+          gmail_smtp_host?: string | null
+          gmail_smtp_password_secret_name?: string | null
+          gmail_smtp_port?: number | null
+          gmail_smtp_user?: string | null
           gmail_token_expires_at?: string | null
           hourly_send_limit?: number
           id?: string
@@ -1225,7 +1235,12 @@ export type Database = {
           gmail_connected?: boolean
           gmail_connected_email?: string | null
           gmail_last_sync_at?: string | null
+          gmail_mode?: string | null
           gmail_refresh_token?: string | null
+          gmail_smtp_host?: string | null
+          gmail_smtp_password_secret_name?: string | null
+          gmail_smtp_port?: number | null
+          gmail_smtp_user?: string | null
           gmail_token_expires_at?: string | null
           hourly_send_limit?: number
           id?: string

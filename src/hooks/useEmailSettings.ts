@@ -6,7 +6,7 @@ const SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
 
 export interface EmailSettings {
   id: string;
-  provider: string;
+  provider: 'resend' | 'gmail';
   from_name: string | null;
   from_email: string | null;
   reply_to_email: string | null;
@@ -19,11 +19,17 @@ export interface EmailSettings {
   gmail_connected: boolean;
   gmail_connected_email: string | null;
   gmail_last_sync_at: string | null;
+  gmail_mode: 'smtp' | 'oauth';
+  gmail_smtp_host: string | null;
+  gmail_smtp_port: number;
+  gmail_smtp_user: string | null;
+  gmail_smtp_password_secret_name: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface EmailSettingsUpdate {
+  provider?: 'resend' | 'gmail';
   from_name?: string | null;
   from_email?: string | null;
   reply_to_email?: string | null;
@@ -33,6 +39,10 @@ export interface EmailSettingsUpdate {
   enable_member_emails?: boolean;
   enable_outreach_emails?: boolean;
   enable_system_emails?: boolean;
+  gmail_mode?: 'smtp' | 'oauth';
+  gmail_smtp_host?: string;
+  gmail_smtp_port?: number;
+  gmail_smtp_user?: string;
 }
 
 export function useEmailSettings() {

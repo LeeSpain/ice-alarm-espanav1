@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Mail,
   Check,
@@ -14,6 +16,7 @@ import {
   Save,
   Loader2,
   Send,
+  Info,
 } from "lucide-react";
 import { useEmailSettings, type EmailSettingsUpdate } from "@/hooks/useEmailSettings";
 
@@ -29,6 +32,7 @@ export function EmailSettingsTab() {
 
   // Form state
   const [formState, setFormState] = useState<EmailSettingsUpdate>({
+    provider: "resend",
     from_name: "",
     from_email: "",
     reply_to_email: "",
@@ -38,6 +42,10 @@ export function EmailSettingsTab() {
     enable_member_emails: true,
     enable_outreach_emails: true,
     enable_system_emails: true,
+    gmail_mode: "smtp",
+    gmail_smtp_host: "smtp.gmail.com",
+    gmail_smtp_port: 587,
+    gmail_smtp_user: "",
   });
 
   const [testEmail, setTestEmail] = useState("");
@@ -46,6 +54,7 @@ export function EmailSettingsTab() {
   useEffect(() => {
     if (settings) {
       setFormState({
+        provider: settings.provider || "resend",
         from_name: settings.from_name || "",
         from_email: settings.from_email || "",
         reply_to_email: settings.reply_to_email || "",
@@ -55,6 +64,10 @@ export function EmailSettingsTab() {
         enable_member_emails: settings.enable_member_emails,
         enable_outreach_emails: settings.enable_outreach_emails,
         enable_system_emails: settings.enable_system_emails,
+        gmail_mode: settings.gmail_mode || "smtp",
+        gmail_smtp_host: settings.gmail_smtp_host || "smtp.gmail.com",
+        gmail_smtp_port: settings.gmail_smtp_port || 587,
+        gmail_smtp_user: settings.gmail_smtp_user || "",
       });
     }
   }, [settings]);
@@ -77,41 +90,131 @@ export function EmailSettingsTab() {
     );
   }
 
-  // We're using Resend, so "connected" is based on whether RESEND_API_KEY is configured
-  // Since we can't check secrets from frontend, we assume it's configured if settings exist
-  const isConnected = true; // Resend API key is configured in secrets
+  const isResend = formState.provider === "resend";
+  const isGmail = formState.provider === "gmail";
 
   return (
     <div className="space-y-6">
-      {/* Connection Status Card */}
+      {/* Provider Selection Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Email Service
-            <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-              <Check className="mr-1 h-3 w-3" />
-              Resend Connected
-            </Badge>
+            Email Provider
           </CardTitle>
           <CardDescription>
-            Email sending is powered by Resend. All emails are logged and tracked.
+            Choose your outbound email service. All emails are logged and tracked regardless of provider.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="p-4 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Resend Email API</p>
-                <p className="text-sm text-muted-foreground">
-                  Verified domain: icealarm.es
+        <CardContent className="space-y-6">
+          <RadioGroup
+            value={formState.provider}
+            onValueChange={(value: 'resend' | 'gmail') => 
+              setFormState((prev) => ({ ...prev, provider: value }))
+            }
+            className="space-y-4"
+          >
+            {/* Resend Option */}
+            <div className={`flex items-start space-x-3 p-4 rounded-lg border ${isResend ? 'border-primary bg-primary/5' : 'border-border'}`}>
+              <RadioGroupItem value="resend" id="resend" className="mt-1" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="resend" className="font-medium cursor-pointer">
+                    Resend (API-based)
+                  </Label>
+                  <Badge className="bg-alert-resolved text-alert-resolved-foreground">
+                    <Check className="mr-1 h-3 w-3" />
+                    Connected
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Recommended for production. Requires verified domain (icealarm.es).
                 </p>
               </div>
             </div>
-          </div>
+
+            {/* Gmail SMTP Option */}
+            <div className={`flex items-start space-x-3 p-4 rounded-lg border ${isGmail ? 'border-primary bg-primary/5' : 'border-border'}`}>
+              <RadioGroupItem value="gmail" id="gmail" className="mt-1" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="gmail" className="font-medium cursor-pointer">
+                    Gmail SMTP
+                  </Label>
+                  {settings?.gmail_smtp_user && (
+                    <Badge variant="secondary">
+                      {settings.gmail_smtp_user}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Use Gmail temporarily until DNS verification for Resend is complete.
+                </p>
+              </div>
+            </div>
+          </RadioGroup>
+
+          {/* Gmail SMTP Configuration */}
+          {isGmail && (
+            <div className="space-y-4 pt-4 border-t">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Gmail Setup Instructions:</strong>
+                  <ol className="list-decimal ml-4 mt-2 space-y-1 text-sm">
+                    <li>Enable 2-Step Verification on your Google account</li>
+                    <li>Generate an App Password at <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="text-primary underline">security.google.com</a></li>
+                    <li>Enter the 16-character App Password below</li>
+                    <li>Add it as <code className="bg-muted px-1 rounded">GMAIL_APP_PASSWORD</code> in project secrets</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>SMTP Host</Label>
+                  <Input
+                    value={formState.gmail_smtp_host || "smtp.gmail.com"}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, gmail_smtp_host: e.target.value }))}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>SMTP Port</Label>
+                  <Input
+                    type="number"
+                    value={formState.gmail_smtp_port || 587}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, gmail_smtp_port: parseInt(e.target.value) || 587 }))}
+                    placeholder="587"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use 587 for TLS (recommended) or 465 for SSL
+                  </p>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Gmail Account</Label>
+                  <Input
+                    type="email"
+                    value={formState.gmail_smtp_user || ""}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, gmail_smtp_user: e.target.value }))}
+                    placeholder="your-account@gmail.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The Gmail address that will send emails
+                  </p>
+                </div>
+              </div>
+
+              <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/50 text-amber-700">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>App Password Required:</strong> Add your Gmail App Password as <code className="bg-muted px-1 rounded">GMAIL_APP_PASSWORD</code> in the project secrets. Never use your regular Gmail password.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -143,10 +246,13 @@ export function EmailSettingsTab() {
                 type="email"
                 value={formState.from_email || ""}
                 onChange={(e) => setFormState((prev) => ({ ...prev, from_email: e.target.value }))}
-                placeholder="noreply@icealarm.es"
+                placeholder={isGmail ? formState.gmail_smtp_user || "your@gmail.com" : "noreply@icealarm.es"}
               />
               <p className="text-xs text-muted-foreground">
-                Must be a verified domain in Resend
+                {isGmail 
+                  ? "Should match your Gmail account" 
+                  : "Must be a verified domain in Resend"
+                }
               </p>
             </div>
 
@@ -293,7 +399,7 @@ export function EmailSettingsTab() {
             Send Test Email
           </CardTitle>
           <CardDescription>
-            Verify your email configuration by sending a test message.
+            Verify your email configuration by sending a test message via {isGmail ? "Gmail SMTP" : "Resend"}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -319,7 +425,7 @@ export function EmailSettingsTab() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            A test email will be sent using your configured settings.
+            A test email will be sent using your configured {isGmail ? "Gmail SMTP" : "Resend"} settings.
           </p>
         </CardContent>
       </Card>
