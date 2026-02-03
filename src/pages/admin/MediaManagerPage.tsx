@@ -22,6 +22,7 @@ import { ComplianceWarningDialog } from "@/components/admin/media/ComplianceWarn
 import { PostMetricsBar } from "@/components/admin/media/PostMetricsBar";
 import { ReadyToPublishSection } from "@/components/admin/media/ReadyToPublishSection";
 import { PostPreviewDialog } from "@/components/admin/media/PostPreviewDialog";
+import { PublishedPostsSection } from "@/components/admin/media/PublishedPostsSection";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -577,125 +578,132 @@ export default function MediaManagerPage() {
               <TabsTrigger value="failed">{t("mediaManager.statuses.failed")}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value={statusFilter} className="mt-0">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : posts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t("mediaManager.noPostsFound")}
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("mediaManager.table.topic")}</TableHead>
-                        <TableHead>{t("mediaManager.table.goal")}</TableHead>
-                        <TableHead>{t("mediaManager.table.language")}</TableHead>
-                        <TableHead>{t("mediaManager.table.status")}</TableHead>
-                        <TableHead>{t("mediaManager.table.created")}</TableHead>
-                        <TableHead className="text-right">{t("mediaManager.table.actions")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {posts.map((post) => (
-                        <TableRow
-                          key={post.id}
-                          className={cn(
-                            "cursor-pointer",
-                            selectedPostId === post.id && "bg-muted/50"
-                          )}
-                          onClick={() => handleSelectPost(post)}
-                        >
-                          <TableCell className="font-medium max-w-[200px] truncate">
-                            {post.topic || t("mediaManager.untitled")}
-                          </TableCell>
-                          <TableCell>
-                            {post.goal ? t(`mediaManager.goals.${post.goal}`) : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {t(`mediaManager.languages.${post.language}`)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={STATUS_COLORS[post.status]}>
-                              {t(`mediaManager.statuses.${post.status}`)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(new Date(post.created_at), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end items-center gap-1">
-                              {/* Error indicator for failed posts */}
-                              {post.status === "failed" && post.error_message && (
-                                <span 
-                                  className="text-destructive cursor-help" 
-                                  title={post.error_message}
-                                >
-                                  <AlertCircle className="h-4 w-4" />
-                                </span>
-                              )}
-                              {/* Retry button for failed posts */}
-                              {post.status === "failed" && (
+            {/* Show PublishedPostsSection for Published tab, regular table for others */}
+            {statusFilter === "published" ? (
+              <TabsContent value="published" className="mt-0">
+                <PublishedPostsSection />
+              </TabsContent>
+            ) : (
+              <TabsContent value={statusFilter} className="mt-0">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {t("mediaManager.noPostsFound")}
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t("mediaManager.table.topic")}</TableHead>
+                          <TableHead>{t("mediaManager.table.goal")}</TableHead>
+                          <TableHead>{t("mediaManager.table.language")}</TableHead>
+                          <TableHead>{t("mediaManager.table.status")}</TableHead>
+                          <TableHead>{t("mediaManager.table.created")}</TableHead>
+                          <TableHead className="text-right">{t("mediaManager.table.actions")}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {posts.map((post) => (
+                          <TableRow
+                            key={post.id}
+                            className={cn(
+                              "cursor-pointer",
+                              selectedPostId === post.id && "bg-muted/50"
+                            )}
+                            onClick={() => handleSelectPost(post)}
+                          >
+                            <TableCell className="font-medium max-w-[200px] truncate">
+                              {post.topic || t("mediaManager.untitled")}
+                            </TableCell>
+                            <TableCell>
+                              {post.goal ? t(`mediaManager.goals.${post.goal}`) : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {t(`mediaManager.languages.${post.language}`)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={STATUS_COLORS[post.status]}>
+                                {t(`mediaManager.statuses.${post.status}`)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(post.created_at), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end items-center gap-1">
+                                {/* Error indicator for failed posts */}
+                                {post.status === "failed" && post.error_message && (
+                                  <span 
+                                    className="text-destructive cursor-help" 
+                                    title={post.error_message}
+                                  >
+                                    <AlertCircle className="h-4 w-4" />
+                                  </span>
+                                )}
+                                {/* Retry button for failed posts */}
+                                {post.status === "failed" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      retryPost(post.id);
+                                    }}
+                                    disabled={isRetrying}
+                                  >
+                                    <RefreshCw className={cn("h-3 w-3", isRetrying && "animate-spin")} />
+                                    {t("mediaManager.actions.retry")}
+                                  </Button>
+                                )}
                                 <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 gap-1"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    retryPost(post.id);
+                                    setPreviewPost(post);
                                   }}
-                                  disabled={isRetrying}
+                                  title={t("mediaManager.readyToPublish.preview")}
                                 >
-                                  <RefreshCw className={cn("h-3 w-3", isRetrying && "animate-spin")} />
-                                  {t("mediaManager.actions.retry")}
+                                  <Eye className="h-4 w-4" />
                                 </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setPreviewPost(post);
-                                }}
-                                title={t("mediaManager.readyToPublish.preview")}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSelectPost(post);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(post.id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectPost(post);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(post.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>

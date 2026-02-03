@@ -121,6 +121,28 @@
       "publishNow": "Publish to Facebook",
       "editFirst": "Edit Post",
       "close": "Close"
+    },
+    "published": {
+      "empty": "No published posts yet. Publish your first post to see engagement metrics!",
+      "refresh": "Refresh",
+      "refreshAll": "Refresh All",
+      "viewOnFacebook": "View on Facebook",
+      "lastUpdated": "Updated",
+      "overview": {
+        "title": "Published Performance",
+        "subtitle": "Aggregated engagement metrics from all published posts",
+        "totalPosts": "Posts",
+        "totalReactions": "Reactions",
+        "totalComments": "Comments",
+        "totalShares": "Shares",
+        "totalReach": "Reach"
+      },
+      "metrics": {
+        "reactions": "reactions",
+        "comments": "comments",
+        "shares": "shares",
+        "reach": "reach"
+      }
     }
   },
   "common": {
