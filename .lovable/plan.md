@@ -1,297 +1,203 @@
 
-# Comprehensive Translation Audit & Fix Plan
+# Complete Translation Audit Report
 
 ## Executive Summary
 
-The ICE Alarm platform has approximately **95% translation coverage**, with excellent i18n implementation across most public pages and core functionality. However, a thorough code-by-code review has identified **~150 hardcoded English strings** that need to be externalized to locale files for full bilingual (EN/ES) support.
+Following a page-by-page, component-by-component, and hook-by-hook review of the ICE Alarm platform, the translation coverage is approximately **97%** with approximately **2,700 translation keys** properly defined across both English (`en.json`) and Spanish (`es.json`) locale files.
+
+The audit identified **~60 remaining hardcoded strings** that need to be externalized to achieve 100% bilingual compliance.
 
 ---
 
-## Areas Requiring Translation
+## Current Status: What's Working Well
 
-### 1. Admin Management Pages (~45 strings)
+### Fully Translated Areas
+| Area | Status | Notes |
+|------|--------|-------|
+| Landing Page | ✅ Complete | All sections translated |
+| Pendant Page | ✅ Complete | Features, specs, testimonials, FAQ |
+| Contact Page | ✅ Complete | Form, success states, info cards |
+| Blog Pages | ✅ Complete | List, post, navigation |
+| Join Wizard | ✅ Complete | All 8 steps fully translated |
+| Client Dashboard | ✅ Complete | Uses `t()` with fallbacks |
+| Admin Members Page | ✅ Complete | Tables, filters, pagination |
+| Admin Orders Page | ✅ Complete | All status badges and actions |
+| Admin Devices Page | ✅ Complete | All device statuses and UI |
+| Call Centre Dashboard | ✅ Complete | Tabs, filters, alerts |
+| Partner Dashboard | ✅ Complete | Referral link, pipeline, stats |
+| Media Strategy | ✅ Complete | All 6 tabs fully translated |
+| Privacy/Terms Pages | ✅ Headers | Body content requires legal translation |
+| Navigation/Sidebar | ✅ Complete | All menu items |
+| Common UI Elements | ✅ Complete | Buttons, badges, status labels |
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `MembersPage.tsx` | Status badges hardcoded | "Active", "Inactive", "Suspended", "No Plan" |
-| `MembersPage.tsx` | Table headers hardcoded | "Name", "Email", "Phone", "Plan", "Status", "Device", "Actions" |
-| `MembersPage.tsx` | Page titles/descriptions | "Members", "Manage all ICE Alarm members..." |
-| `MembersPage.tsx` | Buttons/states | "CRM Import", "CRM Contacts", "Export CSV", "Add Member", "Loading members...", "No members found" |
-| `MembersPage.tsx` | Pagination | "Showing X to Y of Z members", "Page X of Y", "Previous", "Next" |
-| `OrdersPage.tsx` | Status badges | "Pending", "Processing", "Shipped", "Delivered", "Cancelled" |
-| `OrdersPage.tsx` | Actions | "View Details", "Mark Processing", "Mark Shipped", "Mark Delivered" |
-| `OrdersPage.tsx` | Table headers | "Order #", "Member", "Date", "Total", "Status", "Tracking", "Actions" |
-| `DevicesPage.tsx` | Status badges | "In Stock", "Reserved", "Allocated", "With Staff", "Live", "Faulty", "Returned", "Active (Legacy)" |
-| `DevicesPage.tsx` | Table headers | "IMEI", "SIM Number", "Member", "Status", "Online", "Battery", "Last Check-in", "Actions" |
-| `DevicesPage.tsx` | States | "Online", "Offline", "Unassigned", "Loading devices...", "No devices found", "Never", "N/A" |
-| `DevicesPage.tsx` | Actions | "Add Device", "View Details", "Configure", "View Location" |
+---
 
-### 2. Call Centre Dashboard (~15 strings)
+## Issues Found: Remaining Hardcoded Strings
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `CallCentreDashboard.tsx` | Tab labels | "Alerts", "Messages" |
-| `CallCentreDashboard.tsx` | Status badges | "X Incoming", "X In Progress", "X Escalated" |
-| `CallCentreDashboard.tsx` | Search placeholder | "Search by name or location..." |
-| `CallCentreDashboard.tsx` | Tab triggers | "All", "Incoming", "In Progress", "Escalated" |
-| `CallCentreDashboard.tsx` | Quick actions | "Quick Actions", "Call Emergency Services (112)" |
-| `CallCentreDashboard.tsx` | Empty state | "All clear", "No active alerts at the moment", "Loading alerts..." |
+### 1. Hooks with Hardcoded Toast Messages (~15 strings)
 
-### 3. Join Wizard (~25 strings)
+**`src/hooks/useAIImageGenerator.ts`** (Lines 72-102)
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 73 | `"AI Image Generated"` | `ai.imageGenerated` |
+| 74 | `"Professional image created successfully."` | `ai.imageGeneratedDesc` |
+| 86 | `"Rate Limited"` | `ai.rateLimited` |
+| 87 | `"Too many requests. Please wait..."` | `ai.rateLimitedDesc` |
+| 92 | `"Credits Exhausted"` | `ai.creditsExhausted` |
+| 93 | `"AI credits are exhausted..."` | `ai.creditsExhaustedDesc` |
+| 98 | `"Generation Failed"` | `ai.generationFailed` |
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `JoinWizard.tsx` | Payment toasts | "Payment successful! Welcome to ICE Alarm.", "Payment was cancelled. You can try again when ready." |
-| `JoinWizard.tsx` | Validation messages | "Please enter your full name", "Please enter your email address", "Please enter your phone number", "Please enter your date of birth" |
-| `JoinWizard.tsx` | Partner validation | "Please enter your partner's full name", "Please enter your partner's email address", etc. |
-| `JoinWizard.tsx` | Address validation | "Please enter your street address", "Please enter your city", "Please select your province", "Please enter your postal code" |
-| `JoinWizard.tsx` | Contact validation | "Please add at least one emergency contact" |
-| `JoinWizard.tsx` | Terms validation | "Please accept the Terms of Service", "Please consent to share medical information..." |
+**`src/hooks/useBrandedImageGenerator.ts`** (if exists, similar pattern)
 
-### 4. Client Dashboard (~12 strings)
+### 2. Validation Schemas (~20 strings)
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `ClientDashboard.tsx` | Admin preview banners | "Template Preview Mode", "This shows the member dashboard layout...", "Demo Data" |
-| `ClientDashboard.tsx` | Admin viewing banner | "Back to Members", "Viewing as Admin: X's dashboard" |
-| `ClientDashboard.tsx` | Fallback strings | Uses pattern `t("key") || "Fallback"` - fallbacks should be in locale files |
+**`src/hooks/useInputValidation.ts`** (Lines 1-133)
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 7 | `"Email is required"` | `validation.emailRequired` |
+| 8 | `"Invalid email address"` | `validation.invalidEmail` |
+| 9 | `"Email must be less than 255 characters"` | `validation.emailMaxLength` |
+| 14 | `"Phone number is required"` | `validation.phoneRequired` |
+| 15 | `"Invalid phone number format"` | `validation.invalidPhoneFormat` |
+| 20 | `"Password must be at least 8 characters"` | `validation.passwordMinLength` |
+| 22 | `"Password must contain at least one uppercase letter"` | `validation.passwordUppercase` |
+| 23 | `"Password must contain at least one lowercase letter"` | `validation.passwordLowercase` |
+| 24 | `"Password must contain at least one number"` | `validation.passwordNumber` |
+| 29 | `"Name is required"` | `validation.nameRequired` |
+| 30 | `"Name must be less than 100 characters"` | `validation.nameMaxLength` |
+| 31 | `"Name contains invalid characters"` | `validation.nameInvalidChars` |
+| 36 | `"Address is required"` | `validation.addressRequired` |
+| 42 | `"Postal code is required"` | `validation.postalCodeRequired` |
+| 44 | `"Invalid postal code format"` | `validation.invalidPostalCode` |
+| 102 | `"Date of birth is required"` | `validation.dobRequired` |
+| 106 | `"City is required"` | `validation.cityRequired` |
+| 107 | `"Province is required"` | `validation.provinceRequired` |
+| 115 | `"Relationship is required"` | `validation.relationshipRequired` |
 
-### 5. Partner Dashboard (~10 strings)
+### 3. Admin Member Detail Tabs (~10 strings)
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `PartnerDashboard.tsx` | Preview banner | "Template Preview Mode", "This shows the dashboard layout with demo data...", "Demo Data" |
-| `PartnerDashboard.tsx` | Admin banner | "Back to Partners", "Viewing as Admin: X's dashboard" |
-| `PartnerDashboard.tsx` | Empty states | "Partner Not Found", "Your account is not linked...", "Referral Pipeline", "Pipeline data will appear..." |
-| `PartnerDashboard.tsx` | UI labels | "Dashboard", "Welcome back", "Your Referral Link", "Copy", "Referral Code:" |
-| `PartnerDashboard.tsx` | Toast messages | "This is a template preview - referral link is for demo only", "Referral link copied to clipboard!" |
+**`src/components/admin/member-detail/DeviceTab.tsx`**
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 175 | `"Mark this device as faulty?..."` | `admin.devices.confirmMarkFaulty` |
+| 186 | `"Device marked as faulty"` | `admin.devices.markedFaulty` |
+| 190 | `"Failed to update device status"` | `admin.devices.updateFailed` |
+| 195 | `"Are you sure you want to unassign..."` | `admin.devices.confirmUnassign` |
 
-### 6. Legal Pages (~4 strings per page + full content)
+**`src/components/admin/member-detail/TasksTab.tsx`**
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 240 | `"Failed to complete task"` | `tasks.completeFailed` |
+| 245 | `"Are you sure you want to delete this task?"` | `tasks.deleteConfirm` |
 
-| File | Issue | Examples |
-|------|-------|----------|
-| `PrivacyPage.tsx` | Page title | "Privacy Policy", "ICE Alarm España S.L.", "Last updated: January 2025" |
-| `PrivacyPage.tsx` | Footer links | "Terms of Service", "Privacy Policy" |
-| `TermsPage.tsx` | Page title | "Terms and Conditions", "ICE Alarm España S.L.", "Last updated: January 2025" |
-| `TermsPage.tsx` | Footer links | "Terms of Service", "Privacy Policy" |
+**`src/components/admin/member-detail/ContactsTab.tsx`**
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 36 | `"Name is required"` | Reuse: `validation.nameRequired` |
+| 37 | `"Relationship is required"` | Reuse: `validation.relationshipRequired` |
+| 38 | `"Phone is required"` | Reuse: `validation.phoneRequired` |
+| 39 | `"Invalid email"` | Reuse: `validation.invalidEmail` |
 
-**Note**: The full legal document content (Privacy Policy sections 1-14, Terms sections 1-10) would need professional legal translation. These should be marked as requiring external translation services.
+### 4. Admin Wizard Payment Step (~3 strings)
+
+**`src/components/admin/wizard/PaymentStep.tsx`** (Lines 276-281)
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 276 | `"Processing..."` | `joinWizard.payment.processing` (exists) |
+| 281 | `"Pay Now"` | `joinWizard.payment.payNow` |
+| 281 | `"Confirm Order"` | `joinWizard.payment.confirmOrder` |
+
+### 5. Settings Documentation Tab (~2 strings)
+
+**`src/components/admin/settings/DocumentationSettingsTab.tsx`** (Lines 320-325)
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 320 | `"Cancel"` | `common.cancel` (exists) |
+| 325 | `"Delete"` | `common.delete` (exists) |
+
+### 6. Product Forms (~5 strings)
+
+**`src/components/admin/products/ProductForm.tsx`**
+| Line | Current Text | Required Key |
+|------|--------------|--------------|
+| 26 | `"Name is required"` | Reuse: `validation.nameRequired` |
+| 29 | `"Must be positive"` | `validation.mustBePositive` |
+| 30 | `"Must be between 0 and 1"` | `validation.taxRateRange` |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Add New Translation Keys (~100 new keys)
+### Phase 1: Add Missing Translation Keys
 
 **Add to `en.json`:**
-
 ```json
+"ai": {
+  // ... existing keys ...
+  "imageGenerated": "AI Image Generated",
+  "imageGeneratedDesc": "Professional image created successfully.",
+  "rateLimited": "Rate Limited",
+  "rateLimitedDesc": "Too many requests. Please wait a moment and try again.",
+  "creditsExhausted": "Credits Exhausted",
+  "creditsExhaustedDesc": "AI credits are exhausted. Please add more credits.",
+  "generationFailed": "Generation Failed"
+},
+"validation": {
+  // ... existing keys ...
+  "emailMaxLength": "Email must be less than 255 characters",
+  "invalidPhoneFormat": "Invalid phone number format",
+  "phoneMaxLength": "Phone number must be less than 20 characters",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "passwordMaxLength": "Password must be less than 100 characters",
+  "passwordUppercase": "Password must contain at least one uppercase letter",
+  "passwordLowercase": "Password must contain at least one lowercase letter",
+  "passwordNumber": "Password must contain at least one number",
+  "nameMaxLength": "Name must be less than 100 characters",
+  "nameInvalidChars": "Name contains invalid characters",
+  "addressMaxLength": "Address must be less than 200 characters",
+  "postalCodeMaxLength": "Postal code must be less than 10 characters",
+  "mustBePositive": "Must be a positive number",
+  "taxRateRange": "Must be between 0 and 1"
+},
 "admin": {
-  "members": {
-    "title": "Members",
-    "subtitle": "Manage all ICE Alarm members and their information.",
-    "addMember": "Add Member",
-    "exportCsv": "Export CSV",
-    "crmImport": "CRM Import",
-    "crmContacts": "CRM Contacts",
-    "searchPlaceholder": "Search by name, email, or phone...",
-    "loading": "Loading members...",
-    "noResults": "No members found",
-    "noPlan": "No Plan",
-    "assigned": "Assigned",
-    "none": "None",
-    "viewMemberDashboard": "View Member Dashboard",
-    "viewDetails": "View Details",
-    "showing": "Showing {{from}} to {{to}} of {{total}} members",
-    "pageOf": "Page {{page}} of {{totalPages}}",
-    "previous": "Previous",
-    "next": "Next"
-  },
-  "orders": {
-    "title": "Orders",
-    "subtitle": "Manage member orders and shipments.",
-    "searchPlaceholder": "Search by order number...",
-    "loading": "Loading orders...",
-    "noResults": "No orders found",
-    "unknown": "Unknown",
-    "viewDetails": "View Details",
-    "markProcessing": "Mark Processing",
-    "markShipped": "Mark Shipped",
-    "markDelivered": "Mark Delivered",
-    "showing": "Showing {{from}} to {{to}} of {{total}} orders"
-  },
   "devices": {
-    "title": "Devices",
-    "subtitle": "Manage GPS Personal Pendants and their assignments.",
-    "addDevice": "Add Device",
-    "searchPlaceholder": "Search by IMEI or SIM number...",
-    "totalDevices": "Total Devices",
-    "loading": "Loading devices...",
-    "noResults": "No devices found",
-    "unassigned": "Unassigned",
-    "online": "Online",
-    "offline": "Offline",
-    "never": "Never",
-    "na": "N/A",
-    "viewDetails": "View Details",
-    "configure": "Configure",
-    "viewLocation": "View Location",
-    "showing": "Showing {{from}} to {{to}} of {{total}} devices",
-    "statuses": {
-      "in_stock": "In Stock",
-      "reserved": "Reserved",
-      "allocated": "Allocated",
-      "with_staff": "With Staff",
-      "live": "Live",
-      "faulty": "Faulty",
-      "returned": "Returned",
-      "inactive": "Inactive",
-      "active_legacy": "Active (Legacy)"
-    }
-  },
-  "table": {
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "plan": "Plan",
-    "status": "Status",
-    "device": "Device",
-    "actions": "Actions",
-    "orderNumber": "Order #",
-    "member": "Member",
-    "date": "Date",
-    "total": "Total",
-    "tracking": "Tracking",
-    "imei": "IMEI",
-    "simNumber": "SIM Number",
-    "battery": "Battery",
-    "lastCheckIn": "Last Check-in"
-  },
-  "preview": {
-    "templateMode": "Template Preview Mode",
-    "templateModeDesc": "This shows the dashboard layout with demo data. Changes made here will apply to all dashboards.",
-    "demoData": "Demo Data",
-    "viewingAsAdmin": "Viewing as Admin:",
-    "dashboard": "'s dashboard",
-    "backToMembers": "Back to Members",
-    "backToPartners": "Back to Partners"
+    // ... existing keys ...
+    "confirmMarkFaulty": "Mark this device as faulty? This will remove it from the member.",
+    "markedFaulty": "Device marked as faulty",
+    "updateFailed": "Failed to update device status",
+    "confirmUnassign": "Are you sure you want to unassign this device?"
   }
 },
-"callCentre": {
-  "tabs": {
-    "alerts": "Alerts",
-    "messages": "Messages"
-  },
-  "status": {
-    "incoming": "{{count}} Incoming",
-    "inProgress": "{{count}} In Progress",
-    "escalated": "{{count}} Escalated"
-  },
-  "search": {
-    "placeholder": "Search by name or location..."
-  },
-  "filters": {
-    "all": "All",
-    "incoming": "Incoming",
-    "inProgress": "In Progress",
-    "escalated": "Escalated"
-  },
-  "empty": {
-    "allClear": "All clear",
-    "noAlerts": "No active alerts at the moment",
-    "loading": "Loading alerts..."
-  },
-  "quickActions": {
-    "title": "Quick Actions",
-    "callEmergency": "Call Emergency Services (112)"
-  }
+"tasks": {
+  // ... existing keys ...
+  "completeFailed": "Failed to complete task",
+  "deleteConfirm": "Are you sure you want to delete this task?"
 },
 "joinWizard": {
-  "validation": {
-    "enterFullName": "Please enter your full name",
-    "enterEmail": "Please enter your email address",
-    "enterPhone": "Please enter your phone number",
-    "enterDob": "Please enter your date of birth",
-    "enterPartnerFullName": "Please enter your partner's full name",
-    "enterPartnerEmail": "Please enter your partner's email address",
-    "enterPartnerPhone": "Please enter your partner's phone number",
-    "enterPartnerDob": "Please enter your partner's date of birth",
-    "enterStreetAddress": "Please enter your street address",
-    "enterCity": "Please enter your city",
-    "selectProvince": "Please select your province",
-    "enterPostalCode": "Please enter your postal code",
-    "enterPartnerStreet": "Please enter your partner's street address",
-    "enterPartnerCity": "Please enter your partner's city",
-    "selectPartnerProvince": "Please select your partner's province",
-    "enterPartnerPostal": "Please enter your partner's postal code",
-    "addEmergencyContact": "Please add at least one emergency contact",
-    "acceptTerms": "Please accept the Terms of Service",
-    "acceptPrivacy": "Please consent to share medical information with emergency services"
-  },
   "payment": {
-    "success": "Payment successful! Welcome to ICE Alarm.",
-    "cancelled": "Payment was cancelled. You can try again when ready."
-  }
-},
-"partner": {
-  "dashboard": {
-    "title": "Dashboard",
-    "welcomeBack": "Welcome back, {{name}}",
-    "referralLink": "Your Referral Link",
-    "shareToEarn": "Share this link to earn commissions on every signup",
-    "copy": "Copy",
-    "referralCode": "Referral Code:",
-    "notFound": "Partner Not Found",
-    "notLinked": "Your account is not linked to a partner profile.",
-    "pipeline": {
-      "title": "Referral Pipeline",
-      "subtitle": "Track your referrals through each stage",
-      "emptyPreview": "Pipeline data will appear here for actual partners"
-    }
-  },
-  "toast": {
-    "previewOnly": "This is a template preview - referral link is for demo only",
-    "linkCopied": "Referral link copied to clipboard!"
-  }
-},
-"legal": {
-  "privacy": {
-    "title": "Privacy Policy",
-    "company": "ICE Alarm España S.L.",
-    "lastUpdated": "Last updated: January 2025"
-  },
-  "terms": {
-    "title": "Terms and Conditions",
-    "company": "ICE Alarm España S.L.",
-    "lastUpdated": "Last updated: January 2025"
-  },
-  "footer": {
-    "termsOfService": "Terms of Service",
-    "privacyPolicy": "Privacy Policy"
+    // ... existing keys ...
+    "payNow": "Pay Now",
+    "confirmOrder": "Confirm Order"
   }
 }
 ```
 
-**Add corresponding translations to `es.json`:**
-(Spanish translations for all keys above)
+**Add corresponding Spanish translations to `es.json`.**
 
-### Phase 2: Update Components
+### Phase 2: Update Components & Hooks
 
-Update the following files to use i18n `t()` function:
-
-1. **`src/pages/admin/MembersPage.tsx`** - Add `useTranslation()` and replace ~20 hardcoded strings
-2. **`src/pages/admin/OrdersPage.tsx`** - Add `useTranslation()` and replace ~15 hardcoded strings
-3. **`src/pages/admin/DevicesPage.tsx`** - Add `useTranslation()` and replace ~20 hardcoded strings
-4. **`src/pages/call-centre/CallCentreDashboard.tsx`** - Add `useTranslation()` and replace ~15 hardcoded strings
-5. **`src/pages/join/JoinWizard.tsx`** - Replace ~25 validation message strings with translation keys
-6. **`src/pages/client/ClientDashboard.tsx`** - Replace ~12 admin banner strings with translation keys
-7. **`src/pages/partner/PartnerDashboard.tsx`** - Replace ~12 strings and add i18n for toasts
-8. **`src/pages/PrivacyPage.tsx`** - Add translation keys for headers/footers
-9. **`src/pages/TermsPage.tsx`** - Add translation keys for headers/footers
+1. **`useAIImageGenerator.ts`**: Import `i18n` and use `i18n.t()` for toast messages
+2. **`useInputValidation.ts`**: Create a function that returns translated schemas or use `t()` at runtime
+3. **`DeviceTab.tsx`**: Replace `confirm()` with custom dialog using `t()` keys
+4. **`TasksTab.tsx`**: Replace `confirm()` with `t()` keys
+5. **`ContactsTab.tsx`**: Use translated validation messages
+6. **`PaymentStep.tsx`**: Replace hardcoded button text with `t()` calls
+7. **`DocumentationSettingsTab.tsx`**: Use `t("common.cancel")` and `t("common.delete")`
+8. **`ProductForm.tsx`**: Use translated validation messages
 
 ### Phase 3: Remove Fallback Patterns
 
-Update `ClientDashboard.tsx` to remove the fallback pattern:
+Update `ClientDashboard.tsx` to remove patterns like:
 ```typescript
 // FROM:
 {t("dashboard.noDeviceAssigned") || "No device assigned"}
@@ -299,7 +205,8 @@ Update `ClientDashboard.tsx` to remove the fallback pattern:
 // TO:
 {t("dashboard.noDeviceAssigned")}
 ```
-Ensure the key exists in both locale files instead of using inline fallbacks.
+
+Ensure all referenced keys exist in both locale files.
 
 ---
 
@@ -307,49 +214,62 @@ Ensure the key exists in both locale files instead of using inline fallbacks.
 
 | File | Action | Estimated Changes |
 |------|--------|-------------------|
-| `src/i18n/locales/en.json` | Add ~100 new keys | Major additions |
-| `src/i18n/locales/es.json` | Add ~100 Spanish translations | Major additions |
-| `src/pages/admin/MembersPage.tsx` | Add i18n + replace strings | ~20 changes |
-| `src/pages/admin/OrdersPage.tsx` | Add i18n + replace strings | ~15 changes |
-| `src/pages/admin/DevicesPage.tsx` | Add i18n + replace strings | ~20 changes |
-| `src/pages/call-centre/CallCentreDashboard.tsx` | Add i18n + replace strings | ~15 changes |
-| `src/pages/join/JoinWizard.tsx` | Replace validation strings | ~25 changes |
-| `src/pages/client/ClientDashboard.tsx` | Replace admin preview strings | ~12 changes |
-| `src/pages/partner/PartnerDashboard.tsx` | Add i18n + replace strings | ~12 changes |
-| `src/pages/PrivacyPage.tsx` | Add i18n for headers | ~5 changes |
-| `src/pages/TermsPage.tsx` | Add i18n for headers | ~5 changes |
+| `src/i18n/locales/en.json` | Add ~35 new keys | Minor additions |
+| `src/i18n/locales/es.json` | Add ~35 Spanish translations | Minor additions |
+| `src/hooks/useAIImageGenerator.ts` | Add i18n + replace 7 strings | ~10 line changes |
+| `src/hooks/useInputValidation.ts` | Create translated schema builder | Structural change |
+| `src/components/admin/member-detail/DeviceTab.tsx` | Replace confirms + toasts | ~8 line changes |
+| `src/components/admin/member-detail/TasksTab.tsx` | Replace confirms + toasts | ~4 line changes |
+| `src/components/admin/member-detail/ContactsTab.tsx` | Use translated schema | ~4 line changes |
+| `src/components/admin/wizard/PaymentStep.tsx` | Replace button text | ~3 line changes |
+| `src/components/admin/settings/DocumentationSettingsTab.tsx` | Add t() calls | ~2 line changes |
+| `src/components/admin/products/ProductForm.tsx` | Use translated schema | ~3 line changes |
+| `src/pages/client/ClientDashboard.tsx` | Remove fallback patterns | ~15 line changes |
 
 ---
 
 ## Special Considerations
 
-### Legal Content Translation
-The full legal document content (Privacy Policy and Terms of Service) contains legal language that should be professionally translated by a qualified legal translator. For now, only the page headers will be translated programmatically.
+### Zod Validation Translations
+Zod schemas are typically defined at module load time before `i18n` is initialized. Options:
+1. **Function-based schemas**: Create functions that return schemas with translated messages
+2. **Custom error map**: Use Zod's `errorMap` feature to translate errors at display time
+3. **Post-process errors**: Translate error messages when displaying them to users
 
-### Preservation of Existing Translations
-- All existing translation keys will be preserved
-- No keys will be removed or renamed
-- New keys will be added in organized namespaces
+### Native `confirm()` Replacement
+Native browser `confirm()` dialogs cannot be translated. Replace with:
+- Custom `AlertDialog` component using translation keys
+- Already used pattern in `ContentPlanner.tsx`: `confirm(t("mediaStrategy.clearCalendarConfirm"))`
 
-### Quality Assurance
-After implementation:
-1. Test language switching on all affected pages
-2. Verify no literal translation keys appear
-3. Confirm all toast messages appear in correct language
-4. Check admin, call centre, client, and partner dashboards
+### Legal Content
+The Privacy Policy and Terms pages have translated headers but the full legal document bodies require professional legal translation services. This is documented and not included in the programmatic scope.
+
+---
+
+## Quality Assurance Checklist
+
+After implementation, verify:
+1. Language switching works on all affected pages
+2. No literal translation keys appear in UI
+3. Toast messages display in correct language
+4. Validation error messages are translated
+5. Admin confirmation dialogs are translated
+6. No console warnings about missing keys
+7. Both EN and ES files have identical key structures
 
 ---
 
 ## Summary
 
-| Category | Strings to Translate |
-|----------|---------------------|
-| Admin Pages | ~45 |
-| Call Centre | ~15 |
-| Join Wizard | ~25 |
-| Client Dashboard | ~12 |
-| Partner Dashboard | ~12 |
-| Legal Pages | ~10 (headers only) |
-| **Total** | **~120 strings** |
+| Category | Strings Found | Already Translated | Needing Translation |
+|----------|--------------|-------------------|---------------------|
+| Hooks (Toasts) | 15 | 0 | 15 |
+| Validation Schemas | 20 | 4 | 16 |
+| Admin Detail Tabs | 10 | 2 | 8 |
+| Wizard Payment | 3 | 1 | 2 |
+| Settings Dialogs | 2 | 2 | 0 |
+| Product Forms | 5 | 0 | 5 |
+| Client Dashboard Fallbacks | 15 | 15 | 0 (cleanup only) |
+| **TOTAL** | **~70** | **~24** | **~46** |
 
-This plan will bring the platform to **100% bilingual coverage** for all user-facing strings, completing the bilingual standard requirement.
+The platform will achieve **100% bilingual coverage** after implementing these ~46 remaining string translations and the cleanup of fallback patterns.
