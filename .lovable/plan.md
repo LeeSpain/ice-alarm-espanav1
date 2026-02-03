@@ -1,275 +1,687 @@
 
-# Complete Translation Audit Report
+# AI Outreach Module - Complete Implementation Plan
 
-## Executive Summary
+## Overview
 
-Following a page-by-page, component-by-component, and hook-by-hook review of the ICE Alarm platform, the translation coverage is approximately **97%** with approximately **2,700 translation keys** properly defined across both English (`en.json`) and Spanish (`es.json`) locale files.
-
-The audit identified **~60 remaining hardcoded strings** that need to be externalized to achieve 100% bilingual compliance.
+Create a new **AI Outreach** module as a standalone section under Admin → Communication, completely isolated from the Members CRM. This module enables automated lead discovery, AI-powered scoring, personalized outreach campaigns, and controlled email conversations.
 
 ---
 
-## Current Status: What's Working Well
+## Architecture
 
-### Fully Translated Areas
-| Area | Status | Notes |
-|------|--------|-------|
-| Landing Page | ✅ Complete | All sections translated |
-| Pendant Page | ✅ Complete | Features, specs, testimonials, FAQ |
-| Contact Page | ✅ Complete | Form, success states, info cards |
-| Blog Pages | ✅ Complete | List, post, navigation |
-| Join Wizard | ✅ Complete | All 8 steps fully translated |
-| Client Dashboard | ✅ Complete | Uses `t()` with fallbacks |
-| Admin Members Page | ✅ Complete | Tables, filters, pagination |
-| Admin Orders Page | ✅ Complete | All status badges and actions |
-| Admin Devices Page | ✅ Complete | All device statuses and UI |
-| Call Centre Dashboard | ✅ Complete | Tabs, filters, alerts |
-| Partner Dashboard | ✅ Complete | Referral link, pipeline, stats |
-| Media Strategy | ✅ Complete | All 6 tabs fully translated |
-| Privacy/Terms Pages | ✅ Headers | Body content requires legal translation |
-| Navigation/Sidebar | ✅ Complete | All menu items |
-| Common UI Elements | ✅ Complete | Buttons, badges, status labels |
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           ADMIN SIDEBAR                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Communication (existing group)                                              │
+│       ├── Messages (/admin/messages)                                         │
+│       ├── Media Manager (/admin/media-manager)                               │
+│       └── AI Outreach (/admin/ai-outreach) ← NEW                            │
+│               ├── Leads                                                      │
+│               ├── CRM                                                        │
+│               ├── Campaigns                                                  │
+│               ├── Inbox                                                      │
+│               └── Analytics                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
 
----
-
-## Issues Found: Remaining Hardcoded Strings
-
-### 1. Hooks with Hardcoded Toast Messages (~15 strings)
-
-**`src/hooks/useAIImageGenerator.ts`** (Lines 72-102)
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 73 | `"AI Image Generated"` | `ai.imageGenerated` |
-| 74 | `"Professional image created successfully."` | `ai.imageGeneratedDesc` |
-| 86 | `"Rate Limited"` | `ai.rateLimited` |
-| 87 | `"Too many requests. Please wait..."` | `ai.rateLimitedDesc` |
-| 92 | `"Credits Exhausted"` | `ai.creditsExhausted` |
-| 93 | `"AI credits are exhausted..."` | `ai.creditsExhaustedDesc` |
-| 98 | `"Generation Failed"` | `ai.generationFailed` |
-
-**`src/hooks/useBrandedImageGenerator.ts`** (if exists, similar pattern)
-
-### 2. Validation Schemas (~20 strings)
-
-**`src/hooks/useInputValidation.ts`** (Lines 1-133)
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 7 | `"Email is required"` | `validation.emailRequired` |
-| 8 | `"Invalid email address"` | `validation.invalidEmail` |
-| 9 | `"Email must be less than 255 characters"` | `validation.emailMaxLength` |
-| 14 | `"Phone number is required"` | `validation.phoneRequired` |
-| 15 | `"Invalid phone number format"` | `validation.invalidPhoneFormat` |
-| 20 | `"Password must be at least 8 characters"` | `validation.passwordMinLength` |
-| 22 | `"Password must contain at least one uppercase letter"` | `validation.passwordUppercase` |
-| 23 | `"Password must contain at least one lowercase letter"` | `validation.passwordLowercase` |
-| 24 | `"Password must contain at least one number"` | `validation.passwordNumber` |
-| 29 | `"Name is required"` | `validation.nameRequired` |
-| 30 | `"Name must be less than 100 characters"` | `validation.nameMaxLength` |
-| 31 | `"Name contains invalid characters"` | `validation.nameInvalidChars` |
-| 36 | `"Address is required"` | `validation.addressRequired` |
-| 42 | `"Postal code is required"` | `validation.postalCodeRequired` |
-| 44 | `"Invalid postal code format"` | `validation.invalidPostalCode` |
-| 102 | `"Date of birth is required"` | `validation.dobRequired` |
-| 106 | `"City is required"` | `validation.cityRequired` |
-| 107 | `"Province is required"` | `validation.provinceRequired` |
-| 115 | `"Relationship is required"` | `validation.relationshipRequired` |
-
-### 3. Admin Member Detail Tabs (~10 strings)
-
-**`src/components/admin/member-detail/DeviceTab.tsx`**
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 175 | `"Mark this device as faulty?..."` | `admin.devices.confirmMarkFaulty` |
-| 186 | `"Device marked as faulty"` | `admin.devices.markedFaulty` |
-| 190 | `"Failed to update device status"` | `admin.devices.updateFailed` |
-| 195 | `"Are you sure you want to unassign..."` | `admin.devices.confirmUnassign` |
-
-**`src/components/admin/member-detail/TasksTab.tsx`**
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 240 | `"Failed to complete task"` | `tasks.completeFailed` |
-| 245 | `"Are you sure you want to delete this task?"` | `tasks.deleteConfirm` |
-
-**`src/components/admin/member-detail/ContactsTab.tsx`**
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 36 | `"Name is required"` | Reuse: `validation.nameRequired` |
-| 37 | `"Relationship is required"` | Reuse: `validation.relationshipRequired` |
-| 38 | `"Phone is required"` | Reuse: `validation.phoneRequired` |
-| 39 | `"Invalid email"` | Reuse: `validation.invalidEmail` |
-
-### 4. Admin Wizard Payment Step (~3 strings)
-
-**`src/components/admin/wizard/PaymentStep.tsx`** (Lines 276-281)
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 276 | `"Processing..."` | `joinWizard.payment.processing` (exists) |
-| 281 | `"Pay Now"` | `joinWizard.payment.payNow` |
-| 281 | `"Confirm Order"` | `joinWizard.payment.confirmOrder` |
-
-### 5. Settings Documentation Tab (~2 strings)
-
-**`src/components/admin/settings/DocumentationSettingsTab.tsx`** (Lines 320-325)
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 320 | `"Cancel"` | `common.cancel` (exists) |
-| 325 | `"Delete"` | `common.delete` (exists) |
-
-### 6. Product Forms (~5 strings)
-
-**`src/components/admin/products/ProductForm.tsx`**
-| Line | Current Text | Required Key |
-|------|--------------|--------------|
-| 26 | `"Name is required"` | Reuse: `validation.nameRequired` |
-| 29 | `"Must be positive"` | `validation.mustBePositive` |
-| 30 | `"Must be between 0 and 1"` | `validation.taxRateRange` |
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        DATABASE ISOLATION                                    │
+├───────────────────────────────┬─────────────────────────────────────────────┤
+│   MEMBERS CRM (existing)      │   AI OUTREACH (new - isolated)              │
+├───────────────────────────────┼─────────────────────────────────────────────┤
+│   • members                   │   • outreach_raw_leads                      │
+│   • leads                     │   • outreach_crm_leads                      │
+│   • crm_contacts              │   • outreach_campaigns                      │
+│   • crm_profiles              │   • outreach_email_drafts                   │
+│   • conversations             │   • outreach_email_threads                  │
+│   • messages                  │   • outreach_settings                       │
+├───────────────────────────────┴─────────────────────────────────────────────┤
+│   ❌ NO CROSS-REFERENCES - Complete isolation                               │
+│   ✅ Explicit conversion only via "Convert" action                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Implementation Plan
+## Stage 0: Navigation & Module Structure
 
-### Phase 1: Add Missing Translation Keys
+### Changes to AdminSidebar.tsx
 
-**Add to `en.json`:**
+Add "AI Outreach" as a new item under the "communications" group:
+
+```typescript
+// In menuGroups array, update id: "communications"
+{
+  id: "communications",
+  icon: MessageSquare,
+  labelKey: "sidebar.communications",
+  items: [
+    { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
+    { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
+    { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" }  // NEW
+  ]
+}
+```
+
+### New Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/pages/admin/AIOutreachPage.tsx` | Main page with tabbed navigation (Leads, CRM, Campaigns, Inbox, Analytics) |
+| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Raw leads management tab |
+| `src/components/admin/outreach/OutreachCRMTab.tsx` | Qualified leads CRM pipeline |
+| `src/components/admin/outreach/OutreachCampaignsTab.tsx` | Campaign management |
+| `src/components/admin/outreach/OutreachInboxTab.tsx` | Email inbox view |
+| `src/components/admin/outreach/OutreachAnalyticsTab.tsx` | Performance metrics |
+
+### Route Addition in App.tsx
+
+```typescript
+// Add lazy import
+const AIOutreachPage = lazy(() => import("./pages/admin/AIOutreachPage"));
+
+// Add route under admin
+<Route path="ai-outreach" element={<AIOutreachPage />} />
+```
+
+---
+
+## Stage 1: Database Tables (Isolated Storage)
+
+### Table 1: outreach_raw_leads
+
+```sql
+CREATE TABLE public.outreach_raw_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pipeline_type TEXT NOT NULL DEFAULT 'sales' CHECK (pipeline_type IN ('sales', 'partner')),
+  company_name TEXT NOT NULL,
+  contact_name TEXT,
+  email TEXT,
+  website_url TEXT,
+  phone TEXT,
+  location TEXT,
+  category TEXT,
+  source TEXT NOT NULL DEFAULT 'manual',
+  discovered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- AI Rating fields
+  ai_score NUMERIC(2,1) CHECK (ai_score >= 1.0 AND ai_score <= 5.0),
+  ai_reasoning TEXT,
+  ai_rated_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Status tracking
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'qualified', 'rejected')),
+  
+  -- Metadata
+  raw_data JSONB,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_outreach_raw_leads_email ON public.outreach_raw_leads(email);
+CREATE INDEX idx_outreach_raw_leads_pipeline ON public.outreach_raw_leads(pipeline_type);
+CREATE INDEX idx_outreach_raw_leads_status ON public.outreach_raw_leads(status);
+CREATE INDEX idx_outreach_raw_leads_created ON public.outreach_raw_leads(created_at DESC);
+
+-- RLS
+ALTER TABLE public.outreach_raw_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Staff can manage outreach raw leads"
+ON public.outreach_raw_leads FOR ALL TO authenticated
+USING (public.is_staff(auth.uid()))
+WITH CHECK (public.is_staff(auth.uid()));
+
+-- Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.outreach_raw_leads;
+```
+
+### Table 2: outreach_crm_leads
+
+```sql
+CREATE TABLE public.outreach_crm_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  raw_lead_id UUID REFERENCES public.outreach_raw_leads(id) ON DELETE SET NULL,
+  
+  -- Contact info (copied for independence)
+  pipeline_type TEXT NOT NULL DEFAULT 'sales' CHECK (pipeline_type IN ('sales', 'partner')),
+  company_name TEXT NOT NULL,
+  contact_name TEXT,
+  email TEXT,
+  website_url TEXT,
+  phone TEXT,
+  location TEXT,
+  category TEXT,
+  source TEXT NOT NULL,
+  
+  -- AI data
+  ai_score NUMERIC(2,1),
+  research_summary TEXT,
+  personalization_hooks JSONB,
+  assigned_ai_agent TEXT,
+  
+  -- Pipeline status
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'replied', 'interested', 'converted', 'closed')),
+  
+  -- Campaign tracking
+  campaign_id UUID,
+  last_contacted_at TIMESTAMP WITH TIME ZONE,
+  last_reply_at TIMESTAMP WITH TIME ZONE,
+  email_count INTEGER DEFAULT 0,
+  
+  -- Conversion tracking (explicit only)
+  converted_at TIMESTAMP WITH TIME ZONE,
+  converted_to_member_id UUID,
+  converted_to_partner_id UUID,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_outreach_crm_leads_email ON public.outreach_crm_leads(email);
+CREATE INDEX idx_outreach_crm_leads_pipeline ON public.outreach_crm_leads(pipeline_type);
+CREATE INDEX idx_outreach_crm_leads_status ON public.outreach_crm_leads(status);
+CREATE INDEX idx_outreach_crm_leads_created ON public.outreach_crm_leads(created_at DESC);
+
+-- RLS
+ALTER TABLE public.outreach_crm_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Staff can manage outreach CRM leads"
+ON public.outreach_crm_leads FOR ALL TO authenticated
+USING (public.is_staff(auth.uid()))
+WITH CHECK (public.is_staff(auth.uid()));
+
+-- Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.outreach_crm_leads;
+```
+
+### Table 3: outreach_campaigns
+
+```sql
+CREATE TABLE public.outreach_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  pipeline_type TEXT NOT NULL DEFAULT 'sales' CHECK (pipeline_type IN ('sales', 'partner')),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed')),
+  
+  -- Targeting
+  target_categories TEXT[],
+  target_locations TEXT[],
+  min_ai_score NUMERIC(2,1) DEFAULT 3.5,
+  
+  -- Email sequence
+  email_sequence JSONB DEFAULT '[]'::jsonb,
+  days_between_emails INTEGER DEFAULT 3,
+  max_emails_per_lead INTEGER DEFAULT 5,
+  
+  -- Stats
+  leads_count INTEGER DEFAULT 0,
+  emails_sent INTEGER DEFAULT 0,
+  replies_count INTEGER DEFAULT 0,
+  conversions_count INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.outreach_campaigns ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Staff can manage outreach campaigns"
+ON public.outreach_campaigns FOR ALL TO authenticated
+USING (public.is_staff(auth.uid()))
+WITH CHECK (public.is_staff(auth.uid()));
+```
+
+### Table 4: outreach_email_drafts
+
+```sql
+CREATE TABLE public.outreach_email_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  crm_lead_id UUID NOT NULL REFERENCES public.outreach_crm_leads(id) ON DELETE CASCADE,
+  campaign_id UUID REFERENCES public.outreach_campaigns(id) ON DELETE SET NULL,
+  
+  -- Email content
+  subject TEXT NOT NULL,
+  body_text TEXT NOT NULL,
+  body_html TEXT,
+  
+  -- Status
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'scheduled', 'sent', 'delivered', 'opened', 'replied', 'bounced', 'failed')),
+  
+  -- Scheduling
+  scheduled_for TIMESTAMP WITH TIME ZONE,
+  sent_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Tracking
+  sequence_number INTEGER DEFAULT 1,
+  external_message_id TEXT,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.outreach_email_drafts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Staff can manage outreach email drafts"
+ON public.outreach_email_drafts FOR ALL TO authenticated
+USING (public.is_staff(auth.uid()))
+WITH CHECK (public.is_staff(auth.uid()));
+```
+
+### Table 5: outreach_email_threads
+
+```sql
+CREATE TABLE public.outreach_email_threads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  crm_lead_id UUID NOT NULL REFERENCES public.outreach_crm_leads(id) ON DELETE CASCADE,
+  
+  -- Thread info
+  subject TEXT NOT NULL,
+  thread_id TEXT,
+  
+  -- Latest message
+  direction TEXT NOT NULL CHECK (direction IN ('outbound', 'inbound')),
+  message_body TEXT NOT NULL,
+  
+  -- Classification (for inbound)
+  ai_classification TEXT CHECK (ai_classification IN ('interested', 'question', 'not_interested', 'unsubscribe')),
+  ai_suggested_reply TEXT,
+  
+  -- Status
+  requires_action BOOLEAN DEFAULT false,
+  resolved_at TIMESTAMP WITH TIME ZONE,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.outreach_email_threads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Staff can manage outreach email threads"
+ON public.outreach_email_threads FOR ALL TO authenticated
+USING (public.is_staff(auth.uid()))
+WITH CHECK (public.is_staff(auth.uid()));
+
+-- Realtime for inbox
+ALTER PUBLICATION supabase_realtime ADD TABLE public.outreach_email_threads;
+```
+
+### Settings Storage
+
+Add to `system_settings` table:
+- `outreach_min_score_threshold` (default: 3.5)
+
+---
+
+## Stage 2: Leads Page - Import/Search/Add
+
+### Components to Create
+
+| Component | Purpose |
+|-----------|---------|
+| `OutreachLeadsTab.tsx` | Main leads tab with table and filters |
+| `AddOutreachLeadModal.tsx` | Manual lead entry form |
+| `ImportLeadsModal.tsx` | CSV import + paste list functionality |
+| `OutreachLeadFilters.tsx` | Filter controls (pipeline, status, source, score) |
+
+### Features
+
+1. **Manual Add** - Form with: company_name, contact_name, email, website_url, location, category, pipeline_type
+2. **CSV Import** - Parse columns: company, contact, email, website, location, category, pipeline
+3. **Paste List** - One line per lead: `company | email | website (optional)`
+4. **Filters** - pipeline_type, status, source, ai_score range
+5. **No email sending** - Raw leads cannot be emailed
+
+### Hooks to Create
+
+| Hook | Purpose |
+|------|---------|
+| `useOutreachRawLeads.ts` | CRUD for outreach_raw_leads table |
+| `useOutreachImport.ts` | CSV parsing and bulk insert logic |
+
+---
+
+## Stage 3: AI Rating + Qualification Gate
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `AIRatingControls.tsx` | "Rate Selected" and "Rate All New" buttons |
+| `LeadScoreDisplay.tsx` | Star rating display with reasoning tooltip |
+| `QualificationActions.tsx` | "Move to CRM" and "Reject" buttons |
+
+### Edge Function
+
+```typescript
+// supabase/functions/outreach-ai-rate/index.ts
+// Input: Lead data (company, website, category, location, pipeline_type)
+// Output: { score: 1.0-5.0, reasoning: "1-3 lines" }
+```
+
+### Qualification Flow
+
+1. Admin sets `outreach_min_score_threshold` in settings (default 3.5)
+2. "Rate Selected" / "Rate All New" triggers AI scoring
+3. AI returns score (1.0-5.0) + reasoning
+4. "Move Qualified to CRM" button:
+   - Filters leads where `ai_score >= threshold`
+   - Creates records in `outreach_crm_leads`
+   - Updates raw lead `status = 'qualified'`
+5. "Reject Lead" sets `status = 'rejected'`
+
+---
+
+## Stage 4: Research Agent + Email Drafts
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `OutreachCRMTab.tsx` | Kanban-style pipeline view |
+| `CRMLeadCard.tsx` | Individual lead card with actions |
+| `LeadDetailDrawer.tsx` | Full lead details + research + drafts |
+| `ResearchSummaryCard.tsx` | Display research + personalization hooks |
+| `EmailDraftEditor.tsx` | Compose/edit email drafts |
+
+### Edge Functions
+
+```typescript
+// supabase/functions/outreach-research/index.ts
+// Input: { website_url, company_name, category }
+// Output: { research_summary, personalization_hooks: { hook1, hook2, hook3 } }
+
+// supabase/functions/outreach-generate-email/index.ts
+// Input: { lead_data, pipeline_type, research_summary, personalization_hooks }
+// Output: { subject, body_text }
+// - sales: customer-focused, reassurance, safety benefits
+// - partner: professional opportunity, commission structure
+// - Always includes opt-out line
+```
+
+### CRM Pipeline Columns
+
+| Column | Description |
+|--------|-------------|
+| New | Qualified leads, not yet contacted |
+| Contacted | First email sent |
+| Replied | Received a response |
+| Interested | Positive engagement |
+| Converted | Moved to Members CRM |
+| Closed | Not interested / unsubscribed |
+
+---
+
+## Stage 5: Inbox + AI Reply Assistant
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `OutreachInboxTab.tsx` | Email threads view |
+| `ThreadList.tsx` | List of conversations |
+| `ThreadDetail.tsx` | Individual thread with messages |
+| `AIReplyAssistant.tsx` | Suggested reply with approve/edit/send |
+
+### Features
+
+1. **Thread View** - Outbound and inbound messages per lead
+2. **AI Classification** - Classify inbound as: interested, question, not_interested, unsubscribe
+3. **AI Suggested Reply** - Draft response based on classification
+4. **Approval-First** - All replies require manual send (no auto-send)
+5. **Status Update** - Auto-update `outreach_crm_leads.status` based on reply type
+
+### Edge Function
+
+```typescript
+// supabase/functions/outreach-classify-reply/index.ts
+// Input: { inbound_message, conversation_history }
+// Output: { classification, suggested_reply }
+```
+
+---
+
+## Stage 6: Conversion Bridge
+
+### Conversion Actions
+
+In CRM Lead Detail, add "Convert" dropdown with:
+- **Convert to Member** → Creates record in `members` table
+- **Convert to Partner** → Creates record in `partners` table
+
+### Conversion Logic
+
+```typescript
+async function convertToMember(outreachLeadId: string) {
+  // 1. Get outreach CRM lead data
+  const lead = await getOutreachCRMLead(outreachLeadId);
+  
+  // 2. Create member record
+  const member = await createMember({
+    first_name: lead.contact_name?.split(' ')[0],
+    last_name: lead.contact_name?.split(' ').slice(1).join(' '),
+    email: lead.email,
+    phone: lead.phone,
+    source: 'ai_outreach',
+    outreach_lead_id: lead.id
+  });
+  
+  // 3. Update outreach lead
+  await updateOutreachCRMLead(outreachLeadId, {
+    status: 'converted',
+    converted_at: new Date().toISOString(),
+    converted_to_member_id: member.id
+  });
+}
+```
+
+### Database Changes
+
+Add columns to `members` table:
+- `source TEXT DEFAULT 'website'` (values: 'website', 'admin', 'partner', 'ai_outreach')
+- `outreach_lead_id UUID` (nullable, references outreach_crm_leads.id)
+
+---
+
+## Translation Keys
+
+Add to `en.json` and `es.json`:
+
 ```json
-"ai": {
-  // ... existing keys ...
-  "imageGenerated": "AI Image Generated",
-  "imageGeneratedDesc": "Professional image created successfully.",
-  "rateLimited": "Rate Limited",
-  "rateLimitedDesc": "Too many requests. Please wait a moment and try again.",
-  "creditsExhausted": "Credits Exhausted",
-  "creditsExhaustedDesc": "AI credits are exhausted. Please add more credits.",
-  "generationFailed": "Generation Failed"
-},
-"validation": {
-  // ... existing keys ...
-  "emailMaxLength": "Email must be less than 255 characters",
-  "invalidPhoneFormat": "Invalid phone number format",
-  "phoneMaxLength": "Phone number must be less than 20 characters",
-  "passwordMinLength": "Password must be at least 8 characters",
-  "passwordMaxLength": "Password must be less than 100 characters",
-  "passwordUppercase": "Password must contain at least one uppercase letter",
-  "passwordLowercase": "Password must contain at least one lowercase letter",
-  "passwordNumber": "Password must contain at least one number",
-  "nameMaxLength": "Name must be less than 100 characters",
-  "nameInvalidChars": "Name contains invalid characters",
-  "addressMaxLength": "Address must be less than 200 characters",
-  "postalCodeMaxLength": "Postal code must be less than 10 characters",
-  "mustBePositive": "Must be a positive number",
-  "taxRateRange": "Must be between 0 and 1"
-},
-"admin": {
-  "devices": {
-    // ... existing keys ...
-    "confirmMarkFaulty": "Mark this device as faulty? This will remove it from the member.",
-    "markedFaulty": "Device marked as faulty",
-    "updateFailed": "Failed to update device status",
-    "confirmUnassign": "Are you sure you want to unassign this device?"
-  }
-},
-"tasks": {
-  // ... existing keys ...
-  "completeFailed": "Failed to complete task",
-  "deleteConfirm": "Are you sure you want to delete this task?"
-},
-"joinWizard": {
-  "payment": {
-    // ... existing keys ...
-    "payNow": "Pay Now",
-    "confirmOrder": "Confirm Order"
+"outreach": {
+  "title": "AI Outreach",
+  "subtitle": "Automated lead discovery and outreach campaigns",
+  "tabs": {
+    "leads": "Leads",
+    "crm": "CRM",
+    "campaigns": "Campaigns",
+    "inbox": "Inbox",
+    "analytics": "Analytics"
+  },
+  "leads": {
+    "title": "Raw Leads",
+    "subtitle": "Discovered leads awaiting AI rating",
+    "addLead": "Add Lead",
+    "importLeads": "Import Leads",
+    "pasteList": "Paste List",
+    "rateSelected": "Rate Selected",
+    "rateAllNew": "Rate All New",
+    "moveQualified": "Move Qualified to CRM",
+    "rejectLead": "Reject",
+    "columns": {
+      "company": "Company",
+      "contact": "Contact",
+      "email": "Email",
+      "website": "Website",
+      "location": "Location",
+      "category": "Category",
+      "pipeline": "Pipeline",
+      "score": "AI Score",
+      "status": "Status",
+      "source": "Source"
+    },
+    "status": {
+      "new": "New",
+      "qualified": "Qualified",
+      "rejected": "Rejected"
+    },
+    "pipeline": {
+      "sales": "Sales",
+      "partner": "Partner"
+    },
+    "sources": {
+      "manual": "Manual",
+      "csv_import": "CSV Import",
+      "paste_list": "Paste List",
+      "scrape": "Web Scrape"
+    },
+    "import": {
+      "title": "Import Leads",
+      "csvTab": "CSV Upload",
+      "pasteTab": "Paste List",
+      "pasteInstructions": "One lead per line: company | email | website (optional)",
+      "csvInstructions": "Upload a CSV file with columns: company, contact, email, website, location, category, pipeline",
+      "importButton": "Import",
+      "importing": "Importing..."
+    },
+    "noLeads": "No leads found",
+    "loading": "Loading leads..."
+  },
+  "crm": {
+    "title": "Outreach CRM",
+    "subtitle": "Manage qualified leads through your pipeline",
+    "columns": {
+      "new": "New",
+      "contacted": "Contacted",
+      "replied": "Replied",
+      "interested": "Interested",
+      "converted": "Converted",
+      "closed": "Closed"
+    },
+    "actions": {
+      "research": "Research Business",
+      "generateEmail": "Generate Intro Email",
+      "sendEmail": "Send Email",
+      "convert": "Convert",
+      "close": "Close Lead"
+    },
+    "convert": {
+      "toMember": "Convert to Member",
+      "toPartner": "Convert to Partner",
+      "success": "Lead converted successfully",
+      "error": "Failed to convert lead"
+    },
+    "research": {
+      "title": "Business Research",
+      "generating": "Researching...",
+      "summary": "Summary",
+      "hooks": "Personalization Hooks"
+    },
+    "email": {
+      "title": "Email Draft",
+      "generating": "Generating...",
+      "subject": "Subject",
+      "body": "Body",
+      "send": "Send Email",
+      "approve": "Approve",
+      "edit": "Edit"
+    }
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "subtitle": "Create and manage outreach email campaigns",
+    "newCampaign": "New Campaign",
+    "noCampaigns": "No campaigns yet",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed"
+    }
+  },
+  "inbox": {
+    "title": "Inbox",
+    "subtitle": "View and respond to email conversations",
+    "noThreads": "No conversations yet",
+    "classification": {
+      "interested": "Interested",
+      "question": "Question",
+      "not_interested": "Not Interested",
+      "unsubscribe": "Unsubscribe"
+    },
+    "suggestedReply": "Suggested Reply",
+    "sendReply": "Send Reply",
+    "editReply": "Edit"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Track outreach performance metrics",
+    "metrics": {
+      "leadsDiscovered": "Leads Discovered",
+      "leadsQualified": "Leads Qualified",
+      "emailsSent": "Emails Sent",
+      "repliesReceived": "Replies Received",
+      "conversions": "Conversions"
+    }
+  },
+  "settings": {
+    "minScore": "Minimum Qualification Score",
+    "minScoreDesc": "Only leads rated at or above this score can be moved to CRM"
+  },
+  "rating": {
+    "success": "Leads rated successfully",
+    "error": "Failed to rate leads",
+    "noLeadsToRate": "No leads to rate"
   }
 }
 ```
 
-**Add corresponding Spanish translations to `es.json`.**
-
-### Phase 2: Update Components & Hooks
-
-1. **`useAIImageGenerator.ts`**: Import `i18n` and use `i18n.t()` for toast messages
-2. **`useInputValidation.ts`**: Create a function that returns translated schemas or use `t()` at runtime
-3. **`DeviceTab.tsx`**: Replace `confirm()` with custom dialog using `t()` keys
-4. **`TasksTab.tsx`**: Replace `confirm()` with `t()` keys
-5. **`ContactsTab.tsx`**: Use translated validation messages
-6. **`PaymentStep.tsx`**: Replace hardcoded button text with `t()` calls
-7. **`DocumentationSettingsTab.tsx`**: Use `t("common.cancel")` and `t("common.delete")`
-8. **`ProductForm.tsx`**: Use translated validation messages
-
-### Phase 3: Remove Fallback Patterns
-
-Update `ClientDashboard.tsx` to remove patterns like:
-```typescript
-// FROM:
-{t("dashboard.noDeviceAssigned") || "No device assigned"}
-
-// TO:
-{t("dashboard.noDeviceAssigned")}
-```
-
-Ensure all referenced keys exist in both locale files.
+Spanish translations to be added to `es.json` with equivalent keys.
 
 ---
 
-## Files to Modify
+## Files Summary
 
-| File | Action | Estimated Changes |
-|------|--------|-------------------|
-| `src/i18n/locales/en.json` | Add ~35 new keys | Minor additions |
-| `src/i18n/locales/es.json` | Add ~35 Spanish translations | Minor additions |
-| `src/hooks/useAIImageGenerator.ts` | Add i18n + replace 7 strings | ~10 line changes |
-| `src/hooks/useInputValidation.ts` | Create translated schema builder | Structural change |
-| `src/components/admin/member-detail/DeviceTab.tsx` | Replace confirms + toasts | ~8 line changes |
-| `src/components/admin/member-detail/TasksTab.tsx` | Replace confirms + toasts | ~4 line changes |
-| `src/components/admin/member-detail/ContactsTab.tsx` | Use translated schema | ~4 line changes |
-| `src/components/admin/wizard/PaymentStep.tsx` | Replace button text | ~3 line changes |
-| `src/components/admin/settings/DocumentationSettingsTab.tsx` | Add t() calls | ~2 line changes |
-| `src/components/admin/products/ProductForm.tsx` | Use translated schema | ~3 line changes |
-| `src/pages/client/ClientDashboard.tsx` | Remove fallback patterns | ~15 line changes |
+### New Files to Create
 
----
+| Category | Files |
+|----------|-------|
+| **Pages** | `src/pages/admin/AIOutreachPage.tsx` |
+| **Components** | `src/components/admin/outreach/OutreachLeadsTab.tsx`<br>`src/components/admin/outreach/OutreachCRMTab.tsx`<br>`src/components/admin/outreach/OutreachCampaignsTab.tsx`<br>`src/components/admin/outreach/OutreachInboxTab.tsx`<br>`src/components/admin/outreach/OutreachAnalyticsTab.tsx`<br>`src/components/admin/outreach/AddOutreachLeadModal.tsx`<br>`src/components/admin/outreach/ImportLeadsModal.tsx`<br>`src/components/admin/outreach/CRMLeadCard.tsx`<br>`src/components/admin/outreach/LeadDetailDrawer.tsx`<br>`src/components/admin/outreach/EmailDraftEditor.tsx` |
+| **Hooks** | `src/hooks/useOutreachRawLeads.ts`<br>`src/hooks/useOutreachCRMLeads.ts`<br>`src/hooks/useOutreachCampaigns.ts`<br>`src/hooks/useOutreachInbox.ts`<br>`src/hooks/useOutreachAI.ts` |
+| **Edge Functions** | `supabase/functions/outreach-ai-rate/index.ts`<br>`supabase/functions/outreach-research/index.ts`<br>`supabase/functions/outreach-generate-email/index.ts`<br>`supabase/functions/outreach-classify-reply/index.ts` |
 
-## Special Considerations
+### Files to Modify
 
-### Zod Validation Translations
-Zod schemas are typically defined at module load time before `i18n` is initialized. Options:
-1. **Function-based schemas**: Create functions that return schemas with translated messages
-2. **Custom error map**: Use Zod's `errorMap` feature to translate errors at display time
-3. **Post-process errors**: Translate error messages when displaying them to users
+| File | Changes |
+|------|---------|
+| `src/components/layout/AdminSidebar.tsx` | Add AI Outreach nav item under Communications |
+| `src/App.tsx` | Add route for `/admin/ai-outreach` |
+| `src/i18n/locales/en.json` | Add outreach translations (~100 keys) |
+| `src/i18n/locales/es.json` | Add Spanish outreach translations (~100 keys) |
+| `src/integrations/supabase/types.ts` | Auto-updated with new table types |
 
-### Native `confirm()` Replacement
-Native browser `confirm()` dialogs cannot be translated. Replace with:
-- Custom `AlertDialog` component using translation keys
-- Already used pattern in `ContentPlanner.tsx`: `confirm(t("mediaStrategy.clearCalendarConfirm"))`
+### Database Migration
 
-### Legal Content
-The Privacy Policy and Terms pages have translated headers but the full legal document bodies require professional legal translation services. This is documented and not included in the programmatic scope.
+Single migration file creating all 5 tables with:
+- RLS policies (staff-only access)
+- Indexes on email, pipeline_type, status, created_at
+- Realtime enabled for raw_leads, crm_leads, and email_threads
 
 ---
 
-## Quality Assurance Checklist
+## Implementation Order
 
-After implementation, verify:
-1. Language switching works on all affected pages
-2. No literal translation keys appear in UI
-3. Toast messages display in correct language
-4. Validation error messages are translated
-5. Admin confirmation dialogs are translated
-6. No console warnings about missing keys
-7. Both EN and ES files have identical key structures
+1. **Stage 0**: Create page structure, navigation, placeholder tabs
+2. **Stage 1**: Database migration (all 5 tables)
+3. **Stage 2**: Leads tab with manual add, CSV import, paste list
+4. **Stage 3**: AI rating edge function + qualification flow
+5. **Stage 4**: CRM tab + research + email generation
+6. **Stage 5**: Inbox + reply classification
+7. **Stage 6**: Conversion bridge to Members CRM
 
----
-
-## Summary
-
-| Category | Strings Found | Already Translated | Needing Translation |
-|----------|--------------|-------------------|---------------------|
-| Hooks (Toasts) | 15 | 0 | 15 |
-| Validation Schemas | 20 | 4 | 16 |
-| Admin Detail Tabs | 10 | 2 | 8 |
-| Wizard Payment | 3 | 1 | 2 |
-| Settings Dialogs | 2 | 2 | 0 |
-| Product Forms | 5 | 0 | 5 |
-| Client Dashboard Fallbacks | 15 | 15 | 0 (cleanup only) |
-| **TOTAL** | **~70** | **~24** | **~46** |
-
-The platform will achieve **100% bilingual coverage** after implementing these ~46 remaining string translations and the cleanup of fallback patterns.
+This plan ensures complete isolation from the Members CRM while providing a full-featured AI-powered outreach system.
