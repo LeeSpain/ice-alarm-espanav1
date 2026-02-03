@@ -1557,6 +1557,7 @@
     "agreement": "Agreement",
     "backToPartners": "Back to Partners",
     "shiftNotes": "Shift Notes",
+    "documents": "Documents",
     "aiCommandCentre": "AI Command Centre",
     "aiOverview": "Overview",
     "mediaManager": "Media Manager"
@@ -2318,5 +2319,13 @@
       "deleted": "Document deleted",
       "deletedDesc": "The document has been deleted successfully."
     }
+  },
+  "staffDocuments": {
+    "title": "Staff Documents",
+    "subtitle": "Access company procedures, protocols, and guides",
+    "searchPlaceholder": "Search documents...",
+    "important": "Important",
+    "noDocuments": "No documents available",
+    "noDocumentsDesc": "Documents will appear here when published by administrators."
   }
 }

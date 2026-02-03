@@ -95,6 +95,7 @@ const CallCentreMembersPage = lazy(() => import("./pages/call-centre/MembersPage
 const CallCentreMessagesPage = lazy(() => import("./pages/call-centre/MessagesPage"));
 const CallCentreTicketsPage = lazy(() => import("./pages/call-centre/TicketsPage"));
 const CallCentreLeadsPage = lazy(() => import("./pages/call-centre/LeadsPage"));
+const CallCentreDocumentsPage = lazy(() => import("./pages/call-centre/DocumentsPage"));
 
 // Client Pages - Lazy loaded
 const ClientDashboard = lazy(() => import("./pages/client/ClientDashboard"));
@@ -301,6 +302,7 @@ const App = () => {
                   <Route path="tasks" element={<CallCentreTasksPage />} />
                   <Route path="tickets" element={<CallCentreTicketsPage />} />
                   <Route path="leads" element={<CallCentreLeadsPage />} />
+                  <Route path="documents" element={<CallCentreDocumentsPage />} />
                 </Route>
 
                 {/* Client Dashboard Routes - Require Member */}
