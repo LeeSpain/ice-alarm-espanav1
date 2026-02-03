@@ -58,6 +58,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
         website_url: parts[2] || null,
         pipeline_type: pipelineType,
         source: "paste_list" as const,
+        campaign_id: campaignId === "none" ? null : campaignId,
       };
     });
 
@@ -95,6 +96,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
           category: parts[5] || null,
           pipeline_type: pipelineType,
           source: "csv_import" as const,
+          campaign_id: campaignId === "none" ? null : campaignId,
         };
       }).filter(l => l.company_name !== "Unknown");
 

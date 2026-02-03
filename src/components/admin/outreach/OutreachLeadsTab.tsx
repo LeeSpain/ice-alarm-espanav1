@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Upload, Star, ArrowRight, X, Loader2 } from "lucide-react";
+import { Plus, Upload, Star, ArrowRight, X, Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
 import {
   Table,
   TableBody,
@@ -20,8 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useOutreachRawLeads } from "@/hooks/useOutreachRawLeads";
+import { useOutreachCampaigns } from "@/hooks/useOutreachCampaigns";
 import { AddOutreachLeadModal } from "./AddOutreachLeadModal";
 import { ImportLeadsModal } from "./ImportLeadsModal";
 
@@ -34,13 +40,16 @@ export function OutreachLeadsTab() {
     status: "all",
     pipeline: "all",
     source: "all",
+    campaign: "all",
   });
 
-  const { leads, isLoading, qualifyLeads, rejectLeads, isQualifying } = useOutreachRawLeads(filters);
+  const { leads, isLoading, qualifyLeads, rejectLeads, isQualifying, rateLeads, isRating } =
+    useOutreachRawLeads(filters);
+  const { campaigns } = useOutreachCampaigns();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedLeads(leads?.map(l => l.id) || []);
+      setSelectedLeads(leads?.map((l) => l.id) || []);
     } else {
       setSelectedLeads([]);
     }
@@ -48,20 +57,16 @@ export function OutreachLeadsTab() {
 
   const handleSelectLead = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedLeads(prev => [...prev, id]);
+      setSelectedLeads((prev) => [...prev, id]);
     } else {
-      setSelectedLeads(prev => prev.filter(i => i !== id));
+      setSelectedLeads((prev) => prev.filter((i) => i !== id));
     }
   };
 
   const handleMoveQualified = async () => {
-    const qualifiedLeads = leads?.filter(l => 
-      selectedLeads.includes(l.id) && 
-      l.ai_score !== null && 
-      Number(l.ai_score) >= 3.5
-    );
-    if (qualifiedLeads && qualifiedLeads.length > 0) {
-      await qualifyLeads(qualifiedLeads.map(l => l.id));
+    // Let the hook handle threshold checks
+    if (selectedLeads.length > 0) {
+      await qualifyLeads(selectedLeads);
       setSelectedLeads([]);
     }
   };
@@ -71,6 +76,16 @@ export function OutreachLeadsTab() {
       await rejectLeads(selectedLeads);
       setSelectedLeads([]);
     }
+  };
+
+  const handleRateSelected = async () => {
+    if (selectedLeads.length > 0) {
+      await rateLeads({ leadIds: selectedLeads });
+    }
+  };
+
+  const handleRateAllNew = async () => {
+    await rateLeads({ rateAllNew: true });
   };
 
   const getStatusBadge = (status: string) => {
@@ -88,27 +103,53 @@ export function OutreachLeadsTab() {
 
   const getPipelineBadge = (pipeline: string) => {
     return (
-      <Badge variant="outline" className={pipeline === "sales" ? "border-blue-500 text-blue-500" : "border-purple-500 text-purple-500"}>
+      <Badge
+        variant="outline"
+        className={
+          pipeline === "sales" ? "border-blue-500 text-blue-500" : "border-purple-500 text-purple-500"
+        }
+      >
         {t(`outreach.leads.pipeline.${pipeline}`)}
       </Badge>
     );
   };
 
-  const renderScoreStars = (score: number | null) => {
+  const renderScoreStars = (score: number | null, reasoning?: string | null) => {
     if (score === null) return <span className="text-muted-foreground">—</span>;
     const fullStars = Math.floor(score);
-    return (
-      <div className="flex items-center gap-1">
+    
+    const content = (
+      <div className="flex items-center gap-1 cursor-help">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            className={`h-3 w-3 ${i < fullStars ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+            className={`h-3 w-3 ${
+              i < fullStars ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+            }`}
           />
         ))}
         <span className="ml-1 text-xs text-muted-foreground">({score.toFixed(1)})</span>
       </div>
     );
+
+    if (reasoning) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{content}</TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="text-sm">{reasoning}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return content;
   };
+
+  // Count unrated new leads
+  const unratedNewCount = leads?.filter((l) => l.status === "new" && l.ai_score === null).length || 0;
 
   return (
     <>
@@ -120,6 +161,24 @@ export function OutreachLeadsTab() {
               <CardDescription>{t("outreach.leads.subtitle")}</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRateAllNew}
+                disabled={isRating || unratedNewCount === 0}
+              >
+                {isRating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {t("outreach.leads.rateAllNew")}
+                {unratedNewCount > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {unratedNewCount}
+                  </Badge>
+                )}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)}>
                 <Upload className="mr-2 h-4 w-4" />
                 {t("outreach.leads.importLeads")}
@@ -134,7 +193,7 @@ export function OutreachLeadsTab() {
         <CardContent className="space-y-4">
           {/* Filters */}
           <div className="flex flex-wrap gap-3">
-            <Select value={filters.status} onValueChange={(v) => setFilters(f => ({ ...f, status: v }))}>
+            <Select value={filters.status} onValueChange={(v) => setFilters((f) => ({ ...f, status: v }))}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder={t("outreach.leads.columns.status")} />
               </SelectTrigger>
@@ -146,7 +205,7 @@ export function OutreachLeadsTab() {
               </SelectContent>
             </Select>
 
-            <Select value={filters.pipeline} onValueChange={(v) => setFilters(f => ({ ...f, pipeline: v }))}>
+            <Select value={filters.pipeline} onValueChange={(v) => setFilters((f) => ({ ...f, pipeline: v }))}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder={t("outreach.leads.columns.pipeline")} />
               </SelectTrigger>
@@ -157,7 +216,7 @@ export function OutreachLeadsTab() {
               </SelectContent>
             </Select>
 
-            <Select value={filters.source} onValueChange={(v) => setFilters(f => ({ ...f, source: v }))}>
+            <Select value={filters.source} onValueChange={(v) => setFilters((f) => ({ ...f, source: v }))}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder={t("outreach.leads.columns.source")} />
               </SelectTrigger>
@@ -168,6 +227,21 @@ export function OutreachLeadsTab() {
                 <SelectItem value="paste_list">{t("outreach.leads.sources.paste_list")}</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={filters.campaign} onValueChange={(v) => setFilters((f) => ({ ...f, campaign: v }))}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder={t("outreach.leads.columns.campaign")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("common.all")}</SelectItem>
+                <SelectItem value="none">{t("outreach.leads.noCampaign")}</SelectItem>
+                {campaigns?.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk Actions */}
@@ -176,11 +250,15 @@ export function OutreachLeadsTab() {
               <span className="text-sm font-medium">
                 {selectedLeads.length} {t("common.selected")}
               </span>
-              <Button
-                size="sm"
-                onClick={handleMoveQualified}
-                disabled={isQualifying}
-              >
+              <Button size="sm" variant="outline" onClick={handleRateSelected} disabled={isRating}>
+                {isRating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {t("outreach.leads.rateSelected")}
+              </Button>
+              <Button size="sm" onClick={handleMoveQualified} disabled={isQualifying}>
                 {isQualifying ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -188,11 +266,7 @@ export function OutreachLeadsTab() {
                 )}
                 {t("outreach.leads.moveQualified")}
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleRejectSelected}
-              >
+              <Button size="sm" variant="destructive" onClick={handleRejectSelected}>
                 <X className="mr-2 h-4 w-4" />
                 {t("outreach.leads.rejectLead")}
               </Button>
@@ -214,6 +288,7 @@ export function OutreachLeadsTab() {
                   <TableHead>{t("outreach.leads.columns.contact")}</TableHead>
                   <TableHead>{t("outreach.leads.columns.email")}</TableHead>
                   <TableHead>{t("outreach.leads.columns.pipeline")}</TableHead>
+                  <TableHead>{t("outreach.leads.columns.campaign")}</TableHead>
                   <TableHead>{t("outreach.leads.columns.score")}</TableHead>
                   <TableHead>{t("outreach.leads.columns.status")}</TableHead>
                   <TableHead>{t("outreach.leads.columns.source")}</TableHead>
@@ -222,14 +297,14 @@ export function OutreachLeadsTab() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="py-8 text-center">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                       <p className="mt-2 text-sm text-muted-foreground">{t("outreach.leads.loading")}</p>
                     </TableCell>
                   </TableRow>
                 ) : leads?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                       {t("outreach.leads.noLeads")}
                     </TableCell>
                   </TableRow>
@@ -246,7 +321,21 @@ export function OutreachLeadsTab() {
                       <TableCell>{lead.contact_name || "—"}</TableCell>
                       <TableCell>{lead.email || "—"}</TableCell>
                       <TableCell>{getPipelineBadge(lead.pipeline_type)}</TableCell>
-                      <TableCell>{renderScoreStars(lead.ai_score ? Number(lead.ai_score) : null)}</TableCell>
+                      <TableCell>
+                        {lead.campaign ? (
+                          <Badge variant="outline" className="text-xs">
+                            {lead.campaign.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {renderScoreStars(
+                          lead.ai_score ? Number(lead.ai_score) : null,
+                          lead.ai_reasoning
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(lead.status)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
