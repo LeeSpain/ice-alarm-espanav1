@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,10 +43,20 @@ export function StrategyItemEditor({
   requireDescription,
 }: StrategyItemEditorProps) {
   const { t } = useTranslation();
-  const [name, setName] = useState(item?.name || "");
-  const [description, setDescription] = useState(item?.description || "");
-  const [aiPromptHint, setAiPromptHint] = useState(item?.ai_prompt_hint || "");
-  const [isActive, setIsActive] = useState(item?.is_active ?? true);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [aiPromptHint, setAiPromptHint] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
+  // Reset form when item changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      setName(item?.name || "");
+      setDescription(item?.description || "");
+      setAiPromptHint(item?.ai_prompt_hint || "");
+      setIsActive(item?.is_active ?? true);
+    }
+  }, [item, open]);
 
   const handleSave = async () => {
     await onSave({
@@ -56,11 +66,6 @@ export function StrategyItemEditor({
       is_active: item ? isActive : undefined,
     });
     onOpenChange(false);
-    // Reset form
-    setName("");
-    setDescription("");
-    setAiPromptHint("");
-    setIsActive(true);
   };
 
   const isValid = name.trim() && (!requireDescription || description.trim());
