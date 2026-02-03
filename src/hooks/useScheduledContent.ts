@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 export interface ScheduledContentItem {
   id: string;
@@ -82,12 +83,12 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
       const successCount = data.results?.filter((r: { success: boolean }) => r.success).length || 0;
       toast({
-        title: "Content generated",
-        description: `${successCount} of ${data.results?.length || 0} slots generated successfully`,
+        title: i18n.t("mediaStrategy.contentGenerated"),
+        description: i18n.t("mediaStrategy.slotsGeneratedSuccess", { success: successCount, total: data.results?.length || 0 }),
       });
     },
     onError: (err: Error) => {
-      toast({ title: "Generation failed", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.generationFailed"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -103,10 +104,10 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Slot approved" });
+      toast({ title: i18n.t("mediaStrategy.slotApproved") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error approving slot", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.approvingSlot"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -122,10 +123,10 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Slot disabled" });
+      toast({ title: i18n.t("mediaStrategy.slotDisabled") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error disabling slot", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.disablingSlot"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -141,10 +142,10 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Slot enabled" });
+      toast({ title: i18n.t("mediaStrategy.slotEnabled") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error enabling slot", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.enablingSlot"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -165,10 +166,10 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Slot updated" });
+      toast({ title: i18n.t("mediaStrategy.slotUpdated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating slot", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.updatingSlot"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -186,10 +187,10 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
       queryClient.invalidateQueries({ queryKey: ["publishing-history"] });
-      toast({ title: "Published successfully" });
+      toast({ title: i18n.t("mediaStrategy.publishedSuccessfully") });
     },
     onError: (err: Error) => {
-      toast({ title: "Publishing failed", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.publishingFailed"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -214,7 +215,7 @@ export function useScheduledContent(status?: "ready" | "published" | "all") {
       queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.updating"), description: err.message, variant: "destructive" });
     },
   });
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 export interface ContentCalendarItem {
   id: string;
@@ -64,7 +65,7 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
     },
     onError: (err: Error) => {
-      toast({ title: "Error creating calendar item", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.creatingCalendarItem"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -79,7 +80,7 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating calendar item", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.updatingCalendarItem"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -92,7 +93,7 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
     },
     onError: (err: Error) => {
-      toast({ title: "Error deleting calendar item", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.deletingCalendarItem"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -109,10 +110,10 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Calendar cleared" });
+      toast({ title: i18n.t("mediaStrategy.calendarCleared") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error clearing calendar", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.clearingCalendar"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -123,10 +124,10 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-calendar"] });
-      toast({ title: "Calendar generated successfully" });
+      toast({ title: i18n.t("mediaStrategy.calendarGeneratedSuccess") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error generating calendar", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.errors.generatingCalendar"), description: err.message, variant: "destructive" });
     },
   });
 

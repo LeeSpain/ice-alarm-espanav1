@@ -61,12 +61,12 @@ export function ContentPlanner({
   // AI-powered calendar generation
   const generatePlan = async () => {
     if (!scheduleSettings) {
-      toast({ title: "Error", description: "Please configure schedule settings first", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("mediaStrategy.errors.configureSettingsFirst"), variant: "destructive" });
       return;
     }
 
     if (activeGoals.length === 0 || activeAudiences.length === 0 || activeStyles.length === 0) {
-      toast({ title: "Error", description: "Please add at least one goal, audience, and image style", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("mediaStrategy.errors.addGoalsAudiencesStyles"), variant: "destructive" });
       return;
     }
 
@@ -93,11 +93,11 @@ export function ContentPlanner({
 
       if (data?.plan) {
         setPreview(data.plan);
-        toast({ title: "Plan generated", description: `${data.plan.length} posts planned` });
+        toast({ title: t("mediaStrategy.planGenerated"), description: t("mediaStrategy.postsPlanned", { count: data.plan.length }) });
       }
     } catch (err) {
       console.error("Failed to generate plan:", err);
-      toast({ title: "Generation failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+      toast({ title: t("mediaStrategy.generationFailed"), description: err instanceof Error ? err.message : t("mediaStrategy.errors.unknownError"), variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -144,7 +144,7 @@ export function ContentPlanner({
 
   const handleGenerateContent = async () => {
     if (selectedIds.size === 0) {
-      toast({ title: "Select slots", description: "Please select slots to generate content for", variant: "destructive" });
+      toast({ title: t("mediaStrategy.selectSlots"), description: t("mediaStrategy.selectSlotsToGenerate"), variant: "destructive" });
       return;
     }
     await generateContent(Array.from(selectedIds));
@@ -211,7 +211,7 @@ export function ContentPlanner({
               {selectedIds.size > 0 && (
                 <Button onClick={handleGenerateContent} disabled={isGeneratingContent} className="gap-2">
                   {isGeneratingContent ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Generate Content ({selectedIds.size})
+                  {t("mediaStrategy.generateContent")} ({selectedIds.size})
                 </Button>
               )}
             </>
