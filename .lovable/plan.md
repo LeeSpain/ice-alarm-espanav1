@@ -1,188 +1,141 @@
 
+# Media Manager Facebook Publishing - Full Diagnosis Report
 
-# Pendant Live Status Modal for Staff Dashboard
+## Problem Summary
 
-## Overview
-
-This plan adds a "Pendant Live Status" link button to the Staff Dashboard welcome section that opens a modal popup showing a live, real-time list of all EV-07B pendants assigned to members. Staff can see at-a-glance which devices are online or offline, when they last checked in, and have quick access to contact information for follow-up.
-
----
-
-## What You'll Get
-
-- A clickable "Pendant Live Status" button in the dashboard welcome header
-- A popup modal showing all member-assigned pendants with:
-  - Member name and contact details (phone, email)
-  - Live/Offline status with visual indicators
-  - Last online timestamp
-  - Battery level (if available)
-  - Device IMEI for reference
-- Offline devices grouped at the top for easy follow-up
-- Real-time updates as device status changes
-- Click-to-call functionality for offline members
+The Facebook publishing is failing with multiple related errors. After reviewing the edge function logs, database, and code, I've identified the root causes.
 
 ---
 
-## Visual Preview
+## Error Evidence from Logs
 
-**Welcome Header (After):**
-```text
-+------------------------------------------------------------------+
-| Welcome back, Sarah                    [Pendant Live Status] [Generate Shift Report] |
-| Monday, 3 February 2026                                          |
-+------------------------------------------------------------------+
-```
-
-**Modal Popup:**
-```text
-+--------------------------------------------------+
-| Pendant Live Status                    X Close   |
-| Real-time EV-07B fleet status                    |
-+--------------------------------------------------+
-| Summary: 45 Total | 38 Online | 7 Offline        |
-+--------------------------------------------------+
-| OFFLINE DEVICES (7) - Require Follow-up          |
-| +----------------------------------------------+ |
-| | Maria Garcia          OFFLINE                | |
-| | +34 600 123 456      Last seen: 2 hours ago  | |
-| | [Call] [View Member]                         | |
-| +----------------------------------------------+ |
-| | Juan Lopez            OFFLINE                | |
-| | +34 600 789 012      Last seen: 45 min ago   | |
-| | [Call] [View Member]                         | |
-| +----------------------------------------------+ |
-|                                                  |
-| ONLINE DEVICES (38)                              |
-| +----------------------------------------------+ |
-| | Ana Martinez          ONLINE                 | |
-| | +34 600 111 222      Just now - Battery: 85% | |
-| +----------------------------------------------+ |
-| | Carlos Ruiz           ONLINE                 | |
-| | +34 600 333 444      2 min ago - Battery: 72%| |
-| +----------------------------------------------+ |
-+--------------------------------------------------+
-```
+| Timestamp | Error |
+|-----------|-------|
+| 2026-02-03 10:04:05 | `(#200) publish_actions permission deprecated` |
+| 2026-02-03 09:56:04 | `Session has expired on Wednesday, 28-Jan-26 08:00:00 PST` |
+| Earlier failures | `(#210) A page access token is required` |
 
 ---
 
-## Implementation Steps
+## Root Cause Analysis
 
-### Step 1: Create PendantLiveStatusModal Component
+### Issue 1: Expired Access Token (CURRENT BLOCKER)
 
-Create a new component `src/components/call-centre/PendantLiveStatusModal.tsx`:
+Your Facebook Page Access Token expired on **January 28th, 2026**. The current date is February 3rd - the token has been expired for 6 days.
 
-- **Dialog Trigger**: Button with smartphone icon and "Pendant Live Status" text
-- **Data Fetching**: Query devices with status `allocated`, `with_staff`, or `live` joined with member data
-- **Real-time Updates**: Subscribe to `devices` table changes via Supabase Realtime
-- **Grouping**: Separate offline devices (shown first) from online devices
-- **Member Info Display**: Name, phone (clickable), email, device IMEI
-- **Status Display**: Online/Offline badge with color coding
-- **Last Check-in**: Human-readable time (e.g., "2 hours ago", "Just now")
-- **Battery Level**: Show when available
-- **Actions**: "Call" button (tel: link), "View Member" button (navigates to member detail)
+**Current Token Preview:** `EAAT8iZAfQQtoB...` (stored in system_settings)
 
-### Step 2: Update Staff Dashboard Welcome Section
+Standard Facebook tokens expire after 60 days. You need to generate a new long-lived Page Access Token.
 
-Modify `src/pages/call-centre/StaffDashboard.tsx`:
-- Import the new `PendantLiveStatusModal` component
-- Add it to the welcome header row, positioned before the Shift Report button
+### Issue 2: Wrong Permissions on Token
 
-### Step 3: Add Translations
+The `publish_actions` permission was deprecated by Facebook in 2018. Your access token was generated requesting this old permission.
 
-Update `src/i18n/locales/en.json` and `src/i18n/locales/es.json`:
+**Required Modern Permissions:**
+- `pages_manage_posts` - Required to publish content to a Page
+- `pages_read_engagement` - Required to read post metrics
 
-**New Keys:**
-```json
-{
-  "pendantLiveStatus": "Pendant Live Status",
-  "realtimeFleetStatus": "Real-time EV-07B fleet status",
-  "offlineDevices": "Offline Devices",
-  "onlineDevices": "Online Devices",
-  "requireFollowUp": "Require follow-up",
-  "lastSeen": "Last seen",
-  "justNow": "Just now",
-  "battery": "Battery",
-  "callMember": "Call",
-  "viewMember": "View Member",
-  "noDevicesAssigned": "No devices currently assigned to members",
-  "totalDevices": "Total",
-  "devicesOnline": "Online",
-  "devicesOffline": "Offline"
-}
-```
+### Issue 3: Token Type Confusion
+
+Some earlier failures show `(#210) A page access token is required` - this suggests at one point a User Access Token was used instead of a Page Access Token.
 
 ---
 
-## Files to Create
+## What the Code Does Correctly
 
-| File | Purpose |
-|------|---------|
-| `src/components/call-centre/PendantLiveStatusModal.tsx` | Modal component with live device list |
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/call-centre/StaffDashboard.tsx` | Import and add modal to welcome header |
-| `src/i18n/locales/en.json` | Add English translations |
-| `src/i18n/locales/es.json` | Add Spanish translations |
-
----
-
-## Technical Details
-
-### Data Query Structure
-
-The modal will fetch devices with this query pattern:
+The edge function code itself is **correctly implemented**:
 
 ```text
-FROM devices
-JOIN members ON devices.member_id = members.id
-WHERE devices.model = 'EV-07B'
-  AND devices.status IN ('allocated', 'with_staff', 'live')
-ORDER BY is_online ASC, last_checkin_at DESC
+Edge Function Flow:
+1. Validates staff authentication 
+2. Fetches post from database 
+3. Checks post is "approved" 
+4. Retrieves FB credentials from system_settings 
+5. Calls Graph API v24.0 correctly:
+   - /PAGE_ID/photos (for posts with images)
+   - /PAGE_ID/feed (for text-only posts)
+6. Updates post status on success/failure
 ```
 
-**Fields Retrieved:**
-- Device: id, imei, is_online, last_checkin_at, battery_level, offline_since
-- Member: id, first_name, last_name, phone, email
-
-### Real-time Subscription
-
-Uses the existing Supabase Realtime pattern:
-
-```text
-Subscribe to: postgres_changes on "devices" table
-On change: Invalidate query and refetch
-```
-
-### Offline Duration Calculation
-
-For offline devices, show how long they've been offline:
-- If `offline_since` exists: Calculate duration from that timestamp
-- Otherwise: Use `last_checkin_at` to show "Last seen X ago"
-
-### Click-to-Call
-
-Phone numbers render as clickable links using `tel:` protocol, allowing staff to quickly call members with offline devices.
+The problem is **not the code** - it's the credentials stored in your settings.
 
 ---
 
-## Component Structure
+## The Fix: Generate New Facebook Credentials
 
-```text
-PendantLiveStatusModal
- Dialog (open/onOpenChange state)
-   DialogTrigger  Button with Smartphone icon
-   DialogContent
-     DialogHeader
-       DialogTitle  "Pendant Live Status"
-       DialogDescription  "Real-time EV-07B fleet status"
-     Summary Stats Row (Total / Online / Offline counts)
-     ScrollArea
-       Section: Offline Devices (if any)
-         Device rows with warning styling
-       Section: Online Devices
-         Device rows with success styling
-```
+### Step 1: Create/Verify Facebook App
 
+1. Go to [developers.facebook.com](https://developers.facebook.com)
+2. Select or create your app linked to ICE Alarm España
+3. Ensure the app has permissions:
+   - `pages_manage_posts`
+   - `pages_read_engagement`
+   - `pages_show_list`
+
+### Step 2: Get Your Page ID
+
+1. Go to your Facebook Page
+2. Click "About" → Scroll to "Page ID" (numeric ID like `107949497473966`)
+3. Or use Graph API Explorer: `GET /me/accounts` with a user token
+
+**Your Current Page ID:** `107949497473966` ✓ (this looks correct)
+
+### Step 3: Generate Long-Lived Page Access Token
+
+1. Go to [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+2. Select your App from the dropdown
+3. Click "Generate Access Token"
+4. Select permissions: `pages_manage_posts`, `pages_read_engagement`
+5. Authorize when prompted
+6. Use the Access Token Debugger to extend it to a long-lived token (60 days)
+7. **Important**: Exchange for a Page Access Token (not User token)
+
+The token should look like: `EAA...` and when debugged should show:
+- **Type**: Page Access Token
+- **Expires**: ~60 days from now (or "Never" for permanent)
+- **Scopes**: pages_manage_posts, pages_read_engagement
+
+### Step 4: Update Credentials in Admin Settings
+
+1. Go to Admin → Settings → Integrations
+2. Update `Facebook Page Access Token` with the new token
+3. Verify `Facebook Page ID` is the numeric ID (not URL)
+
+---
+
+## Prevention: Token Expiry Warning
+
+To prevent future issues, I recommend adding:
+
+1. **Token expiry tracking** in system_settings
+2. **Admin notification** when token is expiring within 7 days
+3. **Visual indicator** in Media Manager showing token status
+
+---
+
+## Testing After Fix
+
+After updating credentials:
+
+1. Go to Media Manager
+2. Create or select an approved post
+3. Click "Publish"
+4. Should succeed with message: "Published to Facebook! Post ID: xxx"
+
+If it still fails, the error message will indicate what's wrong:
+- `Invalid access token` → Token copied incorrectly
+- `Permission denied` → App doesn't have required permissions
+- `Page not found` → Wrong Page ID
+
+---
+
+## Summary
+
+| Issue | Status | Fix |
+|-------|--------|-----|
+| Access token expired | ❌ Current blocker | Generate new token |
+| Wrong permissions | ❌ Related | Request `pages_manage_posts` |
+| Edge function code | ✅ Working correctly | No changes needed |
+| Page ID | ✅ Looks correct | Verify it's numeric |
+
+**No code changes required** - this is a credentials/configuration issue. Generate a fresh Page Access Token with the correct permissions and update it in your Admin Settings.
