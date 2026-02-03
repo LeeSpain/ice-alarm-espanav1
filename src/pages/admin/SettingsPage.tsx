@@ -32,6 +32,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
 import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
 import { EmailSettingsTab } from "@/components/admin/settings/EmailSettingsTab";
+import { EmailTemplatesTab } from "@/components/admin/settings/EmailTemplatesTab";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -1062,10 +1063,14 @@ export default function SettingsPage() {
               Email Configuration
             </h3>
             <p className="text-sm text-muted-foreground">
-              Configure Gmail integration for sending and receiving emails.
+              Configure your outbound email provider (Resend or Gmail) and manage templates for all platform emails.
             </p>
           </div>
           <EmailSettingsTab />
+
+          {/* Email Templates Section */}
+          <Separator className="my-6" />
+          <EmailTemplatesTab />
         </TabsContent>
 
         {/* Images Tab */}
