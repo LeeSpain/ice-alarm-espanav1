@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,92 @@ const corsHeaders = {
 };
 
 const SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
+
+// Send test email via Gmail SMTP
+async function sendTestViaGmailSMTP(
+  settings: any,
+  toEmail: string,
+  htmlContent: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD secret is not configured. Add it in project secrets." };
+  }
+
+  if (!settings.gmail_smtp_user) {
+    return { success: false, error: "Gmail SMTP user not configured in email settings" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: settings.gmail_smtp_host || "smtp.gmail.com",
+        port: settings.gmail_smtp_port || 587,
+        tls: true,
+        auth: {
+          username: settings.gmail_smtp_user,
+          password: appPassword,
+        },
+      },
+    });
+
+    const fromName = settings.from_name || "ICE Alarm España";
+    const fromEmail = settings.from_email || settings.gmail_smtp_user;
+
+    await client.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: toEmail,
+      subject: "Test Email - ICE Alarm Email System",
+      html: htmlContent,
+      headers: {
+        "X-ICE-Module": "system",
+        "X-ICE-Type": "test",
+      },
+    });
+
+    await client.close();
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Gmail SMTP error:", error);
+    return { success: false, error: error.message || "SMTP connection failed" };
+  }
+}
+
+// Send test email via Resend
+async function sendTestViaResend(
+  settings: any,
+  toEmail: string,
+  htmlContent: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+  if (!resendApiKey) {
+    return { success: false, error: "RESEND_API_KEY is not configured" };
+  }
+
+  const resend = new Resend(resendApiKey);
+  const fromName = settings.from_name || "ICE Alarm España";
+  const fromEmail = settings.from_email || "noreply@icealarm.es";
+
+  const { data, error } = await resend.emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to: [toEmail],
+    subject: "Test Email - ICE Alarm Email System",
+    html: htmlContent,
+    headers: {
+      "X-ICE-Module": "system",
+      "X-ICE-Type": "test",
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, messageId: data?.id };
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -17,14 +104,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-
-    if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({ error: "RESEND_API_KEY is not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Verify authorization
     const authHeader = req.headers.get("Authorization");
@@ -87,11 +166,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Build email
+    // Determine provider
+    const provider = settings.provider || "resend";
     const fromName = settings.from_name || "ICE Alarm España";
-    const fromEmail = settings.from_email || "noreply@icealarm.es";
+    const fromEmail = settings.from_email || 
+      (provider === "gmail" ? settings.gmail_smtp_user : "noreply@icealarm.es");
     const signature = settings.signature_html || "";
 
+    // Build email content
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -114,7 +196,8 @@ const handler = async (req: Request): Promise<Response> => {
           <h3 style="margin-top: 0; color: #1f2937;">Configuration Details:</h3>
           <p style="margin: 5px 0;"><strong>From Name:</strong> ${fromName}</p>
           <p style="margin: 5px 0;"><strong>From Email:</strong> ${fromEmail}</p>
-          <p style="margin: 5px 0;"><strong>Provider:</strong> Resend</p>
+          <p style="margin: 5px 0;"><strong>Provider:</strong> ${provider === "gmail" ? "Gmail SMTP" : "Resend"}</p>
+          ${provider === "gmail" ? `<p style="margin: 5px 0;"><strong>SMTP Host:</strong> ${settings.gmail_smtp_host || "smtp.gmail.com"}</p>` : ""}
           <p style="margin: 5px 0;"><strong>Sent At:</strong> ${new Date().toISOString()}</p>
         </div>
         
@@ -123,57 +206,47 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email via Resend
-    const resend = new Resend(resendApiKey);
+    // Send via appropriate provider
+    let sendResult: { success: boolean; messageId?: string; error?: string };
 
-    const { data: emailResult, error: emailError } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: [toEmail],
-      subject: "Test Email - ICE Alarm Email System",
-      html: htmlContent,
-      headers: {
-        "X-ICE-Module": "system",
-        "X-ICE-Type": "test",
-      },
-    });
-
-    if (emailError) {
-      console.error("Error sending test email:", emailError);
-      
-      // Log failed attempt
-      await supabase.from("email_log").insert({
-        to_email: toEmail,
-        from_email: fromEmail,
-        subject: "Test Email - ICE Alarm Email System",
-        body_html: htmlContent,
-        module: "system",
-        status: "failed",
-        error_message: emailError.message,
-      });
-
-      return new Response(
-        JSON.stringify({ error: emailError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (provider === "gmail") {
+      console.log("Sending test email via Gmail SMTP...");
+      sendResult = await sendTestViaGmailSMTP(settings, toEmail, htmlContent);
+    } else {
+      console.log("Sending test email via Resend...");
+      sendResult = await sendTestViaResend(settings, toEmail, htmlContent);
     }
 
-    // Log successful send
+    // Log to email_log
     await supabase.from("email_log").insert({
       to_email: toEmail,
       from_email: fromEmail,
       subject: "Test Email - ICE Alarm Email System",
       body_html: htmlContent,
       module: "system",
-      status: "sent",
-      provider_message_id: emailResult?.id,
-      sent_at: new Date().toISOString(),
-      headers_json: { "X-ICE-Module": "system", "X-ICE-Type": "test" },
+      status: sendResult.success ? "sent" : "failed",
+      error_message: sendResult.error || null,
+      provider_message_id: sendResult.messageId || null,
+      sent_at: sendResult.success ? new Date().toISOString() : null,
+      headers_json: { 
+        "X-ICE-Module": "system", 
+        "X-ICE-Type": "test",
+        "X-ICE-Provider": provider,
+      },
     });
 
-    console.log("Test email sent successfully:", emailResult);
+    if (!sendResult.success) {
+      console.error("Error sending test email:", sendResult.error);
+      return new Response(
+        JSON.stringify({ error: sendResult.error }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Test email sent successfully via ${provider}:`, sendResult.messageId || "no-id");
 
     return new Response(
-      JSON.stringify({ success: true, message_id: emailResult?.id }),
+      JSON.stringify({ success: true, message_id: sendResult.messageId, provider }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
