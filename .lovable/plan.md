@@ -1,134 +1,218 @@
 
+# Documentation Management System
 
-## Complete Review: EV-07B Implementation
+## Overview
 
-After a thorough examination of all EV-07B related changes across database, edge functions, admin dashboards, client pages, and realtime subscriptions, I've identified the current status and issues that need to be fixed.
-
----
-
-### Current Implementation Status
-
-#### Database & Types
-- **Devices table** - All required fields present: `is_online`, `offline_since`, `model`, `collected_at`, `live_at`, `reserved_order_id`, `reserved_at`
-- **Device status enum** - Supports full lifecycle: `in_stock`, `reserved`, `allocated`, `with_staff`, `live`, `faulty`, `returned`, `inactive`
-- **Alerts table** - Has `device_offline` alert type, `message` column, and all necessary fields
-
-#### Edge Functions (Deployed)
-1. **ev07b-checkin** - Accepts telemetry with API key authentication, updates `is_online`, `last_checkin_at`, `battery_level`, location
-2. **ev07b-offline-monitor** - Checks devices, marks offline after 15 minutes, creates alerts
-
-#### Realtime Subscriptions
-- **useDeviceRealtime** hook - Properly invalidates `device-stock`, `device-stock-stats`, `member-device` queries
-- **useAlertsRealtime** hook - Properly invalidates `device-offline-alerts`, `ev07b-status-summary`, `admin-alerts-list`, `admin-dashboard-stats` queries
-
-#### Integration Points
-| Component | useDeviceRealtime | useAlertsRealtime | Status |
-|-----------|------------------|-------------------|--------|
-| AdminDashboard | Yes | Yes | Working |
-| EV07BPage | Yes | Yes | Working |
-| DevicesPage | Yes | Yes | Working |
-| DeviceDetailPage | Yes | No | Working |
-| DeviceTab (member) | Yes | No | Working |
-| DevicePage (client) | Yes | No | Working |
-| EV07BStatusWidget | Yes | No | Working |
-| DeviceAlertsPanel | No | Yes | Working |
+This plan creates a comprehensive Documentation Center in the Admin Settings area where you can manage company procedures, instructions, and guides. The system will support visibility controls to share content with different dashboards (Admin, Staff, Members) and provide access to AI Agents.
 
 ---
 
-### Issues Found
+## Features
 
-#### Issue 1: Badge Component Missing forwardRef (Console Warning)
-**File**: `src/components/ui/badge.tsx`
+### 1. Documentation Categories
+Organize documentation by topic:
+- **General Procedures** - Company-wide policies and processes
+- **Member Guides** - Help articles visible to members
+- **Staff Instructions** - Internal procedures for call centre staff
+- **Device Guides** - EV-07B setup, troubleshooting, FAQs
+- **Emergency Protocols** - SOS handling, escalation procedures
+- **Partner Information** - Referral program, commission rules
 
-The Badge component is a function component that doesn't use `React.forwardRef()`, causing React warnings when used inside Radix UI components (like ScrollArea) that try to pass refs.
+### 2. Visibility Controls
+Each document can be shared with multiple audiences:
+- **Admin Only** - Super admin internal docs
+- **Staff** - Call centre operators can view
+- **Members** - Appears in member Help Center
+- **AI Agents** - Automatically added to AI knowledge base
 
-**Error message**:
-```
-Warning: Function components cannot be given refs. Attempts to access this ref will fail. 
-Did you mean to use React.forwardRef()?
-Check the render method of `AISalesDesk`.
-Check the render method of `EV07BStatusWidget`.
-```
+### 3. Document Properties
+- **Title** - Clear, searchable name
+- **Category** - Dropdown selection
+- **Content** - Rich text (Markdown supported)
+- **Visibility** - Multi-select: Admin, Staff, Members, AI
+- **Priority/Importance** - 1-10 scale (for AI weighting)
+- **Tags** - For search and filtering
+- **Language** - EN/ES support
+- **Status** - Draft / Published
+- **Version** - Track changes
 
-**Fix**: Update Badge to use `forwardRef`:
-```typescript
-const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, ...props }, ref) => {
-    return <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
-  }
-);
-Badge.displayName = "Badge";
-```
+---
 
-#### Issue 2: Missing Query Key Invalidation in useAlertsRealtime
-**File**: `src/hooks/useAlertsRealtime.ts`
+## Technical Architecture
 
-The `ev07b-open-alerts-count` query key (used in EV07BPage) is not being invalidated when alerts change.
+### Database Table: `documentation`
 
-**Fix**: Add missing invalidation:
-```typescript
-queryClient.invalidateQueries({ queryKey: ["ev07b-open-alerts-count"] });
+```text
++---------------------+---------------------------------------------+
+| Column              | Description                                 |
++---------------------+---------------------------------------------+
+| id                  | UUID primary key                            |
+| title               | Document title (required)                   |
+| slug                | URL-friendly identifier                     |
+| category            | Enum: general, member_guide, staff, device, |
+|                     | emergency, partner                          |
+| content             | Markdown/HTML content                       |
+| visibility          | Array: ['admin', 'staff', 'member', 'ai']   |
+| importance          | Integer 1-10 (for AI priority)              |
+| tags                | Text array for filtering                    |
+| language            | 'en' or 'es'                                |
+| status              | 'draft' or 'published'                      |
+| version             | Integer, auto-incremented on edit           |
+| created_by          | Staff ID who created                        |
+| updated_by          | Staff ID who last edited                    |
+| created_at          | Timestamp                                   |
+| updated_at          | Timestamp                                   |
++---------------------+---------------------------------------------+
 ```
 
-#### Issue 3: DeviceTab Not Refreshing on Realtime Updates
-**File**: `src/components/admin/member-detail/DeviceTab.tsx`
+### RLS Policies
+- **Admins**: Full CRUD access
+- **Staff**: Read access to docs with `staff` in visibility
+- **Members**: Read access to docs with `member` in visibility
+- **AI**: Accessed server-side through edge functions
 
-The DeviceTab uses a local `useEffect` + `fetchDevice()` pattern instead of React Query, so it doesn't automatically refresh when realtime updates occur.
-
-**Fix**: The component should use React Query for the device fetch so it benefits from the realtime invalidation.
-
----
-
-### Implementation Plan
-
-#### Step 1: Fix Badge forwardRef (High Priority)
-Update `src/components/ui/badge.tsx` to use `React.forwardRef` to eliminate console warnings.
-
-#### Step 2: Add Missing Query Key Invalidation
-Update `src/hooks/useAlertsRealtime.ts` to include `ev07b-open-alerts-count` in the invalidation list.
-
-#### Step 3: Refactor DeviceTab to Use React Query
-Update `src/components/admin/member-detail/DeviceTab.tsx` to use React Query instead of local state/useEffect for fetching the device, ensuring it automatically refreshes on realtime updates.
-
-#### Step 4: Add Device Workflow Status to Client Dashboard
-The client dashboard at `src/pages/client/ClientDashboard.tsx` uses a `MOCK_DEVICE` constant. Ensure it properly uses the real device data with `is_online` status.
+### AI Integration
+The `ai-run` edge function will be updated to:
+1. Query `documentation` table for docs with `'ai'` in visibility
+2. Include relevant docs in the AI's knowledge base context
+3. Weight by importance score
 
 ---
 
-### Technical Details
+## UI Components
 
-#### Files to Modify
+### Admin Settings - Documentation Tab
 
-1. **src/components/ui/badge.tsx**
-   - Add `React.forwardRef` wrapper
-   - Add `displayName`
+Add a new tab to `/admin/settings`:
 
-2. **src/hooks/useAlertsRealtime.ts**
-   - Add `queryClient.invalidateQueries({ queryKey: ["ev07b-open-alerts-count"] })`
+```text
++------------------------------------------------------------------+
+| Settings                                                          |
+|------------------------------------------------------------------|
+| [Company] [Pricing] [Payments] [Communications] [Images] [Docs]  |
+|------------------------------------------------------------------|
+|                                                                   |
+|  Documentation Center                                             |
+|  Manage company procedures and knowledge base                     |
+|                                                                   |
+|  [+ Add Document]                          [Search...] [Filter v] |
+|                                                                   |
+|  +------------------------------------------------------------+  |
+|  | Title           | Category      | Visibility | Status     |  |
+|  |------------------------------------------------------------|  |
+|  | SOS Protocol    | Emergency     | Staff, AI  | Published  |  |
+|  | Device Setup    | Device Guide  | All        | Published  |  |
+|  | Billing FAQ     | Member Guide  | Members    | Draft      |  |
+|  +------------------------------------------------------------+  |
+|                                                                   |
++------------------------------------------------------------------+
+```
 
-3. **src/components/admin/member-detail/DeviceTab.tsx**
-   - Convert from local state to React Query for device fetching
-   - Use `useQuery` with queryKey `["admin-member-device", memberId]`
-   - Let realtime invalidation handle refreshes
+### Document Editor Dialog
+
+```text
++------------------------------------------+
+|  Add/Edit Document                       |
+|------------------------------------------|
+|  Title: [_______________________]        |
+|                                          |
+|  Category: [General Procedures    v]     |
+|                                          |
+|  Content:                                |
+|  +------------------------------------+  |
+|  | ## Procedure Title                 |  |
+|  |                                    |  |
+|  | 1. Step one...                     |  |
+|  | 2. Step two...                     |  |
+|  +------------------------------------+  |
+|                                          |
+|  Visibility: [x] Admin  [x] Staff        |
+|              [ ] Members [x] AI          |
+|                                          |
+|  Importance: [====|====] 7               |
+|                                          |
+|  Tags: [sos] [emergency] [protocol] [+]  |
+|                                          |
+|  Language: [EN v]   Status: [Published v]|
+|                                          |
+|  [Cancel]                    [Save]      |
++------------------------------------------+
+```
 
 ---
 
-### Verification Checklist
+## Integration Points
 
-After fixes are applied, verify:
+### 1. Member Help Center (`/client/support`)
+- Query docs where `visibility` contains `'member'`
+- Display as expandable FAQ/help articles
+- Filter by category and language
 
-1. **No console warnings** - Badge ref warning should be eliminated
-2. **EV07BPage alerts count updates** - When offline monitor creates an alert, the count updates instantly
-3. **DeviceTab updates in real-time** - When device status changes, the member detail view updates without refresh
-4. **All dashboards refresh** - Device allocation, status changes, and check-ins reflect immediately
+### 2. Staff Dashboard
+- Quick access panel to relevant procedures
+- Search documentation by keyword
+- Filter by category
 
-### Test Flow
-1. Add EV-07B device to stock
-2. Complete test order (or manually allocate)
-3. Verify device shows as "Allocated" in member DeviceTab
-4. Mark device as "Collected" - verify workflow step updates
-5. Mark device as "Live" - verify all dashboards show the change
-6. Simulate check-in via API - verify `is_online` updates
-7. Wait 15+ minutes (or manually trigger offline monitor) - verify alert created
-8. Close alert - verify dashboard alert count decrements
+### 3. AI Agents
+- Automatic sync to AI knowledge base
+- Documents with `ai` visibility are included in agent context
+- Weighted by importance score
+
+---
+
+## Files to Create/Modify
+
+### New Files
+1. `src/components/admin/settings/DocumentationSettingsTab.tsx` - Main documentation management UI
+2. `src/components/admin/settings/DocumentEditor.tsx` - Add/Edit document dialog
+3. `src/hooks/useDocumentation.ts` - React Query hooks for CRUD operations
+
+### Modified Files
+1. `src/pages/admin/SettingsPage.tsx` - Add Documentation tab
+2. `supabase/functions/ai-run/index.ts` - Include documentation in AI context
+3. `src/pages/client/SupportPage.tsx` - Display member-visible docs in Help Center
+4. `src/i18n/locales/en.json` - Add translations
+5. `src/i18n/locales/es.json` - Add Spanish translations
+
+### Database Migration
+- Create `documentation` table with all columns
+- Add RLS policies for role-based access
+- Enable realtime for live updates
+
+---
+
+## User Flow
+
+### Admin Creating Documentation
+1. Navigate to Settings → Documentation
+2. Click "Add Document"
+3. Fill in title, category, content
+4. Select visibility (Admin, Staff, Members, AI)
+5. Set importance for AI weighting
+6. Add tags for searchability
+7. Choose language and status
+8. Save document
+
+### Member Viewing Help
+1. Navigate to Support → Help Center
+2. See list of published member-visible documents
+3. Click to expand and read
+4. Search by keyword
+
+### AI Using Documentation
+1. AI agent receives query
+2. System fetches docs with `ai` visibility
+3. Docs included in knowledge base context
+4. AI references procedures in responses
+
+---
+
+## Benefits
+
+- **Centralized Knowledge** - All procedures in one place
+- **Role-Based Access** - Right content to right audience
+- **AI Training** - Agents stay updated with latest procedures
+- **Multi-Language** - EN/ES support built-in
+- **Version Control** - Track changes over time
+- **Searchable** - Tags and categories for easy discovery
 
