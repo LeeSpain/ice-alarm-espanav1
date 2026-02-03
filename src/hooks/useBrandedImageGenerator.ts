@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useSocialPostImages } from "./useSocialPostImages";
 import { useToast } from "./use-toast";
+import i18n from "@/i18n";
 
 interface ImageTextData {
   headline: string;
@@ -177,8 +178,8 @@ export function useBrandedImageGenerator() {
 
       if (imageUrl) {
         toast({
-          title: "Image generated",
-          description: "Branded image created and uploaded successfully.",
+          title: i18n.t("ai.brandedImageGenerated"),
+          description: i18n.t("ai.brandedImageGeneratedDesc"),
         });
       }
 
@@ -186,8 +187,8 @@ export function useBrandedImageGenerator() {
     } catch (error: any) {
       console.error("Image generation error:", error);
       toast({
-        title: "Image generation failed",
-        description: error.message || "Failed to generate branded image.",
+        title: i18n.t("ai.brandedImageFailed"),
+        description: error.message || i18n.t("ai.generationFailed"),
         variant: "destructive",
       });
       return null;

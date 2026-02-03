@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { 
   Loader2, Smartphone, Battery, MapPin, Clock, Settings, 
   Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench
@@ -54,6 +55,7 @@ interface DeviceTabProps {
 }
 
 export function DeviceTab({ memberId }: DeviceTabProps) {
+  const { t } = useTranslation();
   const [availableDevices, setAvailableDevices] = useState<Device[]>([]);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -116,12 +118,12 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", selectedDeviceId);
 
       if (error) throw error;
-      toast.success("EV-07B device allocated successfully");
+      toast.success(t("admin.devices.deviceAllocated"));
       setIsDialogOpen(false);
       refetch();
     } catch (error) {
       console.error("Error assigning device:", error);
-      toast.error("Failed to assign device");
+      toast.error(t("admin.devices.assignFailed"));
     } finally {
       setIsAssigning(false);
     }
@@ -140,11 +142,11 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", device.id);
 
       if (error) throw error;
-      toast.success("Device marked as collected by staff");
+      toast.success(t("admin.devices.markedCollected"));
       refetch();
     } catch (error) {
       console.error("Error marking collected:", error);
-      toast.error("Failed to update device status");
+      toast.error(t("admin.devices.updateFailed"));
     }
   };
 
@@ -162,17 +164,17 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", device.id);
 
       if (error) throw error;
-      toast.success("Device marked as live");
+      toast.success(t("admin.devices.markedLive"));
       refetch();
     } catch (error) {
       console.error("Error marking live:", error);
-      toast.error("Failed to update device status");
+      toast.error(t("admin.devices.updateFailed"));
     }
   };
 
   // Workflow action: Mark device as faulty
   const markFaulty = async () => {
-    if (!device || !confirm("Mark this device as faulty? This will remove it from the member.")) return;
+    if (!device || !confirm(t("admin.devices.confirmMarkFaulty"))) return;
     try {
       const { error } = await supabase
         .from("devices")
@@ -183,16 +185,16 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", device.id);
 
       if (error) throw error;
-      toast.success("Device marked as faulty");
+      toast.success(t("admin.devices.markedFaulty"));
       queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
       console.error("Error marking faulty:", error);
-      toast.error("Failed to update device status");
+      toast.error(t("admin.devices.updateFailed"));
     }
   };
 
   const unassignDevice = async () => {
-    if (!device || !confirm("Are you sure you want to unassign this device?")) return;
+    if (!device || !confirm(t("admin.devices.confirmUnassign"))) return;
     
     try {
       const { error } = await supabase
@@ -205,16 +207,16 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", device.id);
 
       if (error) throw error;
-      toast.success("Device unassigned");
+      toast.success(t("admin.devices.deviceUnassigned"));
       queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
       console.error("Error unassigning device:", error);
-      toast.error("Failed to unassign device");
+      toast.error(t("admin.devices.unassignFailed"));
     }
   };
 
   const sendConfigSms = async () => {
-    toast.info("Sending configuration SMS...");
+    toast.info(t("admin.devices.sendingConfigSms"));
     // TODO: Implement SMS sending via Twilio edge function
   };
 

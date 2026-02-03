@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { 
   Loader2, Plus, CheckCircle, Edit, Trash2, Clock,
   AlertTriangle, Calendar, User, ChevronDown, ChevronUp
@@ -41,7 +42,7 @@ import {
 import { format, isPast, isToday } from "date-fns";
 
 const taskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1),
   description: z.string().optional(),
   priority: z.enum(["low", "normal", "high", "urgent"]),
   assigned_to: z.string().optional(),
@@ -80,6 +81,7 @@ interface TasksTabProps {
 }
 
 export function TasksTab({ memberId }: TasksTabProps) {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -199,7 +201,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
           .update(taskData)
           .eq("id", editingTask.id);
         if (error) throw error;
-        toast.success("Task updated");
+        toast.success(t("tasks.taskUpdated"));
       } else {
         const { error } = await supabase
           .from("tasks")
@@ -209,14 +211,14 @@ export function TasksTab({ memberId }: TasksTabProps) {
             created_by: staffData?.id,
           });
         if (error) throw error;
-        toast.success("Task created");
+        toast.success(t("tasks.taskCreated"));
       }
 
       setIsDialogOpen(false);
       fetchTasks();
     } catch (error) {
       console.error("Error saving task:", error);
-      toast.error("Failed to save task");
+      toast.error(t("tasks.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -233,16 +235,16 @@ export function TasksTab({ memberId }: TasksTabProps) {
         .eq("id", taskId);
 
       if (error) throw error;
-      toast.success("Task completed");
+      toast.success(t("tasks.taskCompleted"));
       fetchTasks();
     } catch (error) {
       console.error("Error completing task:", error);
-      toast.error("Failed to complete task");
+      toast.error(t("tasks.completeFailed"));
     }
   };
 
   const deleteTask = async (taskId: string) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+    if (!confirm(t("tasks.deleteConfirm"))) return;
 
     try {
       const { error } = await supabase
@@ -251,24 +253,24 @@ export function TasksTab({ memberId }: TasksTabProps) {
         .eq("id", taskId);
 
       if (error) throw error;
-      toast.success("Task deleted");
+      toast.success(t("tasks.taskDeleted"));
       fetchTasks();
     } catch (error) {
       console.error("Error deleting task:", error);
-      toast.error("Failed to delete task");
+      toast.error(t("tasks.deleteFailed"));
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "urgent":
-        return <Badge variant="destructive">Urgent</Badge>;
+        return <Badge variant="destructive">{t("tasks.priorities.urgent")}</Badge>;
       case "high":
-        return <Badge className="bg-orange-500">High</Badge>;
+        return <Badge className="bg-orange-500">{t("tasks.priorities.high")}</Badge>;
       case "normal":
-        return <Badge variant="secondary">Normal</Badge>;
+        return <Badge variant="secondary">{t("tasks.priorities.normal")}</Badge>;
       case "low":
-        return <Badge variant="outline">Low</Badge>;
+        return <Badge variant="outline">{t("tasks.priorities.low")}</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -289,21 +291,21 @@ export function TasksTab({ memberId }: TasksTabProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Tasks</CardTitle>
-          <CardDescription>Follow-up tasks for this member</CardDescription>
+          <CardTitle>{t("tasks.title")}</CardTitle>
+          <CardDescription>{t("tasks.subtitle")}</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openAddDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              New Task
+              {t("tasks.newTask")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingTask ? "Edit Task" : "Create Task"}</DialogTitle>
+              <DialogTitle>{editingTask ? t("tasks.editTask") : t("tasks.createTask")}</DialogTitle>
               <DialogDescription>
-                {editingTask ? "Update task details." : "Create a new follow-up task."}
+                {editingTask ? t("tasks.updateTask") : t("tasks.createNewTask")}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -313,9 +315,9 @@ export function TasksTab({ memberId }: TasksTabProps) {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>{t("tasks.taskTitle")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Task title..." {...field} />
+                        <Input placeholder={t("tasks.taskTitlePlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -326,9 +328,9 @@ export function TasksTab({ memberId }: TasksTabProps) {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description (optional)</FormLabel>
+                      <FormLabel>{t("tasks.descriptionOptional")}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Task details..." {...field} />
+                        <Textarea placeholder={t("tasks.taskDetailsPlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -340,7 +342,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Priority</FormLabel>
+                        <FormLabel>{t("tasks.priority")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -348,10 +350,10 @@ export function TasksTab({ memberId }: TasksTabProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="normal">Normal</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="urgent">Urgent</SelectItem>
+                            <SelectItem value="low">{t("tasks.priorities.low")}</SelectItem>
+                            <SelectItem value="normal">{t("tasks.priorities.normal")}</SelectItem>
+                            <SelectItem value="high">{t("tasks.priorities.high")}</SelectItem>
+                            <SelectItem value="urgent">{t("tasks.priorities.urgent")}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -363,11 +365,11 @@ export function TasksTab({ memberId }: TasksTabProps) {
                     name="assigned_to"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Assign To</FormLabel>
+                        <FormLabel>{t("tasks.assignTo")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select..." />
+                              <SelectValue placeholder={t("common.search") + "..."} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -388,7 +390,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
                   name="due_date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Due Date (optional)</FormLabel>
+                      <FormLabel>{t("tasks.dueDateOptional")}</FormLabel>
                       <FormControl>
                         <Input type="datetime-local" {...field} />
                       </FormControl>
@@ -399,7 +401,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
                 <DialogFooter>
                   <Button type="submit" disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {editingTask ? "Update" : "Create"} Task
+                    {editingTask ? t("common.update") : t("common.create")} {t("tasks.title").slice(0, -1)}
                   </Button>
                 </DialogFooter>
               </form>
@@ -412,11 +414,11 @@ export function TasksTab({ memberId }: TasksTabProps) {
         {pendingTasks.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <CheckCircle className="mx-auto h-12 w-12 mb-2 opacity-50" />
-            <p>No pending tasks</p>
+            <p>{t("tasks.noPendingTasks")}</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground">PENDING</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">{t("tasks.pending")}</h4>
             {pendingTasks.map((task) => {
               const isOverdue = task.due_date && isPast(new Date(task.due_date));
               const isDueToday = task.due_date && isToday(new Date(task.due_date));
@@ -440,7 +442,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
                           <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : isDueToday ? "text-yellow-600" : ""}`}>
                             {isOverdue && <AlertTriangle className="h-3 w-3" />}
                             <Calendar className="h-3 w-3" />
-                            {isOverdue ? "Overdue: " : isDueToday ? "Due Today: " : "Due: "}
+                            {isOverdue ? t("tasks.overdue") + " " : isDueToday ? t("tasks.dueToday") + " " : t("tasks.due") + " "}
                             {format(new Date(task.due_date), "MMM d, h:mm a")}
                           </span>
                         )}
@@ -460,7 +462,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
                         onClick={() => completeTask(task.id)}
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
-                        Done
+                        {t("tasks.done")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -491,7 +493,7 @@ export function TasksTab({ memberId }: TasksTabProps) {
           <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between">
-                <span>COMPLETED ({completedTasks.length})</span>
+                <span>{t("tasks.completed")} ({completedTasks.length})</span>
                 {showCompleted ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </CollapsibleTrigger>
