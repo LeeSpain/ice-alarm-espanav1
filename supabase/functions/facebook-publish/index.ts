@@ -6,6 +6,73 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SITE_URL = "https://icealarm.es";
+
+// ─────────────────────────── HELPERS ───────────────────────────
+
+const extractTitle = (text: string): string => {
+  const firstSentence = text.split(/[.!?]/)[0].trim();
+  return firstSentence.length > 70 ? firstSentence.substring(0, 67) + "..." : firstSentence;
+};
+
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .substring(0, 60);
+};
+
+const generateExcerpt = (text: string): string => {
+  return text.split("\n").slice(0, 2).join(" ").substring(0, 160).trim();
+};
+
+// ─────────────────────────── AI INTRO GENERATION ───────────────────────────
+
+async function generateAIIntro(postText: string, language: string): Promise<string | null> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.warn("LOVABLE_API_KEY not configured, skipping AI intro generation");
+    return null;
+  }
+
+  const systemPrompt = language === "es"
+    ? `Eres un escritor profesional para ICE Alarm España, una empresa de servicios de alarmas personales para personas mayores. Escribe una introducción breve (2-4 oraciones) en un tono profesional y amigable que explique el tema del siguiente post. No repitas el contenido del post, solo introduce el tema de manera atractiva.`
+    : `You are a professional writer for ICE Alarm España, a personal alarm service company for elderly care. Write a brief introduction (2-4 sentences) in a professional, friendly tone that explains the topic of the following post. Don't repeat the post content, just introduce the topic engagingly.`;
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Write an intro for this post:\n\n${postText}` },
+        ],
+        max_tokens: 200,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("AI gateway error:", response.status, await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (error) {
+    console.error("AI intro generation failed:", error);
+    return null;
+  }
+}
+
+// ─────────────────────────── MAIN HANDLER ───────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -51,7 +118,7 @@ serve(async (req) => {
       });
     }
 
-    // ───────────────────────── SAFE JSON PARSE ─────────────────────────
+    // ───────────────────────── PARSE BODY ─────────────────────────
     let post_id: string | null = null;
     try {
       const body = await req.json();
@@ -114,7 +181,6 @@ serve(async (req) => {
     }
 
     const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]));
-
     const pageId = settingsMap.settings_facebook_page_id;
     const accessToken = settingsMap.settings_facebook_page_access_token;
 
@@ -130,62 +196,18 @@ serve(async (req) => {
       );
     }
 
-    // ───────────────────────── FACEBOOK PUBLISH ─────────────────────────
+    // ───────────────────────── STEP 1: CREATE BLOG POST FIRST ─────────────────────────
     const postText = post.post_text || "";
-    const imageUrl = post.image_url;
-
-    let fbResponse: Response;
-    let fbResult: any;
-
-    if (imageUrl) {
-      const params = new URLSearchParams({
-        url: imageUrl,
-        caption: postText,
-        access_token: accessToken,
-      });
-
-      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/photos`, { method: "POST", body: params });
-    } else {
-      const params = new URLSearchParams({
-        message: postText,
-        access_token: accessToken,
-      });
-
-      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/feed`, { method: "POST", body: params });
-    }
-
-    fbResult = await fbResponse.json();
-
-    if (!fbResponse.ok) {
-      throw new Error(fbResult?.error?.message || JSON.stringify(fbResult));
-    }
-
-    const facebookPostId = fbResult.post_id || fbResult.id;
-
-    // ───────────────────────── CREATE BLOG POST ─────────────────────────
+    const language = post.language || "en";
     let blogPostId: string | null = null;
+    let blogSlug: string | null = null;
+
     try {
-      // Extract title from post text (first sentence or first 60 chars)
-      const extractTitle = (text: string): string => {
-        const firstSentence = text.split(/[.!?]/)[0].trim();
-        return firstSentence.length > 60 ? firstSentence.substring(0, 57) + "..." : firstSentence;
-      };
-
-      // Generate URL-safe slug
-      const generateSlug = (title: string): string => {
-        return title
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .replace(/-+/g, "-")
-          .substring(0, 60);
-      };
-
-      const postText = post.post_text || "";
+      // Generate title and slug
       const title = extractTitle(postText);
       let slug = generateSlug(title);
 
-      // Check if slug exists and append timestamp if needed
+      // Check for duplicate slug
       const { data: existingSlug } = await adminClient
         .from("blog_posts")
         .select("slug")
@@ -196,37 +218,115 @@ serve(async (req) => {
         slug = `${slug}-${Date.now()}`;
       }
 
-      // Extract excerpt (first 1-2 lines, max 200 chars)
-      const excerpt = postText.split("\n").slice(0, 2).join(" ").substring(0, 200);
+      // Generate AI intro
+      console.log("Generating AI intro...");
+      const aiIntro = await generateAIIntro(postText, language);
+      console.log("AI intro generated:", aiIntro ? "success" : "skipped/failed");
+
+      // Compose content with AI intro
+      const ctaLine = language === "es"
+        ? `\n\nConoce más sobre los servicios de ICE Alarm en ${SITE_URL}`
+        : `\n\nLearn more about ICE Alarm services at ${SITE_URL}`;
+
+      let composedContent: string;
+      if (aiIntro) {
+        composedContent = `${aiIntro}\n\n---\n\n${postText}${ctaLine}`;
+      } else {
+        composedContent = `${postText}${ctaLine}`;
+      }
+
+      const excerpt = generateExcerpt(postText);
 
       // Create blog post
       const { data: blogPost, error: blogError } = await adminClient.from("blog_posts").insert({
         title,
         slug,
-        content: postText,
+        content: composedContent,
         excerpt,
-        language: post.language || "en",
+        ai_intro: aiIntro,
+        language,
         published: true,
         published_at: new Date().toISOString(),
-        facebook_post_id: facebookPostId,
         social_post_id: post_id,
         image_url: post.image_url,
         seo_title: title,
         seo_description: excerpt,
-      }).select("id").single();
+      }).select("id, slug").single();
 
       if (blogError) {
         console.error("Error creating blog post:", blogError);
       } else {
         blogPostId = blogPost?.id;
+        blogSlug = blogPost?.slug;
         console.log("Blog post created successfully:", blogPostId);
       }
     } catch (blogCreationError) {
-      // Log error but don't fail the Facebook publish
       console.error("Blog post creation failed:", blogCreationError);
     }
 
-    // ───────────────────────── UPDATE SOCIAL POST ─────────────────────────
+    // ───────────────────────── STEP 2: PUBLISH TO FACEBOOK ─────────────────────────
+    const imageUrl = post.image_url;
+    let fbResponse: Response;
+    let fbResult: any;
+
+    // Prepare Facebook message (optionally include blog URL)
+    let fbMessage = postText;
+    if (blogSlug) {
+      const blogUrl = `${SITE_URL}/blog/${blogSlug}`;
+      const readMoreText = language === "es" ? "\n\n📖 Leer más: " : "\n\n📖 Read more: ";
+      // Only add if within reasonable length
+      if (fbMessage.length + readMoreText.length + blogUrl.length < 2000) {
+        fbMessage += readMoreText + blogUrl;
+      }
+    }
+
+    if (imageUrl) {
+      const params = new URLSearchParams({
+        url: imageUrl,
+        caption: fbMessage,
+        access_token: accessToken,
+      });
+
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/photos`, { method: "POST", body: params });
+    } else {
+      const params = new URLSearchParams({
+        message: fbMessage,
+        access_token: accessToken,
+      });
+
+      fbResponse = await fetch(`https://graph.facebook.com/v24.0/${pageId}/feed`, { method: "POST", body: params });
+    }
+
+    fbResult = await fbResponse.json();
+
+    if (!fbResponse.ok) {
+      // Update social post with error but keep blog post
+      await adminClient
+        .from("social_posts")
+        .update({
+          status: "failed",
+          error_message: fbResult?.error?.message || JSON.stringify(fbResult),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", post_id);
+
+      return new Response(
+        JSON.stringify({
+          error: fbResult?.error?.message || JSON.stringify(fbResult),
+          blog_post_id: blogPostId, // Blog still created
+          blog_slug: blogSlug,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const facebookPostId = fbResult.post_id || fbResult.id;
+
+    // ───────────────────────── UPDATE RECORDS WITH FACEBOOK ID ─────────────────────────
+    // Update social post
     await adminClient
       .from("social_posts")
       .update({
@@ -238,11 +338,20 @@ serve(async (req) => {
       })
       .eq("id", post_id);
 
+    // Update blog post with facebook_post_id
+    if (blogPostId) {
+      await adminClient
+        .from("blog_posts")
+        .update({ facebook_post_id: facebookPostId })
+        .eq("id", blogPostId);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         facebook_post_id: facebookPostId,
         blog_post_id: blogPostId,
+        blog_slug: blogSlug,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

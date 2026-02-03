@@ -7,6 +7,7 @@ export interface BlogPost {
   slug: string;
   excerpt: string | null;
   content: string;
+  ai_intro: string | null;
   language: string;
   published: boolean;
   published_at: string;
