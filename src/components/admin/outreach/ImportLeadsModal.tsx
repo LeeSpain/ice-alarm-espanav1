@@ -36,14 +36,14 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
   const { campaigns } = useOutreachCampaigns();
   const [pasteContent, setPasteContent] = useState("");
   const [pipelineType, setPipelineType] = useState<"sales" | "partner">("sales");
-  const [campaignId, setCampaignId] = useState("");
+  const [campaignId, setCampaignId] = useState("none");
   const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const filteredCampaigns = campaigns?.filter(c => c.pipeline_type === pipelineType && c.status === "active") || [];
 
   const handlePipelineChange = (value: "sales" | "partner") => {
     setPipelineType(value);
-    setCampaignId(""); // Reset campaign when pipeline changes
+    setCampaignId("none"); // Reset campaign when pipeline changes
   };
 
   const handlePasteImport = async () => {
@@ -64,7 +64,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
     if (leads.length > 0) {
       await bulkAddLeads(leads);
       setPasteContent("");
-      setCampaignId("");
+      setCampaignId("none");
       onOpenChange(false);
       toast({
         title: t("common.success"),
@@ -101,7 +101,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
       if (leads.length > 0) {
         await bulkAddLeads(leads);
         setCsvFile(null);
-        setCampaignId("");
+        setCampaignId("none");
         onOpenChange(false);
         toast({
           title: t("common.success"),
@@ -144,7 +144,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
                   <SelectValue placeholder={t("outreach.leads.noCampaign")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("outreach.leads.noCampaign")}</SelectItem>
+                  <SelectItem value="none">{t("outreach.leads.noCampaign")}</SelectItem>
                   {filteredCampaigns.map((campaign) => (
                     <SelectItem key={campaign.id} value={campaign.id}>
                       {campaign.name}
