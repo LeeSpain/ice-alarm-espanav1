@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.ev07b-offline-monitor]
 verify_jwt = false
+
+[functions.facebook-metrics]
+verify_jwt = false

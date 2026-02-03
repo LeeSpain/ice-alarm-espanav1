@@ -2533,6 +2533,53 @@ export type Database = {
           },
         ]
       }
+      social_post_metrics: {
+        Row: {
+          comments_count: number | null
+          created_at: string
+          facebook_post_id: string
+          fetched_at: string
+          id: string
+          impressions: number | null
+          reactions_breakdown: Json | null
+          reactions_total: number | null
+          shares_count: number | null
+          social_post_id: string
+        }
+        Insert: {
+          comments_count?: number | null
+          created_at?: string
+          facebook_post_id: string
+          fetched_at?: string
+          id?: string
+          impressions?: number | null
+          reactions_breakdown?: Json | null
+          reactions_total?: number | null
+          shares_count?: number | null
+          social_post_id: string
+        }
+        Update: {
+          comments_count?: number | null
+          created_at?: string
+          facebook_post_id?: string
+          fetched_at?: string
+          id?: string
+          impressions?: number | null
+          reactions_breakdown?: Json | null
+          reactions_total?: number | null
+          shares_count?: number | null
+          social_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_post_metrics_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: true
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_post_research: {
         Row: {
           compliance_notes: string | null

@@ -121,6 +121,28 @@
       "publishNow": "Publicar en Facebook",
       "editFirst": "Editar Publicación",
       "close": "Cerrar"
+    },
+    "published": {
+      "empty": "Aún no hay publicaciones. ¡Publique su primera publicación para ver métricas de engagement!",
+      "refresh": "Actualizar",
+      "refreshAll": "Actualizar Todo",
+      "viewOnFacebook": "Ver en Facebook",
+      "lastUpdated": "Actualizado",
+      "overview": {
+        "title": "Rendimiento de Publicaciones",
+        "subtitle": "Métricas de engagement agregadas de todas las publicaciones",
+        "totalPosts": "Publicaciones",
+        "totalReactions": "Reacciones",
+        "totalComments": "Comentarios",
+        "totalShares": "Compartidos",
+        "totalReach": "Alcance"
+      },
+      "metrics": {
+        "reactions": "reacciones",
+        "comments": "comentarios",
+        "shares": "compartidos",
+        "reach": "alcance"
+      }
     }
   },
   "common": {
