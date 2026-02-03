@@ -971,6 +971,75 @@ export type Database = {
           },
         ]
       }
+      documentation: {
+        Row: {
+          category: Database["public"]["Enums"]["documentation_category"]
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          importance: number
+          language: string
+          slug: string
+          status: Database["public"]["Enums"]["documentation_status"]
+          tags: string[]
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+          visibility: string[]
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["documentation_category"]
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          importance?: number
+          language?: string
+          slug: string
+          status?: Database["public"]["Enums"]["documentation_status"]
+          tags?: string[]
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visibility?: string[]
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["documentation_category"]
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          importance?: number
+          language?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["documentation_status"]
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visibility?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentation_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentation_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           contact_name: string
@@ -2957,6 +3026,14 @@ export type Database = {
         | "allocated"
         | "with_staff"
         | "live"
+      documentation_category:
+        | "general"
+        | "member_guide"
+        | "staff"
+        | "device"
+        | "emergency"
+        | "partner"
+      documentation_status: "draft" | "published"
       import_batch_status:
         | "uploaded"
         | "parsed"
@@ -3175,6 +3252,15 @@ export const Constants = {
         "with_staff",
         "live",
       ],
+      documentation_category: [
+        "general",
+        "member_guide",
+        "staff",
+        "device",
+        "emergency",
+        "partner",
+      ],
+      documentation_status: ["draft", "published"],
       import_batch_status: [
         "uploaded",
         "parsed",

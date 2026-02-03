@@ -2209,5 +2209,66 @@
     "contactsSection": "Contactos de Emergencia",
     "contactsDescription": "Por favor asegúrese de tener al menos 2 contactos de emergencia con información válida.",
     "submitUpdate": "Enviar Actualización"
+  },
+  "documentation": {
+    "title": "Centro de Documentación",
+    "subtitle": "Gestionar procedimientos y base de conocimientos",
+    "addDocument": "Añadir Documento",
+    "editDocument": "Editar Documento",
+    "searchPlaceholder": "Buscar documentos...",
+    "allCategories": "Todas las Categorías",
+    "allStatus": "Todos los Estados",
+    "noDocuments": "No se encontraron documentos",
+    "noDocumentsDesc": "Cree su primer documento para comenzar",
+    "categories": {
+      "general": "Procedimientos Generales",
+      "member_guide": "Guías para Socios",
+      "staff": "Instrucciones para Personal",
+      "device": "Guías de Dispositivos",
+      "emergency": "Protocolos de Emergencia",
+      "partner": "Información para Partners"
+    },
+    "visibility": {
+      "admin": "Admin",
+      "staff": "Personal",
+      "member": "Socios",
+      "ai": "Agentes IA"
+    },
+    "fields": {
+      "title": "Título",
+      "category": "Categoría",
+      "content": "Contenido",
+      "contentHelp": "Markdown soportado",
+      "visibility": "Visibilidad",
+      "importance": "Importancia (Prioridad IA)",
+      "importanceHelp": "Mayor importancia = mayor prioridad para agentes IA",
+      "tags": "Etiquetas",
+      "addTag": "Añadir etiqueta...",
+      "language": "Idioma",
+      "status": "Estado",
+      "updated": "Actualizado"
+    },
+    "status": {
+      "draft": "Borrador",
+      "published": "Publicado"
+    },
+    "actions": {
+      "create": "Crear Documento",
+      "save": "Guardar Cambios",
+      "delete": "Eliminar",
+      "edit": "Editar"
+    },
+    "deleteConfirm": {
+      "title": "Eliminar Documento",
+      "description": "¿Está seguro de que desea eliminar este documento? Esta acción no se puede deshacer."
+    },
+    "toast": {
+      "created": "Documento creado",
+      "createdDesc": "El documento se ha creado correctamente.",
+      "updated": "Documento actualizado",
+      "updatedDesc": "El documento se ha actualizado correctamente.",
+      "deleted": "Documento eliminado",
+      "deletedDesc": "El documento se ha eliminado correctamente."
+    }
   }
 }

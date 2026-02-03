@@ -2257,5 +2257,66 @@
     "contactsSection": "Emergency Contacts",
     "contactsDescription": "Please ensure you have at least 2 emergency contacts with valid information.",
     "submitUpdate": "Submit Update"
+  },
+  "documentation": {
+    "title": "Documentation Center",
+    "subtitle": "Manage company procedures and knowledge base",
+    "addDocument": "Add Document",
+    "editDocument": "Edit Document",
+    "searchPlaceholder": "Search documents...",
+    "allCategories": "All Categories",
+    "allStatus": "All Status",
+    "noDocuments": "No documents found",
+    "noDocumentsDesc": "Create your first document to get started",
+    "categories": {
+      "general": "General Procedures",
+      "member_guide": "Member Guides",
+      "staff": "Staff Instructions",
+      "device": "Device Guides",
+      "emergency": "Emergency Protocols",
+      "partner": "Partner Information"
+    },
+    "visibility": {
+      "admin": "Admin",
+      "staff": "Staff",
+      "member": "Members",
+      "ai": "AI Agents"
+    },
+    "fields": {
+      "title": "Title",
+      "category": "Category",
+      "content": "Content",
+      "contentHelp": "Markdown supported",
+      "visibility": "Visibility",
+      "importance": "Importance (AI Priority)",
+      "importanceHelp": "Higher importance = higher priority for AI agents",
+      "tags": "Tags",
+      "addTag": "Add a tag...",
+      "language": "Language",
+      "status": "Status",
+      "updated": "Updated"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "actions": {
+      "create": "Create Document",
+      "save": "Save Changes",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "deleteConfirm": {
+      "title": "Delete Document",
+      "description": "Are you sure you want to delete this document? This action cannot be undone."
+    },
+    "toast": {
+      "created": "Document created",
+      "createdDesc": "The document has been created successfully.",
+      "updated": "Document updated",
+      "updatedDesc": "The document has been updated successfully.",
+      "deleted": "Document deleted",
+      "deletedDesc": "The document has been deleted successfully."
+    }
   }
 }
