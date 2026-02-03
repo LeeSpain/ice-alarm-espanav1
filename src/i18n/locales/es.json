@@ -32,6 +32,7 @@
     "aiImageDescription": "Genere imágenes profesionales y realistas usando IA. Estas lucen más naturales que los gráficos de marca.",
     "fullWorkflow": "Flujo Completo",
     "enterTopicToEnable": "Introduzca un tema para habilitar funciones de IA",
+    "generatePostTextFirst": "Genere el texto del post primero para usar este estilo",
     "runAIFirst": "Ejecute el flujo de IA primero para obtener texto de imagen",
     "generateBrandedImage": "Generar imagen con marca",
     "aiResearchSummary": "Resumen de Investigación IA",
@@ -106,6 +107,7 @@
       "publishNow": "Publicar"
     },
     "imageStyles": {
+      "fromPostText": "Basado en el Texto del Post",
       "seniorActive": "Senior Activo",
       "familyPeace": "Momento Familiar",
       "pendantFocus": "Enfoque en Colgante",

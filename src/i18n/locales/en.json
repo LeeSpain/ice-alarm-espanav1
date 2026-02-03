@@ -32,6 +32,7 @@
     "aiImageDescription": "Generate professional, realistic images using AI. These look more natural than branded graphics.",
     "fullWorkflow": "Full Workflow",
     "enterTopicToEnable": "Enter a topic to enable AI features",
+    "generatePostTextFirst": "Generate post text first to use this style",
     "runAIFirst": "Run AI workflow first to get image text",
     "generateBrandedImage": "Generate branded image",
     "aiResearchSummary": "AI Research Summary",
@@ -106,6 +107,7 @@
       "publishNow": "Publish"
     },
     "imageStyles": {
+      "fromPostText": "Based on Post Text",
       "seniorActive": "Active Senior",
       "familyPeace": "Family Moment",
       "pendantFocus": "Pendant Focus",

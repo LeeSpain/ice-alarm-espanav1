@@ -447,19 +447,21 @@ export default function MediaManagerPage() {
                 </Select>
                 <Button
                   variant="default"
-                  disabled={isGeneratingAIImage || !topic}
+                  disabled={isGeneratingAIImage || (!topic && imageStyle !== "from_post_text") || (imageStyle === "from_post_text" && !postText)}
                   onClick={async () => {
                     const url = await generateAIImage({
                       style: imageStyle,
                       topic,
                       imageText: aiOutput?.image_text,
                       postId: selectedPostId || undefined,
+                      postText: imageStyle === "from_post_text" ? postText : undefined,
                     });
                     if (url) {
                       setImageUrl(url);
                     }
                   }}
                   className="gap-2"
+                  title={imageStyle === "from_post_text" && !postText ? t("mediaManager.generatePostTextFirst") : undefined}
                 >
                   {isGeneratingAIImage ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
