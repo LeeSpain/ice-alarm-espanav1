@@ -1,4 +1,4 @@
-Sitemap: https://shelter-span.lovable.app/sitemap.xml
+Sitemap: https://icealarm.es/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
