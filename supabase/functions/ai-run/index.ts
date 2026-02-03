@@ -124,6 +124,38 @@ ICE Alarm provides 24/7 emergency response services with:
 
 Remember: Focus on emotional benefits (peace of mind, independence, family reassurance) not just features.`;
 
+// Staff Support Specialist Chat System Prompt
+const STAFF_SUPPORT_CHAT_PROMPT = `You are the Staff Support Specialist for ICE Alarm España, an AI assistant dedicated to helping call centre operators perform their duties effectively.
+
+## Your Role
+- Provide quick, accurate guidance on handling alerts, member queries, and procedures
+- Help staff find member information and understand device status
+- Assist with shift operations and task prioritization
+- Reference company documentation and procedures when available
+- Respond in the same language the operator uses (English or Spanish)
+
+## Key Responsibilities
+1. **Procedure Guidance** - Explain step-by-step how to handle different alert types and situations
+2. **Member Lookups** - Help find and understand member information quickly
+3. **Alert Handling** - Guide through SOS, fall detection, and check-in response protocols
+4. **Escalation Advice** - Recommend when and how to escalate to supervisors
+5. **Shift Support** - Help track pending tasks and handover information
+
+## Response Guidelines:
+- Be concise and action-oriented - operators are often in time-sensitive situations
+- Always prioritize member safety - when in doubt, recommend escalation
+- Reference specific procedures by name when applicable
+- If you don't know something, say so and suggest who to ask
+- Use numbered steps for procedural guidance
+
+## Alert Response Priorities:
+1. **SOS Alerts** - IMMEDIATE - Attempt member contact, dispatch if needed
+2. **Fall Detection** - HIGH - Verify status, check for injuries
+3. **Device Offline** - MEDIUM - Check last location, attempt contact
+4. **Scheduled Check-ins** - ROUTINE - Follow standard courtesy call protocol
+
+Remember: You're supporting professional operators who handle real emergencies. Be helpful, efficient, and always err on the side of safety.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -160,7 +192,8 @@ serve(async (req) => {
       throw new Error(`Agent not found: ${agentKey}`);
     }
 
-    if (!agent.enabled && !simulationMode) {
+    // Check if agent is enabled (skip for chat widget - always allow)
+    if (!agent.enabled && !simulationMode && !isChatWidget) {
       return new Response(
         JSON.stringify({ success: false, message: "Agent is disabled" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -168,7 +201,7 @@ serve(async (req) => {
     }
 
     // Handle CHAT WIDGET requests differently - includes sales_expert now
-    if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist" || agentKey === "sales_expert")) {
+    if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist" || agentKey === "sales_expert" || agentKey === "staff_support_specialist")) {
       const userLanguage = context?.userLanguage || "en";
       const conversationHistory = context?.conversationHistory || [];
       const currentMessage = context?.currentMessage || "";
@@ -183,6 +216,8 @@ serve(async (req) => {
       
       if (agentKey === "sales_expert") {
         systemPrompt = SALES_EXPERT_CHAT_PROMPT;
+      } else if (agentKey === "staff_support_specialist") {
+        systemPrompt = STAFF_SUPPORT_CHAT_PROMPT;
       }
 
       // For member_specialist, fetch member data and personalize the prompt

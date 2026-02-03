@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Brain, Headphones, TrendingUp, UserCircle, ImageIcon, Activity, Clock, AlertTriangle, ArrowRight, Zap } from "lucide-react";
+import { Brain, Headphones, TrendingUp, UserCircle, ImageIcon, Activity, Clock, AlertTriangle, ArrowRight, Zap, Headset } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +151,8 @@ const getAgentIcon = (agentKey: string): React.ElementType => {
       return UserCircle;
     case "media_manager":
       return ImageIcon;
+    case "staff_support_specialist":
+      return Headset;
     default:
       return Brain;
   }

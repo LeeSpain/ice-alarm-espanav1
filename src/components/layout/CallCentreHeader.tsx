@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { StaffHeaderChatButton } from "@/components/chat/StaffHeaderChatButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +82,9 @@ export function CallCentreHeader() {
       <div className="flex items-center gap-2">
         {/* Language Selector */}
         <LanguageSelector variant="icon-only" />
+
+        {/* AI Chat Button */}
+        <StaffHeaderChatButton staffName={displayName} />
 
         {/* Notification Bell */}
         <NotificationBell staffId={staffId} />
