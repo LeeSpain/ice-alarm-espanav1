@@ -27,6 +27,12 @@ async function sendTestViaGmailSMTP(
   }
 
   try {
+    console.log("Gmail SMTP config:", {
+      host: settings.gmail_smtp_host || "smtp.gmail.com",
+      port: 465,
+      user: settings.gmail_smtp_user,
+    });
+
     // IMPORTANT: In this runtime, STARTTLS on 587 has proven unreliable.
     // Force implicit TLS over 465 for Gmail SMTP.
     const port = 465;
@@ -61,7 +67,21 @@ async function sendTestViaGmailSMTP(
     return { success: true };
   } catch (error: any) {
     console.error("Gmail SMTP error:", error);
-    return { success: false, error: error.message || "SMTP connection failed" };
+
+    const message = error?.message || "SMTP connection failed";
+
+    // Common Gmail auth failure: wrong app password, 2FA disabled, or user mismatch.
+    if (typeof message === "string" && message.includes("535") && message.includes("BadCredentials")) {
+      return {
+        success: false,
+        error:
+          "Gmail rechazó las credenciales (535 BadCredentials). Verifica que: (1) la cuenta " +
+          `“${settings.gmail_smtp_user}”` +
+          " tiene verificación en 2 pasos activada, (2) has generado un App Password nuevo, y (3) el App Password corresponde a ESA misma cuenta (no a un alias).",
+      };
+    }
+
+    return { success: false, error: message };
   }
 }
 
