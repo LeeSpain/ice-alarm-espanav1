@@ -81,6 +81,7 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
       email: data.email || null,
       website_url: data.website_url || null,
       source: "manual",
+      campaign_id: data.campaign_id === "none" ? null : data.campaign_id,
     });
     reset();
     onOpenChange(false);

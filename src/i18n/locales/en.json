@@ -2984,7 +2984,10 @@
         "invalidFile": "Please upload a valid CSV file"
       },
       "noLeads": "No leads found",
-      "loading": "Loading leads..."
+      "loading": "Loading leads...",
+      "ratingComplete": "Successfully rated {{count}} leads",
+      "noLeadsToRate": "No unrated leads to process",
+      "skippedBelowThreshold": "{{count}} leads skipped (below threshold)"
     },
     "crm": {
       "title": "Outreach CRM",

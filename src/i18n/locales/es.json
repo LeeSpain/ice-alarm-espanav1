@@ -2960,7 +2960,10 @@
         "invalidFile": "Por favor sube un archivo CSV válido"
       },
       "noLeads": "No se encontraron leads",
-      "loading": "Cargando leads..."
+      "loading": "Cargando leads...",
+      "ratingComplete": "{{count}} leads calificados correctamente",
+      "noLeadsToRate": "No hay leads sin calificar para procesar",
+      "skippedBelowThreshold": "{{count}} leads omitidos (bajo umbral)"
     },
     "crm": {
       "title": "CRM Outreach",
