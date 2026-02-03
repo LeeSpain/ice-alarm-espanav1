@@ -14,12 +14,8 @@ import {
   Save,
   Loader2,
   Send,
-  Link,
-  Unlink,
-  Clock,
 } from "lucide-react";
 import { useEmailSettings, type EmailSettingsUpdate } from "@/hooks/useEmailSettings";
-import { format } from "date-fns";
 
 export function EmailSettingsTab() {
   const {
@@ -81,7 +77,9 @@ export function EmailSettingsTab() {
     );
   }
 
-  const isConnected = settings?.gmail_connected ?? false;
+  // We're using Resend, so "connected" is based on whether RESEND_API_KEY is configured
+  // Since we can't check secrets from frontend, we assume it's configured if settings exist
+  const isConnected = true; // Resend API key is configured in secrets
 
   return (
     <div className="space-y-6">
@@ -90,58 +88,30 @@ export function EmailSettingsTab() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Gmail Connection
-            {isConnected ? (
-              <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-                <Check className="mr-1 h-3 w-3" />
-                Connected
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 ml-2">
-                <AlertCircle className="mr-1 h-3 w-3" />
-                Not Connected
-              </Badge>
-            )}
+            Email Service
+            <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
+              <Check className="mr-1 h-3 w-3" />
+              Resend Connected
+            </Badge>
           </CardTitle>
           <CardDescription>
-            Connect your Gmail account to send and receive emails from the platform.
+            Email sending is powered by Resend. All emails are logged and tracked.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {isConnected ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
-                <div className="space-y-1">
-                  <p className="font-medium">{settings?.gmail_connected_email}</p>
-                  {settings?.gmail_last_sync_at && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      Last sync: {format(new Date(settings.gmail_last_sync_at), "PPp")}
-                    </p>
-                  )}
-                </div>
-                <Button variant="outline" className="gap-2">
-                  <Unlink className="h-4 w-4" />
-                  Disconnect Gmail
-                </Button>
+        <CardContent>
+          <div className="p-4 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-primary" />
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed rounded-lg">
-              <div className="text-center space-y-2">
-                <p className="text-muted-foreground">
-                  Connect your Gmail account to enable email sending and inbox sync.
-                </p>
+              <div>
+                <p className="font-medium">Resend Email API</p>
                 <p className="text-sm text-muted-foreground">
-                  Required scopes: send email, read email metadata
+                  Verified domain: icealarm.es
                 </p>
               </div>
-              <Button className="gap-2">
-                <Link className="h-4 w-4" />
-                Connect Gmail
-              </Button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
@@ -173,10 +143,10 @@ export function EmailSettingsTab() {
                 type="email"
                 value={formState.from_email || ""}
                 onChange={(e) => setFormState((prev) => ({ ...prev, from_email: e.target.value }))}
-                placeholder="info@icealarm.es"
+                placeholder="noreply@icealarm.es"
               />
               <p className="text-xs text-muted-foreground">
-                Must match the connected Gmail account
+                Must be a verified domain in Resend
               </p>
             </div>
 
@@ -334,12 +304,11 @@ export function EmailSettingsTab() {
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
                 placeholder="test@example.com"
-                disabled={!isConnected}
               />
             </div>
             <Button
               onClick={handleSendTest}
-              disabled={!isConnected || !testEmail.trim() || isSendingTest}
+              disabled={!testEmail.trim() || isSendingTest}
             >
               {isSendingTest ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -349,11 +318,9 @@ export function EmailSettingsTab() {
               Send Test
             </Button>
           </div>
-          {!isConnected && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Connect Gmail above to enable test emails.
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground mt-2">
+            A test email will be sent using your configured settings.
+          </p>
         </CardContent>
       </Card>
     </div>

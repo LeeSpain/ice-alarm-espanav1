@@ -86,3 +86,12 @@ verify_jwt = false
 
 [functions.rate-outreach-leads]
 verify_jwt = false
+
+[functions.send-test-email]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.email-inbound-webhook]
+verify_jwt = false

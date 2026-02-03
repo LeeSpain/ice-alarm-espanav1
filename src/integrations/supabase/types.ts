@@ -1105,6 +1105,71 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          created_at: string
+          error_message: string | null
+          from_email: string
+          headers_json: Json | null
+          id: string
+          module: string
+          provider_message_id: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          template_id: string | null
+          to_email: string
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          created_at?: string
+          error_message?: string | null
+          from_email: string
+          headers_json?: Json | null
+          id?: string
+          module: string
+          provider_message_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          to_email: string
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          created_at?: string
+          error_message?: string | null
+          from_email?: string
+          headers_json?: Json | null
+          id?: string
+          module?: string
+          provider_message_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_id?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_settings: {
         Row: {
           created_at: string
@@ -1171,6 +1236,60 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_html_en: string
+          body_html_es: string
+          body_text_en: string | null
+          body_text_es: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          module: string
+          name: string
+          slug: string
+          subject_en: string
+          subject_es: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          body_html_en: string
+          body_html_es: string
+          body_text_en?: string | null
+          body_text_es?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          module: string
+          name: string
+          slug: string
+          subject_en: string
+          subject_es: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          body_html_en?: string
+          body_html_es?: string
+          body_text_en?: string | null
+          body_text_es?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          module?: string
+          name?: string
+          slug?: string
+          subject_en?: string
+          subject_es?: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           contact_name: string
@@ -1217,6 +1336,71 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbound_email_log: {
+        Row: {
+          body_html: string | null
+          body_snippet: string | null
+          created_at: string
+          from_email: string
+          id: string
+          is_reply: boolean | null
+          linked_entity_id: string | null
+          linked_entity_type: string | null
+          module_matched: string | null
+          original_email_log_id: string | null
+          processed_at: string | null
+          provider_message_id: string | null
+          provider_thread_id: string | null
+          received_at: string
+          subject: string | null
+          to_email: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_snippet?: string | null
+          created_at?: string
+          from_email: string
+          id?: string
+          is_reply?: boolean | null
+          linked_entity_id?: string | null
+          linked_entity_type?: string | null
+          module_matched?: string | null
+          original_email_log_id?: string | null
+          processed_at?: string | null
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          received_at: string
+          subject?: string | null
+          to_email: string
+        }
+        Update: {
+          body_html?: string | null
+          body_snippet?: string | null
+          created_at?: string
+          from_email?: string
+          id?: string
+          is_reply?: boolean | null
+          linked_entity_id?: string | null
+          linked_entity_type?: string | null
+          module_matched?: string | null
+          original_email_log_id?: string | null
+          processed_at?: string | null
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          received_at?: string
+          subject?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_email_log_original_email_log_id_fkey"
+            columns: ["original_email_log_id"]
+            isOneToOne: false
+            referencedRelation: "email_log"
             referencedColumns: ["id"]
           },
         ]
