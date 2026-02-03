@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
+import i18n from "@/i18n";
 
 export type ImageStyle = 
   | "senior_active" 
@@ -70,32 +71,32 @@ export function useAIImageGenerator() {
       }
 
       toast({
-        title: "AI Image Generated",
-        description: "Professional image created successfully.",
+        title: i18n.t("ai.imageGenerated"),
+        description: i18n.t("ai.imageGeneratedDesc"),
       });
 
       return data.image_url;
     } catch (error: unknown) {
       console.error("AI image generation error:", error);
       
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate AI image";
+      const errorMessage = error instanceof Error ? error.message : i18n.t("ai.generationFailed");
       
       // Handle specific error cases
       if (errorMessage.includes("429") || errorMessage.includes("Rate limit")) {
         toast({
-          title: "Rate Limited",
-          description: "Too many requests. Please wait a moment and try again.",
+          title: i18n.t("ai.rateLimited"),
+          description: i18n.t("ai.rateLimitedDesc"),
           variant: "destructive",
         });
       } else if (errorMessage.includes("402") || errorMessage.includes("credits")) {
         toast({
-          title: "Credits Exhausted",
-          description: "AI credits are exhausted. Please add more credits.",
+          title: i18n.t("ai.creditsExhausted"),
+          description: i18n.t("ai.creditsExhaustedDesc"),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Generation Failed",
+          title: i18n.t("ai.generationFailed"),
           description: errorMessage,
           variant: "destructive",
         });

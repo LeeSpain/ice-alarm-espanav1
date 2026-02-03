@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { 
   Loader2, Plus, Phone, Mail, MessageSquare, Edit, Trash2, 
   GripVertical, User
@@ -33,10 +34,10 @@ import {
 import { createWhatsAppUrl, createTelUrl } from "@/hooks/useInputValidation";
 
 const contactSchema = z.object({
-  contact_name: z.string().min(1, "Name is required"),
-  relationship: z.string().min(1, "Relationship is required"),
-  phone: z.string().min(9, "Phone is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  contact_name: z.string().min(1),
+  relationship: z.string().min(1),
+  phone: z.string().min(9),
+  email: z.string().email().optional().or(z.literal("")),
   speaks_spanish: z.boolean().default(false),
   is_primary: z.boolean().default(false),
   notes: z.string().optional(),
@@ -61,6 +62,7 @@ interface ContactsTabProps {
 }
 
 export function ContactsTab({ memberId }: ContactsTabProps) {
+  const { t } = useTranslation();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,7 +98,7 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
       setContacts(data || []);
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      toast.error("Failed to load contacts");
+      toast.error(t("emergencyContacts.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +134,7 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
 
   const onSubmit = async (data: ContactFormValues) => {
     if (contacts.length >= 3 && !editingContact) {
-      toast.error("Maximum 3 emergency contacts allowed");
+      toast.error(t("emergencyContacts.maxContactsReached"));
       return;
     }
 
@@ -144,7 +146,7 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
           .update(data)
           .eq("id", editingContact.id);
         if (error) throw error;
-        toast.success("Contact updated");
+        toast.success(t("emergencyContacts.updated"));
       } else {
         const { error } = await supabase
           .from("emergency_contacts")
@@ -160,21 +162,21 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
             priority_order: contacts.length + 1,
           }]);
         if (error) throw error;
-        toast.success("Contact added");
+        toast.success(t("emergencyContacts.added"));
       }
       
       setIsDialogOpen(false);
       fetchContacts();
     } catch (error) {
       console.error("Error saving contact:", error);
-      toast.error("Failed to save contact");
+      toast.error(t("emergencyContacts.saveFailed"));
     } finally {
       setIsSaving(false);
     }
   };
 
   const deleteContact = async (contactId: string) => {
-    if (!confirm("Are you sure you want to delete this contact?")) return;
+    if (!confirm(t("emergencyContacts.deleteConfirm"))) return;
     
     try {
       const { error } = await supabase
@@ -182,11 +184,11 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
         .delete()
         .eq("id", contactId);
       if (error) throw error;
-      toast.success("Contact deleted");
+      toast.success(t("emergencyContacts.deleted"));
       fetchContacts();
     } catch (error) {
       console.error("Error deleting contact:", error);
-      toast.error("Failed to delete contact");
+      toast.error(t("emergencyContacts.deleteFailed"));
     }
   };
 
