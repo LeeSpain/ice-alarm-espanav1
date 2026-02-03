@@ -22,6 +22,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -46,6 +47,9 @@ import {
   Bot,
   Shield,
   Loader2,
+  Printer,
+  Download,
+  FileType,
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -57,6 +61,8 @@ import {
   VisibilityType,
 } from "@/hooks/useDocumentation";
 import { DocumentEditor } from "./DocumentEditor";
+import { DocumentViewerModal } from "./DocumentViewerModal";
+import { printDocument, downloadMarkdown, downloadText } from "@/lib/documentPrint";
 
 const CATEGORY_LABELS: Record<DocumentCategory, string> = {
   general: "General Procedures",
@@ -88,6 +94,7 @@ export function DocumentationSettingsTab() {
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | "all">("all");
   const [statusFilter, setStatusFilter] = useState<DocumentStatus | "all">("all");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Documentation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<Documentation | null>(null);
@@ -99,6 +106,11 @@ export function DocumentationSettingsTab() {
   });
 
   const deleteMutation = useDeleteDocument();
+
+  const handleView = (doc: Documentation) => {
+    setSelectedDoc(doc);
+    setViewerOpen(true);
+  };
 
   const handleEdit = (doc: Documentation) => {
     setSelectedDoc(doc);
@@ -272,10 +284,28 @@ export function DocumentationSettingsTab() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleView(doc)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(doc)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => printDocument(doc)}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print / PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => downloadMarkdown(doc)}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Download (.md)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => downloadText(doc)}>
+                            <FileType className="h-4 w-4 mr-2" />
+                            Download (.txt)
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => handleDeleteClick(doc)}
@@ -299,6 +329,13 @@ export function DocumentationSettingsTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Document Viewer Modal */}
+      <DocumentViewerModal
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        document={selectedDoc}
+      />
 
       {/* Document Editor Dialog */}
       <DocumentEditor
