@@ -1069,7 +1069,9 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Images Tab */}
-        <ImagesSettingsTab />
+        <TabsContent value="images">
+          <ImagesSettingsTab />
+        </TabsContent>
 
         {/* Documentation Tab */}
         <TabsContent value="documentation">

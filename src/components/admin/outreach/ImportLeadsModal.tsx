@@ -49,27 +49,36 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
   const handlePasteImport = async () => {
     if (!pasteContent.trim()) return;
 
-    const lines = pasteContent.split("\n").filter(line => line.trim());
-    const leads = lines.map(line => {
-      const parts = line.split("|").map(p => p.trim());
-      return {
-        company_name: parts[0] || "Unknown",
-        email: parts[1] || null,
-        website_url: parts[2] || null,
-        pipeline_type: pipelineType,
-        source: "paste_list" as const,
-        campaign_id: campaignId === "none" ? null : campaignId,
-      };
-    });
+    try {
+      const lines = pasteContent.split("\n").filter(line => line.trim());
+      const leads = lines.map(line => {
+        const parts = line.split("|").map(p => p.trim());
+        return {
+          company_name: parts[0] || "Unknown",
+          email: parts[1] || null,
+          website_url: parts[2] || null,
+          pipeline_type: pipelineType,
+          source: "paste_list" as const,
+          campaign_id: campaignId === "none" ? null : campaignId,
+        };
+      });
 
-    if (leads.length > 0) {
-      await bulkAddLeads(leads);
-      setPasteContent("");
-      setCampaignId("none");
-      onOpenChange(false);
+      if (leads.length > 0) {
+        await bulkAddLeads(leads);
+        setPasteContent("");
+        setCampaignId("none");
+        onOpenChange(false);
+        toast({
+          title: t("common.success"),
+          description: t("outreach.leads.import.success", { count: leads.length }),
+        });
+      }
+    } catch (error) {
+      console.error("Import paste error:", error);
       toast({
-        title: t("common.success"),
-        description: t("outreach.leads.import.success", { count: leads.length }),
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : "Failed to import leads",
+        variant: "destructive",
       });
     }
   };
@@ -79,35 +88,44 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split("\n").filter(line => line.trim());
-      
-      // Skip header row
-      const dataLines = lines.slice(1);
-      
-      const leads = dataLines.map(line => {
-        const parts = line.split(",").map(p => p.trim().replace(/^"|"$/g, ""));
-        return {
-          company_name: parts[0] || "Unknown",
-          contact_name: parts[1] || null,
-          email: parts[2] || null,
-          website_url: parts[3] || null,
-          location: parts[4] || null,
-          category: parts[5] || null,
-          pipeline_type: pipelineType,
-          source: "csv_import" as const,
-          campaign_id: campaignId === "none" ? null : campaignId,
-        };
-      }).filter(l => l.company_name !== "Unknown");
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split("\n").filter(line => line.trim());
+        
+        // Skip header row
+        const dataLines = lines.slice(1);
+        
+        const leads = dataLines.map(line => {
+          const parts = line.split(",").map(p => p.trim().replace(/^"|"$/g, ""));
+          return {
+            company_name: parts[0] || "Unknown",
+            contact_name: parts[1] || null,
+            email: parts[2] || null,
+            website_url: parts[3] || null,
+            location: parts[4] || null,
+            category: parts[5] || null,
+            pipeline_type: pipelineType,
+            source: "csv_import" as const,
+            campaign_id: campaignId === "none" ? null : campaignId,
+          };
+        }).filter(l => l.company_name !== "Unknown");
 
-      if (leads.length > 0) {
-        await bulkAddLeads(leads);
-        setCsvFile(null);
-        setCampaignId("none");
-        onOpenChange(false);
+        if (leads.length > 0) {
+          await bulkAddLeads(leads);
+          setCsvFile(null);
+          setCampaignId("none");
+          onOpenChange(false);
+          toast({
+            title: t("common.success"),
+            description: t("outreach.leads.import.success", { count: leads.length }),
+          });
+        }
+      } catch (error) {
+        console.error("CSV import error:", error);
         toast({
-          title: t("common.success"),
-          description: t("outreach.leads.import.success", { count: leads.length }),
+          title: t("common.error"),
+          description: error instanceof Error ? error.message : "Failed to import CSV",
+          variant: "destructive",
         });
       }
     };

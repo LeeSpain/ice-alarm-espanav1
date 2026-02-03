@@ -172,6 +172,21 @@ queryClient.prefetchQuery({
 const App = () => {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
+  // Global unhandled promise rejection handler - prevents blank screens
+  useEffect(() => {
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error("Unhandled rejection:", event.reason);
+      event.preventDefault(); // Prevent crash
+      // Dynamic import to show toast without blocking
+      import("sonner").then(({ toast }) => {
+        toast.error("Something went wrong. Please try again.");
+      });
+    };
+    
+    window.addEventListener("unhandledrejection", handleRejection);
+    return () => window.removeEventListener("unhandledrejection", handleRejection);
+  }, []);
+
   useEffect(() => {
     // Check if this is a first-time visitor
     const hasSelectedLanguage = localStorage.getItem("iceAlarmLanguageSelected");
