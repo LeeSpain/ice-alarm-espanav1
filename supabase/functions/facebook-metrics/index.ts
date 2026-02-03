@@ -24,14 +24,14 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get Facebook credentials from system_settings
+    // Get Facebook credentials from system_settings (using settings_ prefix)
     const { data: settings } = await supabase
       .from("system_settings")
       .select("key, value")
-      .in("key", ["facebook_page_id", "facebook_page_access_token"]);
+      .in("key", ["settings_facebook_page_id", "settings_facebook_page_access_token"]);
 
     const settingsMap = Object.fromEntries(
-      (settings || []).map((s: { key: string; value: string }) => [s.key, s.value])
+      (settings || []).map((s: { key: string; value: string }) => [s.key.replace(/^settings_/, ''), s.value])
     );
 
     const pageAccessToken = settingsMap.facebook_page_access_token;
