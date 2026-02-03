@@ -143,6 +143,111 @@
         "shares": "compartidos",
         "reach": "alcance"
       }
+    },
+    "help": {
+      "title": "Guía del Gestor de Medios",
+      "description": "Aprenda a crear, gestionar y publicar contenido en redes sociales",
+      "howToUse": "Cómo Usar",
+      "gotIt": "Entendido",
+      "proTipLabel": "Consejo Pro",
+      "overview": {
+        "title": "Descripción General",
+        "content": "El Gestor de Medios optimiza su flujo de trabajo en redes sociales con creación de contenido impulsada por IA. Cree borradores, genere imágenes profesionales, obtenga verificaciones de cumplimiento y publique directamente en Facebook. La pestaña Estrategia le permite planificar calendarios de contenido con programación automatizada."
+      },
+      "workflow": {
+        "title": "El Flujo de Trabajo",
+        "steps": ["Definir Tema", "Investigar IA", "Escribir", "Generar Imagen", "Aprobar", "Publicar"]
+      },
+      "create": {
+        "title": "Crear Contenido",
+        "subtitle": "Creación de borradores con IA",
+        "intro": "Use IA para investigar temas y generar publicaciones atractivas para redes sociales.",
+        "steps": [
+          "Ingrese un tema relacionado con su producto o audiencia",
+          "Seleccione objetivo, audiencia y idioma",
+          "Haga clic en 'Investigar' para obtener insights de IA",
+          "Haga clic en 'Escribir Borrador' para generar texto",
+          "Haga clic en 'Flujo Completo' para investigar + escribir en un paso",
+          "Edite el texto generado para añadir su toque personal"
+        ],
+        "proTip": "Use la opción 'Ambos' idiomas para crear publicaciones bilingües que lleguen a audiencias en inglés y español simultáneamente."
+      },
+      "images": {
+        "title": "Generación de Imágenes",
+        "subtitle": "Cree visuales impactantes con IA",
+        "intro": "Genere imágenes profesionales que coincidan con su marca y contenido.",
+        "steps": [
+          "Seleccione un estilo de imagen (Senior Activo, Momento Familiar, etc.)",
+          "Haga clic en 'Generar Imagen IA' para crear una foto realista",
+          "Use 'Imagen Rápida' para gráficos con texto después del flujo de IA",
+          "Suba sus propias imágenes haciendo clic en el área de imagen",
+          "Previsualice la imagen antes de guardar el borrador"
+        ],
+        "proTip": "Las imágenes generadas por IA siempre incluyen el colgante SOS para consistencia de marca. Los estilos 'Senior Activo' y 'Estilo de Vida Español' funcionan mejor en Facebook."
+      },
+      "publishing": {
+        "title": "Aprobación y Publicación",
+        "subtitle": "Revise, apruebe y publique en Facebook",
+        "intro": "Las publicaciones pasan por aprobación antes de publicarse para garantizar calidad y cumplimiento.",
+        "steps": [
+          "Guarde su borrador con el botón 'Guardar Borrador'",
+          "Haga clic en 'Aprobar' para marcar como listo",
+          "La IA verifica problemas de cumplimiento (afirmaciones médicas, etc.)",
+          "Las publicaciones aprobadas aparecen en 'Listos para Publicar'",
+          "Haga clic en 'Publicar' para enviar directamente a Facebook",
+          "Las publicaciones fallidas pueden reintentarse después de corregir problemas"
+        ],
+        "proTip": "Siempre previsualice su publicación antes de publicar. La vista previa muestra exactamente cómo aparecerá en Facebook."
+      },
+      "strategy": {
+        "title": "Estrategia de Contenido",
+        "subtitle": "Planifique y automatice su calendario de contenido",
+        "intro": "Configure objetivos, audiencias, temas y programación para planificación automatizada de contenido.",
+        "steps": [
+          "Defina Objetivos (Reconocimiento de Marca, Generación de Leads, etc.)",
+          "Configure Audiencias Objetivo para cada objetivo",
+          "Cree Temas con períodos de enfriamiento para evitar repetición",
+          "Establezca Estilos de Imagen que coincidan con su identidad de marca",
+          "Use el Planificador de Contenido para generar calendarios semanales/mensuales",
+          "Revise y apruebe el contenido planificado antes de que se publique"
+        ],
+        "proTip": "Establezca enfriamientos de 7 días en temas para mantener su contenido fresco y evitar saturar a seguidores con los mismos temas."
+      },
+      "analytics": {
+        "title": "Seguimiento de Rendimiento",
+        "subtitle": "Monitoree engagement y alcance",
+        "intro": "Rastree cómo rinde su contenido publicado en Facebook.",
+        "metrics": [
+          "Reacciones: Me gusta, me encanta y otras respuestas emoji",
+          "Comentarios: Engagement de usuarios y conversaciones",
+          "Compartidos: Viralidad del contenido y expansión de alcance",
+          "Impresiones: Vistas totales de su contenido",
+          "Publicaciones: Rastree todo su contenido en vivo"
+        ],
+        "proTip": "Actualice las métricas regularmente para ver engagement en tiempo real. Las publicaciones de alto rendimiento pueden usarse como plantillas para contenido futuro."
+      },
+      "quickActions": {
+        "title": "Referencia de Acciones Rápidas",
+        "items": [
+          "Investigar → Obtener insights de IA sobre su tema",
+          "Escribir Borrador → Generar texto desde el tema",
+          "Flujo Completo → Investigar + Escribir en un clic",
+          "Generar Imagen IA → Crear foto realista",
+          "Imagen Rápida → Añadir texto superpuesto a imagen",
+          "Aprobar → Marcar publicación como lista",
+          "Publicar → Enviar directamente a Facebook"
+        ]
+      },
+      "bestPractices": {
+        "title": "Mejores Prácticas",
+        "tips": [
+          "Siempre incluya una imagen - las publicaciones con visuales obtienen 2-3x más engagement",
+          "Use publicaciones bilingües (Ambos) para maximizar alcance en España",
+          "Revise el contenido generado por IA antes de aprobar - añada toques personales",
+          "Programe publicaciones en horarios pico (9-11am, 7-9pm CET)",
+          "Monitoree métricas de engagement y replique formatos de publicaciones exitosas"
+        ]
+      }
     }
   },
   "common": {

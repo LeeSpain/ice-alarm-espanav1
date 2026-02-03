@@ -143,6 +143,111 @@
         "shares": "shares",
         "reach": "reach"
       }
+    },
+    "help": {
+      "title": "Media Manager Guide",
+      "description": "Learn how to create, manage, and publish social media content",
+      "howToUse": "How to Use",
+      "gotIt": "Got It",
+      "proTipLabel": "Pro Tip",
+      "overview": {
+        "title": "Overview",
+        "content": "Media Manager streamlines your social media workflow with AI-powered content creation. Create drafts, generate professional images, get compliance checks, and publish directly to Facebook. The Strategy tab lets you plan content calendars with automated scheduling."
+      },
+      "workflow": {
+        "title": "The Content Workflow",
+        "steps": ["Set Topic", "AI Research", "Write Draft", "Generate Image", "Approve", "Publish"]
+      },
+      "create": {
+        "title": "Creating Content",
+        "subtitle": "AI-powered draft creation",
+        "intro": "Use AI to research topics and generate engaging social media posts.",
+        "steps": [
+          "Enter a topic related to your product or audience",
+          "Select goal, target audience, and language",
+          "Click 'Research' for AI topic insights",
+          "Click 'Write Draft' to generate post text",
+          "Click 'Full Workflow' to do research + write in one step",
+          "Edit the generated text to add your personal touch"
+        ],
+        "proTip": "Use 'Both' language option to create bilingual posts that reach English and Spanish audiences simultaneously."
+      },
+      "images": {
+        "title": "Image Generation",
+        "subtitle": "Create stunning visuals with AI",
+        "intro": "Generate professional images that match your brand and content.",
+        "steps": [
+          "Select an image style (Active Senior, Family Moment, etc.)",
+          "Click 'Generate AI Image' to create a realistic photo",
+          "Use 'Quick Brand' for text overlay graphics after running AI workflow",
+          "Upload your own images by clicking the image area",
+          "Preview the image before saving the draft"
+        ],
+        "proTip": "AI-generated images always include the SOS pendant for brand consistency. 'Active Senior' and 'Spanish Lifestyle' styles perform best on Facebook."
+      },
+      "publishing": {
+        "title": "Approval & Publishing",
+        "subtitle": "Review, approve, and post to Facebook",
+        "intro": "Posts go through approval before publishing to ensure quality and compliance.",
+        "steps": [
+          "Save your draft with 'Save Draft' button",
+          "Click 'Approve' to mark post as ready",
+          "AI checks for compliance issues (medical claims, etc.)",
+          "Approved posts appear in 'Ready to Publish' section",
+          "Click 'Publish' to post directly to Facebook",
+          "Failed posts can be retried after fixing issues"
+        ],
+        "proTip": "Always preview your post before publishing. The preview shows exactly how it will appear on Facebook."
+      },
+      "strategy": {
+        "title": "Content Strategy",
+        "subtitle": "Plan and automate your content calendar",
+        "intro": "Set up goals, audiences, topics, and scheduling for automated content planning.",
+        "steps": [
+          "Define Goals (Brand Awareness, Lead Generation, etc.)",
+          "Configure Target Audiences for each goal",
+          "Create Topics with cooldown periods to avoid repetition",
+          "Set Image Styles that match your brand identity",
+          "Use Content Planner to generate weekly/monthly schedules",
+          "Review and approve planned content before it goes live"
+        ],
+        "proTip": "Set 7-day cooldowns on topics to keep your content fresh and avoid overwhelming followers with the same themes."
+      },
+      "analytics": {
+        "title": "Performance Tracking",
+        "subtitle": "Monitor engagement and reach",
+        "intro": "Track how your published content performs on Facebook.",
+        "metrics": [
+          "Reactions: Likes, loves, and other emoji responses",
+          "Comments: User engagement and conversations",
+          "Shares: Content virality and reach expansion",
+          "Impressions: Total views of your content",
+          "Published Posts: Track all your live content"
+        ],
+        "proTip": "Refresh metrics regularly to see real-time engagement. High-performing posts can be used as templates for future content."
+      },
+      "quickActions": {
+        "title": "Quick Actions Reference",
+        "items": [
+          "Research → Get AI insights on your topic",
+          "Write Draft → Generate post text from topic",
+          "Full Workflow → Research + Write in one click",
+          "Generate AI Image → Create realistic photo",
+          "Quick Brand → Add text overlay to image",
+          "Approve → Mark post as ready to publish",
+          "Publish → Post directly to Facebook"
+        ]
+      },
+      "bestPractices": {
+        "title": "Best Practices",
+        "tips": [
+          "Always include an image - posts with visuals get 2-3x more engagement",
+          "Use bilingual posts (Both) to maximize reach in Spain",
+          "Review AI-generated content before approving - add personal touches",
+          "Schedule posts during peak hours (9-11am, 7-9pm CET)",
+          "Monitor engagement metrics and replicate successful post formats"
+        ]
+      }
     }
   },
   "common": {
