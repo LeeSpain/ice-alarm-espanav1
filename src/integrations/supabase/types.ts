@@ -2492,6 +2492,36 @@ export type Database = {
           },
         ]
       }
+      outreach_daily_usage: {
+        Row: {
+          created_at: string
+          id: string
+          inbox_id: string | null
+          updated_at: string
+          usage_count: number
+          usage_date: string
+          usage_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inbox_id?: string | null
+          updated_at?: string
+          usage_count?: number
+          usage_date?: string
+          usage_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inbox_id?: string | null
+          updated_at?: string
+          usage_count?: number
+          usage_date?: string
+          usage_type?: string
+        }
+        Relationships: []
+      }
       outreach_email_drafts: {
         Row: {
           body_html: string | null
@@ -2602,6 +2632,45 @@ export type Database = {
           },
         ]
       }
+      outreach_queued_tasks: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          id: string
+          priority: number | null
+          processed_at: string | null
+          scheduled_for: string
+          status: string
+          task_type: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          priority?: number | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: string
+          task_type: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          priority?: number | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: string
+          task_type?: string
+        }
+        Relationships: []
+      }
       outreach_raw_leads: {
         Row: {
           ai_rated_at: string | null
@@ -2665,6 +2734,33 @@ export type Database = {
           status?: string
           updated_at?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      outreach_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
         }
         Relationships: []
       }

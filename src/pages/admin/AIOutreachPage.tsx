@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Megaphone, Users, Target, Mail, BarChart3, HelpCircle } from "lucide-react";
+import { Megaphone, Users, Target, Mail, BarChart3, HelpCircle, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { OutreachLeadsTab } from "@/components/admin/outreach/OutreachLeadsTab";
@@ -8,7 +8,9 @@ import { OutreachCRMTab } from "@/components/admin/outreach/OutreachCRMTab";
 import { OutreachCampaignsTab } from "@/components/admin/outreach/OutreachCampaignsTab";
 import { OutreachInboxTab } from "@/components/admin/outreach/OutreachInboxTab";
 import { OutreachAnalyticsTab } from "@/components/admin/outreach/OutreachAnalyticsTab";
+import { OutreachSettingsTab } from "@/components/admin/outreach/OutreachSettingsTab";
 import { OutreachHelpDialog } from "@/components/admin/outreach/OutreachHelpDialog";
+import { OutreachCapsWidget } from "@/components/admin/outreach/OutreachCapsWidget";
 
 const AIOutreachPage = () => {
   const { t } = useTranslation();
@@ -36,9 +38,12 @@ const AIOutreachPage = () => {
 
       <OutreachHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
 
+      {/* Caps Widget */}
+      <OutreachCapsWidget />
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
           <TabsTrigger value="leads" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">{t("outreach.tabs.leads")}</span>
@@ -58,6 +63,10 @@ const AIOutreachPage = () => {
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">{t("outreach.tabs.analytics")}</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.caps.tabs.settings")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -79,6 +88,10 @@ const AIOutreachPage = () => {
 
         <TabsContent value="analytics" className="space-y-4">
           <OutreachAnalyticsTab />
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-4">
+          <OutreachSettingsTab />
         </TabsContent>
       </Tabs>
     </div>

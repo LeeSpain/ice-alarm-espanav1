@@ -33,6 +33,11 @@ interface RatingResult {
   reasoning: string;
 }
 
+interface CapSetting {
+  value: number;
+  enabled: boolean;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -50,6 +55,42 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Check daily caps
+    const today = new Date().toISOString().split("T")[0];
+    
+    // Get cap setting
+    const { data: capSettingData } = await supabase
+      .from("outreach_settings")
+      .select("setting_value")
+      .eq("setting_key", "max_ai_ratings_per_day")
+      .single();
+    
+    const cap: CapSetting = capSettingData?.setting_value as CapSetting || { value: 100, enabled: true };
+    
+    // Get today's usage
+    const { data: usageData } = await supabase
+      .from("outreach_daily_usage")
+      .select("usage_count")
+      .eq("usage_date", today)
+      .eq("usage_type", "ai_ratings")
+      .is("inbox_id", null)
+      .single();
+    
+    const usedToday = usageData?.usage_count || 0;
+    const remaining = cap.enabled ? Math.max(0, cap.value - usedToday) : Infinity;
+
+    if (remaining === 0) {
+      return new Response(
+        JSON.stringify({ 
+          rated: 0, 
+          queued: 0, 
+          capReached: true,
+          message: "Daily AI rating limit reached" 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get leads to rate
     let query = supabase.from("outreach_raw_leads").select("*");
@@ -75,8 +116,28 @@ serve(async (req) => {
       );
     }
 
+    // Apply cap - only process what we can
+    const leadsToProcess = leads.slice(0, remaining);
+    const leadsToQueue = leads.slice(remaining);
+
+    // Queue leads that exceed cap
+    if (leadsToQueue.length > 0) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+
+      const queuedTasks = leadsToQueue.map((lead: LeadToRate) => ({
+        task_type: "ai_rating",
+        entity_id: lead.id,
+        entity_type: "raw_lead",
+        scheduled_for: tomorrow.toISOString().split("T")[0],
+      }));
+
+      await supabase.from("outreach_queued_tasks").insert(queuedTasks);
+    }
+
     // Get unique campaign IDs
-    const campaignIds = [...new Set(leads.filter(l => l.campaign_id).map(l => l.campaign_id))];
+    const campaignIds = [...new Set(leadsToProcess.filter((l: LeadToRate) => l.campaign_id).map((l: LeadToRate) => l.campaign_id))];
     
     // Fetch campaigns if any
     let campaignsMap: Record<string, Campaign> = {};
@@ -87,7 +148,7 @@ serve(async (req) => {
         .in("id", campaignIds);
       
       if (campaigns) {
-        campaignsMap = campaigns.reduce((acc, c) => ({ ...acc, [c.id]: c }), {});
+        campaignsMap = campaigns.reduce((acc: Record<string, Campaign>, c: Campaign) => ({ ...acc, [c.id]: c }), {});
       }
     }
 
@@ -95,7 +156,7 @@ serve(async (req) => {
     const errors: string[] = [];
 
     // Rate each lead
-    for (const lead of leads) {
+    for (const lead of leadsToProcess) {
       try {
         const campaign = lead.campaign_id ? campaignsMap[lead.campaign_id] : null;
         
@@ -172,10 +233,36 @@ Always respond with valid JSON in this exact format: {"score": 4.2, "reasoning":
       }
     }
 
+    // Track usage
+    if (ratedCount > 0) {
+      const { data: existingUsage } = await supabase
+        .from("outreach_daily_usage")
+        .select("id, usage_count")
+        .eq("usage_date", today)
+        .eq("usage_type", "ai_ratings")
+        .is("inbox_id", null)
+        .single();
+
+      if (existingUsage) {
+        await supabase
+          .from("outreach_daily_usage")
+          .update({ usage_count: existingUsage.usage_count + ratedCount })
+          .eq("id", existingUsage.id);
+      } else {
+        await supabase.from("outreach_daily_usage").insert({
+          usage_date: today,
+          usage_type: "ai_ratings",
+          usage_count: ratedCount,
+        });
+      }
+    }
+
     return new Response(
       JSON.stringify({
         rated: ratedCount,
-        total: leads.length,
+        total: leadsToProcess.length,
+        queued: leadsToQueue.length,
+        capReached: leadsToQueue.length > 0,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
