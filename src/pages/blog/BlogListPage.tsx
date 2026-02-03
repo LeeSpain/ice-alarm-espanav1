@@ -45,10 +45,10 @@ export default function BlogListPage() {
             <HeaderChatButton />
             <LanguageSelector />
             <Button variant="ghost" asChild>
-              <Link to="/login">{t("common.signIn")}</Link>
+              <Link to="/login">{t("auth.memberLogin", { defaultValue: "Sign In" })}</Link>
             </Button>
             <Button asChild>
-              <Link to="/join">{t("common.getStarted")}</Link>
+              <Link to="/join">{t("landing.startProtection", { defaultValue: "Get Started" })}</Link>
             </Button>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function BlogListPage() {
             className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {t("common.goBack")}
+            {t("auth.backToHome", { defaultValue: "Go Back" })}
           </Link>
 
           {/* Page Title */}

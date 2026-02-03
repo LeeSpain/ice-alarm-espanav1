@@ -92,10 +92,10 @@ export default function BlogPostPage() {
             <HeaderChatButton />
             <LanguageSelector />
             <Button variant="ghost" asChild>
-              <Link to="/login">{t("common.signIn")}</Link>
+              <Link to="/login">{t("auth.memberLogin", { defaultValue: "Sign In" })}</Link>
             </Button>
             <Button asChild>
-              <Link to="/join">{t("common.getStarted")}</Link>
+              <Link to="/join">{t("landing.startProtection", { defaultValue: "Get Started" })}</Link>
             </Button>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function BlogPostPage() {
                     {t("blog.sharePost", "Found this helpful? Share it with others.")}
                   </p>
                   <Button asChild>
-                    <Link to="/join">{t("common.getStarted")}</Link>
+                    <Link to="/join">{t("landing.startProtection", { defaultValue: "Get Started" })}</Link>
                   </Button>
                 </div>
               </div>
