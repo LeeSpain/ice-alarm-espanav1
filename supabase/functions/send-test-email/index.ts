@@ -75,9 +75,9 @@ async function sendTestViaGmailSMTP(
       return {
         success: false,
         error:
-          "Gmail rechazó las credenciales (535 BadCredentials). Verifica que: (1) la cuenta " +
-          `“${settings.gmail_smtp_user}”` +
-          " tiene verificación en 2 pasos activada, (2) has generado un App Password nuevo, y (3) el App Password corresponde a ESA misma cuenta (no a un alias).",
+          "Gmail rejected the credentials (535 BadCredentials). Please verify: (1) the account " +
+          `\"${settings.gmail_smtp_user}\"` +
+          " has 2-Step Verification enabled, (2) you generated a fresh App Password, and (3) the App Password belongs to THIS exact account (not an alias / different Gmail).",
       };
     }
 
