@@ -11,6 +11,7 @@ const resources = {
   es: { translation: es },
 };
 
+// Initialize i18n synchronously to prevent race conditions
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -25,6 +26,11 @@ i18n
       order: ["localStorage", "navigator", "htmlTag"],
       caches: ["localStorage"],
       lookupLocalStorage: "i18nextLng",
+    },
+    // Ensure synchronous initialization
+    initImmediate: false,
+    react: {
+      useSuspense: false, // Disable suspense to prevent issues with lazy-loaded components
     },
   });
 
