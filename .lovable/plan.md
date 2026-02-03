@@ -1,10 +1,9 @@
 
-
-# Documentation Center Upgrade - Implementation Plan
+# AI Outreach Instructions Popup - Implementation Plan
 
 ## Overview
 
-Upgrade the admin Documentation Center (`/admin/settings` → Docs tab) with a full-featured document viewer, PDF generation, and download capabilities. This will transform it from a basic table view into a professional document management interface.
+Add a professional "How to Use" help button to the AI Outreach page header that opens a detailed instructions dialog. The dialog will provide comprehensive guidance on using all five tabs (Leads, CRM, Campaigns, Inbox, Analytics) with step-by-step workflows and best practices.
 
 ---
 
@@ -12,225 +11,261 @@ Upgrade the admin Documentation Center (`/admin/settings` → Docs tab) with a f
 
 | Feature | Status |
 |---------|--------|
-| Document List View | ✅ Basic table with filters |
-| Document Editor | ✅ Create/edit with markdown |
-| Document Preview | ❌ None - only edit mode |
-| PDF Generation | ❌ Not available |
-| Download Options | ❌ Not available |
-| Full-screen Reading | ❌ Not available |
-| Markdown Rendering | ❌ Basic newline→br only |
+| AI Outreach Page | ✅ Has header with title/subtitle |
+| Help Button | ❌ None |
+| Instructions Popup | ❌ None |
+| Tab Guidance | ❌ None |
 
 ---
 
-## Planned Improvements
+## Planned Implementation
 
-### 1. Document Viewer Modal (New Component)
-Create a dedicated full-screen document viewer for reading documents:
-
-| Feature | Description |
-|---------|-------------|
-| Full Document Display | Scrollable view with proper markdown rendering |
-| Header with Title | Document title, category badge, language, version |
-| Metadata Panel | Tags, visibility, importance, last updated |
-| Action Buttons | Print/PDF, Download (MD), Close |
-| Keyboard Navigation | ESC to close |
-
-### 2. Proper Markdown Rendering
-Install `react-markdown` library for professional markdown display:
-
-- Headings (H1-H6) with proper styling
-- Bold, italic, strikethrough
-- Bullet and numbered lists
-- Code blocks with syntax highlighting
-- Blockquotes
-- Horizontal rules
-- Links and images
-
-### 3. PDF Generation (Print-to-PDF)
-Implement browser-native print functionality:
-
-- Opens styled document in new window
-- Triggers browser print dialog
-- User can select "Save as PDF"
-- Includes company header and footer
-- Clean print-optimized styling
-
-### 4. Download Options
-Add multiple download formats:
-
-| Format | Description |
-|--------|-------------|
-| Markdown (.md) | Original source content |
-| Plain Text (.txt) | Stripped markdown formatting |
-| Print/PDF | Browser print dialog |
-
-### 5. Enhanced Table Actions
-Update the document table with quick actions:
-
-- **View** button - opens viewer modal
-- **Edit** button - opens editor (existing)
-- **Download** dropdown - MD/TXT options
-- **Print** button - opens print view
-- **Delete** button - with confirmation (existing)
-
----
-
-## New Components
-
-### `DocumentViewerModal.tsx`
-Full-screen modal for reading documents:
+### 1. Header Enhancement
+Add a "How to Use" button next to the header title:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  [←] Document Title                          [Print] [Download] │
-│  Category: Emergency  │  Language: EN  │  v3  │  Updated: Jan 3 │
+│  [📢] AI Outreach                                 [? How to Use]│
+│       Automated lead discovery and outreach campaigns           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 2. Instructions Dialog Component
+Create a professional dialog with comprehensive usage instructions:
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  [X]                   AI Outreach Guide                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ## SOS Alert Response Protocol                                 │
+│  ══════════════════════════════════════════════════════════════ │
+│  OVERVIEW                                                       │
+│  ══════════════════════════════════════════════════════════════ │
+│  AI Outreach automates lead discovery and email campaigns       │
+│  for sales and partner acquisition...                           │
 │                                                                 │
-│  This protocol outlines the step-by-step procedure for         │
-│  responding to SOS alerts from member devices...                │
+│  ══════════════════════════════════════════════════════════════ │
+│  📥 LEADS TAB                                                   │
+│  ══════════════════════════════════════════════════════════════ │
+│  • Add leads manually or import via CSV                         │
+│  • AI rates leads (1-10) based on fit                           │
+│  • Move qualified leads (7+) to CRM                             │
 │                                                                 │
-│  ### Step 1: Acknowledge Alert                                  │
-│  - Click "Acknowledge" within 30 seconds                        │
-│  - Attempt first contact with member                            │
+│  ══════════════════════════════════════════════════════════════ │
+│  🎯 CRM TAB                                                     │
+│  ══════════════════════════════════════════════════════════════ │
+│  • Kanban board: New → Contacted → Replied → Converted          │
+│  • AI research generates business summaries                     │
+│  • AI writes personalized intro emails                          │
 │                                                                 │
-│  ...                                                            │
+│  ... (Campaigns, Inbox, Analytics sections) ...                 │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  Tags: #sos #emergency #response                                │
-│  Visibility: Staff, AI                                          │
+│                                                    [Got It]     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## File Changes
+## Dialog Content Structure
 
-### Files to Create
+### Sections
+
+| Section | Content |
+|---------|---------|
+| **Overview** | Purpose of AI Outreach module, workflow summary |
+| **Leads Tab** | Adding leads, importing CSV, AI rating, qualification |
+| **CRM Tab** | Kanban stages, AI research, email generation, conversion |
+| **Campaigns Tab** | Creating campaigns, targeting, messaging config, follow-ups |
+| **Inbox Tab** | Email thread management, AI classification, reply suggestions |
+| **Analytics Tab** | Performance metrics, tracking conversions |
+| **Best Practices** | Tips for maximizing results |
+
+### Content Details
+
+**Overview Section:**
+- Purpose: Automate lead discovery and outreach for sales/partner pipelines
+- Main workflow: Import Leads → AI Rates → Move to CRM → Research → Email → Convert
+
+**Leads Tab Section:**
+- Add leads manually with company/contact/email
+- Import via CSV or paste list
+- Select pipeline (Sales or Partner)
+- Optionally assign to a campaign
+- AI rates leads 1-10 based on business fit
+- Move leads with score ≥7 to CRM
+
+**CRM Tab Section:**
+- Kanban board with 6 columns: New, Contacted, Replied, Interested, Converted, Closed
+- Click "Research Business" for AI-generated company summary
+- Click "Generate Intro Email" for personalized outreach
+- Move cards through pipeline as relationship progresses
+- Convert successful leads to Members or Partners
+
+**Campaigns Tab Section:**
+- Create targeted email campaigns by pipeline type
+- Define ideal lead characteristics for AI personalization
+- Configure email tone (Professional/Friendly/Neutral)
+- Set outreach goals (Introduction/Partnership/Meeting)
+- Enable automated follow-up sequences
+
+**Inbox Tab Section:**
+- View all email conversations in one place
+- AI classifies replies (Interested/Question/Not Interested/Unsubscribe)
+- AI generates suggested replies
+- Edit and send responses
+
+**Analytics Tab Section:**
+- Track leads discovered vs qualified
+- Monitor emails sent and replies received
+- View conversion rates
+
+**Best Practices Section:**
+- Start with a focused campaign targeting specific regions
+- Rate all new leads before moving to CRM
+- Personalize AI emails with research before sending
+- Follow up within 3-5 days if no response
+- Convert interested leads promptly
+
+---
+
+## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/components/admin/settings/DocumentViewerModal.tsx` | Full document viewer with markdown rendering |
-| `src/lib/documentPrint.ts` | Utility functions for print/PDF generation |
+| `src/components/admin/outreach/OutreachHelpDialog.tsx` | Help dialog component with all instructions |
 
-### Files to Modify
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/admin/settings/DocumentationSettingsTab.tsx` | Add View button, download dropdown, print action |
-| `package.json` | Add `react-markdown` and `remark-gfm` dependencies |
+| `src/pages/admin/AIOutreachPage.tsx` | Add HelpCircle button, dialog trigger |
+| `src/i18n/locales/en.json` | Add `outreach.help.*` translation keys |
+| `src/i18n/locales/es.json` | Add Spanish translations |
 
 ---
 
-## Implementation Details
+## Translation Keys to Add
 
-### Markdown Rendering
-Using `react-markdown` with GitHub Flavored Markdown (GFM) support:
-
-```tsx
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-
-<ReactMarkdown 
-  remarkPlugins={[remarkGfm]}
-  className="prose prose-sm max-w-none dark:prose-invert"
->
-  {document.content}
-</ReactMarkdown>
-```
-
-### Print/PDF Function
-Browser-native approach (no external PDF library needed):
-
-```tsx
-function printDocument(doc: Documentation) {
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>${doc.title}</title>
-        <style>
-          body { font-family: system-ui; padding: 40px; max-width: 800px; margin: 0 auto; }
-          h1, h2, h3 { margin-top: 1.5em; }
-          /* ... print styles ... */
-        </style>
-      </head>
-      <body>
-        <header>ICE Alarm España - ${categoryLabels[doc.category]}</header>
-        <h1>${doc.title}</h1>
-        ${markdownToHtml(doc.content)}
-        <footer>Version ${doc.version} | ${doc.language.toUpperCase()}</footer>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.print();
-}
-```
-
-### Download Functions
-
-```tsx
-// Download as Markdown
-function downloadMarkdown(doc: Documentation) {
-  const blob = new Blob([doc.content], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${doc.slug}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Download as Plain Text
-function downloadText(doc: Documentation) {
-  // Strip markdown formatting
-  const plainText = doc.content
-    .replace(/#{1,6}\s/g, '')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/- /g, '• ');
-  
-  const blob = new Blob([plainText], { type: 'text/plain' });
-  // ... download logic
+```json
+{
+  "outreach": {
+    "help": {
+      "title": "AI Outreach Guide",
+      "howToUse": "How to Use",
+      "gotIt": "Got It",
+      "overview": {
+        "title": "Overview",
+        "content": "AI Outreach automates lead discovery and email campaigns for sales and partner acquisition. The workflow is simple: Import leads, let AI rate them, move qualified leads to CRM, research their business, generate personalized emails, and convert to members or partners."
+      },
+      "leads": {
+        "title": "Leads Tab",
+        "intro": "Manage raw leads before they enter your sales pipeline.",
+        "steps": [
+          "Add leads manually or import via CSV/paste list",
+          "Select pipeline type: Sales or Partner",
+          "Optionally assign leads to a campaign",
+          "Click 'Rate All New' to let AI score leads 1-10",
+          "Leads scoring 7+ can be moved to CRM"
+        ]
+      },
+      "crm": {
+        "title": "CRM Tab",
+        "intro": "Work qualified leads through your pipeline with AI assistance.",
+        "steps": [
+          "Leads appear in the 'New' column",
+          "Click 'Research Business' for AI company insights",
+          "Click 'Generate Intro Email' for personalized outreach",
+          "Drag cards to update status as relationships progress",
+          "Convert successful leads to Members or Partners"
+        ]
+      },
+      "campaigns": {
+        "title": "Campaigns Tab",
+        "intro": "Create and manage automated email campaigns.",
+        "steps": [
+          "Click 'New Campaign' to create a targeted campaign",
+          "Define the ideal lead profile for AI personalization",
+          "Configure email tone and outreach goals",
+          "Enable follow-up sequences for non-responders",
+          "Assign leads to campaigns for organized outreach"
+        ]
+      },
+      "inbox": {
+        "title": "Inbox Tab",
+        "intro": "Manage email conversations and responses.",
+        "steps": [
+          "View all email threads in one unified inbox",
+          "AI classifies replies: Interested, Question, Not Interested",
+          "Review AI-suggested responses",
+          "Edit and send personalized replies"
+        ]
+      },
+      "analytics": {
+        "title": "Analytics Tab",
+        "intro": "Track outreach performance and conversions.",
+        "metrics": [
+          "Leads Discovered: Total leads imported",
+          "Leads Qualified: Leads moved to CRM",
+          "Emails Sent: Total outreach emails",
+          "Replies Received: Response count",
+          "Conversions: Successful member/partner signups"
+        ]
+      },
+      "bestPractices": {
+        "title": "Best Practices",
+        "tips": [
+          "Start with focused campaigns targeting specific regions or industries",
+          "Rate all new leads before moving to CRM for better qualification",
+          "Always review and personalize AI-generated emails before sending",
+          "Follow up within 3-5 days if no response",
+          "Document notes on each lead for better context"
+        ]
+      }
+    }
+  }
 }
 ```
 
 ---
 
-## Updated Table Row Actions
+## Component Implementation
 
-Current actions menu will be expanded:
+### OutreachHelpDialog.tsx Structure
 
-| Action | Icon | Description |
-|--------|------|-------------|
-| View | Eye | Opens DocumentViewerModal |
-| Edit | Pencil | Opens DocumentEditor (existing) |
-| Print | Printer | Opens print dialog |
-| Download | Download | Submenu: Markdown, Plain Text |
-| Delete | Trash | Confirmation dialog (existing) |
+```tsx
+// Key features:
+// - Uses Dialog component with ScrollArea for long content
+// - Sections with icons matching tab icons
+// - Numbered/bulleted lists for steps
+// - Professional styling with proper spacing
+// - Fully translated using i18n
+```
 
----
+### AIOutreachPage.tsx Changes
 
-## Dependencies
+```tsx
+// Add to header:
+<div className="flex items-center gap-3">
+  {/* ... existing icon and title ... */}
+</div>
+<Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+  <HelpCircle className="h-4 w-4 mr-2" />
+  {t("outreach.help.howToUse")}
+</Button>
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `react-markdown` | ^9.0.1 | Markdown to React rendering |
-| `remark-gfm` | ^4.0.0 | GitHub Flavored Markdown support |
+// Add dialog:
+<OutreachHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
+```
 
 ---
 
 ## Summary
 
-| Improvement | Implementation |
-|-------------|----------------|
-| Document Viewer | New modal with full content display |
-| Markdown Rendering | react-markdown with GFM plugin |
-| PDF Generation | Browser print-to-PDF (no library needed) |
-| Download Options | Markdown and Plain Text exports |
-| Enhanced Actions | View, Edit, Print, Download, Delete |
-
-This upgrade will transform the Documentation Center into a complete document management system where administrators can create, read, edit, print, and download all company documentation.
-
+| Feature | Implementation |
+|---------|----------------|
+| Help Button | Outline button with HelpCircle icon in header |
+| Instructions Dialog | Full-screen dialog with ScrollArea |
+| Content Sections | 7 sections covering all tabs + best practices |
+| Translations | Full EN/ES bilingual support |
+| Styling | Professional, consistent with existing UI patterns |
