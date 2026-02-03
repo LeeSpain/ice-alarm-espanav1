@@ -55,13 +55,22 @@ interface AuditLogEntry {
  */
 export async function logActivity(entry: AuditLogEntry): Promise<void> {
   try {
-    const { data: staffData } = await supabase.auth.getUser();
-    if (!staffData.user) return;
+    // Use getSession instead of getUser to avoid network validation
+    // that could trigger session invalidation/logout
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    // Silently exit if no session - don't trigger any auth events
+    if (sessionError || !sessionData.session?.user) {
+      console.warn("Audit log skipped: no active session");
+      return;
+    }
+    
+    const userId = sessionData.session.user.id;
 
     const { data: staff } = await supabase
       .from("staff")
       .select("id")
-      .eq("user_id", staffData.user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     // Get client IP (approximate via external service if needed, or null)
