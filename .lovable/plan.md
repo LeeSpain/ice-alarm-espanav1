@@ -1,86 +1,236 @@
-# Blog System - IMPLEMENTED ✅
 
-All 6 stages completed successfully with enhanced Stage 4 (Option B - AI Intros).
 
-## Summary
+# Published Posts Tab with Facebook Engagement Metrics
 
-| Stage | Feature | Status |
-|-------|---------|--------|
-| 1 | Database | ✅ `blog_posts` table with RLS + `ai_intro` column |
-| 2 | Public Pages | ✅ `/blog` and `/blog/:slug` routes |
-| 3 | SEO Metadata | ✅ SEOHead component with OG tags |
-| 4 | Facebook Integration | ✅ Auto-creates blog post with AI intro on publish |
-| 5 | Navigation | ✅ Blog in nav + homepage section |
-| 6 | Sitemap + Schema | ✅ Dynamic sitemap.xml + JSON-LD structured data |
+## Overview
 
-## Stage 4 (Option B) Implementation Details
+Add a dedicated "Published" section to the Media Manager that displays all posts successfully published to Facebook, along with their real-time engagement metrics (reactions, comments, shares, reach). This includes an overview dashboard with aggregated statistics and individual post performance cards.
 
-When publishing to Facebook:
-1. **Blog post created FIRST** (always succeeds even if Facebook fails)
-2. **AI intro generated** using Lovable AI (Gemini 2.5 Flash)
-3. **Content composed as**:
-   - AI intro paragraph
-   - Divider line (---)
-   - Original Facebook post content
-   - CTA link to icealarm.es
-4. **Facebook post includes blog URL** when character count allows
-5. **facebook_post_id stored** on blog_posts record
+---
 
-## Files Created
+## Current State
 
-- `src/hooks/useBlogPosts.ts` - Blog data hooks (includes `ai_intro` field)
-- `src/components/seo/SEOHead.tsx` - Dynamic meta tags
-- `src/components/blog/BlogCard.tsx` - Blog post card
-- `src/pages/blog/BlogListPage.tsx` - `/blog` page
-- `src/pages/blog/BlogPostPage.tsx` - `/blog/:slug` page with JSON-LD schema
-- `supabase/functions/generate-sitemap/index.ts` - Sitemap generator
+The Media Manager currently has:
+- A metrics bar showing counts (Drafts, Approved, Published, Failed)
+- Ready to Publish queue for approved posts
+- A table with tabs filtering by status (All, Drafts, Approved, Published, Failed)
+- Post preview dialog for viewing post content
 
-## Files Modified
+The "Published" tab in the existing table only shows basic info - no engagement metrics.
 
-- `src/App.tsx` - Added blog routes
-- `src/pages/LandingPage.tsx` - Added nav link + latest posts section
-- `src/i18n/locales/en.json` - Added blog translations
-- `src/i18n/locales/es.json` - Added blog translations (Spanish)
-- `supabase/functions/facebook-publish/index.ts` - AI intro + blog post creation flow
-- `vercel.json` - Added sitemap rewrite
-- `public/robots.txt` - Sitemap reference (icealarm.es)
+---
 
-## Database Schema
+## What We Will Add
 
-```sql
-blog_posts (
-  id uuid PRIMARY KEY,
-  title text NOT NULL,
-  slug text UNIQUE NOT NULL,
-  excerpt text,
-  content text NOT NULL,
-  ai_intro text,           -- NEW: AI-generated intro paragraph
-  language text DEFAULT 'en',
-  published boolean DEFAULT true,
-  published_at timestamptz,
-  facebook_post_id text,
-  social_post_id uuid,
-  image_url text,
-  seo_title text,
-  seo_description text,
-  created_at timestamptz,
-  updated_at timestamptz
-)
+| Component | Description |
+|-----------|-------------|
+| Published Overview Card | Aggregated metrics: total posts, total reactions, total reach |
+| Published Posts Grid | Cards showing each published post with engagement metrics |
+| Facebook Metrics Edge Function | Backend function to fetch metrics from Facebook Graph API |
+| Metrics Cache Table | Database table to store fetched metrics (avoid rate limits) |
+| Refresh Metrics Button | Manual refresh to fetch latest metrics from Facebook |
+
+---
+
+## Architecture
+
+```text
+User clicks "Published" tab
+         │
+         ▼
+┌─────────────────────────────────────┐
+│  Published Overview (Aggregated)    │
+│  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐   │
+│  │Posts│ │React│ │Reach│ │Share│   │
+│  │  5  │ │ 234 │ │1.2K │ │ 45  │   │
+│  └─────┘ └─────┘ └─────┘ └─────┘   │
+└─────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│  Published Posts Grid               │
+│  ┌─────────────┐ ┌─────────────┐   │
+│  │ Post Card   │ │ Post Card   │   │
+│  │ [Image]     │ │ [Image]     │   │
+│  │ Topic       │ │ Topic       │   │
+│  │ 👍 50 💬 12 │ │ 👍 30 💬 8  │   │
+│  │ 📊 View FB  │ │ 📊 View FB  │   │
+│  └─────────────┘ └─────────────┘   │
+└─────────────────────────────────────┘
 ```
 
-## URL Configuration
+---
 
-All URLs standardized to `https://icealarm.es`:
-- Sitemap BASE_URL
-- Canonical URLs
-- robots.txt sitemap reference
+## Implementation Stages
 
-## Usage
+### Stage 1: Database - Metrics Cache Table
 
-1. **Publishing**: When a Facebook post is published:
-   - AI generates a 2-4 sentence intro
-   - Blog post is created with composed content
-   - Facebook receives the blog URL in the post
-2. **Manual posts**: Insert directly into `blog_posts` table
-3. **Sitemap**: Available at `/sitemap.xml` (via Vercel rewrite)
-4. **SEO**: JSON-LD structured data on all blog post pages
+Create a table to cache Facebook metrics (avoid hitting API rate limits):
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `social_post_id` | uuid | FK to social_posts |
+| `facebook_post_id` | text | Facebook's post ID |
+| `reactions_total` | integer | Total reactions count |
+| `reactions_breakdown` | jsonb | {like: 10, love: 5, ...} |
+| `comments_count` | integer | Number of comments |
+| `shares_count` | integer | Number of shares |
+| `impressions` | integer | Post views/reach |
+| `fetched_at` | timestamptz | When metrics were last fetched |
+
+RLS: Staff can read/write.
+
+---
+
+### Stage 2: Edge Function - Fetch Facebook Metrics
+
+Create `facebook-metrics` edge function that:
+
+1. Accepts a `post_id` (social_posts.id)
+2. Looks up the `facebook_post_id`
+3. Calls Facebook Graph API:
+   - `GET /{facebook_post_id}?fields=reactions.summary(true),comments.summary(true),shares`
+   - `GET /{facebook_post_id}/insights?metric=post_impressions`
+4. Stores results in `social_post_metrics` table
+5. Returns the metrics
+
+**Permissions needed**: The existing Page Access Token should work if it includes `pages_read_engagement`.
+
+---
+
+### Stage 3: Data Hook - usePublishedPosts
+
+Create a new hook that:
+- Fetches all published social posts with their cached metrics
+- Provides a `refreshMetrics(postId)` function
+- Provides a `refreshAllMetrics()` function
+- Calculates aggregated totals for the overview
+
+---
+
+### Stage 4: UI Components
+
+#### A. PublishedOverviewCard
+
+Displays aggregated metrics at the top:
+- Total published posts count
+- Total reactions across all posts
+- Total reach/impressions
+- Total shares
+
+#### B. PublishedPostCard
+
+Individual post card showing:
+- Post image thumbnail
+- Topic name
+- Published date
+- Engagement metrics (reactions, comments, shares)
+- Link to view on Facebook (opens in new tab)
+- Refresh metrics button
+
+#### C. PublishedPostsSection
+
+Container component that:
+- Shows the overview card
+- Displays grid of published post cards
+- Includes "Refresh All Metrics" button
+
+---
+
+### Stage 5: Media Manager Integration
+
+Update `MediaManagerPage.tsx`:
+- Replace current basic "published" tab behavior with the new Published section
+- Add the PublishedPostsSection component
+- Keep all existing functionality intact
+
+---
+
+### Stage 6: Translations
+
+Add new translation keys for:
+- Published overview labels
+- Engagement metric labels (reactions, comments, shares, reach)
+- Refresh metrics button
+- View on Facebook link
+- Last updated timestamp
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `supabase/functions/facebook-metrics/index.ts` | Edge function to fetch Facebook metrics |
+| `src/hooks/usePublishedPosts.ts` | Data hook for published posts with metrics |
+| `src/components/admin/media/PublishedOverviewCard.tsx` | Aggregated metrics display |
+| `src/components/admin/media/PublishedPostCard.tsx` | Individual post with metrics |
+| `src/components/admin/media/PublishedPostsSection.tsx` | Container component |
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/admin/MediaManagerPage.tsx` | Integrate PublishedPostsSection |
+| `src/i18n/locales/en.json` | Add translation keys |
+| `src/i18n/locales/es.json` | Add Spanish translations |
+
+---
+
+## Technical Details
+
+### Facebook Graph API Calls
+
+**Get reactions, comments, shares:**
+```
+GET https://graph.facebook.com/v24.0/{facebook_post_id}
+  ?fields=reactions.summary(true),comments.summary(true),shares
+  &access_token={page_access_token}
+```
+
+Response:
+```json
+{
+  "reactions": { "summary": { "total_count": 50 } },
+  "comments": { "summary": { "total_count": 12 } },
+  "shares": { "count": 5 }
+}
+```
+
+**Get impressions/reach:**
+```
+GET https://graph.facebook.com/v24.0/{facebook_post_id}/insights
+  ?metric=post_impressions
+  &access_token={page_access_token}
+```
+
+### Metrics Cache Strategy
+
+- Cache metrics for 15 minutes minimum
+- Show "Last updated X ago" timestamp
+- Manual refresh button for immediate update
+- Auto-refresh when viewing published tab (if cache older than 15 min)
+
+---
+
+## User Experience
+
+1. User navigates to Media Manager
+2. Existing "Ready to Publish" section and draft editor remain unchanged
+3. In the bottom posts table, clicking "Published" tab now shows:
+   - An overview card with total engagement stats
+   - A grid of published posts with individual metrics
+   - Each post card has View on Facebook link
+4. User can click "Refresh Metrics" to fetch latest data
+5. Metrics show reactions, comments, shares, and reach for each post
+
+---
+
+## Important Notes
+
+- **No changes to existing features** - All current functionality preserved
+- **Graceful degradation** - If Facebook API fails, show cached data with error message
+- **Rate limit protection** - Metrics are cached, manual refresh only
+- **Permissions** - May need to add `read_insights` permission to Facebook token for full metrics
+
