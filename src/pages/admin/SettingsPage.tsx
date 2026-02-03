@@ -24,11 +24,13 @@ import {
   Tag,
   Facebook,
   FlaskConical,
+  FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
+import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -354,12 +356,13 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="company">Company</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="communications">Communications</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="documentation">Docs</TabsTrigger>
         </TabsList>
 
         {/* Company Tab */}
@@ -1073,6 +1076,11 @@ export default function SettingsPage() {
 
         {/* Images Tab */}
         <ImagesSettingsTab />
+
+        {/* Documentation Tab */}
+        <TabsContent value="documentation">
+          <DocumentationSettingsTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
