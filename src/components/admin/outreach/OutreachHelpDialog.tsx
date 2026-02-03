@@ -16,6 +16,14 @@ interface OutreachHelpDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Helper to safely get array from translation
+const getArrayFromTranslation = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return [];
+};
+
 export const OutreachHelpDialog = ({ open, onOpenChange }: OutreachHelpDialogProps) => {
   const { t } = useTranslation();
 
@@ -30,41 +38,41 @@ export const OutreachHelpDialog = ({ open, onOpenChange }: OutreachHelpDialogPro
       icon: Users,
       title: t("outreach.help.leads.title"),
       intro: t("outreach.help.leads.intro"),
-      steps: t("outreach.help.leads.steps", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.leads.steps", { returnObjects: true })),
       type: "steps" as const,
     },
     {
       icon: Target,
       title: t("outreach.help.crm.title"),
       intro: t("outreach.help.crm.intro"),
-      steps: t("outreach.help.crm.steps", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.crm.steps", { returnObjects: true })),
       type: "steps" as const,
     },
     {
       icon: Megaphone,
       title: t("outreach.help.campaigns.title"),
       intro: t("outreach.help.campaigns.intro"),
-      steps: t("outreach.help.campaigns.steps", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.campaigns.steps", { returnObjects: true })),
       type: "steps" as const,
     },
     {
       icon: Mail,
       title: t("outreach.help.inbox.title"),
       intro: t("outreach.help.inbox.intro"),
-      steps: t("outreach.help.inbox.steps", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.inbox.steps", { returnObjects: true })),
       type: "steps" as const,
     },
     {
       icon: BarChart3,
       title: t("outreach.help.analytics.title"),
       intro: t("outreach.help.analytics.intro"),
-      metrics: t("outreach.help.analytics.metrics", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.analytics.metrics", { returnObjects: true })),
       type: "metrics" as const,
     },
     {
       icon: Lightbulb,
       title: t("outreach.help.bestPractices.title"),
-      tips: t("outreach.help.bestPractices.tips", { returnObjects: true }) as string[],
+      items: getArrayFromTranslation(t("outreach.help.bestPractices.tips", { returnObjects: true })),
       type: "tips" as const,
     },
   ];
@@ -100,7 +108,7 @@ export const OutreachHelpDialog = ({ open, onOpenChange }: OutreachHelpDialogPro
                   <div className="pl-10 space-y-2">
                     <p className="text-sm text-muted-foreground mb-2">{section.intro}</p>
                     <ol className="list-decimal list-inside space-y-1.5">
-                      {section.steps?.map((step, stepIndex) => (
+                      {section.items.map((step, stepIndex) => (
                         <li key={stepIndex} className="text-sm text-muted-foreground">
                           {step}
                         </li>
@@ -113,7 +121,7 @@ export const OutreachHelpDialog = ({ open, onOpenChange }: OutreachHelpDialogPro
                   <div className="pl-10 space-y-2">
                     <p className="text-sm text-muted-foreground mb-2">{section.intro}</p>
                     <ul className="list-disc list-inside space-y-1.5">
-                      {section.metrics?.map((metric, metricIndex) => (
+                      {section.items.map((metric, metricIndex) => (
                         <li key={metricIndex} className="text-sm text-muted-foreground">
                           {metric}
                         </li>
@@ -124,7 +132,7 @@ export const OutreachHelpDialog = ({ open, onOpenChange }: OutreachHelpDialogPro
 
                 {section.type === "tips" && (
                   <ul className="pl-10 list-disc list-inside space-y-1.5">
-                    {section.tips?.map((tip, tipIndex) => (
+                    {section.items.map((tip, tipIndex) => (
                       <li key={tipIndex} className="text-sm text-muted-foreground">
                         {tip}
                       </li>
