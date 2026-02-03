@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
 import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
+import { EmailSettingsTab } from "@/components/admin/settings/EmailSettingsTab";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -1053,25 +1054,18 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Email Service */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Email Service
-                <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-                  <Check className="mr-1 h-3 w-3" />
-                  Configured
-                </Badge>
-              </CardTitle>
-              <CardDescription>Transactional emails are handled automatically via Supabase</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Email functionality is provided through the integrated backend. No additional configuration required.
-              </p>
-            </CardContent>
-          </Card>
+          {/* Email Settings Section */}
+          <Separator className="my-6" />
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Configuration
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Configure Gmail integration for sending and receiving emails.
+            </p>
+          </div>
+          <EmailSettingsTab />
         </TabsContent>
 
         {/* Images Tab */}
