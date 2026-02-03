@@ -10,6 +10,40 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { useBlogPost } from "@/hooks/useBlogPosts";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// JSON-LD structured data component
+function ArticleSchema({ post, canonicalUrl }: { post: any; canonicalUrl: string }) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.seo_title || post.title,
+    description: post.seo_description || post.excerpt || post.content?.substring(0, 150),
+    datePublished: post.published_at,
+    dateModified: post.updated_at || post.published_at,
+    author: {
+      "@type": "Organization",
+      name: "ICE Alarm España",
+      url: "https://icealarm.es",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "ICE Alarm España",
+      url: "https://icealarm.es",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    ...(post.image_url && { image: post.image_url }),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
@@ -18,19 +52,22 @@ export default function BlogPostPage() {
   // Generate SEO values
   const seoTitle = post?.seo_title || post?.title || "Blog Post";
   const seoDescription = post?.seo_description || post?.excerpt || post?.content?.substring(0, 150) || "";
-  const canonicalUrl = `https://shelter-span.lovable.app/blog/${slug}`;
+  const canonicalUrl = `https://icealarm.es/blog/${slug}`;
 
   return (
     <div className="min-h-screen bg-background">
       {post && (
-        <SEOHead
-          title={`${seoTitle} | ICE Alarm Blog`}
-          description={seoDescription}
-          canonicalUrl={canonicalUrl}
-          ogType="article"
-          ogImage={post.image_url || undefined}
-          publishedTime={post.published_at}
-        />
+        <>
+          <SEOHead
+            title={`${seoTitle} | ICE Alarm Blog`}
+            description={seoDescription}
+            canonicalUrl={canonicalUrl}
+            ogType="article"
+            ogImage={post.image_url || undefined}
+            publishedTime={post.published_at}
+          />
+          <ArticleSchema post={post} canonicalUrl={canonicalUrl} />
+        </>
       )}
 
       {/* Header */}
@@ -134,10 +171,23 @@ export default function BlogPostPage() {
                 </div>
               )}
 
+              {/* AI Intro (if exists) */}
+              {post.ai_intro && (
+                <div className="bg-muted/50 border-l-4 border-primary p-6 rounded-r-lg mb-8">
+                  <p className="text-lg text-foreground/90 italic leading-relaxed">
+                    {post.ai_intro}
+                  </p>
+                </div>
+              )}
+
               {/* Content */}
               <div className="prose prose-lg max-w-none dark:prose-invert">
                 {post.content.split("\n").map((paragraph, index) => {
                   if (!paragraph.trim()) return null;
+                  // Render divider line
+                  if (paragraph.trim() === "---") {
+                    return <hr key={index} className="my-8 border-border" />;
+                  }
                   return (
                     <p key={index} className="mb-4">
                       {paragraph}
