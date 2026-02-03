@@ -2283,5 +2283,23 @@
     "important": "Importante",
     "noDocuments": "No hay documentos disponibles",
     "noDocumentsDesc": "Los documentos aparecerán aquí cuando sean publicados por los administradores."
+  },
+  "pendantStatus": {
+    "title": "Estado en Vivo de Colgantes",
+    "realtimeFleetStatus": "Estado en tiempo real de la flota EV-07B",
+    "offlineDevices": "Dispositivos Desconectados",
+    "onlineDevices": "Dispositivos Conectados",
+    "requireFollowUp": "Requieren seguimiento",
+    "lastSeen": "Última vez visto",
+    "justNow": "Ahora mismo",
+    "unknown": "Desconocido",
+    "battery": "Batería",
+    "callMember": "Llamar",
+    "viewMember": "Ver",
+    "noDevicesAssigned": "No hay dispositivos asignados a socios actualmente",
+    "totalDevices": "Total",
+    "devicesOnline": "Conectados",
+    "devicesOffline": "Desconectados",
+    "unassigned": "Sin asignar"
   }
 }

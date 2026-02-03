@@ -24,6 +24,7 @@ import { es, enGB } from "date-fns/locale";
 import i18n from "@/i18n";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 import { ShiftReportModal } from "@/components/call-centre/ShiftReportModal";
+import { PendantLiveStatusModal } from "@/components/call-centre/PendantLiveStatusModal";
 import { EV07BLiveStatusCard } from "@/components/call-centre/EV07BLiveStatusCard";
 import { DeviceIssuesQueue } from "@/components/call-centre/DeviceIssuesQueue";
 import { DeviceOfflineAlertsCard } from "@/components/call-centre/DeviceOfflineAlertsCard";
@@ -418,7 +419,10 @@ export default function StaffDashboard() {
           </h1>
           <p className="text-sm text-muted-foreground capitalize">{currentDate}</p>
         </div>
-        <ShiftReportModal />
+        <div className="flex items-center gap-2">
+          <PendantLiveStatusModal />
+          <ShiftReportModal />
+        </div>
       </div>
 
       {/* Stats Cards */}
