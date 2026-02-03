@@ -2991,6 +2991,79 @@
       "success": "Leads calificados exitosamente",
       "error": "Error al calificar leads",
       "noLeadsToRate": "No hay leads para calificar"
+    },
+    "help": {
+      "title": "Guía de AI Outreach",
+      "howToUse": "Cómo Usar",
+      "gotIt": "Entendido",
+      "overview": {
+        "title": "Visión General",
+        "content": "AI Outreach automatiza el descubrimiento de leads y campañas de email para ventas y adquisición de socios. El flujo es simple: Importar leads, dejar que la IA los califique, mover leads calificados al CRM, investigar su negocio, generar emails personalizados y convertir a miembros o socios."
+      },
+      "leads": {
+        "title": "Pestaña Leads",
+        "intro": "Gestiona leads sin procesar antes de que entren en tu pipeline de ventas.",
+        "steps": [
+          "Añade leads manualmente o importa vía CSV/pegar lista",
+          "Selecciona tipo de pipeline: Ventas o Socio",
+          "Opcionalmente asigna leads a una campaña",
+          "Haz clic en 'Calificar Todos' para que la IA puntúe leads del 1-10",
+          "Leads con puntuación 7+ pueden moverse al CRM"
+        ]
+      },
+      "crm": {
+        "title": "Pestaña CRM",
+        "intro": "Trabaja leads calificados a través de tu pipeline con asistencia de IA.",
+        "steps": [
+          "Los leads aparecen en la columna 'Nuevo'",
+          "Haz clic en 'Investigar Negocio' para insights de la empresa",
+          "Haz clic en 'Generar Email Intro' para contacto personalizado",
+          "Arrastra tarjetas para actualizar estado según avanza la relación",
+          "Convierte leads exitosos a Miembros o Socios"
+        ]
+      },
+      "campaigns": {
+        "title": "Pestaña Campañas",
+        "intro": "Crea y gestiona campañas de email automatizadas.",
+        "steps": [
+          "Haz clic en 'Nueva Campaña' para crear una campaña dirigida",
+          "Define el perfil ideal de lead para personalización IA",
+          "Configura tono de email y objetivos de contacto",
+          "Activa secuencias de seguimiento para no respondedores",
+          "Asigna leads a campañas para contacto organizado"
+        ]
+      },
+      "inbox": {
+        "title": "Pestaña Bandeja",
+        "intro": "Gestiona conversaciones de email y respuestas.",
+        "steps": [
+          "Ve todos los hilos de email en una bandeja unificada",
+          "La IA clasifica respuestas: Interesado, Pregunta, No Interesado",
+          "Revisa respuestas sugeridas por IA",
+          "Edita y envía respuestas personalizadas"
+        ]
+      },
+      "analytics": {
+        "title": "Pestaña Analíticas",
+        "intro": "Rastrea rendimiento de contactos y conversiones.",
+        "metrics": [
+          "Leads Descubiertos: Total de leads importados",
+          "Leads Calificados: Leads movidos al CRM",
+          "Emails Enviados: Total de emails de contacto",
+          "Respuestas Recibidas: Conteo de respuestas",
+          "Conversiones: Registros exitosos de miembros/socios"
+        ]
+      },
+      "bestPractices": {
+        "title": "Mejores Prácticas",
+        "tips": [
+          "Comienza con campañas enfocadas en regiones o industrias específicas",
+          "Califica todos los leads nuevos antes de moverlos al CRM",
+          "Siempre revisa y personaliza emails generados por IA antes de enviar",
+          "Haz seguimiento en 3-5 días si no hay respuesta",
+          "Documenta notas en cada lead para mejor contexto"
+        ]
+      }
     }
   }
 }

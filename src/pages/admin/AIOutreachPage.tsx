@@ -1,29 +1,40 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Megaphone, Users, Target, Mail, BarChart3 } from "lucide-react";
+import { Megaphone, Users, Target, Mail, BarChart3, HelpCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { OutreachLeadsTab } from "@/components/admin/outreach/OutreachLeadsTab";
 import { OutreachCRMTab } from "@/components/admin/outreach/OutreachCRMTab";
 import { OutreachCampaignsTab } from "@/components/admin/outreach/OutreachCampaignsTab";
 import { OutreachInboxTab } from "@/components/admin/outreach/OutreachInboxTab";
 import { OutreachAnalyticsTab } from "@/components/admin/outreach/OutreachAnalyticsTab";
+import { OutreachHelpDialog } from "@/components/admin/outreach/OutreachHelpDialog";
 
 const AIOutreachPage = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("leads");
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-          <Megaphone className="h-5 w-5 text-primary" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Megaphone className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("outreach.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("outreach.subtitle")}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("outreach.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("outreach.subtitle")}</p>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+          <HelpCircle className="h-4 w-4 mr-2" />
+          {t("outreach.help.howToUse")}
+        </Button>
       </div>
+
+      <OutreachHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
