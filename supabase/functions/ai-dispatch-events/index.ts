@@ -8,14 +8,30 @@ const corsHeaders = {
 
 // Event type to agent mapping
 const EVENT_AGENT_MAP: Record<string, string[]> = {
+  // Main Brain - orchestration and high-level events
   "sale.created": ["main_brain"],
   "sale.paid": ["main_brain"],
   "partner.joined": ["main_brain"],
   "ticket.created": ["main_brain"],
   "conversation.escalated": ["main_brain"],
   "alert.created": ["main_brain"],
+  
+  // Customer Service Expert - support and general enquiries
   "conversation.started": ["customer_service_expert"],
   "message.received": ["customer_service_expert"],
+  
+  // Sales Expert - lead and sales handling
+  "lead.created": ["sales_expert"],
+  "sale.enquiry": ["sales_expert"],
+  "quote.requested": ["sales_expert"],
+  
+  // Member Specialist - logged-in member support
+  "member.support_request": ["member_specialist"],
+  "member.device_issue": ["member_specialist"],
+  
+  // Media Manager - content creation
+  "social.content_needed": ["media_manager"],
+  "marketing.campaign_start": ["media_manager"],
 };
 
 serve(async (req) => {

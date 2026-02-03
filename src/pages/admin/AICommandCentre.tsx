@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Brain, MessageSquare, Activity, Clock, AlertTriangle, ArrowRight, Zap } from "lucide-react";
+import { Brain, Headphones, TrendingUp, UserCircle, ImageIcon, Activity, Clock, AlertTriangle, ArrowRight, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,13 +138,28 @@ function AgentCard({
   );
 }
 
+// Map agent_key to appropriate icon
+const getAgentIcon = (agentKey: string): React.ElementType => {
+  switch (agentKey) {
+    case "main_brain":
+      return Brain;
+    case "customer_service_expert":
+      return Headphones;
+    case "sales_expert":
+      return TrendingUp;
+    case "member_specialist":
+      return UserCircle;
+    case "media_manager":
+      return ImageIcon;
+    default:
+      return Brain;
+  }
+};
+
 export default function AICommandCentre() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: agents, isLoading } = useAIAgents();
-
-  const mainBrain = agents?.find(a => a.agent_key === "main_brain");
-  const customerService = agents?.find(a => a.agent_key === "customer_service_expert");
 
   return (
     <div className="space-y-6">
@@ -159,23 +174,19 @@ export default function AICommandCentre() {
         <div className="grid gap-6 md:grid-cols-2">
           <Skeleton className="h-[320px]" />
           <Skeleton className="h-[320px]" />
+          <Skeleton className="h-[320px]" />
+          <Skeleton className="h-[320px]" />
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {mainBrain && (
+          {agents?.map((agent) => (
             <AgentCard
-              agent={mainBrain}
-              icon={Brain}
-              onOpen={() => navigate(`/admin/ai/agents/${mainBrain.agent_key}`)}
+              key={agent.id}
+              agent={agent}
+              icon={getAgentIcon(agent.agent_key)}
+              onOpen={() => navigate(`/admin/ai/agents/${agent.agent_key}`)}
             />
-          )}
-          {customerService && (
-            <AgentCard
-              agent={customerService}
-              icon={MessageSquare}
-              onOpen={() => navigate(`/admin/ai/agents/${customerService.agent_key}`)}
-            />
-          )}
+          ))}
         </div>
       )}
 
