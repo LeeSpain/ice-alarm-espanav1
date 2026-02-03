@@ -1,215 +1,236 @@
 
 
-# Complete Staff Documentation - Implementation Plan
+# Documentation Center Upgrade - Implementation Plan
 
 ## Overview
 
-Populate the `documentation` table with comprehensive, professionally-written documents across all 6 categories for ICE Alarm España's staff and AI systems. All documents will be created in both English and Spanish, published status, with appropriate visibility and importance ratings.
+Upgrade the admin Documentation Center (`/admin/settings` → Docs tab) with a full-featured document viewer, PDF generation, and download capabilities. This will transform it from a basic table view into a professional document management interface.
 
 ---
 
-## Document Categories & Content Plan
+## Current State
 
-### 1. Emergency Protocols (category: `emergency`)
-**Importance: 9-10** | **Visibility: staff, ai** | **Priority: Highest**
-
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| SOS Alert Response Protocol | EN/ES | 10 | sos, emergency, response |
-| Fall Detection Alert Protocol | EN/ES | 10 | fall, detection, response |
-| Device Offline Alert Procedure | EN/ES | 9 | offline, device, troubleshooting |
-| Emergency Escalation Guidelines | EN/ES | 10 | escalation, supervisor, 112 |
-| Member Non-Response Protocol | EN/ES | 9 | non-response, safety-check |
-
-**Content includes:**
-- Step-by-step response procedures
-- Response time requirements (<30 seconds)
-- When to call 112 (Spanish emergency number)
-- Supervisor escalation triggers
-- Documentation requirements
+| Feature | Status |
+|---------|--------|
+| Document List View | ✅ Basic table with filters |
+| Document Editor | ✅ Create/edit with markdown |
+| Document Preview | ❌ None - only edit mode |
+| PDF Generation | ❌ Not available |
+| Download Options | ❌ Not available |
+| Full-screen Reading | ❌ Not available |
+| Markdown Rendering | ❌ Basic newline→br only |
 
 ---
 
-### 2. Device Guides (category: `device`)
-**Importance: 7-9** | **Visibility: staff, ai, member**
+## Planned Improvements
 
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| EV-07B Pendant Complete Guide | EN/ES | 9 | ev07b, pendant, setup |
-| Pendant Charging & Battery Care | EN/ES | 8 | battery, charging, maintenance |
-| Pendant Troubleshooting Guide | EN/ES | 8 | troubleshooting, issues, support |
-| GPS & Location Features | EN/ES | 7 | gps, location, tracking |
-| Fall Detection Settings | EN/ES | 8 | fall-detection, sensitivity |
+### 1. Document Viewer Modal (New Component)
+Create a dedicated full-screen document viewer for reading documents:
 
-**Content includes:**
-- Device specifications (IP67, LTE, 5-day battery)
-- Setup instructions
-- Charging procedures (magnetic USB, 2-hour full charge)
-- Common issues and solutions
-- Care and maintenance tips
+| Feature | Description |
+|---------|-------------|
+| Full Document Display | Scrollable view with proper markdown rendering |
+| Header with Title | Document title, category badge, language, version |
+| Metadata Panel | Tags, visibility, importance, last updated |
+| Action Buttons | Print/PDF, Download (MD), Close |
+| Keyboard Navigation | ESC to close |
 
----
+### 2. Proper Markdown Rendering
+Install `react-markdown` library for professional markdown display:
 
-### 3. Staff Instructions (category: `staff`)
-**Importance: 7-9** | **Visibility: staff, ai**
+- Headings (H1-H6) with proper styling
+- Bold, italic, strikethrough
+- Bullet and numbered lists
+- Code blocks with syntax highlighting
+- Blockquotes
+- Horizontal rules
+- Links and images
 
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| Daily Shift Procedures | EN/ES | 9 | shift, procedures, daily |
-| Member Information Lookup | EN/ES | 8 | member, lookup, crm |
-| Courtesy Call Guidelines | EN/ES | 7 | courtesy-calls, check-in |
-| Shift Handover Protocol | EN/ES | 8 | handover, shift-change |
-| Communication Standards | EN/ES | 7 | communication, professionalism |
+### 3. PDF Generation (Print-to-PDF)
+Implement browser-native print functionality:
 
-**Content includes:**
-- Start/end shift checklists
-- How to search and access member profiles
-- Courtesy call scripts and timing
-- Handover documentation requirements
-- Professional communication guidelines (bilingual EN/ES)
+- Opens styled document in new window
+- Triggers browser print dialog
+- User can select "Save as PDF"
+- Includes company header and footer
+- Clean print-optimized styling
 
----
+### 4. Download Options
+Add multiple download formats:
 
-### 4. General (category: `general`)
-**Importance: 5-7** | **Visibility: admin, staff, ai**
+| Format | Description |
+|--------|-------------|
+| Markdown (.md) | Original source content |
+| Plain Text (.txt) | Stripped markdown formatting |
+| Print/PDF | Browser print dialog |
 
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| Company Overview | EN/ES | 7 | company, about, mission |
-| Service Pricing & Plans | EN/ES | 8 | pricing, membership, plans |
-| Data Privacy & GDPR Compliance | EN/ES | 8 | gdpr, privacy, data-protection |
-| Working Hours & Contact Information | EN/ES | 6 | hours, contact, support |
-| Glossary of Terms | EN/ES | 5 | glossary, terminology |
+### 5. Enhanced Table Actions
+Update the document table with quick actions:
 
-**Content includes:**
-- ICE Alarm España company background
-- Pricing structure (Single €27.49/mo, Couple €38.49/mo, Pendant €151.25)
-- GDPR/LOPD compliance information
-- 24/7 support center details
-- Common terminology definitions
+- **View** button - opens viewer modal
+- **Edit** button - opens editor (existing)
+- **Download** dropdown - MD/TXT options
+- **Print** button - opens print view
+- **Delete** button - with confirmation (existing)
 
 ---
 
-### 5. Member Guides (category: `member_guide`)
-**Importance: 6-8** | **Visibility: member, staff, ai**
+## New Components
 
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| Getting Started with ICE Alarm | EN/ES | 8 | getting-started, onboarding |
-| Managing Your Emergency Contacts | EN/ES | 8 | contacts, emergency, update |
-| Updating Medical Information | EN/ES | 8 | medical, health, update |
-| Using the Member Dashboard | EN/ES | 7 | dashboard, account, profile |
-| How to Test Your Pendant | EN/ES | 7 | testing, pendant, functionality |
-| Billing & Subscription FAQ | EN/ES | 6 | billing, subscription, payment |
+### `DocumentViewerModal.tsx`
+Full-screen modal for reading documents:
 
-**Content includes:**
-- First-time setup guide
-- How to add/edit up to 3 emergency contacts
-- Medical profile management (conditions, medications, allergies)
-- Dashboard navigation
-- Monthly test procedures
-- Subscription management
-
----
-
-### 6. Partner Info (category: `partner`)
-**Importance: 6-8** | **Visibility: staff, ai**
-
-| Document Title | Language | Importance | Tags |
-|---------------|----------|------------|------|
-| Partner Program Overview | EN/ES | 8 | partner, referral, program |
-| Commission Structure & Payments | EN/ES | 8 | commission, payment, earnings |
-| Partner Dashboard Guide | EN/ES | 7 | dashboard, tools, referrals |
-| Marketing Materials & Guidelines | EN/ES | 7 | marketing, branding, materials |
-| Partner Agreement Requirements | EN/ES | 8 | agreement, legal, compliance |
-
-**Content includes:**
-- €50 commission per referral
-- 7-day holding period before payment approval
-- Referral link and QR code generation
-- Marketing presentation downloads (PDF/PPTX)
-- Spanish ID (NIF/NIE/CIF) requirement
-- Legal agreement signing process
-
----
-
-## Database Migration
-
-Create a single migration to insert all documentation records:
-
-```sql
--- Insert all documentation records
--- Each document includes:
---   - Unique slug
---   - Category (emergency/device/staff/general/member_guide/partner)
---   - Full professional content
---   - Visibility array
---   - Importance (1-10)
---   - Tags array
---   - Language (en/es)
---   - Status: published
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  [←] Document Title                          [Print] [Download] │
+│  Category: Emergency  │  Language: EN  │  v3  │  Updated: Jan 3 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ## SOS Alert Response Protocol                                 │
+│                                                                 │
+│  This protocol outlines the step-by-step procedure for         │
+│  responding to SOS alerts from member devices...                │
+│                                                                 │
+│  ### Step 1: Acknowledge Alert                                  │
+│  - Click "Acknowledge" within 30 seconds                        │
+│  - Attempt first contact with member                            │
+│                                                                 │
+│  ...                                                            │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Tags: #sos #emergency #response                                │
+│  Visibility: Staff, AI                                          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Document Content Standards
+## File Changes
 
-### Formatting
-- Use Markdown formatting for structure
-- Include headers (##, ###) for sections
-- Use bullet points for lists
-- Include numbered steps for procedures
-- Add **bold** for emphasis on critical points
-
-### Length Guidelines
-- Emergency protocols: 400-600 words (detailed procedures)
-- Device guides: 300-500 words (practical instructions)
-- Staff instructions: 300-400 words (clear procedures)
-- General: 200-400 words (informational)
-- Member guides: 250-400 words (user-friendly)
-- Partner info: 300-400 words (professional)
-
-### Bilingual Requirement
-- Each document created in both EN and ES
-- Total: ~60 documents (30 in each language)
-
----
-
-## Implementation Summary
-
-| Category | Documents (EN) | Documents (ES) | Total |
-|----------|----------------|----------------|-------|
-| Emergency Protocols | 5 | 5 | 10 |
-| Device Guides | 5 | 5 | 10 |
-| Staff Instructions | 5 | 5 | 10 |
-| General | 5 | 5 | 10 |
-| Member Guides | 6 | 6 | 12 |
-| Partner Info | 5 | 5 | 10 |
-| **TOTAL** | **31** | **31** | **62** |
-
----
-
-## Technical Implementation
-
-### Migration File
-- Single SQL migration file with all INSERT statements
-- Uses proper escaping for content with apostrophes
-- Sets `status = 'published'` for immediate availability
-- Sets `created_by` and `updated_by` to NULL (system-generated)
-
-### Content Delivery
-After migration runs:
-- Staff can view documents at `/call-centre/documents`
-- Documents with `member` visibility appear in member Help Center
-- AI agents receive documents with `ai` visibility in their context
-
----
-
-## Files to Create
+### Files to Create
 
 | File | Purpose |
 |------|---------|
-| `supabase/migrations/[timestamp]_seed_documentation.sql` | Insert all 62 documents |
+| `src/components/admin/settings/DocumentViewerModal.tsx` | Full document viewer with markdown rendering |
+| `src/lib/documentPrint.ts` | Utility functions for print/PDF generation |
 
-No code changes required - documentation system is already fully functional.
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/admin/settings/DocumentationSettingsTab.tsx` | Add View button, download dropdown, print action |
+| `package.json` | Add `react-markdown` and `remark-gfm` dependencies |
+
+---
+
+## Implementation Details
+
+### Markdown Rendering
+Using `react-markdown` with GitHub Flavored Markdown (GFM) support:
+
+```tsx
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+<ReactMarkdown 
+  remarkPlugins={[remarkGfm]}
+  className="prose prose-sm max-w-none dark:prose-invert"
+>
+  {document.content}
+</ReactMarkdown>
+```
+
+### Print/PDF Function
+Browser-native approach (no external PDF library needed):
+
+```tsx
+function printDocument(doc: Documentation) {
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>${doc.title}</title>
+        <style>
+          body { font-family: system-ui; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1, h2, h3 { margin-top: 1.5em; }
+          /* ... print styles ... */
+        </style>
+      </head>
+      <body>
+        <header>ICE Alarm España - ${categoryLabels[doc.category]}</header>
+        <h1>${doc.title}</h1>
+        ${markdownToHtml(doc.content)}
+        <footer>Version ${doc.version} | ${doc.language.toUpperCase()}</footer>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.print();
+}
+```
+
+### Download Functions
+
+```tsx
+// Download as Markdown
+function downloadMarkdown(doc: Documentation) {
+  const blob = new Blob([doc.content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${doc.slug}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Download as Plain Text
+function downloadText(doc: Documentation) {
+  // Strip markdown formatting
+  const plainText = doc.content
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/- /g, '• ');
+  
+  const blob = new Blob([plainText], { type: 'text/plain' });
+  // ... download logic
+}
+```
+
+---
+
+## Updated Table Row Actions
+
+Current actions menu will be expanded:
+
+| Action | Icon | Description |
+|--------|------|-------------|
+| View | Eye | Opens DocumentViewerModal |
+| Edit | Pencil | Opens DocumentEditor (existing) |
+| Print | Printer | Opens print dialog |
+| Download | Download | Submenu: Markdown, Plain Text |
+| Delete | Trash | Confirmation dialog (existing) |
+
+---
+
+## Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `react-markdown` | ^9.0.1 | Markdown to React rendering |
+| `remark-gfm` | ^4.0.0 | GitHub Flavored Markdown support |
+
+---
+
+## Summary
+
+| Improvement | Implementation |
+|-------------|----------------|
+| Document Viewer | New modal with full content display |
+| Markdown Rendering | react-markdown with GFM plugin |
+| PDF Generation | Browser print-to-PDF (no library needed) |
+| Download Options | Markdown and Plain Text exports |
+| Enhanced Actions | View, Edit, Print, Download, Delete |
+
+This upgrade will transform the Documentation Center into a complete document management system where administrators can create, read, edit, print, and download all company documentation.
 
