@@ -91,20 +91,24 @@ export default function MediaManagerPage() {
   };
 
   const handleSaveDraft = async () => {
-    const data: CreateSocialPostData = {
-      goal: goal || undefined,
-      target_audience: audience || undefined,
-      topic: topic || undefined,
-      language,
-      post_text: postText || undefined,
-      image_url: imageUrl || undefined,
-    };
+    try {
+      const data: CreateSocialPostData = {
+        goal: goal || undefined,
+        target_audience: audience || undefined,
+        topic: topic || undefined,
+        language,
+        post_text: postText || undefined,
+        image_url: imageUrl || undefined,
+      };
 
-    if (selectedPostId) {
-      await updateDraft({ id: selectedPostId, data });
-    } else {
-      const newPost = await createDraft(data);
-      setSelectedPostId(newPost.id);
+      if (selectedPostId) {
+        await updateDraft({ id: selectedPostId, data });
+      } else {
+        const newPost = await createDraft(data);
+        setSelectedPostId(newPost.id);
+      }
+    } catch (error) {
+      console.error("Save draft error:", error);
     }
   };
 
@@ -134,10 +138,14 @@ export default function MediaManagerPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = await uploadImage(file);
-    if (url) setImageUrl(url);
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = await uploadImage(file);
+      if (url) setImageUrl(url);
+    } catch (error) {
+      console.error("Image upload error:", error);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -149,60 +157,72 @@ export default function MediaManagerPage() {
 
   // AI workflow handlers
   const handleResearch = async () => {
-    const output = await generateDraft({
-      topic,
-      goal,
-      target_audience: audience,
-      language,
-      post_id: selectedPostId || undefined,
-      workflow_type: "research",
-    });
-    if (output) {
-      setAiOutput(output);
+    try {
+      const output = await generateDraft({
+        topic,
+        goal,
+        target_audience: audience,
+        language,
+        post_id: selectedPostId || undefined,
+        workflow_type: "research",
+      });
+      if (output) {
+        setAiOutput(output);
+      }
+    } catch (error) {
+      console.error("Research error:", error);
     }
   };
 
   const handleWriteDraft = async () => {
-    const output = await generateDraft({
-      topic,
-      goal,
-      target_audience: audience,
-      language,
-      post_id: selectedPostId || undefined,
-      workflow_type: "write",
-    });
-    if (output) {
-      setAiOutput(output);
-      // Apply the generated text based on language
-      if (language === "en") {
-        setPostText(output.post_en);
-      } else if (language === "es") {
-        setPostText(output.post_es);
-      } else {
-        setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+    try {
+      const output = await generateDraft({
+        topic,
+        goal,
+        target_audience: audience,
+        language,
+        post_id: selectedPostId || undefined,
+        workflow_type: "write",
+      });
+      if (output) {
+        setAiOutput(output);
+        // Apply the generated text based on language
+        if (language === "en") {
+          setPostText(output.post_en);
+        } else if (language === "es") {
+          setPostText(output.post_es);
+        } else {
+          setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+        }
       }
+    } catch (error) {
+      console.error("Write draft error:", error);
     }
   };
 
   const handleFullWorkflow = async () => {
-    const output = await generateDraft({
-      topic,
-      goal,
-      target_audience: audience,
-      language,
-      post_id: selectedPostId || undefined,
-      workflow_type: "full",
-    });
-    if (output) {
-      setAiOutput(output);
-      // Apply the generated text based on language
-      if (language === "en") {
-        setPostText(output.post_en);
-      } else if (language === "es") {
-        setPostText(output.post_es);
-      } else {
-        setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+    try {
+      const output = await generateDraft({
+        topic,
+        goal,
+        target_audience: audience,
+        language,
+        post_id: selectedPostId || undefined,
+        workflow_type: "full",
+      });
+      if (output) {
+        setAiOutput(output);
+        // Apply the generated text based on language
+        if (language === "en") {
+          setPostText(output.post_en);
+        } else if (language === "es") {
+          setPostText(output.post_es);
+        } else {
+          setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+        }
       }
+    } catch (error) {
+      console.error("Full workflow error:", error);
     }
   };
 
