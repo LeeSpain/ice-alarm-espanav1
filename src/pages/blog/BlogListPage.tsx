@@ -19,7 +19,7 @@ export default function BlogListPage() {
       <SEOHead
         title="ICE Alarm Blog - Safety, Care & Updates"
         description="Read the latest articles about personal safety, elderly care, and emergency response from ICE Alarm España."
-        canonicalUrl="https://shelter-span.lovable.app/blog"
+        canonicalUrl="https://icealarm.es/blog"
         ogType="website"
       />
 

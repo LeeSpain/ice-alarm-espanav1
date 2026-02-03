@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const BASE_URL = "https://shelter-span.lovable.app";
+const BASE_URL = "https://icealarm.es";
 
 interface SitemapPage {
   path: string;
