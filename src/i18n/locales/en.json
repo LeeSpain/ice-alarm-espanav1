@@ -324,6 +324,19 @@
     "pendant": "Pendant",
     "ev07b": "EV-07B"
   },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Stay informed with our latest updates about personal safety, elderly care, and emergency response.",
+    "latestFrom": "Latest from ICE Alarm",
+    "viewAll": "View All Articles",
+    "readMore": "Read More",
+    "postedOn": "Posted on",
+    "noPostsYet": "No articles yet. Check back soon!",
+    "backToBlog": "Back to Blog",
+    "notFound": "Post not found",
+    "notFoundDesc": "The blog post you're looking for doesn't exist or has been removed.",
+    "sharePost": "Found this helpful? Share it with others."
+  },
   "landing": {
     "emergencyResponse": "24/7 Emergency Response in Spain",
     "heroTitle": "Peace of Mind for",

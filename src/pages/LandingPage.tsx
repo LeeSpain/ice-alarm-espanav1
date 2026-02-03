@@ -12,6 +12,8 @@ import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
+import { BlogCard } from "@/components/blog/BlogCard";
+import { useBlogPosts } from "@/hooks/useBlogPosts";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,9 @@ export default function LandingPage() {
   
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
+  
+  // Fetch latest blog posts for homepage section
+  const { data: latestPosts } = useBlogPosts(3);
 
   // Capture partner referral code on landing and track view
   useEffect(() => {
@@ -60,6 +65,9 @@ export default function LandingPage() {
             </a>
             <Link to="/pendant" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pendant")}
+            </Link>
+            <Link to="/blog" className="text-sm font-medium hover:text-primary transition-colors">
+              {t("blog.title")}
             </Link>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pricing")}
@@ -541,6 +549,32 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Latest from ICE Alarm - Blog Section */}
+      {latestPosts && latestPosts.length > 0 && (
+        <section className="py-20 px-4 bg-muted/30">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">{t("blog.latestFrom")}</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                {t("blog.subtitle", "Stay informed with our latest updates about personal safety, elderly care, and emergency response.")}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {latestPosts.map((post) => (
+                <BlogCard key={post.id} post={post} />
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <Button variant="outline" asChild>
+                <Link to="/blog">{t("blog.viewAll")}</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 px-4">

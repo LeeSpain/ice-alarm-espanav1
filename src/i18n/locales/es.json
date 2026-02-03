@@ -300,6 +300,19 @@
     "pendant": "Colgante",
     "ev07b": "EV-07B"
   },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Manténgase informado con nuestras últimas actualizaciones sobre seguridad personal, cuidado de mayores y respuesta de emergencia.",
+    "latestFrom": "Lo Último de ICE Alarm",
+    "viewAll": "Ver Todos los Artículos",
+    "readMore": "Leer Más",
+    "postedOn": "Publicado el",
+    "noPostsYet": "Aún no hay artículos. ¡Vuelva pronto!",
+    "backToBlog": "Volver al Blog",
+    "notFound": "Artículo no encontrado",
+    "notFoundDesc": "El artículo que busca no existe o ha sido eliminado.",
+    "sharePost": "¿Le resultó útil? Compártalo con otros."
+  },
   "landing": {
     "emergencyResponse": "Respuesta de emergencia 24/7 en España",
     "heroTitle": "Tranquilidad para",
