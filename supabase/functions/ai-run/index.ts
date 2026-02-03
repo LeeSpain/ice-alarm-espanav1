@@ -74,6 +74,56 @@ ICE Alarm provides 24/7 emergency response services with:
 
 Remember: You are the first point of contact for potential customers. Be welcoming and make them feel confident about choosing ICE Alarm.`;
 
+// Sales Expert Chat System Prompt
+const SALES_EXPERT_CHAT_PROMPT = `You are a skilled sales specialist for ICE Alarm España, a 24/7 emergency response service for seniors and expats in Spain.
+
+## Your Sales Role
+- Qualify leads and understand their specific needs
+- Present ICE Alarm's value proposition compellingly
+- Handle objections with empathy and facts
+- Guide prospects toward purchase decisions
+- Respond in the customer's preferred language (English or Spanish)
+
+## About ICE Alarm España
+ICE Alarm provides 24/7 emergency response services with:
+- SOS pendant with one-button emergency calling
+- Automatic fall detection
+- GPS location tracking
+- Two-way voice communication through the pendant
+- Bilingual call center (English & Spanish)
+- Coverage throughout Spain
+
+## Pricing Information (All prices include IVA/VAT)
+
+### Monthly Subscriptions:
+- **Individual Plan**: €27.49/month (€24.99 + 10% IVA)
+- **Couple Plan**: €38.49/month (€34.99 + 10% IVA) - for two people at the same address
+
+### Annual Plans (Pay for 10 months, get 12 - 2 months FREE):
+- **Individual Annual**: €274.89/year (saves ~€55)
+- **Couple Annual**: €384.89/year (saves ~€77)
+
+### One-Time Costs:
+- **GPS Pendant**: €151.25 (€125 + 21% IVA) - optional but recommended
+- **Registration Fee**: €59.99 (one-time setup fee)
+- **Shipping**: €14.99 (if ordering a pendant)
+
+## Sales Techniques:
+1. Ask qualifying questions: "Who would be using the device?" "Do they live alone?"
+2. Identify pain points: worry about falls, living far from family, peace of mind
+3. Present value: "For less than €1/day, you get 24/7 peace of mind"
+4. Handle objections: "I understand - many of our members felt the same way initially..."
+5. Create urgency gently: "We can have this set up for you within a few days"
+
+## Key Selling Points:
+- No long-term contracts - cancel anytime
+- 24/7 bilingual emergency response center
+- Works anywhere in Spain with mobile coverage
+- Trusted by thousands of families
+- Simple one-button operation
+
+Remember: Focus on emotional benefits (peace of mind, independence, family reassurance) not just features.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -117,8 +167,8 @@ serve(async (req) => {
       );
     }
 
-    // Handle CHAT WIDGET requests differently
-    if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist")) {
+    // Handle CHAT WIDGET requests differently - includes sales_expert now
+    if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist" || agentKey === "sales_expert")) {
       const userLanguage = context?.userLanguage || "en";
       const conversationHistory = context?.conversationHistory || [];
       const currentMessage = context?.currentMessage || "";
@@ -128,7 +178,12 @@ serve(async (req) => {
         ? "\n\n**IMPORTANTE**: El usuario está comunicándose en ESPAÑOL. DEBES responder completamente en español. Usa terminología española natural y un tono amigable."
         : "\n\n**IMPORTANT**: The user is communicating in ENGLISH. You MUST respond entirely in English. Use natural English terminology and a friendly tone.";
 
+      // Choose the appropriate system prompt based on agent
       let systemPrompt = CUSTOMER_SERVICE_CHAT_PROMPT;
+      
+      if (agentKey === "sales_expert") {
+        systemPrompt = SALES_EXPERT_CHAT_PROMPT;
+      }
 
       // For member_specialist, fetch member data and personalize the prompt
       if (agentKey === "member_specialist" && context?.memberId) {
@@ -273,6 +328,15 @@ You are speaking directly with ${member?.first_name || "this member"}. Use their
       .order("importance", { ascending: false })
       .limit(20);
 
+    // Load AI-visible documentation (Fix 4: Documentation Integration)
+    const { data: documentation } = await supabase
+      .from("documentation")
+      .select("title, content, category, importance")
+      .contains("visibility", ["ai"])
+      .eq("status", "published")
+      .order("importance", { ascending: false })
+      .limit(10);
+
     // Load event if provided
     let eventData = null;
     if (eventId) {
@@ -287,8 +351,13 @@ You are speaking directly with ${member?.first_name || "this member"}. Use their
     // Build context based on read permissions
     const enrichedContext: Record<string, any> = { ...context };
     
+    // Normalize permissions to array format (handle legacy object format)
+    const readPermissions = Array.isArray(config.read_permissions) 
+      ? config.read_permissions 
+      : (config.read_permissions as any)?.tables || [];
+    
     // Load relevant data based on permissions (limited for performance)
-    for (const permission of config.read_permissions || []) {
+    for (const permission of readPermissions) {
       try {
         if (permission === "orders" && eventData?.entity_type === "order") {
           const { data } = await supabase
@@ -339,14 +408,28 @@ You are speaking directly with ${member?.first_name || "this member"}. Use their
             .eq("id", eventData.entity_id)
             .single();
           enrichedContext.partner = data;
+        } else if (permission === "leads" && eventData?.entity_type === "lead") {
+          const { data } = await supabase
+            .from("leads")
+            .select("*")
+            .eq("id", eventData.entity_id)
+            .single();
+          enrichedContext.lead = data;
         }
       } catch (e) {
         console.error(`Error loading ${permission}:`, e);
       }
     }
 
-    // Build the system prompt
+    // Build the system prompt with memory and documentation
     const memoryText = memories?.map(m => `[${m.title}]: ${m.content}`).join("\n") || "";
+    const docsText = documentation?.map(d => `[${d.category}/${d.title}]: ${d.content}`).join("\n\n") || "";
+    
+    // Normalize write permissions to array format
+    const writePermissions = Array.isArray(config.write_permissions) 
+      ? config.write_permissions 
+      : (config.write_permissions as any)?.tables || [];
+    
     const systemPrompt = `${config.system_instruction}
 
 ## Business Context
@@ -355,6 +438,9 @@ ${config.business_context || ""}
 ## Knowledge Base
 ${memoryText}
 
+## Company Documentation
+${docsText}
+
 ## Current Mode
 You are operating in "${agent.mode}" mode:
 - advise_only: Analyze and provide recommendations only, do not propose actions
@@ -362,13 +448,13 @@ You are operating in "${agent.mode}" mode:
 - auto_act: Execute approved action types automatically
 
 ## Available Actions (based on your permissions)
-${JSON.stringify(config.write_permissions || [])}
+${JSON.stringify(writePermissions)}
 
 ## Tool Policy
 ${JSON.stringify(config.tool_policy || {})}
 
 When you need to take action, respond with a JSON object containing an "actions" array. Each action should have:
-- action_type: one of ${JSON.stringify(config.write_permissions || [])}
+- action_type: one of ${JSON.stringify(writePermissions)}
 - payload: the action-specific data
 - reason: why you're taking this action
 
@@ -476,7 +562,7 @@ If no action is needed, respond with {"actions": [], "analysis": "your analysis 
     const createdActions = [];
     for (const action of parsedOutput.actions || []) {
       // Validate action type is allowed
-      if (!config.write_permissions?.includes(action.action_type)) {
+      if (!writePermissions.includes(action.action_type)) {
         console.log(`Action type ${action.action_type} not permitted for this agent`);
         continue;
       }
