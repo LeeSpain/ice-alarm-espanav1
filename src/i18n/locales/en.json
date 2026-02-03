@@ -242,12 +242,18 @@
     "staff": "Staff",
     "saveChanges": "Save Changes",
     "hours": "hours",
+    "day": "day",
     "days": "days",
     "at": "at",
     "filters": "Filters",
     "link": "Link",
     "preview": "Preview",
-    "deleteConfirm": "Are you sure you want to delete this item?"
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "languages": {
+      "en": "English",
+      "es": "Spanish"
+    },
+    "notesPlaceholder": "Additional notes..."
   },
   "auth": {
     "login": "Login",
@@ -2827,8 +2833,23 @@
         "pipeline": "Pipeline",
         "score": "AI Score",
         "status": "Status",
-        "source": "Source"
+        "source": "Source",
+        "campaign": "Campaign",
+        "phone": "Phone",
+        "notes": "Notes"
       },
+      "placeholders": {
+        "company": "Acme Corp",
+        "contact": "John Smith",
+        "email": "john@acme.com",
+        "phone": "+34 600 000 000",
+        "location": "Madrid, Spain",
+        "category": "Healthcare",
+        "notes": "Additional notes...",
+        "campaign": "Select campaign"
+      },
+      "noCampaign": "No campaign",
+      "noActiveCampaigns": "No active campaigns for this pipeline",
       "status": {
         "new": "New",
         "qualified": "Qualified",
@@ -2851,7 +2872,11 @@
         "pasteInstructions": "One lead per line: company | email | website (optional)",
         "csvInstructions": "Upload a CSV file with columns: company, contact, email, website, location, category, pipeline",
         "importButton": "Import",
-        "importing": "Importing..."
+        "importing": "Importing...",
+        "success": "{{count}} leads imported successfully",
+        "noLeadsFound": "No leads found in the input",
+        "error": "Failed to import leads",
+        "invalidFile": "Please upload a valid CSV file"
       },
       "noLeads": "No leads found",
       "loading": "Loading leads..."
@@ -2901,11 +2926,60 @@
       "subtitle": "Create and manage outreach email campaigns",
       "newCampaign": "New Campaign",
       "noCampaigns": "No campaigns yet",
+      "create": "Create Campaign",
+      "created": "Campaign created successfully",
+      "updated": "Campaign updated successfully",
+      "deleted": "Campaign deleted successfully",
+      "deleteConfirm": "Are you sure you want to delete this campaign?",
+      "pause": "Pause",
+      "activate": "Activate",
       "status": {
         "draft": "Draft",
         "active": "Active",
         "paused": "Paused",
         "completed": "Completed"
+      },
+      "sections": {
+        "basic": "Basic Information",
+        "targeting": "Targeting",
+        "messaging": "Messaging Configuration",
+        "followUp": "Follow-up Settings"
+      },
+      "fields": {
+        "name": "Campaign Name",
+        "description": "Description",
+        "pipelineType": "Pipeline Type",
+        "status": "Status",
+        "targetDescription": "Target Description",
+        "targetLocations": "Target Regions",
+        "defaultLanguage": "Default Language",
+        "emailTone": "Email Tone",
+        "outreachGoal": "Outreach Goal",
+        "followUpEnabled": "Enable Follow-ups",
+        "maxEmails": "Maximum Follow-up Emails",
+        "daysBetween": "Days Between Emails"
+      },
+      "placeholders": {
+        "name": "e.g., Q1 Partner Outreach",
+        "description": "Brief description of this campaign",
+        "targetDescription": "Describe the ideal lead for this campaign (used by AI to personalize emails)",
+        "targetLocations": "Madrid, Barcelona, Valencia"
+      },
+      "descriptions": {
+        "targetDescription": "AI will use this to personalize email content",
+        "targetLocations": "Comma-separated list of target regions",
+        "followUpEnabled": "Automatically send follow-up emails to non-responders",
+        "maxEmails": "Total emails including initial outreach"
+      },
+      "tones": {
+        "professional": "Professional",
+        "friendly": "Friendly",
+        "neutral": "Neutral"
+      },
+      "goals": {
+        "intro": "Introduction",
+        "partnership": "Partnership Proposal",
+        "meeting": "Schedule Meeting"
       }
     },
     "inbox": {

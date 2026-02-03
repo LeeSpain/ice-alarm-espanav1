@@ -242,12 +242,18 @@
     "staff": "Personal",
     "saveChanges": "Guardar Cambios",
     "hours": "horas",
+    "day": "día",
     "days": "días",
     "at": "a las",
     "filters": "Filtros",
     "link": "Enlace",
     "preview": "Vista Previa",
-    "deleteConfirm": "¿Estás seguro de que quieres eliminar este elemento?"
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar este elemento?",
+    "languages": {
+      "en": "Inglés",
+      "es": "Español"
+    },
+    "notesPlaceholder": "Notas adicionales..."
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -2803,8 +2809,23 @@
         "pipeline": "Pipeline",
         "score": "Puntuación IA",
         "status": "Estado",
-        "source": "Fuente"
+        "source": "Fuente",
+        "campaign": "Campaña",
+        "phone": "Teléfono",
+        "notes": "Notas"
       },
+      "placeholders": {
+        "company": "Acme Corp",
+        "contact": "Juan García",
+        "email": "juan@acme.com",
+        "phone": "+34 600 000 000",
+        "location": "Madrid, España",
+        "category": "Salud",
+        "notes": "Notas adicionales...",
+        "campaign": "Seleccionar campaña"
+      },
+      "noCampaign": "Sin campaña",
+      "noActiveCampaigns": "No hay campañas activas para este pipeline",
       "status": {
         "new": "Nuevo",
         "qualified": "Calificado",
@@ -2827,7 +2848,11 @@
         "pasteInstructions": "Un lead por línea: empresa | email | web (opcional)",
         "csvInstructions": "Sube un archivo CSV con columnas: empresa, contacto, email, web, ubicación, categoría, pipeline",
         "importButton": "Importar",
-        "importing": "Importando..."
+        "importing": "Importando...",
+        "success": "{{count}} leads importados correctamente",
+        "noLeadsFound": "No se encontraron leads en la entrada",
+        "error": "Error al importar leads",
+        "invalidFile": "Por favor sube un archivo CSV válido"
       },
       "noLeads": "No se encontraron leads",
       "loading": "Cargando leads..."
@@ -2877,11 +2902,60 @@
       "subtitle": "Crear y gestionar campañas de email outreach",
       "newCampaign": "Nueva Campaña",
       "noCampaigns": "Aún no hay campañas",
+      "create": "Crear Campaña",
+      "created": "Campaña creada correctamente",
+      "updated": "Campaña actualizada correctamente",
+      "deleted": "Campaña eliminada correctamente",
+      "deleteConfirm": "¿Está seguro de que desea eliminar esta campaña?",
+      "pause": "Pausar",
+      "activate": "Activar",
       "status": {
         "draft": "Borrador",
         "active": "Activa",
         "paused": "Pausada",
         "completed": "Completada"
+      },
+      "sections": {
+        "basic": "Información Básica",
+        "targeting": "Segmentación",
+        "messaging": "Configuración de Mensajes",
+        "followUp": "Configuración de Seguimiento"
+      },
+      "fields": {
+        "name": "Nombre de Campaña",
+        "description": "Descripción",
+        "pipelineType": "Tipo de Pipeline",
+        "status": "Estado",
+        "targetDescription": "Descripción del Objetivo",
+        "targetLocations": "Regiones Objetivo",
+        "defaultLanguage": "Idioma Predeterminado",
+        "emailTone": "Tono del Email",
+        "outreachGoal": "Objetivo del Outreach",
+        "followUpEnabled": "Habilitar Seguimientos",
+        "maxEmails": "Máximo de Emails de Seguimiento",
+        "daysBetween": "Días Entre Emails"
+      },
+      "placeholders": {
+        "name": "ej., Outreach Partners Q1",
+        "description": "Breve descripción de esta campaña",
+        "targetDescription": "Describe el lead ideal para esta campaña (usado por IA para personalizar emails)",
+        "targetLocations": "Madrid, Barcelona, Valencia"
+      },
+      "descriptions": {
+        "targetDescription": "La IA usará esto para personalizar el contenido del email",
+        "targetLocations": "Lista de regiones objetivo separadas por comas",
+        "followUpEnabled": "Enviar automáticamente emails de seguimiento a no-respondedores",
+        "maxEmails": "Total de emails incluyendo el outreach inicial"
+      },
+      "tones": {
+        "professional": "Profesional",
+        "friendly": "Amigable",
+        "neutral": "Neutral"
+      },
+      "goals": {
+        "intro": "Introducción",
+        "partnership": "Propuesta de Partnership",
+        "meeting": "Agendar Reunión"
       }
     },
     "inbox": {

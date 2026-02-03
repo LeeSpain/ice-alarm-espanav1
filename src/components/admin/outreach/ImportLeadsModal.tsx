@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOutreachRawLeads } from "@/hooks/useOutreachRawLeads";
+import { useOutreachCampaigns } from "@/hooks/useOutreachCampaigns";
 import { toast } from "@/hooks/use-toast";
 
 interface ImportLeadsModalProps {
@@ -32,9 +33,18 @@ interface ImportLeadsModalProps {
 export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) {
   const { t } = useTranslation();
   const { bulkAddLeads, isAdding } = useOutreachRawLeads();
+  const { campaigns } = useOutreachCampaigns();
   const [pasteContent, setPasteContent] = useState("");
   const [pipelineType, setPipelineType] = useState<"sales" | "partner">("sales");
+  const [campaignId, setCampaignId] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
+
+  const filteredCampaigns = campaigns?.filter(c => c.pipeline_type === pipelineType && c.status === "active") || [];
+
+  const handlePipelineChange = (value: "sales" | "partner") => {
+    setPipelineType(value);
+    setCampaignId(""); // Reset campaign when pipeline changes
+  };
 
   const handlePasteImport = async () => {
     if (!pasteContent.trim()) return;
@@ -54,10 +64,11 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
     if (leads.length > 0) {
       await bulkAddLeads(leads);
       setPasteContent("");
+      setCampaignId("");
       onOpenChange(false);
       toast({
         title: t("common.success"),
-        description: `${leads.length} leads imported`,
+        description: t("outreach.leads.import.success", { count: leads.length }),
       });
     }
   };
@@ -82,7 +93,7 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
           website_url: parts[3] || null,
           location: parts[4] || null,
           category: parts[5] || null,
-          pipeline_type: (parts[6] === "partner" ? "partner" : "sales") as "sales" | "partner",
+          pipeline_type: pipelineType,
           source: "csv_import" as const,
         };
       }).filter(l => l.company_name !== "Unknown");
@@ -90,10 +101,11 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
       if (leads.length > 0) {
         await bulkAddLeads(leads);
         setCsvFile(null);
+        setCampaignId("");
         onOpenChange(false);
         toast({
           title: t("common.success"),
-          description: `${leads.length} leads imported`,
+          description: t("outreach.leads.import.success", { count: leads.length }),
         });
       }
     };
@@ -110,6 +122,40 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
           </DialogDescription>
         </DialogHeader>
 
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{t("outreach.leads.columns.pipeline")}</Label>
+              <Select value={pipelineType} onValueChange={handlePipelineChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales">{t("outreach.leads.pipeline.sales")}</SelectItem>
+                  <SelectItem value="partner">{t("outreach.leads.pipeline.partner")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t("outreach.leads.columns.campaign")}</Label>
+              <Select value={campaignId} onValueChange={setCampaignId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("outreach.leads.noCampaign")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("outreach.leads.noCampaign")}</SelectItem>
+                  {filteredCampaigns.map((campaign) => (
+                    <SelectItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         <Tabs defaultValue="paste" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="paste" className="flex items-center gap-2">
@@ -123,18 +169,6 @@ export function ImportLeadsModal({ open, onOpenChange }: ImportLeadsModalProps) 
           </TabsList>
 
           <TabsContent value="paste" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label>{t("outreach.leads.columns.pipeline")}</Label>
-              <Select value={pipelineType} onValueChange={(v) => setPipelineType(v as "sales" | "partner")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sales">{t("outreach.leads.pipeline.sales")}</SelectItem>
-                  <SelectItem value="partner">{t("outreach.leads.pipeline.partner")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2">
               <Label>{t("outreach.leads.pasteList")}</Label>
               <Textarea
