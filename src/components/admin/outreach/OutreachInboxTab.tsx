@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Mail, Inbox, RefreshCw, ExternalLink, Clock, User } from "lucide-react";
+import { Mail, Inbox, RefreshCw, Clock, User } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useOutreachInbox, type InboundEmail } from "@/hooks/useInboundEmails";
 import { format } from "date-fns";
-
+import DOMPurify from "dompurify";
 export function OutreachInboxTab() {
   const { t } = useTranslation();
   const { data: emails, isLoading, refetch, isRefetching } = useOutreachInbox();
@@ -119,7 +119,15 @@ export function OutreachInboxTab() {
             <div className="border rounded-lg p-4 bg-background">
               {selectedEmail?.body_html ? (
                 <div
-                  dangerouslySetInnerHTML={{ __html: selectedEmail.body_html }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(selectedEmail.body_html, {
+                      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'div', 'span', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'hr'],
+                      ALLOWED_ATTR: ['href', 'class', 'style', 'src', 'alt', 'target', 'rel'],
+                      ALLOW_DATA_ATTR: false,
+                      FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input', 'button', 'object', 'embed'],
+                      FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur']
+                    })
+                  }}
                   className="prose prose-sm max-w-none"
                 />
               ) : (
