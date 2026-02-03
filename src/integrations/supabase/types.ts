@@ -473,6 +473,68 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          facebook_post_id: string | null
+          id: string
+          image_url: string | null
+          language: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          social_post_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          image_url?: string | null
+          language?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          social_post_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          image_url?: string | null
+          language?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          social_post_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           assigned_to: string | null

@@ -27,6 +27,8 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const PendantPage = lazy(() => import("./pages/PendantPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const BlogListPage = lazy(() => import("./pages/blog/BlogListPage"));
+const BlogPostPage = lazy(() => import("./pages/blog/BlogPostPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Join Flow - Lazy loaded
@@ -207,6 +209,8 @@ const App = () => {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/blog" element={<BlogListPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/join" element={<JoinWizard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/staff/login" element={<StaffLogin />} />

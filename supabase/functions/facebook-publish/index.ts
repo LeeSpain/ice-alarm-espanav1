@@ -162,7 +162,71 @@ serve(async (req) => {
 
     const facebookPostId = fbResult.post_id || fbResult.id;
 
-    // ───────────────────────── UPDATE POST ─────────────────────────
+    // ───────────────────────── CREATE BLOG POST ─────────────────────────
+    let blogPostId: string | null = null;
+    try {
+      // Extract title from post text (first sentence or first 60 chars)
+      const extractTitle = (text: string): string => {
+        const firstSentence = text.split(/[.!?]/)[0].trim();
+        return firstSentence.length > 60 ? firstSentence.substring(0, 57) + "..." : firstSentence;
+      };
+
+      // Generate URL-safe slug
+      const generateSlug = (title: string): string => {
+        return title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .substring(0, 60);
+      };
+
+      const postText = post.post_text || "";
+      const title = extractTitle(postText);
+      let slug = generateSlug(title);
+
+      // Check if slug exists and append timestamp if needed
+      const { data: existingSlug } = await adminClient
+        .from("blog_posts")
+        .select("slug")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (existingSlug) {
+        slug = `${slug}-${Date.now()}`;
+      }
+
+      // Extract excerpt (first 1-2 lines, max 200 chars)
+      const excerpt = postText.split("\n").slice(0, 2).join(" ").substring(0, 200);
+
+      // Create blog post
+      const { data: blogPost, error: blogError } = await adminClient.from("blog_posts").insert({
+        title,
+        slug,
+        content: postText,
+        excerpt,
+        language: post.language || "en",
+        published: true,
+        published_at: new Date().toISOString(),
+        facebook_post_id: facebookPostId,
+        social_post_id: post_id,
+        image_url: post.image_url,
+        seo_title: title,
+        seo_description: excerpt,
+      }).select("id").single();
+
+      if (blogError) {
+        console.error("Error creating blog post:", blogError);
+      } else {
+        blogPostId = blogPost?.id;
+        console.log("Blog post created successfully:", blogPostId);
+      }
+    } catch (blogCreationError) {
+      // Log error but don't fail the Facebook publish
+      console.error("Blog post creation failed:", blogCreationError);
+    }
+
+    // ───────────────────────── UPDATE SOCIAL POST ─────────────────────────
     await adminClient
       .from("social_posts")
       .update({
@@ -178,6 +242,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         facebook_post_id: facebookPostId,
+        blog_post_id: blogPostId,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
