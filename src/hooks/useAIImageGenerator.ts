@@ -9,9 +9,11 @@ export type ImageStyle =
   | "pendant_focus" 
   | "spanish_lifestyle" 
   | "independence" 
-  | "peace_of_mind";
+  | "peace_of_mind"
+  | "from_post_text";
 
 export const IMAGE_STYLE_OPTIONS: { value: ImageStyle; labelKey: string }[] = [
+  { value: "from_post_text", labelKey: "mediaManager.imageStyles.fromPostText" },
   { value: "senior_active", labelKey: "mediaManager.imageStyles.seniorActive" },
   { value: "family_peace", labelKey: "mediaManager.imageStyles.familyPeace" },
   { value: "pendant_focus", labelKey: "mediaManager.imageStyles.pendantFocus" },
@@ -31,6 +33,7 @@ interface GenerateAIImageOptions {
   topic?: string;
   imageText?: ImageTextData;
   postId?: string;
+  postText?: string;
 }
 
 interface GenerateAIImageResult {
@@ -45,7 +48,7 @@ export function useAIImageGenerator() {
   const { toast } = useToast();
 
   const generateImage = useCallback(async (options: GenerateAIImageOptions): Promise<string | null> => {
-    const { style, topic, imageText, postId } = options;
+    const { style, topic, imageText, postId, postText } = options;
 
     setIsGenerating(true);
 
@@ -58,6 +61,7 @@ export function useAIImageGenerator() {
             topic,
             image_text: imageText,
             post_id: postId,
+            post_text: postText,
           },
         }
       );

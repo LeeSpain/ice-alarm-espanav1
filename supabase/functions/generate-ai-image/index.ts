@@ -27,10 +27,34 @@ interface RequestBody {
   topic?: string;
   image_text?: ImageTextData;
   post_id?: string;
+  post_text?: string;
 }
 
-function buildImagePrompt(style: string, topic?: string, imageText?: ImageTextData): string {
+function buildImagePrompt(style: string, topic?: string, imageText?: ImageTextData, postText?: string): string {
   const baseContext = `Create a professional, high-quality social media image for ICE Alarm España, a trusted 24/7 emergency response service for seniors living in Spain.`;
+  
+  // Special handling for "from_post_text" style
+  if (style === "from_post_text" && postText) {
+    const cleanPostText = postText.substring(0, 1000); // Limit text length
+    return `${baseContext}
+
+Create an image that visually represents this social media post content:
+
+"${cleanPostText}"
+
+CRITICAL Requirements:
+- Professional photography quality, sharp and well-composed
+- Warm, caring, and reassuring emotional tone
+- THE PERSON MUST BE WEARING A VISIBLE SOS/EMERGENCY PENDANT around their neck on a lanyard or chain - this is MANDATORY
+- The pendant should be a small, sleek, modern emergency device (similar to a medical alert pendant)
+- DO NOT include any text, logos, or overlays in the image
+- Suitable for Facebook marketing (1200x630 landscape)
+- Natural, authentic representation of seniors
+- Avoid clinical, hospital, or medical settings
+- Focus on independence, dignity, peace of mind, and active living
+- Use warm Mediterranean color palette (golden light, blue skies, terracotta)
+- Include diverse but authentic representation`;
+  }
   
   const stylePrompt = IMAGE_STYLES[style] || IMAGE_STYLES.senior_active;
   
@@ -60,11 +84,19 @@ serve(async (req) => {
   }
 
   try {
-    const { style, topic, image_text, post_id }: RequestBody = await req.json();
+    const { style, topic, image_text, post_id, post_text }: RequestBody = await req.json();
 
     if (!style) {
       return new Response(
         JSON.stringify({ error: "Style is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate "from_post_text" style requires post_text
+    if (style === "from_post_text" && !post_text) {
+      return new Response(
+        JSON.stringify({ error: "Post text is required for 'Based on Post Text' style" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -74,7 +106,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = buildImagePrompt(style, topic, image_text);
+    const prompt = buildImagePrompt(style, topic, image_text, post_text);
     console.log("Generating image with prompt:", prompt.substring(0, 200) + "...");
 
     // Call Lovable AI Gateway with image model
