@@ -1,141 +1,113 @@
 
-# Media Manager Facebook Publishing - Full Diagnosis Report
 
-## Problem Summary
+# Facebook Publishing Fix - Token Regeneration Required
 
-The Facebook publishing is failing with multiple related errors. After reviewing the edge function logs, database, and code, I've identified the root causes.
+## The Problem
 
----
+The error `(#200) publish_actions permission deprecated` is coming from Facebook's API, **not from our code**. 
 
-## Error Evidence from Logs
+**What's happening:**
+1. Your current access token was generated with the old `publish_actions` permission
+2. Facebook checks the permissions on the token itself when you make API calls
+3. Even though our code uses the correct modern endpoints (`/feed` and `/photos`), Facebook rejects the token because it was created with deprecated permissions
 
-| Timestamp | Error |
-|-----------|-------|
-| 2026-02-03 10:04:05 | `(#200) publish_actions permission deprecated` |
-| 2026-02-03 09:56:04 | `Session has expired on Wednesday, 28-Jan-26 08:00:00 PST` |
-| Earlier failures | `(#210) A page access token is required` |
+**The code is correct** - it doesn't request any permissions, it simply passes the access token to Facebook's Graph API.
 
 ---
 
-## Root Cause Analysis
+## The Fix (Action Required)
 
-### Issue 1: Expired Access Token (CURRENT BLOCKER)
+You need to regenerate your Facebook Page Access Token with the **modern permissions**. Here's exactly how:
 
-Your Facebook Page Access Token expired on **January 28th, 2026**. The current date is February 3rd - the token has been expired for 6 days.
+### Step 1: Go to Facebook Developer Tools
 
-**Current Token Preview:** `EAAT8iZAfQQtoB...` (stored in system_settings)
+1. Open [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+2. Select your Facebook App from the dropdown (the app connected to ICE Alarm España)
 
-Standard Facebook tokens expire after 60 days. You need to generate a new long-lived Page Access Token.
+### Step 2: Select Correct Permissions
 
-### Issue 2: Wrong Permissions on Token
+Click "Add a Permission" and select **ONLY these**:
+- ✅ `pages_manage_posts` (for publishing)
+- ✅ `pages_read_engagement` (for metrics)
+- ✅ `pages_show_list` (to see your pages)
 
-The `publish_actions` permission was deprecated by Facebook in 2018. Your access token was generated requesting this old permission.
+**DO NOT select:**
+- ❌ `publish_actions` (deprecated)
+- ❌ `publish_pages` (deprecated)
 
-**Required Modern Permissions:**
-- `pages_manage_posts` - Required to publish content to a Page
-- `pages_read_engagement` - Required to read post metrics
+### Step 3: Generate User Token
 
-### Issue 3: Token Type Confusion
+1. Click "Generate Access Token"
+2. Facebook will prompt you to authorize - approve it
+3. You'll get a short-lived User Access Token
 
-Some earlier failures show `(#210) A page access token is required` - this suggests at one point a User Access Token was used instead of a Page Access Token.
+### Step 4: Get Page Access Token
 
----
+In the Graph API Explorer:
+1. Make a GET request to: `/me/accounts`
+2. This returns your pages with their Page Access Tokens
+3. Find "ICE Alarm España" in the response
+4. Copy the `access_token` for that page (this is the Page Access Token)
 
-## What the Code Does Correctly
+### Step 5: Extend Token (Optional but Recommended)
 
-The edge function code itself is **correctly implemented**:
+1. Go to [Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/)
+2. Paste your Page Access Token
+3. Click "Extend Access Token" to get a 60-day or permanent token
 
-```text
-Edge Function Flow:
-1. Validates staff authentication 
-2. Fetches post from database 
-3. Checks post is "approved" 
-4. Retrieves FB credentials from system_settings 
-5. Calls Graph API v24.0 correctly:
-   - /PAGE_ID/photos (for posts with images)
-   - /PAGE_ID/feed (for text-only posts)
-6. Updates post status on success/failure
-```
+### Step 6: Update in Admin Settings
 
-The problem is **not the code** - it's the credentials stored in your settings.
-
----
-
-## The Fix: Generate New Facebook Credentials
-
-### Step 1: Create/Verify Facebook App
-
-1. Go to [developers.facebook.com](https://developers.facebook.com)
-2. Select or create your app linked to ICE Alarm España
-3. Ensure the app has permissions:
-   - `pages_manage_posts`
-   - `pages_read_engagement`
-   - `pages_show_list`
-
-### Step 2: Get Your Page ID
-
-1. Go to your Facebook Page
-2. Click "About" → Scroll to "Page ID" (numeric ID like `107949497473966`)
-3. Or use Graph API Explorer: `GET /me/accounts` with a user token
-
-**Your Current Page ID:** `107949497473966` ✓ (this looks correct)
-
-### Step 3: Generate Long-Lived Page Access Token
-
-1. Go to [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
-2. Select your App from the dropdown
-3. Click "Generate Access Token"
-4. Select permissions: `pages_manage_posts`, `pages_read_engagement`
-5. Authorize when prompted
-6. Use the Access Token Debugger to extend it to a long-lived token (60 days)
-7. **Important**: Exchange for a Page Access Token (not User token)
-
-The token should look like: `EAA...` and when debugged should show:
-- **Type**: Page Access Token
-- **Expires**: ~60 days from now (or "Never" for permanent)
-- **Scopes**: pages_manage_posts, pages_read_engagement
-
-### Step 4: Update Credentials in Admin Settings
-
-1. Go to Admin → Settings → Integrations
-2. Update `Facebook Page Access Token` with the new token
-3. Verify `Facebook Page ID` is the numeric ID (not URL)
+1. Go to **Admin → Settings → Integrations**
+2. Find "Facebook Page Access Token"
+3. Paste the new token (it should start with `EAA...`)
+4. Save
 
 ---
 
-## Prevention: Token Expiry Warning
+## Verification
 
-To prevent future issues, I recommend adding:
+After updating the token, you can verify it's correct:
 
-1. **Token expiry tracking** in system_settings
-2. **Admin notification** when token is expiring within 7 days
-3. **Visual indicator** in Media Manager showing token status
+1. Go to [Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/)
+2. Paste your new token
+3. Check that it shows:
+   - **Type**: Page Access Token
+   - **Valid**: True
+   - **Scopes**: `pages_manage_posts`, `pages_read_engagement`
+   - **Expires**: Far in the future (or "Never")
 
 ---
 
-## Testing After Fix
+## Current Settings (from database)
 
-After updating credentials:
+| Setting | Current Value |
+|---------|---------------|
+| Page ID | `107949497473966` ✅ (correct format) |
+| Access Token | `EAAT8iZAfQQtoB...` ❌ (has deprecated permissions) |
 
-1. Go to Media Manager
-2. Create or select an approved post
-3. Click "Publish"
-4. Should succeed with message: "Published to Facebook! Post ID: xxx"
+---
 
-If it still fails, the error message will indicate what's wrong:
-- `Invalid access token` → Token copied incorrectly
-- `Permission denied` → App doesn't have required permissions
-- `Page not found` → Wrong Page ID
+## No Code Changes Required
+
+The edge function code is correctly implemented:
+- Uses Graph API v24.0 ✅
+- Calls `/photos` endpoint for image posts ✅
+- Calls `/feed` endpoint for text posts ✅
+- Passes token correctly ✅
+
+The issue is purely with the **access token's associated permissions** that were set when the token was originally generated on Facebook's developer portal.
 
 ---
 
 ## Summary
 
-| Issue | Status | Fix |
-|-------|--------|-----|
-| Access token expired | ❌ Current blocker | Generate new token |
-| Wrong permissions | ❌ Related | Request `pages_manage_posts` |
-| Edge function code | ✅ Working correctly | No changes needed |
-| Page ID | ✅ Looks correct | Verify it's numeric |
+| Action | Who | What |
+|--------|-----|------|
+| Generate new token | You | Facebook Developer Tools |
+| Select modern permissions | You | `pages_manage_posts`, `pages_read_engagement` |
+| Get Page Access Token | You | From `/me/accounts` response |
+| Update in settings | You | Admin → Settings → Integrations |
+| Test publishing | You | Media Manager → Publish a post |
 
-**No code changes required** - this is a credentials/configuration issue. Generate a fresh Page Access Token with the correct permissions and update it in your Admin Settings.
+Once you've updated the token with the correct permissions, publishing will work immediately - no deployment or code changes needed.
+
