@@ -12,7 +12,8 @@ import {
   LogOut,
   ChevronLeft,
   Menu,
-  UserPlus
+  UserPlus,
+  BookOpen
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const menuItems: MenuItem[] = [
   { icon: CheckSquare, labelKey: "sidebar.tasks", path: "/call-centre/tasks" },
   { icon: Ticket, labelKey: "sidebar.staffTickets", path: "/call-centre/tickets" },
   { icon: FileText, labelKey: "sidebar.shiftNotes", path: "/call-centre/shift-notes" },
+  { icon: BookOpen, labelKey: "sidebar.documents", path: "/call-centre/documents" },
 ];
 
 interface CallCentreSidebarProps {

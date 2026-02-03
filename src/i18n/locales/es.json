@@ -1509,6 +1509,7 @@
     "agreement": "Acuerdo",
     "backToPartners": "Volver a Partners",
     "shiftNotes": "Notas de turno",
+    "documents": "Documentos",
     "aiCommandCentre": "Centro de Mando IA",
     "aiOverview": "Vista General",
     "mediaManager": "Gestor de Medios"
@@ -2270,5 +2271,13 @@
       "deleted": "Documento eliminado",
       "deletedDesc": "El documento se ha eliminado correctamente."
     }
+  },
+  "staffDocuments": {
+    "title": "Documentos del Personal",
+    "subtitle": "Acceda a procedimientos, protocolos y guías de la empresa",
+    "searchPlaceholder": "Buscar documentos...",
+    "important": "Importante",
+    "noDocuments": "No hay documentos disponibles",
+    "noDocumentsDesc": "Los documentos aparecerán aquí cuando sean publicados por los administradores."
   }
 }
