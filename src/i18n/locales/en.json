@@ -2380,6 +2380,191 @@
     "devicesOffline": "Offline",
     "unassigned": "Unassigned"
   },
+  "admin": {
+    "members": {
+      "title": "Members",
+      "subtitle": "Manage all ICE Alarm members and their information.",
+      "addMember": "Add Member",
+      "exportCsv": "Export CSV",
+      "crmImport": "CRM Import",
+      "crmContacts": "CRM Contacts",
+      "searchPlaceholder": "Search by name, email, or phone...",
+      "loading": "Loading members...",
+      "noResults": "No members found",
+      "noPlan": "No Plan",
+      "assigned": "Assigned",
+      "none": "None",
+      "viewMemberDashboard": "View Member Dashboard",
+      "viewDetails": "View Details",
+      "showing": "Showing {{from}} to {{to}} of {{total}} members",
+      "pageOf": "Page {{page}} of {{totalPages}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "orders": {
+      "title": "Orders",
+      "subtitle": "Manage member orders and shipments.",
+      "searchPlaceholder": "Search by order number...",
+      "loading": "Loading orders...",
+      "noResults": "No orders found",
+      "unknown": "Unknown",
+      "viewDetails": "View Details",
+      "markProcessing": "Mark Processing",
+      "markShipped": "Mark Shipped",
+      "markDelivered": "Mark Delivered",
+      "showing": "Showing {{from}} to {{to}} of {{total}} orders"
+    },
+    "devices": {
+      "title": "Devices",
+      "subtitle": "Manage GPS Personal Pendants and their assignments.",
+      "addDevice": "Add Device",
+      "searchPlaceholder": "Search by IMEI or SIM number...",
+      "totalDevices": "Total Devices",
+      "loading": "Loading devices...",
+      "noResults": "No devices found",
+      "unassigned": "Unassigned",
+      "online": "Online",
+      "offline": "Offline",
+      "never": "Never",
+      "na": "N/A",
+      "viewDetails": "View Details",
+      "configure": "Configure",
+      "viewLocation": "View Location",
+      "showing": "Showing {{from}} to {{to}} of {{total}} devices",
+      "statuses": {
+        "in_stock": "In Stock",
+        "reserved": "Reserved",
+        "allocated": "Allocated",
+        "with_staff": "With Staff",
+        "live": "Live",
+        "faulty": "Faulty",
+        "returned": "Returned",
+        "inactive": "Inactive",
+        "active_legacy": "Active (Legacy)"
+      }
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "plan": "Plan",
+      "status": "Status",
+      "device": "Device",
+      "actions": "Actions",
+      "orderNumber": "Order #",
+      "member": "Member",
+      "date": "Date",
+      "total": "Total",
+      "tracking": "Tracking",
+      "imei": "IMEI",
+      "simNumber": "SIM Number",
+      "battery": "Battery",
+      "lastCheckIn": "Last Check-in",
+      "assignment": "Assignment"
+    },
+    "preview": {
+      "templateMode": "Template Preview Mode",
+      "templateModeDesc": "This shows the dashboard layout with demo data. Changes made here will apply to all dashboards.",
+      "demoData": "Demo Data",
+      "viewingAsAdmin": "Viewing as Admin:",
+      "dashboard": "'s dashboard",
+      "backToMembers": "Back to Members",
+      "backToPartners": "Back to Partners"
+    }
+  },
+  "callCentre": {
+    "tabs": {
+      "alerts": "Alerts",
+      "messages": "Messages"
+    },
+    "status": {
+      "incoming": "{{count}} Incoming",
+      "inProgress": "{{count}} In Progress",
+      "escalated": "{{count}} Escalated"
+    },
+    "search": {
+      "placeholder": "Search by name or location..."
+    },
+    "filters": {
+      "all": "All",
+      "incoming": "Incoming",
+      "inProgress": "In Progress",
+      "escalated": "Escalated"
+    },
+    "empty": {
+      "allClear": "All clear",
+      "noAlerts": "No active alerts at the moment",
+      "loading": "Loading alerts..."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "callEmergency": "Call Emergency Services (112)"
+    }
+  },
+  "joinWizard": {
+    "validation": {
+      "enterFullName": "Please enter your full name",
+      "enterEmail": "Please enter your email address",
+      "enterPhone": "Please enter your phone number",
+      "enterDob": "Please enter your date of birth",
+      "enterPartnerFullName": "Please enter your partner's full name",
+      "enterPartnerEmail": "Please enter your partner's email address",
+      "enterPartnerPhone": "Please enter your partner's phone number",
+      "enterPartnerDob": "Please enter your partner's date of birth",
+      "enterStreetAddress": "Please enter your street address",
+      "enterCity": "Please enter your city",
+      "selectProvince": "Please select your province",
+      "enterPostalCode": "Please enter your postal code",
+      "enterPartnerStreet": "Please enter your partner's street address",
+      "enterPartnerCity": "Please enter your partner's city",
+      "selectPartnerProvince": "Please select your partner's province",
+      "enterPartnerPostal": "Please enter your partner's postal code",
+      "addEmergencyContact": "Please add at least one emergency contact",
+      "acceptTerms": "Please accept the Terms of Service",
+      "acceptPrivacy": "Please consent to share medical information with emergency services"
+    },
+    "payment": {
+      "success": "Payment successful! Welcome to ICE Alarm.",
+      "cancelled": "Payment was cancelled. You can try again when ready."
+    }
+  },
+  "partner": {
+    "dashboard": {
+      "title": "Dashboard",
+      "welcomeBack": "Welcome back, {{name}}",
+      "referralLink": "Your Referral Link",
+      "shareToEarn": "Share this link to earn commissions on every signup",
+      "copy": "Copy",
+      "referralCode": "Referral Code:",
+      "notFound": "Partner Not Found",
+      "notLinked": "Your account is not linked to a partner profile.",
+      "pipeline": {
+        "title": "Referral Pipeline",
+        "subtitle": "Track your referrals through each stage",
+        "emptyPreview": "Pipeline data will appear here for actual partners"
+      }
+    },
+    "toast": {
+      "previewOnly": "This is a template preview - referral link is for demo only",
+      "linkCopied": "Referral link copied to clipboard!"
+    }
+  },
+  "legal": {
+    "privacy": {
+      "title": "Privacy Policy",
+      "company": "ICE Alarm España S.L.",
+      "lastUpdated": "Last updated: January 2025"
+    },
+    "terms": {
+      "title": "Terms and Conditions",
+      "company": "ICE Alarm España S.L.",
+      "lastUpdated": "Last updated: January 2025"
+    },
+    "footer": {
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    }
+  },
   "mediaStrategy": {
     "goals": "Goals",
     "goalsDescription": "Define marketing goals for your social media content",

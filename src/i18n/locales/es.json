@@ -2356,6 +2356,191 @@
     "devicesOffline": "Desconectados",
     "unassigned": "Sin asignar"
   },
+  "admin": {
+    "members": {
+      "title": "Socios",
+      "subtitle": "Gestiona todos los socios de ICE Alarm y su información.",
+      "addMember": "Añadir Socio",
+      "exportCsv": "Exportar CSV",
+      "crmImport": "Importar CRM",
+      "crmContacts": "Contactos CRM",
+      "searchPlaceholder": "Buscar por nombre, email o teléfono...",
+      "loading": "Cargando socios...",
+      "noResults": "No se encontraron socios",
+      "noPlan": "Sin Plan",
+      "assigned": "Asignado",
+      "none": "Ninguno",
+      "viewMemberDashboard": "Ver Panel del Socio",
+      "viewDetails": "Ver Detalles",
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} socios",
+      "pageOf": "Página {{page}} de {{totalPages}}",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    },
+    "orders": {
+      "title": "Pedidos",
+      "subtitle": "Gestiona pedidos de socios y envíos.",
+      "searchPlaceholder": "Buscar por número de pedido...",
+      "loading": "Cargando pedidos...",
+      "noResults": "No se encontraron pedidos",
+      "unknown": "Desconocido",
+      "viewDetails": "Ver Detalles",
+      "markProcessing": "Marcar Procesando",
+      "markShipped": "Marcar Enviado",
+      "markDelivered": "Marcar Entregado",
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} pedidos"
+    },
+    "devices": {
+      "title": "Dispositivos",
+      "subtitle": "Gestiona Colgantes GPS Personales y sus asignaciones.",
+      "addDevice": "Añadir Dispositivo",
+      "searchPlaceholder": "Buscar por IMEI o número SIM...",
+      "totalDevices": "Total Dispositivos",
+      "loading": "Cargando dispositivos...",
+      "noResults": "No se encontraron dispositivos",
+      "unassigned": "Sin Asignar",
+      "online": "Conectado",
+      "offline": "Desconectado",
+      "never": "Nunca",
+      "na": "N/D",
+      "viewDetails": "Ver Detalles",
+      "configure": "Configurar",
+      "viewLocation": "Ver Ubicación",
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} dispositivos",
+      "statuses": {
+        "in_stock": "En Stock",
+        "reserved": "Reservado",
+        "allocated": "Asignado",
+        "with_staff": "Con Personal",
+        "live": "Activo",
+        "faulty": "Defectuoso",
+        "returned": "Devuelto",
+        "inactive": "Inactivo",
+        "active_legacy": "Activo (Legacy)"
+      }
+    },
+    "table": {
+      "name": "Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "plan": "Plan",
+      "status": "Estado",
+      "device": "Dispositivo",
+      "actions": "Acciones",
+      "orderNumber": "Pedido #",
+      "member": "Socio",
+      "date": "Fecha",
+      "total": "Total",
+      "tracking": "Seguimiento",
+      "imei": "IMEI",
+      "simNumber": "Número SIM",
+      "battery": "Batería",
+      "lastCheckIn": "Último Check-in",
+      "assignment": "Asignación"
+    },
+    "preview": {
+      "templateMode": "Modo Vista Previa de Plantilla",
+      "templateModeDesc": "Esto muestra el diseño del panel con datos de demostración. Los cambios realizados aquí se aplicarán a todos los paneles.",
+      "demoData": "Datos Demo",
+      "viewingAsAdmin": "Viendo como Admin:",
+      "dashboard": " panel",
+      "backToMembers": "Volver a Socios",
+      "backToPartners": "Volver a Socios"
+    }
+  },
+  "callCentre": {
+    "tabs": {
+      "alerts": "Alertas",
+      "messages": "Mensajes"
+    },
+    "status": {
+      "incoming": "{{count}} Entrantes",
+      "inProgress": "{{count}} En Progreso",
+      "escalated": "{{count}} Escaladas"
+    },
+    "search": {
+      "placeholder": "Buscar por nombre o ubicación..."
+    },
+    "filters": {
+      "all": "Todos",
+      "incoming": "Entrantes",
+      "inProgress": "En Progreso",
+      "escalated": "Escaladas"
+    },
+    "empty": {
+      "allClear": "Todo despejado",
+      "noAlerts": "No hay alertas activas en este momento",
+      "loading": "Cargando alertas..."
+    },
+    "quickActions": {
+      "title": "Acciones Rápidas",
+      "callEmergency": "Llamar Servicios de Emergencia (112)"
+    }
+  },
+  "joinWizard": {
+    "validation": {
+      "enterFullName": "Por favor introduzca su nombre completo",
+      "enterEmail": "Por favor introduzca su correo electrónico",
+      "enterPhone": "Por favor introduzca su número de teléfono",
+      "enterDob": "Por favor introduzca su fecha de nacimiento",
+      "enterPartnerFullName": "Por favor introduzca el nombre completo de su pareja",
+      "enterPartnerEmail": "Por favor introduzca el email de su pareja",
+      "enterPartnerPhone": "Por favor introduzca el teléfono de su pareja",
+      "enterPartnerDob": "Por favor introduzca la fecha de nacimiento de su pareja",
+      "enterStreetAddress": "Por favor introduzca su dirección",
+      "enterCity": "Por favor introduzca su ciudad",
+      "selectProvince": "Por favor seleccione su provincia",
+      "enterPostalCode": "Por favor introduzca su código postal",
+      "enterPartnerStreet": "Por favor introduzca la dirección de su pareja",
+      "enterPartnerCity": "Por favor introduzca la ciudad de su pareja",
+      "selectPartnerProvince": "Por favor seleccione la provincia de su pareja",
+      "enterPartnerPostal": "Por favor introduzca el código postal de su pareja",
+      "addEmergencyContact": "Por favor añada al menos un contacto de emergencia",
+      "acceptTerms": "Por favor acepte los Términos de Servicio",
+      "acceptPrivacy": "Por favor consienta compartir información médica con servicios de emergencia"
+    },
+    "payment": {
+      "success": "¡Pago exitoso! Bienvenido a ICE Alarm.",
+      "cancelled": "El pago fue cancelado. Puede intentarlo de nuevo cuando desee."
+    }
+  },
+  "partner": {
+    "dashboard": {
+      "title": "Panel",
+      "welcomeBack": "Bienvenido de nuevo, {{name}}",
+      "referralLink": "Su Enlace de Referido",
+      "shareToEarn": "Comparta este enlace para ganar comisiones en cada registro",
+      "copy": "Copiar",
+      "referralCode": "Código de Referido:",
+      "notFound": "Socio No Encontrado",
+      "notLinked": "Su cuenta no está vinculada a un perfil de socio.",
+      "pipeline": {
+        "title": "Pipeline de Referidos",
+        "subtitle": "Siga sus referidos a través de cada etapa",
+        "emptyPreview": "Los datos del pipeline aparecerán aquí para socios reales"
+      }
+    },
+    "toast": {
+      "previewOnly": "Esta es una vista previa de plantilla - el enlace de referido es solo de demostración",
+      "linkCopied": "¡Enlace de referido copiado al portapapeles!"
+    }
+  },
+  "legal": {
+    "privacy": {
+      "title": "Política de Privacidad",
+      "company": "ICE Alarm España S.L.",
+      "lastUpdated": "Última actualización: Enero 2025"
+    },
+    "terms": {
+      "title": "Términos y Condiciones",
+      "company": "ICE Alarm España S.L.",
+      "lastUpdated": "Última actualización: Enero 2025"
+    },
+    "footer": {
+      "termsOfService": "Términos de Servicio",
+      "privacyPolicy": "Política de Privacidad"
+    }
+  },
   "mediaStrategy": {
     "goals": "Objetivos",
     "goalsDescription": "Define objetivos de marketing para tu contenido en redes sociales",

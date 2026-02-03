@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { generateReferralLink } from "@/lib/crmEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ const MOCK_STATS = {
 };
 
 export default function PartnerDashboard() {
+  const { t } = useTranslation();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -66,11 +68,11 @@ export default function PartnerDashboard() {
 
   const copyReferralLink = () => {
     if (isTemplatePreview) {
-      toast.info("This is a template preview - referral link is for demo only");
+      toast.info(t("partner.toast.previewOnly"));
       return;
     }
     navigator.clipboard.writeText(referralLink);
-    toast.success("Referral link copied to clipboard!");
+    toast.success(t("partner.toast.linkCopied"));
   };
 
   if (!isTemplatePreview && partnerLoading) {
@@ -101,9 +103,9 @@ export default function PartnerDashboard() {
       <div className="flex items-center justify-center h-[50vh]">
         <Card className="max-w-md text-center">
           <CardHeader>
-            <CardTitle>Partner Not Found</CardTitle>
+            <CardTitle>{t("partner.dashboard.notFound")}</CardTitle>
             <CardDescription>
-              Your account is not linked to a partner profile.
+              {t("partner.dashboard.notLinked")}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -119,14 +121,14 @@ export default function PartnerDashboard() {
           <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Template Preview Mode
+              {t("admin.preview.templateMode")}
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400">
-              This shows the dashboard layout with demo data. Changes made here will apply to all partner dashboards.
+              {t("admin.preview.templateModeDesc")}
             </p>
           </div>
           <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200">
-            Demo Data
+            {t("admin.preview.demoData")}
           </Badge>
         </div>
       )}
@@ -140,19 +142,19 @@ export default function PartnerDashboard() {
             onClick={() => navigate("/admin/partners")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Partners
+            {t("admin.preview.backToPartners")}
           </Button>
           <span className="text-sm text-amber-800 dark:text-amber-200">
-            Viewing as Admin: <strong>{partner.contact_name}</strong>'s dashboard
+            {t("admin.preview.viewingAsAdmin")} <strong>{partner.contact_name}</strong>{t("admin.preview.dashboard")}
           </span>
         </div>
       )}
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("partner.dashboard.title")}</h1>
           <p className="text-muted-foreground">
-            Welcome back, {displayPartner?.contact_name}
+            {t("partner.dashboard.welcomeBack", { name: displayPartner?.contact_name })}
           </p>
         </div>
 
@@ -161,17 +163,17 @@ export default function PartnerDashboard() {
           <DialogTrigger asChild>
             <Button variant="outline" className="gap-2">
               <Link className="h-4 w-4" />
-              Your Referral Link
+              {t("partner.dashboard.referralLink")}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Link className="h-5 w-5" />
-                Your Referral Link
+                {t("partner.dashboard.referralLink")}
               </DialogTitle>
               <DialogDescription>
-                Share this link to earn commissions on every signup
+                {t("partner.dashboard.shareToEarn")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
@@ -183,11 +185,11 @@ export default function PartnerDashboard() {
                 </div>
                 <Button onClick={copyReferralLink} className="shrink-0">
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy
+                  {t("partner.dashboard.copy")}
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                Referral Code: <strong>{displayPartner?.referral_code}</strong>
+                {t("partner.dashboard.referralCode")} <strong>{displayPartner?.referral_code}</strong>
               </p>
             </div>
           </DialogContent>
@@ -201,12 +203,12 @@ export default function PartnerDashboard() {
       {isTemplatePreview ? (
         <Card>
           <CardHeader>
-            <CardTitle>Referral Pipeline</CardTitle>
-            <CardDescription>Track your referrals through each stage</CardDescription>
+            <CardTitle>{t("partner.dashboard.pipeline.title")}</CardTitle>
+            <CardDescription>{t("partner.dashboard.pipeline.subtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8 text-muted-foreground">
-              <p>Pipeline data will appear here for actual partners</p>
+              <p>{t("partner.dashboard.pipeline.emptyPreview")}</p>
             </div>
           </CardContent>
         </Card>

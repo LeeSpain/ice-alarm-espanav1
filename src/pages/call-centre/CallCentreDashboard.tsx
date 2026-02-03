@@ -11,11 +11,13 @@ import { MemberQuickSearch } from "@/components/call-centre/MemberQuickSearch";
 import { AlertCard } from "@/components/dashboard/AlertCard";
 import { MessagesPanel } from "@/components/call-centre/MessagesPanel";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 type AlertTabValue = "all" | "incoming" | "in_progress" | "escalated";
 type MainTab = "alerts" | "messages";
 
 export default function CallCentreDashboard() {
+  const { t } = useTranslation();
   const { alerts, isLoading, claimAlert, resolveAlert, escalateAlert } = useAlerts();
   const [mainTab, setMainTab] = useState<MainTab>("alerts");
   const [activeTab, setActiveTab] = useState<AlertTabValue>("all");
@@ -100,14 +102,14 @@ export default function CallCentreDashboard() {
             <TabsList>
               <TabsTrigger value="alerts" className="gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                Alerts
+                {t("callCentre.tabs.alerts")}
                 {alertCounts.incoming > 0 && (
                   <Badge className="ml-1 h-5 px-1.5 bg-alert-sos">{alertCounts.incoming}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="messages" className="gap-2">
                 <MessageSquare className="w-4 h-4" />
-                Messages
+                {t("callCentre.tabs.messages")}
                 {unreadMessageCount > 0 && (
                   <Badge className="ml-1 h-5 px-1.5 bg-blue-500">{unreadMessageCount}</Badge>
                 )}
@@ -122,16 +124,16 @@ export default function CallCentreDashboard() {
                 alertCounts.incoming > 0 && "animate-pulse"
               )}>
                 <AlertTriangle className="w-3 h-3 mr-1" />
-                {alertCounts.incoming} Incoming
+                {t("callCentre.status.incoming", { count: alertCounts.incoming })}
               </Badge>
               <Badge variant="outline" className="bg-alert-battery/10 text-alert-battery border-alert-battery/30">
                 <Clock className="w-3 h-3 mr-1" />
-                {alertCounts.in_progress} In Progress
+                {t("callCentre.status.inProgress", { count: alertCounts.in_progress })}
               </Badge>
               {alertCounts.escalated > 0 && (
                 <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
                   <AlertTriangle className="w-3 h-3 mr-1" />
-                  {alertCounts.escalated} Escalated
+                  {t("callCentre.status.escalated", { count: alertCounts.escalated })}
                 </Badge>
               )}
             </>
@@ -164,7 +166,7 @@ export default function CallCentreDashboard() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Search by name or location..."
+                    placeholder={t("callCentre.search.placeholder")}
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -178,21 +180,21 @@ export default function CallCentreDashboard() {
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AlertTabValue)}>
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="all" className="gap-1">
-                    All
+                    {t("callCentre.filters.all")}
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.all}</Badge>
                   </TabsTrigger>
                   <TabsTrigger value="incoming" className="gap-1">
-                    Incoming
+                    {t("callCentre.filters.incoming")}
                     <Badge className={cn("ml-1 h-5 px-1.5", alertCounts.incoming > 0 ? "bg-alert-sos" : "bg-muted text-muted-foreground")}>
                       {alertCounts.incoming}
                     </Badge>
                   </TabsTrigger>
                   <TabsTrigger value="in_progress" className="gap-1">
-                    In Progress
+                    {t("callCentre.filters.inProgress")}
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.in_progress}</Badge>
                   </TabsTrigger>
                   <TabsTrigger value="escalated" className="gap-1">
-                    Escalated
+                    {t("callCentre.filters.escalated")}
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.escalated}</Badge>
                   </TabsTrigger>
                 </TabsList>
@@ -204,7 +206,7 @@ export default function CallCentreDashboard() {
               {isLoading ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-                  <p>Loading alerts...</p>
+                  <p>{t("callCentre.empty.loading")}</p>
                 </div>
               ) : filteredAlerts.length > 0 ? (
                 filteredAlerts.map((alert) => (
@@ -223,8 +225,8 @@ export default function CallCentreDashboard() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-30 text-status-active" />
-                  <p className="text-lg font-medium">All clear</p>
-                  <p className="text-sm">No active alerts at the moment</p>
+                  <p className="text-lg font-medium">{t("callCentre.empty.allClear")}</p>
+                  <p className="text-sm">{t("callCentre.empty.noAlerts")}</p>
                 </div>
               )}
             </div>
@@ -235,11 +237,11 @@ export default function CallCentreDashboard() {
             <MemberQuickSearch />
             
             <div className="mt-auto pt-4 border-t">
-              <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
+              <h4 className="text-sm font-medium mb-3">{t("callCentre.quickActions.title")}</h4>
               <div className="space-y-2">
                 <Button variant="destructive" className="w-full justify-start gap-2">
                   <PhoneCall className="h-4 w-4" />
-                  Call Emergency Services (112)
+                  {t("callCentre.quickActions.callEmergency")}
                 </Button>
               </div>
             </div>
