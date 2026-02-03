@@ -2331,5 +2331,23 @@
     "important": "Important",
     "noDocuments": "No documents available",
     "noDocumentsDesc": "Documents will appear here when published by administrators."
+  },
+  "pendantStatus": {
+    "title": "Pendant Live Status",
+    "realtimeFleetStatus": "Real-time EV-07B fleet status",
+    "offlineDevices": "Offline Devices",
+    "onlineDevices": "Online Devices",
+    "requireFollowUp": "Require follow-up",
+    "lastSeen": "Last seen",
+    "justNow": "Just now",
+    "unknown": "Unknown",
+    "battery": "Battery",
+    "callMember": "Call",
+    "viewMember": "View",
+    "noDevicesAssigned": "No devices currently assigned to members",
+    "totalDevices": "Total",
+    "devicesOnline": "Online",
+    "devicesOffline": "Offline",
+    "unassigned": "Unassigned"
   }
 }
