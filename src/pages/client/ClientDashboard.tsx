@@ -172,15 +172,14 @@ export default function ClientDashboard() {
           <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Template Preview Mode
+              {t("admin.preview.templateMode")}
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400">
-              This shows the member dashboard layout with demo data. 
-              Changes made here will apply to all member dashboards.
+              {t("admin.preview.templateModeDesc")}
             </p>
           </div>
           <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-800">
-            Demo Data
+            {t("admin.preview.demoData")}
           </Badge>
         </div>
       )}
@@ -190,10 +189,10 @@ export default function ClientDashboard() {
         <div className="flex items-center gap-4 p-4 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/members")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Members
+            {t("admin.preview.backToMembers")}
           </Button>
           <span className="text-sm text-amber-800 dark:text-amber-200">
-            Viewing as Admin: <strong>{displayMember.first_name} {displayMember.last_name}</strong>'s dashboard
+            {t("admin.preview.viewingAsAdmin")} <strong>{displayMember.first_name} {displayMember.last_name}</strong>{t("admin.preview.dashboard")}
           </span>
         </div>
       )}

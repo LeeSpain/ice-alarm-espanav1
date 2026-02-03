@@ -82,7 +82,7 @@ export default function JoinWizard() {
             orderId: orderNumber,
           });
           setCurrentStep(8); // Go to confirmation step
-          toast.success("Payment successful! Welcome to ICE Alarm.");
+          toast.success(t("joinWizard.payment.success"));
         } catch (e) {
           console.error("Failed to parse saved wizard data:", e);
         }
@@ -94,7 +94,7 @@ export default function JoinWizard() {
           orderId: orderNumber,
         }));
         setCurrentStep(8);
-        toast.success("Payment successful! Welcome to ICE Alarm.");
+        toast.success(t("joinWizard.payment.success"));
       }
       // Clear saved data and registration session
       localStorage.removeItem(WIZARD_STORAGE_KEY);
@@ -113,7 +113,7 @@ export default function JoinWizard() {
           console.error("Failed to parse saved wizard data:", e);
         }
       }
-      toast.error("Payment was cancelled. You can try again when ready.");
+      toast.error(t("joinWizard.payment.cancelled"));
       // Clear URL params
       navigate("/join", { replace: true });
     }
@@ -182,68 +182,68 @@ export default function JoinWizard() {
     switch (currentStep) {
       case 2:
         if (!wizardData.primaryMember.firstName || !wizardData.primaryMember.lastName) {
-          return "Please enter your full name";
+          return t("joinWizard.validation.enterFullName");
         }
         if (!wizardData.primaryMember.email) {
-          return "Please enter your email address";
+          return t("joinWizard.validation.enterEmail");
         }
         if (!wizardData.primaryMember.phone) {
-          return "Please enter your phone number";
+          return t("joinWizard.validation.enterPhone");
         }
         if (!wizardData.primaryMember.dateOfBirth) {
-          return "Please enter your date of birth";
+          return t("joinWizard.validation.enterDob");
         }
         if (wizardData.membershipType === "couple") {
           if (!wizardData.partnerMember?.firstName || !wizardData.partnerMember?.lastName) {
-            return "Please enter your partner's full name";
+            return t("joinWizard.validation.enterPartnerFullName");
           }
           if (!wizardData.partnerMember?.email) {
-            return "Please enter your partner's email address";
+            return t("joinWizard.validation.enterPartnerEmail");
           }
           if (!wizardData.partnerMember?.phone) {
-            return "Please enter your partner's phone number";
+            return t("joinWizard.validation.enterPartnerPhone");
           }
           if (!wizardData.partnerMember?.dateOfBirth) {
-            return "Please enter your partner's date of birth";
+            return t("joinWizard.validation.enterPartnerDob");
           }
         }
         return null;
       case 3:
         if (!wizardData.address.addressLine1) {
-          return "Please enter your street address";
+          return t("joinWizard.validation.enterStreetAddress");
         }
         if (!wizardData.address.city) {
-          return "Please enter your city";
+          return t("joinWizard.validation.enterCity");
         }
         if (!wizardData.address.province) {
-          return "Please select your province";
+          return t("joinWizard.validation.selectProvince");
         }
         if (!wizardData.address.postalCode) {
-          return "Please enter your postal code";
+          return t("joinWizard.validation.enterPostalCode");
         }
         if (wizardData.membershipType === "couple" && wizardData.separateAddresses) {
           if (!wizardData.partnerAddress?.addressLine1) {
-            return "Please enter your partner's street address";
+            return t("joinWizard.validation.enterPartnerStreet");
           }
           if (!wizardData.partnerAddress?.city) {
-            return "Please enter your partner's city";
+            return t("joinWizard.validation.enterPartnerCity");
           }
           if (!wizardData.partnerAddress?.province) {
-            return "Please select your partner's province";
+            return t("joinWizard.validation.selectPartnerProvince");
           }
           if (!wizardData.partnerAddress?.postalCode) {
-            return "Please enter your partner's postal code";
+            return t("joinWizard.validation.enterPartnerPostal");
           }
         }
         return null;
       case 4:
-        return "Please add at least one emergency contact";
+        return t("joinWizard.validation.addEmergencyContact");
       case 6:
         if (!wizardData.acceptTerms) {
-          return "Please accept the Terms of Service";
+          return t("joinWizard.validation.acceptTerms");
         }
         if (!wizardData.acceptPrivacy) {
-          return "Please consent to share medical information with emergency services";
+          return t("joinWizard.validation.acceptPrivacy");
         }
         return null;
       default:

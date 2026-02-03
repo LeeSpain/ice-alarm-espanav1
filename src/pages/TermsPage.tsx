@@ -43,12 +43,12 @@ export default function TermsPage() {
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Terms and Conditions</h1>
-                <p className="text-muted-foreground">ICE Alarm España S.L.</p>
+                <h1 className="text-3xl font-bold">{t("legal.terms.title")}</h1>
+                <p className="text-muted-foreground">{t("legal.terms.company")}</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Last updated: January 2025
+              {t("legal.terms.lastUpdated")}
             </p>
           </div>
 
@@ -194,8 +194,8 @@ export default function TermsPage() {
         <div className="container mx-auto text-center text-sm text-sidebar-foreground/60">
           <p>© {new Date().getFullYear()} ICE Alarm España. {t("landing.allRightsReserved")}</p>
           <div className="mt-2 space-x-4">
-            <Link to="/terms" className="hover:text-sidebar-foreground">Terms of Service</Link>
-            <Link to="/privacy" className="hover:text-sidebar-foreground">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-sidebar-foreground">{t("legal.footer.termsOfService")}</Link>
+            <Link to="/privacy" className="hover:text-sidebar-foreground">{t("legal.footer.privacyPolicy")}</Link>
           </div>
         </div>
       </footer>

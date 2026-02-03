@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   Search, 
   Plus, 
@@ -48,6 +49,7 @@ import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 const ITEMS_PER_PAGE = 20;
 
 export default function DevicesPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all");
@@ -96,30 +98,30 @@ export default function DevicesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "in_stock":
-        return <Badge variant="outline">In Stock</Badge>;
+        return <Badge variant="outline">{t("admin.devices.statuses.in_stock")}</Badge>;
       case "reserved":
-        return <Badge variant="secondary">Reserved</Badge>;
+        return <Badge variant="secondary">{t("admin.devices.statuses.reserved")}</Badge>;
       case "allocated":
-        return <Badge className="bg-blue-500 text-white">Allocated</Badge>;
+        return <Badge className="bg-blue-500 text-white">{t("admin.devices.statuses.allocated")}</Badge>;
       case "with_staff":
-        return <Badge className="bg-amber-500 text-white">With Staff</Badge>;
+        return <Badge className="bg-amber-500 text-white">{t("admin.devices.statuses.with_staff")}</Badge>;
       case "live":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Live</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("admin.devices.statuses.live")}</Badge>;
       case "faulty":
-        return <Badge variant="destructive">Faulty</Badge>;
+        return <Badge variant="destructive">{t("admin.devices.statuses.faulty")}</Badge>;
       case "returned":
-        return <Badge variant="secondary">Returned</Badge>;
+        return <Badge variant="secondary">{t("admin.devices.statuses.returned")}</Badge>;
       case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>;
+        return <Badge variant="secondary">{t("admin.devices.statuses.inactive")}</Badge>;
       case "active":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Active (Legacy)</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("admin.devices.statuses.active_legacy")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const getBatteryIndicator = (level: number | null) => {
-    if (level === null) return <span className="text-muted-foreground">N/A</span>;
+    if (level === null) return <span className="text-muted-foreground">{t("admin.devices.na")}</span>;
     
     let color = "text-alert-resolved";
     if (level < 20) color = "text-alert-sos";
@@ -138,15 +140,15 @@ export default function DevicesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Devices</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("admin.devices.title")}</h1>
           <p className="text-muted-foreground">
-            Manage GPS Personal Pendants and their assignments.
+            {t("admin.devices.subtitle")}
           </p>
         </div>
         <Button asChild>
           <Link to="/admin/devices/new">
             <Plus className="mr-2 h-4 w-4" />
-            Add Device
+            {t("admin.devices.addDevice")}
           </Link>
         </Button>
       </div>
@@ -161,7 +163,7 @@ export default function DevicesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data?.totalCount || 0}</p>
-                <p className="text-sm text-muted-foreground">Total Devices</p>
+                <p className="text-sm text-muted-foreground">{t("admin.devices.totalDevices")}</p>
               </div>
             </div>
           </CardContent>
@@ -175,7 +177,7 @@ export default function DevicesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by IMEI or SIM number..."
+                placeholder={t("admin.devices.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -186,27 +188,27 @@ export default function DevicesPage() {
             </div>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("common.status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="in_stock">In Stock</SelectItem>
-                <SelectItem value="reserved">Reserved</SelectItem>
-                <SelectItem value="allocated">Allocated</SelectItem>
-                <SelectItem value="with_staff">With Staff</SelectItem>
-                <SelectItem value="live">Live</SelectItem>
-                <SelectItem value="faulty">Faulty</SelectItem>
-                <SelectItem value="returned">Returned</SelectItem>
+                <SelectItem value="all">{t("common.all")} {t("common.status")}</SelectItem>
+                <SelectItem value="in_stock">{t("admin.devices.statuses.in_stock")}</SelectItem>
+                <SelectItem value="reserved">{t("admin.devices.statuses.reserved")}</SelectItem>
+                <SelectItem value="allocated">{t("admin.devices.statuses.allocated")}</SelectItem>
+                <SelectItem value="with_staff">{t("admin.devices.statuses.with_staff")}</SelectItem>
+                <SelectItem value="live">{t("admin.devices.statuses.live")}</SelectItem>
+                <SelectItem value="faulty">{t("admin.devices.statuses.faulty")}</SelectItem>
+                <SelectItem value="returned">{t("admin.devices.statuses.returned")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={assignmentFilter} onValueChange={(v) => { setAssignmentFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Assignment" />
+                <SelectValue placeholder={t("admin.table.assignment")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="assigned">Assigned</SelectItem>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
+                <SelectItem value="all">{t("common.all")}</SelectItem>
+                <SelectItem value="assigned">{t("admin.members.assigned")}</SelectItem>
+                <SelectItem value="unassigned">{t("admin.devices.unassigned")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -219,21 +221,21 @@ export default function DevicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>IMEI</TableHead>
-                <TableHead>SIM Number</TableHead>
-                <TableHead>Member</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Online</TableHead>
-                <TableHead>Battery</TableHead>
-                <TableHead>Last Check-in</TableHead>
-                <TableHead className="w-[70px]">Actions</TableHead>
+                <TableHead>{t("admin.table.imei")}</TableHead>
+                <TableHead>{t("admin.table.simNumber")}</TableHead>
+                <TableHead>{t("admin.table.member")}</TableHead>
+                <TableHead>{t("admin.table.status")}</TableHead>
+                <TableHead>{t("common.online")}</TableHead>
+                <TableHead>{t("admin.table.battery")}</TableHead>
+                <TableHead>{t("admin.table.lastCheckIn")}</TableHead>
+                <TableHead className="w-[70px]">{t("admin.table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    Loading devices...
+                    {t("admin.devices.loading")}
                   </TableCell>
                 </TableRow>
               ) : data?.devices && data.devices.length > 0 ? (
@@ -255,7 +257,7 @@ export default function DevicesPage() {
                           {device.member.first_name} {device.member.last_name}
                         </Link>
                       ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
+                        <span className="text-muted-foreground">{t("admin.devices.unassigned")}</span>
                       )}
                     </TableCell>
                     <TableCell>{getStatusBadge(device.status)}</TableCell>
@@ -263,12 +265,12 @@ export default function DevicesPage() {
                       {device.is_online ? (
                         <Badge className="bg-green-500 text-white gap-1">
                           <Wifi className="h-3 w-3" />
-                          Online
+                          {t("admin.devices.online")}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1">
                           <WifiOff className="h-3 w-3" />
-                          Offline
+                          {t("admin.devices.offline")}
                         </Badge>
                       )}
                     </TableCell>
@@ -277,7 +279,7 @@ export default function DevicesPage() {
                       {device.last_checkin_at ? (
                         format(new Date(device.last_checkin_at), "dd MMM, HH:mm")
                       ) : (
-                        <span className="text-muted-foreground">Never</span>
+                        <span className="text-muted-foreground">{t("admin.devices.never")}</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -293,16 +295,16 @@ export default function DevicesPage() {
                             navigate(`/admin/devices/${device.id}`);
                           }}>
                             <Eye className="mr-2 h-4 w-4" />
-                            View Details
+                            {t("admin.devices.viewDetails")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                             <Settings className="mr-2 h-4 w-4" />
-                            Configure
+                            {t("admin.devices.configure")}
                           </DropdownMenuItem>
                           {device.last_location_lat && (
                             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                               <MapPin className="mr-2 h-4 w-4" />
-                              View Location
+                              {t("admin.devices.viewLocation")}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -313,7 +315,7 @@ export default function DevicesPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No devices found
+                    {t("admin.devices.noResults")}
                   </TableCell>
                 </TableRow>
               )}
@@ -326,7 +328,7 @@ export default function DevicesPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0)} of {data?.totalCount || 0} devices
+            {t("admin.devices.showing", { from: ((page - 1) * ITEMS_PER_PAGE) + 1, to: Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0), total: data?.totalCount || 0 })}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -336,10 +338,10 @@ export default function DevicesPage() {
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              {t("admin.members.previous")}
             </Button>
             <span className="text-sm">
-              Page {page} of {totalPages}
+              {t("admin.members.pageOf", { page, totalPages })}
             </span>
             <Button
               variant="outline"
@@ -347,7 +349,7 @@ export default function DevicesPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t("admin.members.next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

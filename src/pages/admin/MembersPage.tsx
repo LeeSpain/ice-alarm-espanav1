@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   Search, 
   Plus, 
@@ -46,6 +47,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const ITEMS_PER_PAGE = 20;
 
 export default function MembersPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -96,11 +98,11 @@ export default function MembersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Active</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("common.active")}</Badge>;
       case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>;
+        return <Badge variant="secondary">{t("common.inactive")}</Badge>;
       case "suspended":
-        return <Badge variant="destructive">Suspended</Badge>;
+        return <Badge variant="destructive">{t("membership.suspended")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -108,10 +110,10 @@ export default function MembersPage() {
 
   const getPlanBadge = (subscriptions: any[]) => {
     const activeSub = subscriptions?.find((s: any) => s.status === "active");
-    if (!activeSub) return <Badge variant="outline">No Plan</Badge>;
+    if (!activeSub) return <Badge variant="outline">{t("admin.members.noPlan")}</Badge>;
     return (
       <Badge variant="secondary" className="capitalize">
-        {activeSub.plan_type}
+        {activeSub.plan_type === "single" ? t("membership.single") : t("membership.couple")}
       </Badge>
     );
   };
@@ -126,9 +128,9 @@ export default function MembersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Members</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("admin.members.title")}</h1>
           <p className="text-muted-foreground">
-            Manage all ICE Alarm members and their information.
+            {t("admin.members.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -137,25 +139,25 @@ export default function MembersPage() {
               <Button variant="outline" asChild>
                 <Link to="/admin/crm-import">
                   <Upload className="mr-2 h-4 w-4" />
-                  CRM Import
+                  {t("admin.members.crmImport")}
                 </Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link to="/admin/crm-contacts">
                   <Contact className="mr-2 h-4 w-4" />
-                  CRM Contacts
+                  {t("admin.members.crmContacts")}
                 </Link>
               </Button>
             </>
           )}
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t("admin.members.exportCsv")}
           </Button>
           <Button asChild>
             <Link to="/admin/members/new">
               <Plus className="mr-2 h-4 w-4" />
-              Add Member
+              {t("admin.members.addMember")}
             </Link>
           </Button>
         </div>
@@ -168,7 +170,7 @@ export default function MembersPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name, email, or phone..."
+                placeholder={t("admin.members.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -179,23 +181,23 @@ export default function MembersPage() {
             </div>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("common.status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="all">{t("common.all")} {t("common.status")}</SelectItem>
+                <SelectItem value="active">{t("common.active")}</SelectItem>
+                <SelectItem value="inactive">{t("common.inactive")}</SelectItem>
+                <SelectItem value="suspended">{t("membership.suspended")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Plan" />
+                <SelectValue placeholder={t("common.plan")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Plans</SelectItem>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="couple">Couple</SelectItem>
+                <SelectItem value="all">{t("common.all")} {t("common.plan")}s</SelectItem>
+                <SelectItem value="single">{t("membership.single")}</SelectItem>
+                <SelectItem value="couple">{t("membership.couple")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -208,20 +210,20 @@ export default function MembersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead className="w-[70px]">Actions</TableHead>
+                <TableHead>{t("admin.table.name")}</TableHead>
+                <TableHead>{t("admin.table.email")}</TableHead>
+                <TableHead>{t("admin.table.phone")}</TableHead>
+                <TableHead>{t("admin.table.plan")}</TableHead>
+                <TableHead>{t("admin.table.status")}</TableHead>
+                <TableHead>{t("admin.table.device")}</TableHead>
+                <TableHead className="w-[70px]">{t("admin.table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
-                    Loading members...
+                    {t("admin.members.loading")}
                   </TableCell>
                 </TableRow>
               ) : data?.members && data.members.length > 0 ? (
@@ -241,10 +243,10 @@ export default function MembersPage() {
                     <TableCell>
                       {member.devices?.some((d: any) => d.status === "active") ? (
                         <Badge variant="outline" className="bg-alert-resolved/10 text-alert-resolved border-alert-resolved/20">
-                          Assigned
+                          {t("admin.members.assigned")}
                         </Badge>
                       ) : (
-                        <Badge variant="outline">None</Badge>
+                        <Badge variant="outline">{t("admin.members.none")}</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -256,7 +258,7 @@ export default function MembersPage() {
                             e.stopPropagation();
                             navigate(`/dashboard?memberId=${member.id}`);
                           }}
-                          title="View Member Dashboard"
+                          title={t("admin.members.viewMemberDashboard")}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -272,14 +274,14 @@ export default function MembersPage() {
                               navigate(`/admin/members/${member.id}`);
                             }}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View Details
+                              {t("admin.members.viewDetails")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/admin/members/${member.id}/edit`);
                             }}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              {t("common.edit")}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -287,7 +289,7 @@ export default function MembersPage() {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              {t("common.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -298,7 +300,7 @@ export default function MembersPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No members found
+                    {t("admin.members.noResults")}
                   </TableCell>
                 </TableRow>
               )}
@@ -311,7 +313,7 @@ export default function MembersPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0)} of {data?.totalCount || 0} members
+            {t("admin.members.showing", { from: ((page - 1) * ITEMS_PER_PAGE) + 1, to: Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0), total: data?.totalCount || 0 })}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -321,10 +323,10 @@ export default function MembersPage() {
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              {t("admin.members.previous")}
             </Button>
             <span className="text-sm">
-              Page {page} of {totalPages}
+              {t("admin.members.pageOf", { page, totalPages })}
             </span>
             <Button
               variant="outline"
@@ -332,7 +334,7 @@ export default function MembersPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t("admin.members.next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
