@@ -1570,7 +1570,8 @@
     "documents": "Documentos",
     "aiCommandCentre": "Centro de Mando IA",
     "aiOverview": "Vista General",
-    "mediaManager": "Gestor de Medios"
+    "mediaManager": "Gestor de Medios",
+    "aiOutreach": "AI Outreach"
   },
   "ai": {
     "commandCentre": "Centro de Mando IA",
@@ -2770,6 +2771,152 @@
       "normal": "Normal",
       "high": "Alta",
       "urgent": "Urgente"
+    }
+  },
+  "outreach": {
+    "title": "AI Outreach",
+    "subtitle": "Descubrimiento automático de leads y campañas de outreach",
+    "tabs": {
+      "leads": "Leads",
+      "crm": "CRM",
+      "campaigns": "Campañas",
+      "inbox": "Bandeja",
+      "analytics": "Analítica"
+    },
+    "leads": {
+      "title": "Leads Sin Procesar",
+      "subtitle": "Leads descubiertos esperando calificación IA",
+      "addLead": "Añadir Lead",
+      "importLeads": "Importar Leads",
+      "pasteList": "Pegar Lista",
+      "rateSelected": "Calificar Seleccionados",
+      "rateAllNew": "Calificar Todos Nuevos",
+      "moveQualified": "Mover Calificados a CRM",
+      "rejectLead": "Rechazar",
+      "columns": {
+        "company": "Empresa",
+        "contact": "Contacto",
+        "email": "Email",
+        "website": "Web",
+        "location": "Ubicación",
+        "category": "Categoría",
+        "pipeline": "Pipeline",
+        "score": "Puntuación IA",
+        "status": "Estado",
+        "source": "Fuente"
+      },
+      "status": {
+        "new": "Nuevo",
+        "qualified": "Calificado",
+        "rejected": "Rechazado"
+      },
+      "pipeline": {
+        "sales": "Ventas",
+        "partner": "Partner"
+      },
+      "sources": {
+        "manual": "Manual",
+        "csv_import": "Importación CSV",
+        "paste_list": "Lista Pegada",
+        "scrape": "Web Scrape"
+      },
+      "import": {
+        "title": "Importar Leads",
+        "csvTab": "Subir CSV",
+        "pasteTab": "Pegar Lista",
+        "pasteInstructions": "Un lead por línea: empresa | email | web (opcional)",
+        "csvInstructions": "Sube un archivo CSV con columnas: empresa, contacto, email, web, ubicación, categoría, pipeline",
+        "importButton": "Importar",
+        "importing": "Importando..."
+      },
+      "noLeads": "No se encontraron leads",
+      "loading": "Cargando leads..."
+    },
+    "crm": {
+      "title": "CRM Outreach",
+      "subtitle": "Gestiona leads calificados a través del pipeline",
+      "columns": {
+        "new": "Nuevo",
+        "contacted": "Contactado",
+        "replied": "Respondido",
+        "interested": "Interesado",
+        "converted": "Convertido",
+        "closed": "Cerrado"
+      },
+      "actions": {
+        "research": "Investigar Negocio",
+        "generateEmail": "Generar Email Intro",
+        "sendEmail": "Enviar Email",
+        "convert": "Convertir",
+        "close": "Cerrar Lead"
+      },
+      "convert": {
+        "toMember": "Convertir a Miembro",
+        "toPartner": "Convertir a Partner",
+        "success": "Lead convertido exitosamente",
+        "error": "Error al convertir lead"
+      },
+      "research": {
+        "title": "Investigación de Negocio",
+        "generating": "Investigando...",
+        "summary": "Resumen",
+        "hooks": "Hooks de Personalización"
+      },
+      "email": {
+        "title": "Borrador de Email",
+        "generating": "Generando...",
+        "subject": "Asunto",
+        "body": "Cuerpo",
+        "send": "Enviar Email",
+        "approve": "Aprobar",
+        "edit": "Editar"
+      }
+    },
+    "campaigns": {
+      "title": "Campañas",
+      "subtitle": "Crear y gestionar campañas de email outreach",
+      "newCampaign": "Nueva Campaña",
+      "noCampaigns": "Aún no hay campañas",
+      "status": {
+        "draft": "Borrador",
+        "active": "Activa",
+        "paused": "Pausada",
+        "completed": "Completada"
+      }
+    },
+    "inbox": {
+      "title": "Bandeja de Entrada",
+      "subtitle": "Ver y responder conversaciones de email",
+      "noThreads": "Aún no hay conversaciones",
+      "classification": {
+        "interested": "Interesado",
+        "question": "Pregunta",
+        "not_interested": "No Interesado",
+        "unsubscribe": "Baja"
+      },
+      "suggestedReply": "Respuesta Sugerida",
+      "sendReply": "Enviar Respuesta",
+      "editReply": "Editar"
+    },
+    "analytics": {
+      "title": "Analítica",
+      "subtitle": "Seguimiento de métricas de rendimiento outreach",
+      "metrics": {
+        "leadsDiscovered": "Leads Descubiertos",
+        "leadsQualified": "Leads Calificados",
+        "emailsSent": "Emails Enviados",
+        "repliesReceived": "Respuestas Recibidas",
+        "conversions": "Conversiones"
+      }
+    },
+    "settings": {
+      "minScore": "Puntuación Mínima de Calificación",
+      "minScoreDesc": "Solo leads con esta puntuación o superior pueden pasar al CRM"
+    },
+    "rating": {
+      "success": "Leads calificados exitosamente",
+      "error": "Error al calificar leads",
+      "noLeadsToRate": "No hay leads para calificar"
     }
   }
 }

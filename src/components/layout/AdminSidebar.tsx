@@ -25,6 +25,7 @@ import {
   Package,
   Brain,
   Share2,
+  Megaphone,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -111,7 +112,8 @@ const menuGroups: MenuGroup[] = [
     labelKey: "sidebar.communications",
     items: [
       { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
-      { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" }
+      { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
+      { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" }
     ]
   },
   {

@@ -1,0 +1,77 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Megaphone, Users, Target, Mail, BarChart3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OutreachLeadsTab } from "@/components/admin/outreach/OutreachLeadsTab";
+import { OutreachCRMTab } from "@/components/admin/outreach/OutreachCRMTab";
+import { OutreachCampaignsTab } from "@/components/admin/outreach/OutreachCampaignsTab";
+import { OutreachInboxTab } from "@/components/admin/outreach/OutreachInboxTab";
+import { OutreachAnalyticsTab } from "@/components/admin/outreach/OutreachAnalyticsTab";
+
+const AIOutreachPage = () => {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState("leads");
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+          <Megaphone className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("outreach.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("outreach.subtitle")}</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+          <TabsTrigger value="leads" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.tabs.leads")}</span>
+          </TabsTrigger>
+          <TabsTrigger value="crm" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.tabs.crm")}</span>
+          </TabsTrigger>
+          <TabsTrigger value="campaigns" className="flex items-center gap-2">
+            <Megaphone className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.tabs.campaigns")}</span>
+          </TabsTrigger>
+          <TabsTrigger value="inbox" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.tabs.inbox")}</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("outreach.tabs.analytics")}</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="leads" className="space-y-4">
+          <OutreachLeadsTab />
+        </TabsContent>
+
+        <TabsContent value="crm" className="space-y-4">
+          <OutreachCRMTab />
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-4">
+          <OutreachCampaignsTab />
+        </TabsContent>
+
+        <TabsContent value="inbox" className="space-y-4">
+          <OutreachInboxTab />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <OutreachAnalyticsTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default AIOutreachPage;
