@@ -15,7 +15,7 @@ interface UseAIChatOptions {
   memberId?: string | null;
   memberName?: string | null;
   staffName?: string | null;
-  userRole?: "member" | "admin" | "public";
+  userRole?: "member" | "admin" | "public" | "staff";
 }
 
 // Get time-appropriate greeting
@@ -81,6 +81,13 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
         content = `${greeting}, ${staffName}! 👋 Soy el Main Brain, tu asistente de IA para la gestión del sistema ICE Alarm. Puedo ayudarte con análisis de datos, gestión de miembros, reportes, y coordinar las operaciones del negocio. ¿En qué puedo ayudarte hoy?`;
       } else {
         content = `${greeting}, ${staffName}! 👋 I'm the Main Brain, your AI assistant for managing the ICE Alarm system. I can help you with data analysis, member management, reports, and coordinating business operations. What can I help you with today?`;
+      }
+    } else if (userRole === "staff" && staffName) {
+      // Personalized greeting for call centre staff
+      if (i18n.language === "es") {
+        content = `${greeting}, ${staffName}! 👋 Soy tu Especialista de Soporte. Estoy aquí para ayudarte con procedimientos, búsquedas de miembros, gestión de alertas, y cualquier cosa que necesites durante tu turno. ¿En qué puedo ayudarte?`;
+      } else {
+        content = `${greeting}, ${staffName}! 👋 I'm your Staff Support Specialist. I'm here to help you with procedures, member lookups, alert handling, and anything else you need during your shift. What can I help you with?`;
       }
     } else if (userRole === "member" && memberName) {
       // Personalized greeting for logged-in members

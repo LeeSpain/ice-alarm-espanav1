@@ -15,7 +15,7 @@ interface AIChatWidgetProps {
   memberId?: string | null;
   memberName?: string | null;
   staffName?: string | null;
-  userRole?: "member" | "admin" | "public";
+  userRole?: "member" | "admin" | "public" | "staff";
 }
 
 export function AIChatWidget({ 

@@ -29,6 +29,10 @@ const EVENT_AGENT_MAP: Record<string, string[]> = {
   "member.support_request": ["member_specialist"],
   "member.device_issue": ["member_specialist"],
   
+  // Staff Support Specialist - call centre staff assistance
+  "staff.help_request": ["staff_support_specialist"],
+  "staff.procedure_query": ["staff_support_specialist"],
+  
   // Media Manager - content creation
   "social.content_needed": ["media_manager"],
   "marketing.campaign_start": ["media_manager"],
