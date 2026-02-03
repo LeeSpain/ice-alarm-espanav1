@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -29,14 +30,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useOutreachCampaigns, NewCampaign } from "@/hooks/useOutreachCampaigns";
+import { useOutreachCampaigns, NewCampaign, Campaign } from "@/hooks/useOutreachCampaigns";
 import { Loader2 } from "lucide-react";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Campaign name is required"),
   description: z.string().optional(),
   pipeline_type: z.enum(["sales", "partner"]),
-  status: z.enum(["active", "paused"]),
+  status: z.enum(["active", "paused", "draft", "completed"]),
   target_description: z.string().optional(),
   target_locations: z.string().optional(),
   default_language: z.enum(["en", "es"]),
@@ -49,14 +50,16 @@ const campaignSchema = z.object({
 
 type CampaignFormValues = z.infer<typeof campaignSchema>;
 
-interface CreateCampaignModalProps {
+interface CampaignFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  campaign?: Campaign | null;
+  mode: "create" | "edit";
 }
 
-export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalProps) {
+export function CampaignFormModal({ open, onOpenChange, campaign, mode }: CampaignFormModalProps) {
   const { t } = useTranslation();
-  const { createCampaign, isCreating } = useOutreachCampaigns();
+  const { createCampaign, isCreating, updateCampaign, isUpdating } = useOutreachCampaigns();
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
@@ -76,12 +79,47 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
     },
   });
 
+  // Populate form when editing
+  useEffect(() => {
+    if (mode === "edit" && campaign) {
+      form.reset({
+        name: campaign.name,
+        description: campaign.description || "",
+        pipeline_type: campaign.pipeline_type,
+        status: campaign.status || "active",
+        target_description: campaign.target_description || "",
+        target_locations: campaign.target_locations?.join(", ") || "",
+        default_language: campaign.default_language,
+        email_tone: campaign.email_tone,
+        outreach_goal: campaign.outreach_goal,
+        follow_up_enabled: campaign.follow_up_enabled,
+        max_emails_per_lead: campaign.max_emails_per_lead || 3,
+        days_between_emails: campaign.days_between_emails || 3,
+      });
+    } else if (mode === "create") {
+      form.reset({
+        name: "",
+        description: "",
+        pipeline_type: "sales",
+        status: "active",
+        target_description: "",
+        target_locations: "",
+        default_language: "en",
+        email_tone: "professional",
+        outreach_goal: "intro",
+        follow_up_enabled: true,
+        max_emails_per_lead: 3,
+        days_between_emails: 3,
+      });
+    }
+  }, [mode, campaign, form, open]);
+
   const onSubmit = async (values: CampaignFormValues) => {
     const campaignData: NewCampaign = {
       name: values.name,
       description: values.description || null,
       pipeline_type: values.pipeline_type,
-      status: values.status,
+      status: values.status as "draft" | "active" | "paused" | "completed",
       target_description: values.target_description || null,
       target_locations: values.target_locations 
         ? values.target_locations.split(",").map(s => s.trim()).filter(Boolean)
@@ -94,16 +132,32 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
       days_between_emails: values.days_between_emails,
     };
 
-    await createCampaign(campaignData);
+    if (mode === "edit" && campaign) {
+      await updateCampaign({ id: campaign.id, ...campaignData });
+    } else {
+      await createCampaign(campaignData);
+    }
+    
     form.reset();
     onOpenChange(false);
   };
+
+  const isSubmitting = isCreating || isUpdating;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("outreach.campaigns.newCampaign")}</DialogTitle>
+          <DialogTitle>
+            {mode === "edit" 
+              ? t("outreach.campaigns.editCampaign") 
+              : t("outreach.campaigns.newCampaign")}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "edit"
+              ? t("outreach.campaigns.editDescription")
+              : t("outreach.campaigns.createDescription")}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -152,7 +206,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("outreach.campaigns.fields.pipelineType")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -174,7 +228,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("outreach.campaigns.fields.status")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -183,6 +237,8 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                         <SelectContent>
                           <SelectItem value="active">{t("outreach.campaigns.status.active")}</SelectItem>
                           <SelectItem value="paused">{t("outreach.campaigns.status.paused")}</SelectItem>
+                          <SelectItem value="draft">{t("outreach.campaigns.status.draft")}</SelectItem>
+                          <SelectItem value="completed">{t("outreach.campaigns.status.completed")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -244,7 +300,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("outreach.campaigns.fields.defaultLanguage")}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -274,7 +330,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("outreach.campaigns.fields.emailTone")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -297,7 +353,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("outreach.campaigns.fields.outreachGoal")}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -355,7 +411,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                         <FormLabel>{t("outreach.campaigns.fields.maxEmails")}</FormLabel>
                         <Select 
                           onValueChange={(val) => field.onChange(parseInt(val))} 
-                          defaultValue={String(field.value)}
+                          value={String(field.value)}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -386,7 +442,7 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
                         <FormLabel>{t("outreach.campaigns.fields.daysBetween")}</FormLabel>
                         <Select 
                           onValueChange={(val) => field.onChange(parseInt(val))} 
-                          defaultValue={String(field.value)}
+                          value={String(field.value)}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -415,9 +471,9 @@ export function CreateCampaignModal({ open, onOpenChange }: CreateCampaignModalP
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isCreating}>
-                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("outreach.campaigns.create")}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mode === "edit" ? t("common.save") : t("outreach.campaigns.create")}
               </Button>
             </div>
           </form>
