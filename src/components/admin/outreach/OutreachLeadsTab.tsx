@@ -28,6 +28,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useOutreachRawLeads } from "@/hooks/useOutreachRawLeads";
 import { useOutreachCampaigns } from "@/hooks/useOutreachCampaigns";
+import { useOutreachCaps } from "@/hooks/useOutreachCaps";
 import { AddOutreachLeadModal } from "./AddOutreachLeadModal";
 import { ImportLeadsModal } from "./ImportLeadsModal";
 
@@ -46,6 +47,7 @@ export function OutreachLeadsTab() {
   const { leads, isLoading, qualifyLeads, rejectLeads, isQualifying, rateLeads, isRating } =
     useOutreachRawLeads(filters);
   const { campaigns } = useOutreachCampaigns();
+  const { settings, usage } = useOutreachCaps();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -64,9 +66,13 @@ export function OutreachLeadsTab() {
   };
 
   const handleMoveQualified = async () => {
-    // Let the hook handle threshold checks
+    // Pass cap settings and current usage for enforcement
     if (selectedLeads.length > 0) {
-      await qualifyLeads(selectedLeads);
+      await qualifyLeads({ 
+        leadIds: selectedLeads, 
+        capSettings: settings, 
+        currentUsage: usage 
+      });
       setSelectedLeads([]);
     }
   };

@@ -217,11 +217,25 @@ export function useOutreachRawLeads(filters?: Filters) {
       });
 
       if (response.error) throw response.error;
-      return response.data as { rated: number; total?: number; errors?: string[] };
+      return response.data as { 
+        rated: number; 
+        total?: number; 
+        queued?: number; 
+        capReached?: boolean;
+        errors?: string[] 
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["outreach-raw-leads"] });
-      if (data.rated > 0) {
+      queryClient.invalidateQueries({ queryKey: ["outreach-daily-usage"] });
+      
+      if (data.capReached && data.queued && data.queued > 0) {
+        toast({
+          title: i18n.t("outreach.caps.capsReachedTitle"),
+          description: i18n.t("outreach.caps.ratingCapReached", { queued: data.queued }),
+          variant: "destructive",
+        });
+      } else if (data.rated > 0) {
         toast({
           title: i18n.t("common.success"),
           description: i18n.t("outreach.leads.ratingComplete", { count: data.rated }),
@@ -243,7 +257,24 @@ export function useOutreachRawLeads(filters?: Filters) {
   });
 
   const qualifyLeadsMutation = useMutation({
-    mutationFn: async (leadIds: string[]) => {
+    mutationFn: async ({ 
+      leadIds, 
+      capSettings, 
+      currentUsage 
+    }: { 
+      leadIds: string[]; 
+      capSettings?: { max_qualified_per_day: { value: number; enabled: boolean } };
+      currentUsage?: { qualified: number };
+    }) => {
+      // Check qualification cap
+      const qualifiedToday = currentUsage?.qualified ?? 0;
+      const cap = capSettings?.max_qualified_per_day;
+      const remaining = cap?.enabled ? Math.max(0, cap.value - qualifiedToday) : Infinity;
+
+      if (remaining === 0) {
+        return { qualified: 0, skipped: 0, queued: leadIds.length, capReached: true };
+      }
+
       // Get lead details
       const { data: rawLeadsData, error: fetchError } = await supabase
         .from("outreach_raw_leads")
@@ -251,7 +282,7 @@ export function useOutreachRawLeads(filters?: Filters) {
         .in("id", leadIds);
 
       if (fetchError) throw fetchError;
-      if (!rawLeadsData || rawLeadsData.length === 0) return { qualified: 0, skipped: 0 };
+      if (!rawLeadsData || rawLeadsData.length === 0) return { qualified: 0, skipped: 0, queued: 0, capReached: false };
 
       // Cast to generic record type
       const dbRows = rawLeadsData as unknown as Record<string, unknown>[];
@@ -303,11 +334,31 @@ export function useOutreachRawLeads(filters?: Filters) {
       }
 
       if (qualifiedLeads.length === 0) {
-        return { qualified: 0, skipped: skippedLeads.length };
+        return { qualified: 0, skipped: skippedLeads.length, queued: 0, capReached: false };
+      }
+
+      // Apply cap - take only what we can process
+      const leadsToProcess = qualifiedLeads.slice(0, remaining);
+      const queuedLeads = qualifiedLeads.slice(remaining);
+
+      // Queue leads that exceed cap
+      if (queuedLeads.length > 0) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        const queuedTasks = queuedLeads.map((lead) => ({
+          task_type: "qualify",
+          entity_id: lead.id,
+          entity_type: "raw_lead",
+          scheduled_for: tomorrow.toISOString().split("T")[0],
+        }));
+
+        await supabase.from("outreach_queued_tasks").insert(queuedTasks);
       }
 
       // Create CRM leads with campaign_id
-      const crmLeads = qualifiedLeads.map((lead) => ({
+      const crmLeads = leadsToProcess.map((lead) => ({
         raw_lead_id: lead.id,
         pipeline_type: lead.pipeline_type,
         company_name: lead.company_name,
@@ -333,17 +384,54 @@ export function useOutreachRawLeads(filters?: Filters) {
       const { error: updateError } = await supabase
         .from("outreach_raw_leads")
         .update({ status: "qualified" })
-        .in("id", qualifiedLeads.map((l) => l.id));
+        .in("id", leadsToProcess.map((l) => l.id));
 
       if (updateError) throw updateError;
 
-      return { qualified: qualifiedLeads.length, skipped: skippedLeads.length };
+      // Track usage
+      if (leadsToProcess.length > 0) {
+        const today = new Date().toISOString().split("T")[0];
+        const { data: existing } = await supabase
+          .from("outreach_daily_usage")
+          .select("id, usage_count")
+          .eq("usage_date", today)
+          .eq("usage_type", "qualified")
+          .is("inbox_id", null)
+          .single();
+
+        if (existing) {
+          await supabase
+            .from("outreach_daily_usage")
+            .update({ usage_count: existing.usage_count + leadsToProcess.length })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("outreach_daily_usage").insert({
+            usage_date: today,
+            usage_type: "qualified",
+            usage_count: leadsToProcess.length,
+          });
+        }
+      }
+
+      return { 
+        qualified: leadsToProcess.length, 
+        skipped: skippedLeads.length, 
+        queued: queuedLeads.length,
+        capReached: queuedLeads.length > 0
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["outreach-raw-leads"] });
       queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["outreach-daily-usage"] });
 
-      if (data.qualified > 0) {
+      if (data.capReached && data.queued > 0) {
+        toast({
+          title: i18n.t("outreach.caps.capsReachedTitle"),
+          description: i18n.t("outreach.caps.qualificationCapReached", { queued: data.queued }),
+          variant: "destructive",
+        });
+      } else if (data.qualified > 0) {
         toast({
           title: i18n.t("common.success"),
           description: i18n.t("outreach.leads.moveQualified"),
