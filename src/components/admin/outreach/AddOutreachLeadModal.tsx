@@ -61,7 +61,7 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
     resolver: zodResolver(leadSchema),
     defaultValues: {
       pipeline_type: "sales",
-      campaign_id: "",
+      campaign_id: "none",
     },
   });
 
@@ -177,7 +177,7 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
                 value={selectedPipeline}
                 onValueChange={(v) => {
                   setValue("pipeline_type", v as "sales" | "partner");
-                  setValue("campaign_id", ""); // Reset campaign when pipeline changes
+                  setValue("campaign_id", "none"); // Reset campaign when pipeline changes
                 }}
               >
                 <SelectTrigger>
@@ -200,7 +200,7 @@ export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModa
                   <SelectValue placeholder={t("outreach.leads.noCampaign")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("outreach.leads.noCampaign")}</SelectItem>
+                  <SelectItem value="none">{t("outreach.leads.noCampaign")}</SelectItem>
                   {filteredCampaigns.map((campaign) => (
                     <SelectItem key={campaign.id} value={campaign.id}>
                       {campaign.name}
