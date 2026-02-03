@@ -1,147 +1,267 @@
 
-# AI Outreach Instructions Popup - Implementation Plan
+# AI Outreach Lead Rating Implementation Plan
 
 ## Overview
 
-Add a professional "How to Use" help button to the AI Outreach page header that opens a detailed instructions dialog. The dialog will provide comprehensive guidance on using all five tabs (Leads, CRM, Campaigns, Inbox, Analytics) with step-by-step workflows and best practices.
+This plan implements a complete end-to-end campaign assignment and AI rating system for outreach leads in three stages, as requested.
 
 ---
 
-## Current State
+## STAGE 1: Add campaign_id to Raw Leads
 
-| Feature | Status |
-|---------|--------|
-| AI Outreach Page | ✅ Has header with title/subtitle |
-| Help Button | ❌ None |
-| Instructions Popup | ❌ None |
-| Tab Guidance | ❌ None |
+### Database Changes
 
----
-
-## Planned Implementation
-
-### 1. Header Enhancement
-Add a "How to Use" button next to the header title:
+| Change | Details |
+|--------|---------|
+| Add column | `campaign_id uuid NULL` to `outreach_raw_leads` |
+| Add foreign key | References `outreach_campaigns(id)` with `ON DELETE SET NULL` |
+| Add index | `idx_outreach_raw_leads_campaign_id` for performance |
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│  [📢] AI Outreach                                 [? How to Use]│
-│       Automated lead discovery and outreach campaigns           │
-└─────────────────────────────────────────────────────────────────┘
+outreach_raw_leads
+├── id
+├── company_name
+├── campaign_id (NEW) ──────► outreach_campaigns(id)
+├── ai_score
+├── ai_reasoning
+├── ai_rated_at
+└── ...
 ```
 
-### 2. Instructions Dialog Component
-Create a professional dialog with comprehensive usage instructions:
+### Frontend Changes
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  [X]                   AI Outreach Guide                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ══════════════════════════════════════════════════════════════ │
-│  OVERVIEW                                                       │
-│  ══════════════════════════════════════════════════════════════ │
-│  AI Outreach automates lead discovery and email campaigns       │
-│  for sales and partner acquisition...                           │
-│                                                                 │
-│  ══════════════════════════════════════════════════════════════ │
-│  📥 LEADS TAB                                                   │
-│  ══════════════════════════════════════════════════════════════ │
-│  • Add leads manually or import via CSV                         │
-│  • AI rates leads (1-10) based on fit                           │
-│  • Move qualified leads (7+) to CRM                             │
-│                                                                 │
-│  ══════════════════════════════════════════════════════════════ │
-│  🎯 CRM TAB                                                     │
-│  ══════════════════════════════════════════════════════════════ │
-│  • Kanban board: New → Contacted → Replied → Converted          │
-│  • AI research generates business summaries                     │
-│  • AI writes personalized intro emails                          │
-│                                                                 │
-│  ... (Campaigns, Inbox, Analytics sections) ...                 │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                    [Got It]     │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Dialog Content Structure
-
-### Sections
-
-| Section | Content |
-|---------|---------|
-| **Overview** | Purpose of AI Outreach module, workflow summary |
-| **Leads Tab** | Adding leads, importing CSV, AI rating, qualification |
-| **CRM Tab** | Kanban stages, AI research, email generation, conversion |
-| **Campaigns Tab** | Creating campaigns, targeting, messaging config, follow-ups |
-| **Inbox Tab** | Email thread management, AI classification, reply suggestions |
-| **Analytics Tab** | Performance metrics, tracking conversions |
-| **Best Practices** | Tips for maximizing results |
-
-### Content Details
-
-**Overview Section:**
-- Purpose: Automate lead discovery and outreach for sales/partner pipelines
-- Main workflow: Import Leads → AI Rates → Move to CRM → Research → Email → Convert
-
-**Leads Tab Section:**
-- Add leads manually with company/contact/email
-- Import via CSV or paste list
-- Select pipeline (Sales or Partner)
-- Optionally assign to a campaign
-- AI rates leads 1-10 based on business fit
-- Move leads with score ≥7 to CRM
-
-**CRM Tab Section:**
-- Kanban board with 6 columns: New, Contacted, Replied, Interested, Converted, Closed
-- Click "Research Business" for AI-generated company summary
-- Click "Generate Intro Email" for personalized outreach
-- Move cards through pipeline as relationship progresses
-- Convert successful leads to Members or Partners
-
-**Campaigns Tab Section:**
-- Create targeted email campaigns by pipeline type
-- Define ideal lead characteristics for AI personalization
-- Configure email tone (Professional/Friendly/Neutral)
-- Set outreach goals (Introduction/Partnership/Meeting)
-- Enable automated follow-up sequences
-
-**Inbox Tab Section:**
-- View all email conversations in one place
-- AI classifies replies (Interested/Question/Not Interested/Unsubscribe)
-- AI generates suggested replies
-- Edit and send responses
-
-**Analytics Tab Section:**
-- Track leads discovered vs qualified
-- Monitor emails sent and replies received
-- View conversion rates
-
-**Best Practices Section:**
-- Start with a focused campaign targeting specific regions
-- Rate all new leads before moving to CRM
-- Personalize AI emails with research before sending
-- Follow up within 3-5 days if no response
-- Convert interested leads promptly
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/admin/outreach/OutreachHelpDialog.tsx` | Help dialog component with all instructions |
-
-## Files to Modify
+**Files to modify:**
 
 | File | Changes |
 |------|---------|
-| `src/pages/admin/AIOutreachPage.tsx` | Add HelpCircle button, dialog trigger |
-| `src/i18n/locales/en.json` | Add `outreach.help.*` translation keys |
+| `src/hooks/useOutreachRawLeads.ts` | Add `campaign_id` to `NewLead` interface and insert/bulk operations |
+| `src/components/admin/outreach/AddOutreachLeadModal.tsx` | Pass `campaign_id` to `addLead()` function |
+| `src/components/admin/outreach/ImportLeadsModal.tsx` | Pass `campaign_id` to bulk import |
+| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add "Campaign" column to table, join with campaigns for display |
+
+### Table Column Display
+
+The leads table will show campaign names:
+
+```text
+┌─────┬──────────────┬─────────┬──────────┬────────────────┬───────┬────────┐
+│  ✓  │ Company      │ Contact │ Pipeline │ Campaign       │ Score │ Status │
+├─────┼──────────────┼─────────┼──────────┼────────────────┼───────┼────────┤
+│ [ ] │ Acme Corp    │ John    │ Sales    │ Q1 Healthcare  │ ★★★★☆ │ New    │
+│ [ ] │ Beta Inc     │ Jane    │ Partner  │ —              │ —     │ New    │
+└─────┴──────────────┴─────────┴──────────┴────────────────┴───────┴────────┘
+```
+
+---
+
+## STAGE 2: AI Rating System
+
+### Edge Function
+
+**Create:** `supabase/functions/rate-outreach-leads/index.ts`
+
+This function will:
+1. Accept lead IDs (or "all_new" flag)
+2. For each lead, build an AI prompt including:
+   - Lead fields: company_name, category, location, website_url, email
+   - If campaign_id is set: fetch campaign's `target_description`, `target_locations`, `pipeline_type`
+3. Call Lovable AI Gateway to get a rating
+4. Write results to database: `ai_score`, `ai_reasoning`, `ai_rated_at`
+
+**AI Prompt Structure:**
+```text
+You are a B2B lead qualification specialist. Rate this lead from 1.0 to 5.0.
+
+Lead Information:
+- Company: {company_name}
+- Category: {category}
+- Location: {location}
+- Website: {website_url}
+- Email: {email}
+
+[If campaign is set:]
+Campaign Target:
+- Description: {target_description}
+- Target Regions: {target_locations}
+- Pipeline: {pipeline_type}
+
+Rate based on:
+1. Business fit for our emergency response service
+2. Location match (Spain preferred)
+3. Contact information quality
+4. Industry relevance
+
+Respond in JSON: {"score": 4.2, "reasoning": "Brief explanation"}
+```
+
+### Frontend Changes
+
+**Files to modify:**
+
+| File | Changes |
+|------|---------|
+| `src/hooks/useOutreachRawLeads.ts` | Add `rateLeads()` mutation that calls edge function |
+| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add "AI Rate Selected" and "AI Rate All New" buttons |
+| `src/i18n/locales/en.json` | Add translation keys for rating buttons |
 | `src/i18n/locales/es.json` | Add Spanish translations |
+
+### UI for Rating Buttons
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Raw Leads                                                                  │
+│                                                                             │
+│  [Import] [+ Add Lead]        [⚡ Rate Selected] [⚡ Rate All New]          │
+│                                                                             │
+│  ┌─ Filters ──────────────────────────────────────────────────────────────┐ │
+│  │ Status: [All ▼]  Pipeline: [All ▼]  Source: [All ▼]  Campaign: [All ▼] │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Rating Flow
+
+```text
+User clicks "Rate All New"
+         │
+         ▼
+    ┌─────────────┐
+    │ Get leads   │
+    │ status=new  │
+    │ no ai_score │
+    └─────┬───────┘
+          │
+          ▼
+    ┌─────────────┐
+    │ For each    │──────────────┐
+    │ lead        │              │
+    └─────┬───────┘              │
+          │                      │
+          ▼                      │
+    ┌─────────────┐              │
+    │ If has      │              │
+    │ campaign_id │              │
+    │ → fetch     │              │
+    │   campaign  │              │
+    └─────┬───────┘              │
+          │                      │
+          ▼                      │
+    ┌─────────────┐              │
+    │ Build AI    │              │
+    │ prompt with │              │
+    │ lead +      │              │
+    │ campaign    │              │
+    │ context     │              │
+    └─────┬───────┘              │
+          │                      │
+          ▼                      │
+    ┌─────────────┐              │
+    │ Call Lovable│              │
+    │ AI Gateway  │              │
+    └─────┬───────┘              │
+          │                      │
+          ▼                      │
+    ┌─────────────┐              │
+    │ Update lead │              │
+    │ ai_score    │              │
+    │ ai_reasoning│              │
+    │ ai_rated_at │              │
+    └─────┬───────┘              │
+          │                      │
+          ▼                      │
+    ┌─────────────┐              │
+    │ Next lead   │◄─────────────┘
+    └─────────────┘
+```
+
+---
+
+## STAGE 3: Campaign Threshold Qualification
+
+### Logic Change
+
+Currently `handleMoveQualified` in OutreachLeadsTab uses:
+```javascript
+Number(l.ai_score) >= 3.5  // Hard-coded
+```
+
+New logic:
+```javascript
+// For each lead:
+// 1. If lead.campaign_id exists → get campaign.min_ai_score
+// 2. Else use default 3.5
+// 3. Check if lead.ai_score >= threshold
+```
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/hooks/useOutreachRawLeads.ts` | Update `qualifyLeadsMutation` to: 1) Check campaign thresholds, 2) Copy `campaign_id` to CRM leads |
+| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Remove hard-coded 3.5 check, let hook handle threshold logic |
+
+### Updated Qualification Logic
+
+```text
+┌───────────────────────────────────────────────────────────────────────────┐
+│  qualifyLeads(selectedLeadIds)                                            │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│  1. Fetch selected leads from outreach_raw_leads                          │
+│                                                                           │
+│  2. Group leads by campaign_id                                            │
+│     ├── Leads with campaign_id → fetch campaign.min_ai_score              │
+│     └── Leads without campaign → use default threshold (3.5)              │
+│                                                                           │
+│  3. Filter leads where ai_score >= threshold                              │
+│                                                                           │
+│  4. Create CRM leads (INCLUDING campaign_id!)                             │
+│     {                                                                     │
+│       raw_lead_id,                                                        │
+│       company_name,                                                       │
+│       campaign_id,  ◄── NEW: Copy from raw lead                           │
+│       ai_score,                                                           │
+│       ...                                                                 │
+│     }                                                                     │
+│                                                                           │
+│  5. Update raw leads status → 'qualified'                                 │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Files Summary
+
+### New Files to Create
+
+| File | Purpose |
+|------|---------|
+| `supabase/functions/rate-outreach-leads/index.ts` | Edge function for AI rating |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/hooks/useOutreachRawLeads.ts` | Add campaign_id to types, add rateLeads mutation, update qualify logic |
+| `src/components/admin/outreach/AddOutreachLeadModal.tsx` | Pass campaign_id to addLead |
+| `src/components/admin/outreach/ImportLeadsModal.tsx` | Pass campaign_id to bulk import |
+| `src/components/admin/outreach/OutreachLeadsTab.tsx` | Add rating buttons, campaign column, campaign filter, remove hard-coded threshold |
+| `src/i18n/locales/en.json` | Add translation keys |
+| `src/i18n/locales/es.json` | Add Spanish translations |
+
+### Database Migration
+
+```sql
+-- Add campaign_id to outreach_raw_leads
+ALTER TABLE outreach_raw_leads 
+ADD COLUMN campaign_id uuid NULL 
+REFERENCES outreach_campaigns(id) ON DELETE SET NULL;
+
+-- Add index for performance
+CREATE INDEX idx_outreach_raw_leads_campaign_id 
+ON outreach_raw_leads(campaign_id);
+```
 
 ---
 
@@ -150,77 +270,14 @@ Create a professional dialog with comprehensive usage instructions:
 ```json
 {
   "outreach": {
-    "help": {
-      "title": "AI Outreach Guide",
-      "howToUse": "How to Use",
-      "gotIt": "Got It",
-      "overview": {
-        "title": "Overview",
-        "content": "AI Outreach automates lead discovery and email campaigns for sales and partner acquisition. The workflow is simple: Import leads, let AI rate them, move qualified leads to CRM, research their business, generate personalized emails, and convert to members or partners."
-      },
-      "leads": {
-        "title": "Leads Tab",
-        "intro": "Manage raw leads before they enter your sales pipeline.",
-        "steps": [
-          "Add leads manually or import via CSV/paste list",
-          "Select pipeline type: Sales or Partner",
-          "Optionally assign leads to a campaign",
-          "Click 'Rate All New' to let AI score leads 1-10",
-          "Leads scoring 7+ can be moved to CRM"
-        ]
-      },
-      "crm": {
-        "title": "CRM Tab",
-        "intro": "Work qualified leads through your pipeline with AI assistance.",
-        "steps": [
-          "Leads appear in the 'New' column",
-          "Click 'Research Business' for AI company insights",
-          "Click 'Generate Intro Email' for personalized outreach",
-          "Drag cards to update status as relationships progress",
-          "Convert successful leads to Members or Partners"
-        ]
-      },
-      "campaigns": {
-        "title": "Campaigns Tab",
-        "intro": "Create and manage automated email campaigns.",
-        "steps": [
-          "Click 'New Campaign' to create a targeted campaign",
-          "Define the ideal lead profile for AI personalization",
-          "Configure email tone and outreach goals",
-          "Enable follow-up sequences for non-responders",
-          "Assign leads to campaigns for organized outreach"
-        ]
-      },
-      "inbox": {
-        "title": "Inbox Tab",
-        "intro": "Manage email conversations and responses.",
-        "steps": [
-          "View all email threads in one unified inbox",
-          "AI classifies replies: Interested, Question, Not Interested",
-          "Review AI-suggested responses",
-          "Edit and send personalized replies"
-        ]
-      },
-      "analytics": {
-        "title": "Analytics Tab",
-        "intro": "Track outreach performance and conversions.",
-        "metrics": [
-          "Leads Discovered: Total leads imported",
-          "Leads Qualified: Leads moved to CRM",
-          "Emails Sent: Total outreach emails",
-          "Replies Received: Response count",
-          "Conversions: Successful member/partner signups"
-        ]
-      },
-      "bestPractices": {
-        "title": "Best Practices",
-        "tips": [
-          "Start with focused campaigns targeting specific regions or industries",
-          "Rate all new leads before moving to CRM for better qualification",
-          "Always review and personalize AI-generated emails before sending",
-          "Follow up within 3-5 days if no response",
-          "Document notes on each lead for better context"
-        ]
+    "leads": {
+      "rateSelected": "AI Rate Selected",
+      "rateAllNew": "AI Rate All New",
+      "rating": "Rating leads...",
+      "ratingComplete": "Successfully rated {{count}} leads",
+      "noLeadsToRate": "No unrated leads to process",
+      "columns": {
+        "campaign": "Campaign"
       }
     }
   }
@@ -229,43 +286,25 @@ Create a professional dialog with comprehensive usage instructions:
 
 ---
 
-## Component Implementation
+## Done Criteria Checklist
 
-### OutreachHelpDialog.tsx Structure
+### Stage 1
+- [ ] campaign_id column added to outreach_raw_leads
+- [ ] Foreign key constraint to outreach_campaigns
+- [ ] Index created for performance
+- [ ] AddOutreachLeadModal saves campaign_id
+- [ ] ImportLeadsModal saves campaign_id
+- [ ] Campaign column displays in table
 
-```tsx
-// Key features:
-// - Uses Dialog component with ScrollArea for long content
-// - Sections with icons matching tab icons
-// - Numbered/bulleted lists for steps
-// - Professional styling with proper spacing
-// - Fully translated using i18n
-```
+### Stage 2
+- [ ] Edge function created for AI rating
+- [ ] "AI Rate Selected" button works
+- [ ] "AI Rate All New" button works
+- [ ] AI considers campaign context when rating
+- [ ] ai_score, ai_reasoning, ai_rated_at populated
 
-### AIOutreachPage.tsx Changes
-
-```tsx
-// Add to header:
-<div className="flex items-center gap-3">
-  {/* ... existing icon and title ... */}
-</div>
-<Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
-  <HelpCircle className="h-4 w-4 mr-2" />
-  {t("outreach.help.howToUse")}
-</Button>
-
-// Add dialog:
-<OutreachHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
-```
-
----
-
-## Summary
-
-| Feature | Implementation |
-|---------|----------------|
-| Help Button | Outline button with HelpCircle icon in header |
-| Instructions Dialog | Full-screen dialog with ScrollArea |
-| Content Sections | 7 sections covering all tabs + best practices |
-| Translations | Full EN/ES bilingual support |
-| Styling | Professional, consistent with existing UI patterns |
+### Stage 3
+- [ ] Qualification uses campaign.min_ai_score when available
+- [ ] Default 3.5 used for leads without campaign
+- [ ] campaign_id copied to outreach_crm_leads
+- [ ] Hard-coded 3.5 removed from UI
