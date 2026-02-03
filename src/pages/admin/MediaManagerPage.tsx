@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2 } from "lucide-react";
+import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
@@ -23,6 +23,7 @@ import { PostMetricsBar } from "@/components/admin/media/PostMetricsBar";
 import { ReadyToPublishSection } from "@/components/admin/media/ReadyToPublishSection";
 import { PostPreviewDialog } from "@/components/admin/media/PostPreviewDialog";
 import { PublishedPostsSection } from "@/components/admin/media/PublishedPostsSection";
+import { MediaStrategySection } from "@/components/admin/media/strategy/MediaStrategySection";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -37,6 +38,7 @@ const STATUS_COLORS: Record<SocialPostStatus, string> = {
 
 export default function MediaManagerPage() {
   const { t } = useTranslation();
+  const [mainTab, setMainTab] = useState<"posts" | "strategy">("posts");
   const [statusFilter, setStatusFilter] = useState<SocialPostStatus | "all">("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [previewPost, setPreviewPost] = useState<SocialPost | null>(null);
@@ -237,22 +239,44 @@ export default function MediaManagerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">{t("mediaManager.title")}</h1>
-        <p className="text-muted-foreground">{t("mediaManager.subtitle")}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{t("mediaManager.title")}</h1>
+          <p className="text-muted-foreground">{t("mediaManager.subtitle")}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={mainTab === "posts" ? "default" : "outline"}
+            onClick={() => setMainTab("posts")}
+          >
+            {t("mediaManager.statuses.all")}
+          </Button>
+          <Button
+            variant={mainTab === "strategy" ? "default" : "outline"}
+            onClick={() => setMainTab("strategy")}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            {t("mediaStrategy.schedule")}
+          </Button>
+        </div>
       </div>
 
-      {/* Post Metrics Bar */}
-      <PostMetricsBar metrics={metrics} isLoading={isLoadingMetrics} />
+      {mainTab === "strategy" ? (
+        <MediaStrategySection />
+      ) : (
+        <>
+          {/* Post Metrics Bar */}
+          <PostMetricsBar metrics={metrics} isLoading={isLoadingMetrics} />
 
-      {/* Ready to Publish Section */}
-      <ReadyToPublishSection
-        posts={approvedPosts}
-        isLoading={isLoadingApproved}
-        onPreview={setPreviewPost}
-        onPublish={handlePublishFromQueue}
-        publishingId={publishingFromQueue}
-      />
+          {/* Ready to Publish Section */}
+          <ReadyToPublishSection
+            posts={approvedPosts}
+            isLoading={isLoadingApproved}
+            onPreview={setPreviewPost}
+            onPublish={handlePublishFromQueue}
+            publishingId={publishingFromQueue}
+          />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Panel - Create/Edit Draft */}
@@ -728,6 +752,8 @@ export default function MediaManagerPage() {
         isPublishing={publishingFromQueue === previewPost?.id}
         isRetrying={isRetrying}
       />
+        </>
+      )}
     </div>
   );
 }

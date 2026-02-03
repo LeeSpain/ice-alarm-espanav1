@@ -1300,6 +1300,255 @@ export type Database = {
           },
         ]
       }
+      media_audiences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_content_calendar: {
+        Row: {
+          audience_id: string | null
+          created_at: string
+          goal_id: string | null
+          id: string
+          image_style_id: string | null
+          notes: string | null
+          scheduled_date: string
+          scheduled_time: string
+          social_post_id: string | null
+          status: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience_id?: string | null
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          image_style_id?: string | null
+          notes?: string | null
+          scheduled_date: string
+          scheduled_time?: string
+          social_post_id?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience_id?: string | null
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          image_style_id?: string | null
+          notes?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          social_post_id?: string | null
+          status?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_content_calendar_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "media_audiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_content_calendar_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "media_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_content_calendar_image_style_id_fkey"
+            columns: ["image_style_id"]
+            isOneToOne: false
+            referencedRelation: "media_image_styles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_content_calendar_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_content_calendar_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "media_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_image_styles: {
+        Row: {
+          ai_prompt_hint: string | null
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          ai_prompt_hint?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          ai_prompt_hint?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_schedule_settings: {
+        Row: {
+          active_days: Json
+          anti_repetition_rules: Json
+          created_at: string
+          id: string
+          posts_per_day: number
+          updated_at: string
+        }
+        Insert: {
+          active_days?: Json
+          anti_repetition_rules?: Json
+          created_at?: string
+          id?: string
+          posts_per_day?: number
+          updated_at?: string
+        }
+        Update: {
+          active_days?: Json
+          anti_repetition_rules?: Json
+          created_at?: string
+          id?: string
+          posts_per_day?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_topic_goals: {
+        Row: {
+          goal_id: string
+          topic_id: string
+        }
+        Insert: {
+          goal_id: string
+          topic_id: string
+        }
+        Update: {
+          goal_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_topic_goals_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "media_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_topic_goals_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "media_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medical_information: {
         Row: {
           additional_notes: string | null
