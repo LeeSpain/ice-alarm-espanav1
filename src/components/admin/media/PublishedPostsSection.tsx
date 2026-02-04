@@ -21,9 +21,12 @@ export function PublishedPostsSection() {
     needsAutoRefresh,
     connectionStatus,
     testConnection,
+    unpublishPost,
+    isUnpublishing,
   } = usePublishedPosts();
 
   const [refreshingPostId, setRefreshingPostId] = useState<string | null>(null);
+  const [unpublishingPostId, setUnpublishingPostId] = useState<string | null>(null);
   const [hasAutoRefreshed, setHasAutoRefreshed] = useState(false);
 
   // Auto-refresh if metrics are stale (only once per component mount)
@@ -40,6 +43,15 @@ export function PublishedPostsSection() {
       await refreshMetrics(postId);
     } finally {
       setRefreshingPostId(null);
+    }
+  };
+
+  const handleUnpublish = async (postId: string) => {
+    setUnpublishingPostId(postId);
+    try {
+      await unpublishPost(postId);
+    } finally {
+      setUnpublishingPostId(null);
     }
   };
 
@@ -94,7 +106,9 @@ export function PublishedPostsSection() {
             key={post.id}
             post={post}
             onRefresh={handleRefreshSingle}
+            onUnpublish={handleUnpublish}
             isRefreshing={refreshingPostId === post.id || isRefreshing}
+            isUnpublishing={unpublishingPostId === post.id || isUnpublishing}
             hasError={connectionStatus === "token_expired"}
           />
         ))}

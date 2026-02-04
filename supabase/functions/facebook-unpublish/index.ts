@@ -1,0 +1,216 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Parse request body
+    const { post_id } = await req.json();
+
+    if (!post_id) {
+      return new Response(
+        JSON.stringify({ error: "post_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[facebook-unpublish] Starting unpublish for post: ${post_id}`);
+
+    // 1. Fetch the post and verify it's published
+    const { data: post, error: postError } = await supabase
+      .from("social_posts")
+      .select("*")
+      .eq("id", post_id)
+      .single();
+
+    if (postError || !post) {
+      console.error("[facebook-unpublish] Post not found:", postError);
+      return new Response(
+        JSON.stringify({ error: "Post not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (post.status !== "published") {
+      return new Response(
+        JSON.stringify({ error: "Post is not published", status: post.status }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Get Facebook credentials from system_settings
+    const { data: settings, error: settingsError } = await supabase
+      .from("system_settings")
+      .select("settings_key, settings_value")
+      .in("settings_key", ["settings_facebook_page_access_token", "settings_facebook_page_id"]);
+
+    if (settingsError) {
+      console.error("[facebook-unpublish] Failed to fetch settings:", settingsError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch Facebook credentials" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const settingsMap: Record<string, string> = {};
+    for (const s of settings || []) {
+      settingsMap[s.settings_key] = s.settings_value;
+    }
+
+    const accessToken = settingsMap["settings_facebook_page_access_token"];
+    if (!accessToken) {
+      return new Response(
+        JSON.stringify({ error: "not_configured", message: "Facebook access token not configured" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let deletedFromFacebook = false;
+    let facebookError: string | null = null;
+
+    // 3. Delete from Facebook if we have a facebook_post_id
+    if (post.facebook_post_id) {
+      console.log(`[facebook-unpublish] Deleting Facebook post: ${post.facebook_post_id}`);
+      
+      try {
+        const deleteUrl = `https://graph.facebook.com/v24.0/${post.facebook_post_id}?access_token=${accessToken}`;
+        const fbResponse = await fetch(deleteUrl, { method: "DELETE" });
+        const fbResult = await fbResponse.json();
+
+        console.log("[facebook-unpublish] Facebook API response:", fbResult);
+
+        if (fbResult.success === true) {
+          deletedFromFacebook = true;
+          console.log("[facebook-unpublish] Successfully deleted from Facebook");
+        } else if (fbResult.error?.code === 190) {
+          // Token expired
+          facebookError = "token_expired";
+          console.error("[facebook-unpublish] Facebook token expired");
+          return new Response(
+            JSON.stringify({ 
+              error: "token_expired", 
+              message: "Facebook access token has expired. Please update it in Settings." 
+            }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else if (fbResult.error?.code === 100 && fbResult.error?.error_subcode === 33) {
+          // Post already deleted or doesn't exist - treat as success
+          deletedFromFacebook = true;
+          console.log("[facebook-unpublish] Post already deleted from Facebook (or never existed)");
+        } else if (fbResult.error) {
+          facebookError = fbResult.error.message || "Unknown Facebook error";
+          console.error("[facebook-unpublish] Facebook API error:", fbResult.error);
+          // Continue with local cleanup even if Facebook delete fails
+        }
+      } catch (err) {
+        facebookError = err instanceof Error ? err.message : "Network error";
+        console.error("[facebook-unpublish] Facebook API exception:", err);
+        // Continue with local cleanup
+      }
+    } else {
+      console.log("[facebook-unpublish] No facebook_post_id, skipping Facebook deletion");
+      deletedFromFacebook = true; // Nothing to delete
+    }
+
+    // 4. Delete the linked blog post
+    let blogRemoved = false;
+    const { data: blogPost, error: blogFetchError } = await supabase
+      .from("blog_posts")
+      .select("id")
+      .eq("social_post_id", post_id)
+      .single();
+
+    if (blogPost && !blogFetchError) {
+      const { error: blogDeleteError } = await supabase
+        .from("blog_posts")
+        .delete()
+        .eq("id", blogPost.id);
+
+      if (blogDeleteError) {
+        console.error("[facebook-unpublish] Failed to delete blog post:", blogDeleteError);
+      } else {
+        blogRemoved = true;
+        console.log(`[facebook-unpublish] Deleted blog post: ${blogPost.id}`);
+      }
+    } else {
+      console.log("[facebook-unpublish] No linked blog post found");
+      blogRemoved = true; // Nothing to remove
+    }
+
+    // 5. Delete metrics from social_post_metrics
+    let metricsRemoved = false;
+    const { error: metricsDeleteError } = await supabase
+      .from("social_post_metrics")
+      .delete()
+      .eq("social_post_id", post_id);
+
+    if (metricsDeleteError) {
+      console.error("[facebook-unpublish] Failed to delete metrics:", metricsDeleteError);
+    } else {
+      metricsRemoved = true;
+      console.log("[facebook-unpublish] Deleted metrics for post");
+    }
+
+    // 6. Update social post status to "archived"
+    const { error: updateError } = await supabase
+      .from("social_posts")
+      .update({ 
+        status: "archived",
+        facebook_post_id: null // Clear the facebook_post_id
+      })
+      .eq("id", post_id);
+
+    if (updateError) {
+      console.error("[facebook-unpublish] Failed to update post status:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to update post status" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("[facebook-unpublish] Post status updated to archived");
+
+    // 7. Log to activity_logs for audit
+    await supabase.from("activity_logs").insert({
+      entity_type: "social_post",
+      entity_id: post_id,
+      action: "unpublish",
+      new_values: {
+        deleted_from_facebook: deletedFromFacebook,
+        blog_removed: blogRemoved,
+        metrics_removed: metricsRemoved,
+        facebook_error: facebookError,
+      },
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        deleted_from_facebook: deletedFromFacebook,
+        blog_removed: blogRemoved,
+        metrics_removed: metricsRemoved,
+        facebook_error: facebookError,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("[facebook-unpublish] Unexpected error:", err);
+    return new Response(
+      JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

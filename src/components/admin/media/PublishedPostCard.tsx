@@ -1,25 +1,61 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, RefreshCw, Heart, MessageCircle, Share2, Eye, Loader2, Clock, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { 
+  ExternalLink, 
+  RefreshCw, 
+  Heart, 
+  MessageCircle, 
+  Share2, 
+  Eye, 
+  Loader2, 
+  Clock, 
+  Image as ImageIcon, 
+  AlertCircle,
+  MoreVertical,
+  Trash2
+} from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { PublishedPostWithMetrics } from "@/hooks/usePublishedPosts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UnpublishPostDialog } from "./UnpublishPostDialog";
 
 interface PublishedPostCardProps {
   post: PublishedPostWithMetrics;
   onRefresh: (postId: string) => void;
+  onUnpublish: (postId: string) => Promise<void>;
   isRefreshing: boolean;
+  isUnpublishing: boolean;
   hasError?: boolean;
 }
 
-export function PublishedPostCard({ post, onRefresh, isRefreshing, hasError }: PublishedPostCardProps) {
+export function PublishedPostCard({ 
+  post, 
+  onRefresh, 
+  onUnpublish, 
+  isRefreshing, 
+  isUnpublishing,
+  hasError 
+}: PublishedPostCardProps) {
   const { t } = useTranslation();
+  const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
 
   const facebookUrl = post.facebook_post_id
     ? `https://facebook.com/${post.facebook_post_id}`
     : null;
+
+  const handleUnpublish = async () => {
+    await onUnpublish(post.id);
+    setShowUnpublishDialog(false);
+  };
 
   const formatNumber = (num: number) => {
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -135,7 +171,7 @@ export function PublishedPostCard({ post, onRefresh, isRefreshing, hasError }: P
           size="sm"
           className="flex-1 gap-1"
           onClick={() => onRefresh(post.id)}
-          disabled={isRefreshing}
+          disabled={isRefreshing || isUnpublishing}
         >
           {isRefreshing ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -150,12 +186,45 @@ export function PublishedPostCard({ post, onRefresh, isRefreshing, hasError }: P
             size="sm"
             className="flex-1 gap-1"
             onClick={() => window.open(facebookUrl, "_blank")}
+            disabled={isUnpublishing}
           >
             <ExternalLink className="h-3.5 w-3.5" />
             {t("mediaManager.published.viewOnFacebook")}
           </Button>
         )}
+        
+        {/* Dropdown menu with Unpublish option */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="px-2"
+              disabled={isUnpublishing}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => setShowUnpublishDialog(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {t("mediaManager.unpublish.button")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardFooter>
+
+      {/* Unpublish Confirmation Dialog */}
+      <UnpublishPostDialog
+        open={showUnpublishDialog}
+        onOpenChange={setShowUnpublishDialog}
+        onConfirm={handleUnpublish}
+        isLoading={isUnpublishing}
+        postTopic={post.topic || undefined}
+      />
     </Card>
   );
 }

@@ -230,6 +230,59 @@ export function usePublishedPosts() {
     },
   });
 
+  // Unpublish a post (delete from Facebook, blog, and metrics)
+  const unpublishMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+
+      const { data, error } = await supabase.functions.invoke("facebook-unpublish", {
+        body: { post_id: postId },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (error) throw error;
+      
+      // Check for token expiry error
+      if (data?.error === "token_expired") {
+        setConnectionStatus("token_expired");
+        setLastError(data.message);
+        throw new Error(data.message || "Facebook token expired");
+      }
+
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
+      toast({ 
+        title: "Post unpublished", 
+        description: data.deleted_from_facebook 
+          ? "Post removed from Facebook, blog, and metrics deleted."
+          : "Post archived locally. Facebook deletion may have failed.",
+      });
+    },
+    onError: (error: Error) => {
+      const isTokenError = error.message.toLowerCase().includes("token") || 
+                           error.message.toLowerCase().includes("expired");
+      toast({
+        title: isTokenError ? "Facebook Token Expired" : "Failed to unpublish",
+        description: isTokenError 
+          ? "Please update your Facebook access token in Settings → Integrations."
+          : error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Check if metrics need auto-refresh (older than 15 min)
   const needsAutoRefresh = () => {
     if (!postsQuery.data || postsQuery.data.length === 0) return false;
@@ -254,9 +307,12 @@ export function usePublishedPosts() {
     isRefreshing: refreshSingleMutation.isPending,
     isRefreshingAll: refreshAllMutation.isPending,
     needsAutoRefresh,
-    // New connection status features
+    // Connection status features
     connectionStatus,
     lastError,
     testConnection,
+    // Unpublish feature
+    unpublishPost: unpublishMutation.mutateAsync,
+    isUnpublishing: unpublishMutation.isPending,
   };
 }

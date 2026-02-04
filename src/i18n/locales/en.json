@@ -158,6 +158,22 @@
         "reach": "reach"
       }
     },
+    "unpublish": {
+      "button": "Unpublish",
+      "title": "Unpublish Post",
+      "description": "This will permanently remove the post from Facebook and delete the associated blog article. This action cannot be undone.",
+      "willBeDeleted": "The following will be deleted",
+      "items": {
+        "facebook": "Facebook post (cannot be recovered)",
+        "blog": "Blog article (will return 404)",
+        "metrics": "Engagement metrics data"
+      },
+      "warning": "⚠️ This action cannot be undone.",
+      "confirm": "Yes, Unpublish",
+      "unpublishing": "Unpublishing...",
+      "success": "Post unpublished successfully",
+      "error": "Failed to unpublish post"
+    },
     "help": {
       "title": "Media Manager Guide",
       "description": "Learn how to create, manage, and publish social media content",

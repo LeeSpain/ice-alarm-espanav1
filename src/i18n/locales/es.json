@@ -158,6 +158,22 @@
         "reach": "alcance"
       }
     },
+    "unpublish": {
+      "button": "Despublicar",
+      "title": "Despublicar Publicación",
+      "description": "Esto eliminará permanentemente la publicación de Facebook y el artículo del blog asociado. Esta acción no se puede deshacer.",
+      "willBeDeleted": "Se eliminará lo siguiente",
+      "items": {
+        "facebook": "Publicación de Facebook (no se puede recuperar)",
+        "blog": "Artículo del blog (devolverá 404)",
+        "metrics": "Datos de métricas de engagement"
+      },
+      "warning": "⚠️ Esta acción no se puede deshacer.",
+      "confirm": "Sí, Despublicar",
+      "unpublishing": "Despublicando...",
+      "success": "Publicación despublicada correctamente",
+      "error": "Error al despublicar"
+    },
     "help": {
       "title": "Guía del Gestor de Medios",
       "description": "Aprenda a crear, gestionar y publicar contenido en redes sociales",
