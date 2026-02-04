@@ -54,8 +54,8 @@ Deno.serve(async (req) => {
     // 2. Get Facebook credentials from system_settings
     const { data: settings, error: settingsError } = await supabase
       .from("system_settings")
-      .select("settings_key, settings_value")
-      .in("settings_key", ["settings_facebook_page_access_token", "settings_facebook_page_id"]);
+      .select("key, value")
+      .in("key", ["settings_facebook_page_access_token", "settings_facebook_page_id"]);
 
     if (settingsError) {
       console.error("[facebook-unpublish] Failed to fetch settings:", settingsError);
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
 
     const settingsMap: Record<string, string> = {};
     for (const s of settings || []) {
-      settingsMap[s.settings_key] = s.settings_value;
+      settingsMap[s.key] = s.value;
     }
 
     const accessToken = settingsMap["settings_facebook_page_access_token"];
