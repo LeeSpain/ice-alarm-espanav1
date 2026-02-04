@@ -127,6 +127,9 @@ export default function SettingsPage() {
   // Visibility toggles for Twilio API Key Secret
   const [showTwilioApiSecret, setShowTwilioApiSecret] = useState(false);
   
+  // Track if Twilio secrets are being edited (prevents useEffect from overwriting input)
+  const [twilioSecretsDirty, setTwilioSecretsDirty] = useState(false);
+  
   // Twilio test state
   const [twilioTestStatus, setTwilioTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [twilioTestMessage, setTwilioTestMessage] = useState("");
@@ -198,15 +201,17 @@ export default function SettingsPage() {
       webhook_secret: mask(settingsMap[KEY.STRIPE_WEBHOOK]),
     });
 
-    // Twilio (masked for secrets)
-    setTwilioKeys({
-      account_sid: settingsMap[KEY.TWILIO_SID] || "",
-      auth_token: mask(settingsMap[KEY.TWILIO_TOKEN]),
-      api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
-      api_key_secret: mask(settingsMap[KEY.TWILIO_API_KEY_SECRET]),
-      phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
-      whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
-    });
+    // Twilio (masked for secrets) - only update if not being edited
+    if (!twilioSecretsDirty) {
+      setTwilioKeys({
+        account_sid: settingsMap[KEY.TWILIO_SID] || "",
+        auth_token: mask(settingsMap[KEY.TWILIO_TOKEN]),
+        api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
+        api_key_secret: mask(settingsMap[KEY.TWILIO_API_KEY_SECRET]),
+        phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
+        whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
+      });
+    }
 
     setGoogleMapsKey(settingsMap[KEY.GOOGLE_MAPS] || "");
 
@@ -334,6 +339,8 @@ export default function SettingsPage() {
       return;
     }
 
+    // Reset dirty flag after save
+    setTwilioSecretsDirty(false);
     saveMutation.mutate(updates);
   };
 
@@ -850,7 +857,10 @@ export default function SettingsPage() {
                     <Input
                       type={showTwilioToken ? "text" : "password"}
                       value={twilioKeys.auth_token}
-                      onChange={(e) => setTwilioKeys((prev) => ({ ...prev, auth_token: e.target.value }))}
+                      onChange={(e) => {
+                        setTwilioSecretsDirty(true);
+                        setTwilioKeys((prev) => ({ ...prev, auth_token: e.target.value }));
+                      }}
                       placeholder="Enter auth token"
                       className="pr-10"
                     />
@@ -885,7 +895,10 @@ export default function SettingsPage() {
                     <Input
                       type={showTwilioApiSecret ? "text" : "password"}
                       value={twilioKeys.api_key_secret}
-                      onChange={(e) => setTwilioKeys((prev) => ({ ...prev, api_key_secret: e.target.value }))}
+                      onChange={(e) => {
+                        setTwilioSecretsDirty(true);
+                        setTwilioKeys((prev) => ({ ...prev, api_key_secret: e.target.value }));
+                      }}
                       placeholder="Enter API key secret"
                       className="pr-10"
                     />
