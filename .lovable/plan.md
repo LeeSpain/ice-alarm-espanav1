@@ -1,137 +1,75 @@
 
-# Fix Blog Post Count Discrepancy
 
-## Problem Summary
+# Fix Blog Page to Show Published Posts
 
-You're seeing **6 blog posts** on the public blog page but only **4 published posts** in the Media Manager. This is caused by:
+## Problem Identified
 
-1. **Orphan blog posts** - Blog entries that have no linked published social post
-2. **Duplicate blog posts** - The same social post created multiple blog entries
-3. **Manual blog entries** - A "Welcome" post was created manually without a social post
-4. **Missing linkage** - The scheduled publishing flow doesn't properly link blog posts to social posts
+The blog page shows "No articles yet" because:
 
----
+1. **RLS Policy Conflict**: The `social_posts` table only allows **staff** to SELECT records
+2. **Join Failure**: The `!inner` join in `useBlogPosts` requires read access to both `blog_posts` AND `social_posts`
+3. **Anonymous Access Blocked**: Public visitors (unauthenticated) cannot read `social_posts`, so the join returns empty
 
-## Data Cleanup (Immediate Fix)
+## Solution
 
-I'll create a cleanup migration that:
+Two options to fix this:
 
-1. **Deletes orphan blog posts** - Blogs where:
-   - `social_post_id` is NULL (except the welcome post if you want to keep it)
-   - `social_post_id` references a non-existent or non-published social post
+### Option A: Add Public Read Policy for Published Social Posts (Recommended)
 
-2. **Removes duplicates** - Keeps only the most recent blog for each `social_post_id`
-
----
-
-## Code Fixes
-
-### Fix 1: Update `publish-scheduled` Edge Function
-
-The scheduled publisher creates blog posts but doesn't link them to `social_posts`. I'll update it to:
-
-- Create a `social_posts` record when publishing scheduled content
-- Link the blog post to this social post via `social_post_id`
-- This ensures the unpublish flow works correctly
-
-**File:** `supabase/functions/publish-scheduled/index.ts`
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  CURRENT FLOW (broken)                                       │
-│                                                              │
-│  media_content_calendar → blog_posts (no social_post link)  │
-│                                                              │
-│  FIXED FLOW                                                  │
-│                                                              │
-│  media_content_calendar → social_posts → blog_posts          │
-│                           (linked via social_post_id)        │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Fix 2: Update `facebook-unpublish` Edge Function
-
-Improve the unpublish logic to:
-
-- Also check for blog posts linked via `calendar_item_id` or by matching `facebook_post_id`
-- Delete **all** matching blog posts, not just one
-
-**File:** `supabase/functions/facebook-unpublish/index.ts`
-
-### Fix 3: Add Database Constraint
-
-Add a unique partial index on `blog_posts.social_post_id` to prevent duplicates:
+Add an RLS policy that allows anonymous users to read social posts with `status = 'published'`. This is safe since published posts are already public on Facebook.
 
 ```sql
-CREATE UNIQUE INDEX IF NOT EXISTS blog_posts_social_post_unique 
-ON blog_posts (social_post_id) 
-WHERE social_post_id IS NOT NULL;
+CREATE POLICY "Anyone can read published social posts"
+ON social_posts FOR SELECT
+USING (status = 'published');
 ```
+
+This approach:
+- Keeps the blog/social post relationship intact
+- Allows the `!inner` join to work for public visitors
+- Only exposes already-public content (Facebook posts)
+- Maintains staff-only access for non-published content
+
+### Option B: Rewrite Query Without Join (Alternative)
+
+Change the hook to:
+1. First fetch published social post IDs
+2. Then filter blog posts by those IDs
+
+This is more complex and requires extra logic.
 
 ---
 
-## Technical Implementation
+## Implementation Plan
 
-### Step 1: Database Cleanup Migration
+### Step 1: Add Database Migration
+
+Create a new RLS policy on `social_posts` to allow public read access for published posts:
 
 ```sql
--- Delete orphan blog posts (no linked published social post)
-DELETE FROM blog_posts
-WHERE social_post_id IS NOT NULL 
-AND social_post_id NOT IN (
-  SELECT id FROM social_posts WHERE status = 'published'
-);
-
--- Delete duplicates, keeping only the newest per social_post_id
-DELETE FROM blog_posts a
-USING blog_posts b
-WHERE a.social_post_id = b.social_post_id
-AND a.social_post_id IS NOT NULL
-AND a.created_at < b.created_at;
-
--- Add constraint to prevent future duplicates
-CREATE UNIQUE INDEX IF NOT EXISTS blog_posts_social_post_unique 
-ON blog_posts (social_post_id) 
-WHERE social_post_id IS NOT NULL;
+-- Allow public read access to published social posts
+CREATE POLICY "Anyone can read published social posts"
+ON social_posts FOR SELECT
+USING (status = 'published');
 ```
 
-### Step 2: Update `publish-scheduled` Function
+### Step 2: Verify Hook Logic
 
-Before creating a blog post, also create a `social_posts` record:
-
-```typescript
-// Create social_posts record first
-const { data: socialPost } = await adminClient
-  .from("social_posts")
-  .insert({
-    post_text: postText,
-    image_url: imageUrl,
-    language: "en",
-    status: "published",
-    published_at: new Date().toISOString(),
-  })
-  .select("id")
-  .single();
-
-// Then create blog post with social_post_id
-const { data: blogPost } = await adminClient
-  .from("blog_posts")
-  .insert({
-    // ... existing fields
-    social_post_id: socialPost?.id,  // ← Add this link
-  });
-```
-
-### Step 3: Update `facebook-unpublish` Function
-
-Expand the blog deletion query to find all matching posts:
+The current `useBlogPosts` query will work correctly once the RLS policy is added:
 
 ```typescript
-// Delete ALL linked blog posts (by social_post_id OR facebook_post_id)
-const { error: blogDeleteError } = await supabase
+// This will now return results for anonymous users
+let query = supabase
   .from("blog_posts")
-  .delete()
-  .or(`social_post_id.eq.${post_id},facebook_post_id.eq.${post.facebook_post_id}`);
+  .select(`
+    *,
+    social_posts!inner(id, status)
+  `)
+  .eq("published", true)
+  .eq("social_posts.status", "published")
+  .not("published_at", "is", null)
+  .lte("published_at", new Date().toISOString())
+  .order("published_at", { ascending: false });
 ```
 
 ---
@@ -140,16 +78,23 @@ const { error: blogDeleteError } = await supabase
 
 | File | Change |
 |------|--------|
-| Database migration | Cleanup orphans + add unique constraint |
-| `supabase/functions/publish-scheduled/index.ts` | Create social_posts record, link to blog |
-| `supabase/functions/facebook-unpublish/index.ts` | Delete all matching blogs |
+| Database migration | Add RLS policy for public read of published social posts |
 
 ---
 
 ## Expected Result
 
 After implementation:
-- Blog page will show exactly **4 posts** (matching Media Manager)
-- Future publishes will always create proper linkage
-- Unpublishing will clean up **all** related blog entries
-- Duplicates will be prevented by database constraint
+- Blog page will display **3 blog posts** (matching the published social posts with linked blogs)
+- New Facebook publications will automatically appear on the blog
+- Unpublishing from Media Manager will remove posts from the blog
+- Staff-only social posts (drafts, approved, failed) remain hidden from public
+
+---
+
+## Technical Notes
+
+- The existing `Anyone can read published posts` policy on `blog_posts` remains unchanged
+- The new policy on `social_posts` is additive (doesn't affect existing staff policies)
+- This follows the principle of least privilege - only exposing what's already public
+
