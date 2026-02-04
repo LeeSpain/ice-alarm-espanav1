@@ -810,8 +810,9 @@ serve(async (req) => {
       throw new Error("agentKey is required");
     }
 
-    // Check if this is a chat widget request
+    // Check if this is a chat widget or voice call request
     const isChatWidget = context?.source === "chat_widget";
+    const isVoiceCall = context?.source === "voice_call";
 
     // Load agent and config
     const { data: agent, error: agentError } = await supabase
@@ -824,8 +825,8 @@ serve(async (req) => {
       throw new Error(`Agent not found: ${agentKey}`);
     }
 
-    // Check if agent is enabled (skip for chat widget - always allow)
-    if (!agent.enabled && !simulationMode && !isChatWidget) {
+    // Check if agent is enabled (skip for chat widget and voice calls - always allow)
+    if (!agent.enabled && !simulationMode && !isChatWidget && !isVoiceCall) {
       return new Response(
         JSON.stringify({ success: false, message: "Agent is disabled" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -973,7 +974,166 @@ You are speaking directly with ${member?.first_name || "this member"}. Use their
       );
     }
 
+    // ============ VOICE CALL HANDLER ============
+    if (isVoiceCall && agentKey === "customer_service_expert") {
+      const userLanguage = context?.userLanguage || "es";
+      const conversationHistory = context?.conversationHistory || [];
+      const currentMessage = context?.currentMessage || "";
+      const callerPhone = context?.callerPhone || "Unknown";
+      const memberId = context?.memberId;
+      const callDirection = context?.callDirection || "inbound";
+
+      // Voice-specific language instruction
+      const languageInstruction = userLanguage === "es" 
+        ? "\n\n**IMPORTANTE**: La llamada es en ESPAÑOL. DEBES responder completamente en español. Usa un tono cálido y conversacional."
+        : "\n\n**IMPORTANT**: The call is in ENGLISH. You MUST respond entirely in English. Use a warm, conversational tone.";
+
+      // Voice-specific instructions to append to system prompt
+      const voiceInstructions = `
+
+═══════════════════════════════════════════════════════════════════════════════
+                    VOICE CALL MODE - CRITICAL INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+You are on a LIVE PHONE CALL being converted to text-to-speech. Adapt your responses:
+
+1. **KEEP RESPONSES SHORT** - Maximum 2-3 sentences per turn (under 80 words)
+2. **USE CONVERSATIONAL SPEECH** - No bullet points, markdown, asterisks, or lists
+3. **CONFIRM UNDERSTANDING** - "Let me make sure I understood correctly..."
+4. **NATURAL PACING** - Use commas and periods for natural TTS pauses
+5. **SAY NUMBERS NATURALLY** - Say "twenty-seven euros" not "€27" or "27€"
+6. **NO SPECIAL CHARACTERS** - Avoid symbols, URLs, email addresses in speech
+7. **BE WARM AND PERSONAL** - This is a real person on the phone
+
+## Current Call Context
+- Call Direction: ${callDirection}
+- Caller Phone: ${callerPhone}
+- Identified Member: ${memberId ? "YES - treat as existing member" : "NO - treat as potential new customer or general inquiry"}
+
+## Escalation Trigger
+If you determine the call requires a human operator (complex technical issue, billing dispute, 
+formal complaint, caller distress, or explicit request for human), end your response with:
+[ESCALATE: brief reason here]
+
+This will IMMEDIATELY transfer the call to a staff member. Only use when necessary.
+
+## Response Format Rules
+- Start directly with your response (no greetings if already past initial contact)
+- Keep each turn focused on ONE topic or question
+- End with a clear question or confirmation to keep conversation flowing
+- If caller seems confused, simplify and slow down
+
+REMEMBER: Every word you write will be spoken aloud. Write as you would naturally speak.
+`;
+
+      // Fetch member data if available
+      let memberContext = "";
+      if (memberId) {
+        const { data: member } = await supabase
+          .from("members")
+          .select("first_name, last_name, preferred_language, status, city")
+          .eq("id", memberId)
+          .single();
+
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select("plan_type, status")
+          .eq("member_id", memberId)
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (member) {
+          memberContext = `
+
+## Caller Identity (VERIFIED MEMBER)
+- Name: ${member.first_name} ${member.last_name}
+- Location: ${member.city || "Spain"}
+- Status: ${member.status}
+- Subscription: ${subscription?.plan_type || "Unknown"} (${subscription?.status || "check"})
+
+Use their name naturally in conversation. They are an existing member.
+`;
+        }
+      }
+
+      const messages = [
+        { 
+          role: "system", 
+          content: CUSTOMER_SERVICE_CHAT_PROMPT + voiceInstructions + memberContext + languageInstruction
+        },
+        ...conversationHistory.map((msg: { role: string; content: string }) => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      ];
+
+      // Add current message if not in history
+      if (currentMessage && !conversationHistory.some((m: { content: string }) => m.content === currentMessage)) {
+        messages.push({ role: "user", content: currentMessage });
+      }
+
+      // Call Lovable AI with lower token limit for voice
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages,
+          temperature: 0.7,
+          max_tokens: 300, // Lower for voice - keep responses concise
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error("Voice AI Gateway error:", aiResponse.status, errorText);
+        
+        if (aiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded" }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (aiResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI credits exhausted" }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        throw new Error(`Voice AI Gateway error: ${aiResponse.status}`);
+      }
+
+      const aiResult = await aiResponse.json();
+      let responseContent = aiResult.choices?.[0]?.message?.content || "";
+
+      // Clean up any markdown or formatting that slipped through
+      responseContent = responseContent
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/#{1,6}\s/g, "")
+        .replace(/`/g, "")
+        .replace(/\n{2,}/g, " ")
+        .replace(/\n/g, " ")
+        .trim();
+
+      console.log("Voice AI Response:", responseContent);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          output: {
+            response: responseContent,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ============ ORIGINAL AGENT LOGIC FOR NON-CHAT REQUESTS ============
+
 
     // Load active config
     const { data: config, error: configError } = await supabase
