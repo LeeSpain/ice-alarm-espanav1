@@ -64,6 +64,8 @@ const KEY = {
   // Twilio
   TWILIO_SID: "twilio_account_sid",
   TWILIO_TOKEN: "twilio_auth_token",
+  TWILIO_API_KEY_SID: "twilio_api_key_sid",
+  TWILIO_API_KEY_SECRET: "twilio_api_key_secret",
   TWILIO_PHONE: "twilio_phone_number",
   TWILIO_WA: "twilio_whatsapp_number",
 
@@ -117,9 +119,14 @@ export default function SettingsPage() {
   const [twilioKeys, setTwilioKeys] = useState({
     account_sid: "",
     auth_token: "",
+    api_key_sid: "",
+    api_key_secret: "",
     phone_number: "",
     whatsapp_number: "",
   });
+
+  // Visibility toggles for Twilio API Key Secret
+  const [showTwilioApiSecret, setShowTwilioApiSecret] = useState(false);
 
   const [googleMapsKey, setGoogleMapsKey] = useState("");
 
@@ -188,10 +195,12 @@ export default function SettingsPage() {
       webhook_secret: mask(settingsMap[KEY.STRIPE_WEBHOOK]),
     });
 
-    // Twilio (masked)
+    // Twilio (masked for secrets)
     setTwilioKeys({
       account_sid: settingsMap[KEY.TWILIO_SID] || "",
       auth_token: mask(settingsMap[KEY.TWILIO_TOKEN]),
+      api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
+      api_key_secret: mask(settingsMap[KEY.TWILIO_API_KEY_SECRET]),
       phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
       whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
     });
@@ -311,6 +320,9 @@ export default function SettingsPage() {
     if (twilioKeys.account_sid) updates[KEY.TWILIO_SID] = twilioKeys.account_sid;
     if (twilioKeys.auth_token && !twilioKeys.auth_token.includes("•"))
       updates[KEY.TWILIO_TOKEN] = twilioKeys.auth_token;
+    if (twilioKeys.api_key_sid) updates[KEY.TWILIO_API_KEY_SID] = twilioKeys.api_key_sid;
+    if (twilioKeys.api_key_secret && !twilioKeys.api_key_secret.includes("•"))
+      updates[KEY.TWILIO_API_KEY_SECRET] = twilioKeys.api_key_secret;
     if (twilioKeys.phone_number) updates[KEY.TWILIO_PHONE] = twilioKeys.phone_number;
     if (twilioKeys.whatsapp_number) updates[KEY.TWILIO_WA] = twilioKeys.whatsapp_number;
 
@@ -792,7 +804,9 @@ export default function SettingsPage() {
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
                 Twilio Configuration
-                {getIntegrationStatus([KEY.TWILIO_SID, KEY.TWILIO_TOKEN]) ? (
+                {getIntegrationStatus([KEY.TWILIO_SID]) && 
+                 (getIntegrationStatus([KEY.TWILIO_API_KEY_SID, KEY.TWILIO_API_KEY_SECRET]) || 
+                  getIntegrationStatus([KEY.TWILIO_TOKEN])) ? (
                   <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
                     <Check className="mr-1 h-3 w-3" />
                     Configured
@@ -828,7 +842,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Auth Token</Label>
+                  <Label>Auth Token <span className="text-muted-foreground text-xs">(optional if using API Keys)</span></Label>
                   <div className="relative">
                     <Input
                       type={showTwilioToken ? "text" : "password"}
@@ -848,6 +862,44 @@ export default function SettingsPage() {
                       {showTwilioToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>API Key SID <span className="text-muted-foreground text-xs">(recommended)</span></Label>
+                  <Input
+                    value={twilioKeys.api_key_sid}
+                    onChange={(e) => setTwilioKeys((prev) => ({ ...prev, api_key_sid: e.target.value }))}
+                    placeholder="SK..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Starts with SK. Create in Twilio Console → Account → API keys
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>API Key Secret</Label>
+                  <div className="relative">
+                    <Input
+                      type={showTwilioApiSecret ? "text" : "password"}
+                      value={twilioKeys.api_key_secret}
+                      onChange={(e) => setTwilioKeys((prev) => ({ ...prev, api_key_secret: e.target.value }))}
+                      placeholder="Enter API key secret"
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 z-10"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowTwilioApiSecret((prev) => !prev)}
+                    >
+                      {showTwilioApiSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Shown only once when creating the API Key
+                  </p>
                 </div>
 
                 <div className="space-y-2">

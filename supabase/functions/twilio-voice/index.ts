@@ -21,14 +21,24 @@ serve(async (req) => {
     const { data: settings } = await supabase
       .from("system_settings")
       .select("key, value")
-      .in("key", ["twilio_account_sid", "twilio_auth_token", "twilio_phone_number"]);
+      .in("key", [
+        "twilio_account_sid",
+        "twilio_auth_token",
+        "twilio_api_key_sid",
+        "twilio_api_key_secret",
+        "twilio_phone_number"
+      ]);
 
     const twilioConfig = settings?.reduce((acc, s) => {
       acc[s.key] = s.value;
       return acc;
     }, {} as Record<string, string>) || {};
 
-    if (!twilioConfig.twilio_account_sid || !twilioConfig.twilio_auth_token) {
+    // Prefer API Keys, fall back to Auth Token
+    const authUsername = twilioConfig.twilio_api_key_sid || twilioConfig.twilio_account_sid;
+    const authPassword = twilioConfig.twilio_api_key_secret || twilioConfig.twilio_auth_token;
+
+    if (!twilioConfig.twilio_account_sid || !authPassword) {
       return new Response(
         JSON.stringify({ error: "Twilio not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -161,9 +171,9 @@ serve(async (req) => {
 
     const { to, alertId } = await req.json();
 
-    // Make outbound call using Twilio API
+    // Make outbound call using Twilio API (use API Keys if available)
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.twilio_account_sid}/Calls.json`;
-    const auth = btoa(`${twilioConfig.twilio_account_sid}:${twilioConfig.twilio_auth_token}`);
+    const auth = btoa(`${authUsername}:${authPassword}`);
 
     const callResponse = await fetch(twilioUrl, {
       method: "POST",
