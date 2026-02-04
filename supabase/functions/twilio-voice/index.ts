@@ -191,7 +191,11 @@ serve(async (req) => {
         const callSid = formData.get("CallSid") as string;
         const callDirection = formData.get("Direction") as string;
 
-        console.log("Incoming call from:", from, "CallSid:", callSid, "ConversationId:", conversationIdParam);
+        // Get caller_name from query param (passed from Call Me feature)
+        const callerNameParam = url.searchParams.get("caller_name");
+        const callerName = callerNameParam ? decodeURIComponent(callerNameParam).replace(/[<>&"']/g, "").trim() : "";
+        
+        console.log("Incoming call from:", from, "CallSid:", callSid, "ConversationId:", conversationIdParam, "CallerName:", callerName || "(none)");
 
         // Try to find existing member by phone
         const { data: member } = await supabase
@@ -269,13 +273,15 @@ serve(async (req) => {
         const recordingEn = getSetting("voice_recording_notice_en", 
           "This call may be recorded to improve our service.");
 
-        // Build personalized greeting if member known
-        const greetingEs = member?.first_name 
-          ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel. ${recordingEs} ¿En qué puedo ayudarle hoy?`
+        // Build personalized greeting - priority: member.first_name > callerName > generic
+        const personName = member?.first_name || callerName || "";
+        
+        const greetingEs = personName 
+          ? `Hola ${personName}, bienvenido a ICE Alarm. Soy Isabel. ${recordingEs} ¿En qué puedo ayudarle hoy?`
           : `${baseGreetingEs} ${recordingEs} ¿En qué puedo ayudarle hoy?`;
         
-        const greetingEn = member?.first_name
-          ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
+        const greetingEn = personName
+          ? `Hello ${personName}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
           : `${baseGreetingEn} ${recordingEn} How can I help you today?`;
 
         // Save AI greeting to conversation

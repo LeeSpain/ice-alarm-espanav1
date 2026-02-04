@@ -261,6 +261,7 @@ export function AIChatWidget({
       <CallMeModal
         open={showCallModal}
         onOpenChange={setShowCallModal}
+        defaultName={memberName || ""}
         defaultLanguage={defaultLanguage as "en" | "es"}
         conversationId={conversationId}
       />

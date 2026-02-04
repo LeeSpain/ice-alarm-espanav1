@@ -25,6 +25,7 @@ interface CallMeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultPhone?: string;
+  defaultName?: string;
   defaultLanguage?: "en" | "es";
   conversationId?: string | null;
 }
@@ -35,10 +36,12 @@ export function CallMeModal({
   open,
   onOpenChange,
   defaultPhone = "",
+  defaultName = "",
   defaultLanguage = "es",
   conversationId = null,
 }: CallMeModalProps) {
   const { t } = useTranslation();
+  const [callerName, setCallerName] = useState(defaultName);
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
   const [language, setLanguage] = useState<"en" | "es">(defaultLanguage);
   const [status, setStatus] = useState<CallStatus>("idle");
@@ -69,6 +72,7 @@ export function CallMeModal({
       const { data, error } = await supabase.functions.invoke("twilio-call-me", {
         body: {
           phoneNumber: phoneNumber.replace(/\s/g, ""),
+          callerName: callerName.trim().slice(0, 50) || undefined,
           language,
           conversationId: conversationId || undefined,
         },
@@ -161,6 +165,20 @@ export function CallMeModal({
           </div>
         ) : (
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t("callMe.nameLabel", "Your Name")}</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder={t("callMe.namePlaceholder", "Enter your name")}
+                value={callerName}
+                onChange={(e) => setCallerName(e.target.value)}
+                disabled={status === "calling"}
+                maxLength={50}
+                className="text-base"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="phone">{t("callMe.phoneLabel", "Phone Number")}</Label>
               <Input

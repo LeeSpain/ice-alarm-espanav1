@@ -42,7 +42,7 @@ serve(async (req) => {
                      req.headers.get("x-real-ip") || 
                      "unknown";
     
-    const { phoneNumber, language, conversationId } = await req.json();
+    const { phoneNumber, callerName, language, conversationId } = await req.json();
     
     // Validate phone number (must start with + and contain digits)
     if (!phoneNumber || typeof phoneNumber !== "string") {
@@ -89,7 +89,12 @@ serve(async (req) => {
       );
     }
     
-    console.log(`Call request: IP=${clientIp}, Phone=${cleanPhone}, Language=${lang}`);
+    // Sanitize caller name (remove special chars, limit length)
+    const sanitizedName = callerName 
+      ? String(callerName).replace(/[<>&"']/g, "").trim().slice(0, 50) 
+      : "";
+    
+    console.log(`Call request: IP=${clientIp}, Phone=${cleanPhone}, Name=${sanitizedName || "(none)"}, Language=${lang}`);
     
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -133,6 +138,9 @@ serve(async (req) => {
     let voiceUrl = `${baseUrl}/functions/v1/twilio-voice?action=incoming&lang=${lang}&source=website`;
     if (conversationId) {
       voiceUrl += `&conversation_id=${encodeURIComponent(conversationId)}`;
+    }
+    if (sanitizedName) {
+      voiceUrl += `&caller_name=${encodeURIComponent(sanitizedName)}`;
     }
     
     // Make outbound call using Twilio API
