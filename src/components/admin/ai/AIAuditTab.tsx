@@ -25,16 +25,16 @@ export function AIAuditTab({ agent }: AIAuditTabProps) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader><CardTitle>{t("ai.recentRuns")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("ai.recentRuns", "Recent Runs")}</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <p>{t("common.loading")}</p> : (
+          {isLoading ? <p>{t("common.loading", "Loading...")}</p> : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("ai.time")}</TableHead>
-                  <TableHead>{t("ai.status")}</TableHead>
-                  <TableHead>{t("ai.tokens")}</TableHead>
-                  <TableHead>{t("ai.duration")}</TableHead>
+                  <TableHead>{t("ai.time", "Time")}</TableHead>
+                  <TableHead>{t("ai.status", "Status")}</TableHead>
+                  <TableHead>{t("ai.tokens", "Tokens")}</TableHead>
+                  <TableHead>{t("ai.duration", "Duration")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -52,14 +52,14 @@ export function AIAuditTab({ agent }: AIAuditTabProps) {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>{t("ai.recentActions")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("ai.recentActions", "Recent Actions")}</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("ai.time")}</TableHead>
-                <TableHead>{t("ai.actionType")}</TableHead>
-                <TableHead>{t("ai.status")}</TableHead>
+                <TableHead>{t("ai.time", "Time")}</TableHead>
+                <TableHead>{t("ai.actionType", "Action Type")}</TableHead>
+                <TableHead>{t("ai.status", "Status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

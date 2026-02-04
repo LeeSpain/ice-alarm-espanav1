@@ -28,35 +28,35 @@ export function AIMemoryTab({ agent }: AIMemoryTabProps) {
   const handleCreate = async () => {
     try {
       await createMemory.mutateAsync({ scope: "agent", agent_id: agent.id, title, content, importance, tags: [], scope_id: null });
-      toast({ title: t("common.created") });
+      toast({ title: t("common.created", "Created") });
       setOpen(false);
       setTitle(""); setContent(""); setImportance(5);
-    } catch { toast({ title: t("common.error"), variant: "destructive" }); }
+    } catch { toast({ title: t("common.error", "Error"), variant: "destructive" }); }
   };
 
   const handleDelete = async (id: string) => {
-    try { await deleteMemory.mutateAsync(id); toast({ title: t("common.deleted") }); }
-    catch { toast({ title: t("common.error"), variant: "destructive" }); }
+    try { await deleteMemory.mutateAsync(id); toast({ title: t("common.deleted", "Deleted") }); }
+    catch { toast({ title: t("common.error", "Error"), variant: "destructive" }); }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{t("ai.knowledgeBase")}</h3>
+        <h3 className="text-lg font-medium">{t("ai.knowledgeBase", "Knowledge Base")}</h3>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t("ai.addMemory")}</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{t("ai.addMemory", "Add Memory")}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{t("ai.addMemory")}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("ai.addMemory", "Add Memory")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <Input placeholder={t("ai.memoryTitle")} value={title} onChange={e => setTitle(e.target.value)} />
-              <Textarea placeholder={t("ai.memoryContent")} value={content} onChange={e => setContent(e.target.value)} rows={4} />
-              <div><label className="text-sm">{t("ai.importance")}: {importance}</label><Slider value={[importance]} onValueChange={v => setImportance(v[0])} min={1} max={10} step={1} /></div>
-              <Button onClick={handleCreate} disabled={!title || !content}>{t("common.create")}</Button>
+              <Input placeholder={t("ai.memoryTitle", "Title")} value={title} onChange={e => setTitle(e.target.value)} />
+              <Textarea placeholder={t("ai.memoryContent", "Content")} value={content} onChange={e => setContent(e.target.value)} rows={4} />
+              <div><label className="text-sm">{t("ai.importance", "Importance")}: {importance}</label><Slider value={[importance]} onValueChange={v => setImportance(v[0])} min={1} max={10} step={1} /></div>
+              <Button onClick={handleCreate} disabled={!title || !content}>{t("common.create", "Create")}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
-      {isLoading ? <p>{t("common.loading")}</p> : (
+      {isLoading ? <p>{t("common.loading", "Loading...")}</p> : (
         <div className="grid gap-3">
           {memories?.map(m => (
             <Card key={m.id}>

@@ -52,15 +52,15 @@ export default function AIAgentDetail() {
         updates: { enabled: !agent.enabled }
       });
       toast({
-        title: agent.enabled ? t("ai.agentPaused") : t("ai.agentEnabled"),
+        title: agent.enabled ? t("ai.agentPaused", "Agent Paused") : t("ai.agentEnabled", "Agent Enabled"),
         description: agent.enabled 
-          ? t("ai.agentPausedDescription") 
-          : t("ai.agentEnabledDescription"),
+          ? t("ai.agentPausedDescription", "This agent will no longer process events.") 
+          : t("ai.agentEnabledDescription", "This agent is now active and processing events."),
       });
     } catch {
       toast({
-        title: t("common.error"),
-        description: t("ai.toggleError"),
+        title: t("common.error", "Error"),
+        description: t("ai.toggleError", "Failed to toggle agent status"),
         variant: "destructive",
       });
     }
@@ -87,9 +87,9 @@ export default function AIAgentDetail() {
   if (!agent || !config) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">{t("ai.agentNotFound")}</p>
+        <p className="text-muted-foreground">{t("ai.agentNotFound", "Agent not found")}</p>
         <Button variant="link" onClick={() => navigate("/admin/ai")}>
-          {t("common.goBack")}
+          {t("common.goBack", "Go Back")}
         </Button>
       </div>
     );
@@ -114,7 +114,7 @@ export default function AIAgentDetail() {
                 variant="outline" 
                 className={agent.enabled ? "bg-green-500/10 text-green-500 border-green-500/20" : ""}
               >
-                {agent.enabled ? t("ai.enabled") : t("ai.paused")}
+                {agent.enabled ? t("ai.enabled", "Enabled") : t("ai.paused", "Paused")}
               </Badge>
               <Badge variant="outline" className={getModeColor(agent.mode)}>
                 {agent.mode.replace("_", " ")}
@@ -129,15 +129,15 @@ export default function AIAgentDetail() {
             onClick={handleToggleEnabled}
             disabled={updateAgent.isPending}
           >
-            {agent.enabled ? (
+          {agent.enabled ? (
               <>
                 <PowerOff className="h-4 w-4 mr-2" />
-                {t("ai.pauseAgent")}
+                {t("ai.pauseAgent", "Pause Agent")}
               </>
             ) : (
               <>
                 <Power className="h-4 w-4 mr-2" />
-                {t("ai.enableAgent")}
+                {t("ai.enableAgent", "Enable Agent")}
               </>
             )}
           </Button>
@@ -154,27 +154,27 @@ export default function AIAgentDetail() {
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="instructions" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.instructions")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.instructions", "Instructions")}</span>
           </TabsTrigger>
           <TabsTrigger value="tools" className="flex items-center gap-2">
             <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.tools")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.tools", "Tools & Permissions")}</span>
           </TabsTrigger>
           <TabsTrigger value="memory" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.memory")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.memory", "Memory")}</span>
           </TabsTrigger>
           <TabsTrigger value="training" className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.training")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.training", "Training")}</span>
           </TabsTrigger>
           <TabsTrigger value="simulator" className="flex items-center gap-2">
             <Play className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.simulator")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.simulator", "Run / Simulator")}</span>
           </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("ai.tabs.audit")}</span>
+            <span className="hidden sm:inline">{t("ai.tabs.audit", "Audit Log")}</span>
           </TabsTrigger>
         </TabsList>
 
