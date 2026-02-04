@@ -9,6 +9,7 @@ import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelectionModal } from "@/components/LanguageSelectionModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import i18n from "@/i18n";
 
 // Auth - Not lazy loaded (critical path)
@@ -217,8 +218,9 @@ const App = () => {
               onLanguageSelect={handleLanguageSelect}
             />
             
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Index />} />
                 <Route path="/pendant" element={<PendantPage />} />
@@ -348,8 +350,9 @@ const App = () => {
 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </AuthProvider>
         </TooltipProvider>
       </BrowserRouter>
