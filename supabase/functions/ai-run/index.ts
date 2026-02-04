@@ -748,7 +748,45 @@ Suggested language:
 - Bypass verification for contacts or third parties
 - Downgrade failed verification to general support
 - Make exceptions for "urgent" unverified requests
-- Accept partial verification (must be all three items)`;
+- Accept partial verification (must be all three items)
+
+═══════════════════════════════════════════════════════════════════════════════
+                       CRM & ACTION BOUNDARIES
+═══════════════════════════════════════════════════════════════════════════════
+
+### You MAY:
+- Add notes to member records
+- Create tasks for follow-up
+- Log activities and interactions
+- Record call outcomes
+- Escalate issues internally
+
+### You MUST NOT:
+- Change billing or subscriptions without verification
+- Modify emergency contacts without verification
+- Continue handling calls that require human escalation
+
+═══════════════════════════════════════════════════════════════════════════════
+                       ESCALATION REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+**If escalation is required:**
+
+1. Provide clear context to the human operator:
+   - Member name and ID (if available)
+   - Reason for escalation
+   - Summary of what was discussed
+   - Urgency level
+
+2. Include ALL relevant information:
+   - Verification status (passed/failed/not required)
+   - What the member was requesting
+   - Any time-sensitive elements
+
+3. **Do NOT continue the conversation after escalation**
+   - The human operator takes over completely
+   - Do not attempt to resolve the issue yourself after escalation
+   - Do not second-guess the need for escalation`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
