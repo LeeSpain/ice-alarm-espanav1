@@ -22,11 +22,11 @@ serve(async (req) => {
       .from("system_settings")
       .select("key, value")
       .in("key", [
-        "twilio_account_sid",
-        "twilio_auth_token",
-        "twilio_api_key_sid",
-        "twilio_api_key_secret",
-        "twilio_phone_number"
+        "settings_twilio_account_sid",
+        "settings_twilio_auth_token",
+        "settings_twilio_api_key_sid",
+        "settings_twilio_api_key_secret",
+        "settings_twilio_phone_number"
       ]);
 
     const twilioConfig = settings?.reduce((acc, s) => {
@@ -35,10 +35,10 @@ serve(async (req) => {
     }, {} as Record<string, string>) || {};
 
     // Prefer API Keys, fall back to Auth Token
-    const authUsername = twilioConfig.twilio_api_key_sid || twilioConfig.twilio_account_sid;
-    const authPassword = twilioConfig.twilio_api_key_secret || twilioConfig.twilio_auth_token;
+    const authUsername = twilioConfig.settings_twilio_api_key_sid || twilioConfig.settings_twilio_account_sid;
+    const authPassword = twilioConfig.settings_twilio_api_key_secret || twilioConfig.settings_twilio_auth_token;
 
-    if (!twilioConfig.twilio_account_sid || !authPassword) {
+    if (!twilioConfig.settings_twilio_account_sid || !authPassword) {
       return new Response(
         JSON.stringify({ error: "Twilio not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -172,7 +172,7 @@ serve(async (req) => {
     const { to, alertId } = await req.json();
 
     // Make outbound call using Twilio API (use API Keys if available)
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.twilio_account_sid}/Calls.json`;
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.settings_twilio_account_sid}/Calls.json`;
     const auth = btoa(`${authUsername}:${authPassword}`);
 
     const callResponse = await fetch(twilioUrl, {
@@ -183,7 +183,7 @@ serve(async (req) => {
       },
       body: new URLSearchParams({
         To: to,
-        From: twilioConfig.twilio_phone_number || "+34900000000",
+        From: twilioConfig.settings_twilio_phone_number || "+34900000000",
         Record: "true",
         StatusCallback: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice?action=status`,
         RecordingStatusCallback: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice?action=recording`,
