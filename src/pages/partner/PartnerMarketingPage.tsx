@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { ShareContentSection } from "@/components/partner/ShareContentSection";
 
 const generateReferralLink = (code: string) => {
   return `${window.location.origin}/join?ref=${code}`;
@@ -389,6 +390,9 @@ export default function PartnerMarketingPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Shareable Content Section */}
+      {partner?.id && <ShareContentSection partnerId={partner.id} />}
     </div>
   );
 }
