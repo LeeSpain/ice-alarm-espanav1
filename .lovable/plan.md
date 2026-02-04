@@ -1,170 +1,97 @@
 
-# Performance Optimization and Blank Screen Fix Plan
+# Media Manager - Published Performance Review
 
-## Summary
+## Summary of Investigation
 
-After a thorough review of the codebase, I've identified **two root causes** for the issues you're experiencing:
-
-1. **Blank screens when navigating between pages**: Caused by unhandled promise rejections in async event handlers that crash the React tree
-2. **Slow page loading**: Caused by missing `React.forwardRef` on tab components (causing React warnings), and opportunities for better query optimization
+I've completed a thorough review of the Published Performance feature. The code architecture is **correctly connected and well-structured**, but there's a **critical configuration issue** preventing metrics from updating.
 
 ---
 
-## Problem 1: Blank Screens During Navigation
+## Root Cause Identified
 
-### Root Cause
-When you click buttons that trigger async operations (like saving settings, generating images, etc.), and those operations fail, the error is not caught. This causes an **unhandled promise rejection** which can crash the React component tree, resulting in a blank screen. Refreshing works because it reloads the entire app from scratch.
+### The Problem: Expired Facebook Access Token
 
-### Evidence Found
-- `MediaManagerPage.tsx`: Multiple `onClick={async () => {...}}` handlers without try/catch
-- `ImportLeadsModal.tsx`: Bulk operations without error handling
-- `StaffDashboard.tsx`: `handleClaimAlert` missing error handling
-- No global error boundary for unhandled promise rejections
+The edge function logs reveal the exact issue:
 
-### Solution
-1. Add a **global unhandled rejection handler** in `App.tsx` that catches stray promise errors and shows a toast instead of crashing
-2. Wrap critical async handlers in try/catch blocks with user-friendly error messages
-
----
-
-## Problem 2: React Ref Warnings (Console Errors)
-
-### Root Cause
-The console shows warnings like:
 ```
-Function components cannot be given refs. Check the render method of `SettingsPage`.
+Error validating access token: Session has expired on Tuesday, 03-Feb-26 04:00:00 PST.
+The current time is Wednesday, 04-Feb-26 01:19:22 PST.
 ```
 
-This happens because:
-- `ImagesSettingsTab` and `EmailSettingsTab` are function components used directly inside `TabsContent`
-- Radix UI's `TabsContent` tries to pass a ref to its children
-- These components don't use `React.forwardRef`, so the ref is silently dropped
-
-### Evidence
-- Line 1068 in `SettingsPage.tsx`: `<EmailSettingsTab />` rendered inside TabsContent
-- Line 1072: `<ImagesSettingsTab />` rendered without wrapping in TabsContent
-- Both components are regular function components, not forwardRef
-
-### Solution
-1. Wrap `EmailSettingsTab` and `ImagesSettingsTab` in `React.forwardRef`
-2. Ensure `ImagesSettingsTab` is wrapped in a proper `<TabsContent value="images">` container
+**Your Facebook Page Access Token stored in `system_settings` has expired.** This is why:
+1. When you like a post on Facebook, nothing changes in the app
+2. The `social_post_metrics` table is empty (no metrics have ever been successfully fetched)
+3. All refresh attempts fail silently (returning 0 values)
 
 ---
 
-## Problem 3: Page Loading Speed Optimizations
+## Architecture Review (All Working Correctly)
 
-### Current State (Already Good)
-Your app already has several optimizations:
-- Lazy loading for all pages via `React.lazy()`
-- Prefetching company settings and website images at app startup
-- Single RPC call for admin dashboard stats
-- Global React Query caching with 2-minute staleTime
-
-### Additional Optimizations
-1. **Increase staleTime for static data**: Settings, images, and documentation rarely change - increase their staleTime to 30 minutes
-2. **Prefetch common admin routes**: When entering admin area, prefetch members list and alerts data
-3. **Add loading boundaries per route**: Instead of one global Suspense, add nested Suspense boundaries for faster perceived loading
-
----
-
-## Implementation Plan
-
-### Step 1: Add Global Error Handler (App.tsx)
-Add a `useEffect` hook that listens for `unhandledrejection` events and shows a toast notification instead of crashing the app.
+### Data Flow
 
 ```text
-Location: src/App.tsx
-Change: Add error boundary effect before the return statement
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Published Posts Flow                         │
+└─────────────────────────────────────────────────────────────────────┘
+
+  1. User clicks "Refresh" or "Refresh All"
+                ↓
+  2. usePublishedPosts hook calls facebook-metrics edge function
+                ↓
+  3. Edge function fetches credentials from system_settings:
+     - settings_facebook_page_id: 107949497473966 ✓
+     - settings_facebook_page_access_token: [EXPIRED] ✗
+                ↓
+  4. Edge function calls Facebook Graph API v24.0:
+     - /[post_id]?fields=reactions.summary,comments.summary,shares
+     - /[post_id]/insights?metric=post_impressions
+     - /[post_id]/reactions?summary=total_count
+                ↓
+  5. Metrics upserted to social_post_metrics table
+                ↓
+  6. UI refreshes via React Query invalidation
 ```
 
-### Step 2: Fix TabsContent Component Refs (SettingsPage.tsx)
-- Wrap `ImagesSettingsTab` in `<TabsContent value="images">`
-- Keep component rendering but fix the structure
+### Components Reviewed
 
-```text
-Location: src/pages/admin/SettingsPage.tsx (line 1071-1072)
-Change: Wrap ImagesSettingsTab properly in TabsContent
-```
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `PublishedPostsSection.tsx` | Working | Correctly uses hook, handles loading/empty states |
+| `PublishedPostCard.tsx` | Working | Displays metrics, refresh button, "View on Facebook" link |
+| `PublishedOverviewCard.tsx` | Working | Aggregates metrics across all posts |
+| `usePublishedPosts.ts` | Working | Correct query structure, proper cache invalidation |
+| `facebook-metrics` edge function | Working | Correct API calls, proper upsert logic |
+| `social_post_metrics` table | Working | Correct schema with unique constraint on `social_post_id` |
 
-### Step 3: Add forwardRef to Settings Tab Components
-- Update `ImagesSettingsTab` to use `React.forwardRef`
-- Update `EmailSettingsTab` to use `React.forwardRef`
+### Database State
 
-```text
-Locations:
-- src/components/admin/settings/ImagesSettingsTab.tsx
-- src/components/admin/settings/EmailSettingsTab.tsx
-Changes: Wrap component in React.forwardRef
-```
-
-### Step 4: Add Error Handling to Critical Async Handlers
-Add try/catch blocks to the most common async handlers:
-- `MediaManagerPage.tsx` - Image generation and publishing
-- `ImportLeadsModal.tsx` - Bulk lead imports
-
-```text
-Locations:
-- src/pages/admin/MediaManagerPage.tsx
-- src/components/admin/outreach/ImportLeadsModal.tsx
-Changes: Wrap async operations in try/catch with toast error messages
-```
-
-### Step 5: Optimize Query StaleTime for Static Data
-Increase staleTime for queries that fetch rarely-changing data:
-- Website images: 30 minutes
-- System settings: 30 minutes
-- Documentation: 10 minutes
-
-```text
-Locations: Various hooks
-Changes: Update staleTime in useQuery options
-```
+- **Published posts**: 3 posts with valid `facebook_post_id` values
+- **Metrics table**: Empty (0 records) - because token expired before any successful fetch
+- **Token storage**: Token exists in `system_settings` but has expired
 
 ---
 
-## Technical Details
+## Resolution Plan
 
-### Global Error Handler Code
-```typescript
-// In App.tsx, inside the App component
-useEffect(() => {
-  const handleRejection = (event: PromiseRejectionEvent) => {
-    console.error("Unhandled rejection:", event.reason);
-    event.preventDefault(); // Prevent crash
-    // Toast will be shown via sonner
-    import("sonner").then(({ toast }) => {
-      toast.error("Something went wrong. Please try again.");
-    });
-  };
-  
-  window.addEventListener("unhandledrejection", handleRejection);
-  return () => window.removeEventListener("unhandledrejection", handleRejection);
-}, []);
-```
+### Step 1: Generate a New Long-Lived Facebook Page Access Token
 
-### ForwardRef Pattern
-```typescript
-// Before
-export function ImagesSettingsTab() { ... }
+Facebook Page Access Tokens expire after ~60 days. You need to:
 
-// After
-export const ImagesSettingsTab = React.forwardRef<HTMLDivElement, object>(
-  function ImagesSettingsTab(props, ref) {
-    // Component logic
-    return <TabsContent value="images" ref={ref}>...</TabsContent>;
-  }
-);
-```
+1. Go to [Facebook Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+2. Select your App
+3. Add permissions: `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`, `pages_read_user_content`
+4. Click "Generate Access Token"
+5. Convert to long-lived token using the token debugger or API call
+6. Update the token in Admin Settings → Integrations
 
----
+### Step 2: Code Improvements (Recommended)
 
-## Expected Results
+Even though the architecture is correct, I'll add these enhancements:
 
-After implementation:
-1. **No more blank screens**: Errors will show as toast notifications instead of crashing
-2. **No React warnings**: Clean console without forwardRef warnings
-3. **Faster perceived loading**: Static data cached longer, reducing unnecessary network requests
-4. **Smoother navigation**: Error recovery prevents need to refresh
+1. **Better error visibility**: Show token expiry errors clearly in the UI instead of silent failures
+2. **Token health check**: Add a "Test Connection" button to verify Facebook credentials
+3. **Graceful degradation**: Show "Token expired" badge on posts when metrics fetch fails
+4. **Auto-retry with backoff**: Don't hammer the API when token is expired
 
 ---
 
@@ -172,11 +99,68 @@ After implementation:
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add global unhandled rejection handler |
-| `src/pages/admin/SettingsPage.tsx` | Fix TabsContent wrapper for ImagesSettingsTab |
-| `src/components/admin/settings/ImagesSettingsTab.tsx` | Add React.forwardRef |
-| `src/components/admin/settings/EmailSettingsTab.tsx` | Add React.forwardRef |
-| `src/pages/admin/MediaManagerPage.tsx` | Add try/catch to async handlers |
-| `src/components/admin/outreach/ImportLeadsModal.tsx` | Add try/catch to bulk operations |
-| `src/hooks/useWebsiteImage.ts` | Increase staleTime to 30 minutes |
-| `src/hooks/useEmailSettings.ts` | Increase staleTime to 30 minutes |
+| `supabase/functions/facebook-metrics/index.ts` | Return structured error for expired token (code 190) |
+| `src/hooks/usePublishedPosts.ts` | Surface token errors, add connection status |
+| `src/components/admin/media/PublishedPostsSection.tsx` | Show error banner when token expired |
+| `src/components/admin/media/PublishedOverviewCard.tsx` | Add "Test Connection" button |
+| `src/components/admin/media/PublishedPostCard.tsx` | Show error badge on failed refresh |
+
+---
+
+## Implementation Details
+
+### 1. Enhanced Edge Function Error Response
+
+Detect OAuth errors (code 190) and return a specific error type so the frontend can display helpful guidance:
+
+```typescript
+// In facebook-metrics/index.ts
+if (engagementData.error?.code === 190) {
+  return {
+    error: "token_expired",
+    message: "Facebook access token has expired. Please generate a new token in Settings.",
+    details: engagementData.error.message
+  };
+}
+```
+
+### 2. Connection Status in Hook
+
+Add a `connectionStatus` field to track whether Facebook is properly connected:
+
+```typescript
+// In usePublishedPosts.ts
+connectionStatus: "connected" | "token_expired" | "not_configured" | "unknown"
+```
+
+### 3. Error Banner in Published Section
+
+When token is expired, show a prominent banner with instructions:
+
+```text
+⚠️ Facebook Token Expired
+Your Facebook access token has expired. Metrics cannot be refreshed until you generate a new token.
+[Go to Settings →]
+```
+
+### 4. Test Connection Button
+
+Add a button in the overview card that calls the edge function with a simple test request to verify the token is valid before showing all metrics.
+
+---
+
+## Expected Results After Fix
+
+1. **Token Renewal**: Once you update the token, clicking "Refresh All" will fetch real metrics
+2. **Visible Errors**: If the token expires again, users will see a clear error message
+3. **Better UX**: Test connection before publishing to avoid failed posts
+4. **Metrics Display**: All engagement data (reactions, comments, shares, reach) will populate
+
+---
+
+## Technical Notes
+
+- The Facebook Graph API v24.0 is correctly used
+- The `post_impressions` insight requires `pages_read_engagement` permission
+- Reaction breakdown fetching is working but will only show types after token renewal
+- The 15-minute cache prevents API rate limiting (this is good)
