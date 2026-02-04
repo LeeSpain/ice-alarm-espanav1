@@ -1,161 +1,101 @@
 
-
-# Add Configurable Voice Scripts and CRM Note Logging to Twilio Voice
+# Add Caller Name to "Call and Speak" Feature
 
 ## Overview
+Enhance the "Call and Speak" feature to collect the caller's name so the AI agent (Isabel) can greet them personally when calling back. For logged-in members, the name will be pre-populated from their profile.
 
-This plan adds 4 key improvements to the `twilio-voice` edge function:
+## Current Flow
+1. User clicks "Call and Speak" in chat widget
+2. Modal collects: Phone Number + Language
+3. Twilio calls user → AI greets generically
 
-1. **Voice Script Settings** - Make greetings, hold messages, and error prompts editable via `system_settings`
-2. **Safe getSetting Helper** - Ensure missing settings don't break calls (graceful fallbacks)
-3. **Recording Notice** - Add GDPR-compliant recording disclosure to greetings
-4. **CRM Note Logging** - Save completed calls as member notes for visibility in Member → Notes tab
+## New Flow
+1. User clicks "Call and Speak" in chat widget
+2. Modal collects: **Name** + Phone Number + Language
+3. Name is passed through the call chain
+4. AI greets: "Hello **[Name]**, I'm Isabel from ICE Alarm..."
 
 ---
 
-## Changes Summary
+## Implementation Details
 
-| Location | Change |
-|----------|--------|
-| Lines 26-31 | Add 8 new settings keys for voice scripts |
-| After line 36 | Add `getSetting()` helper function |
-| Lines 52-62 (wait action) | Use editable hold messages |
-| Lines 107-140 (incoming action) | Use editable greetings with recording notice |
-| After line 459 (status action) | Insert member note on call completion |
+### 1. Frontend - CallMeModal.tsx
+**Add name input field above phone number:**
+- New state: `callerName`
+- Add text input with label "Your Name" / "Su nombre"
+- For logged-in members: pre-populate from `memberName` prop
+- Pass `callerName` to edge function call
+- Validation: name should be trimmed, max 50 chars (optional but recommended)
+
+**Props to add:**
+- `defaultName?: string` - allows pre-population for logged-in users
+
+### 2. Frontend - AIChatWidget.tsx
+**Pass member name to CallMeModal:**
+- The widget already receives `memberName` prop
+- Pass it as `defaultName` to CallMeModal component
+
+### 3. Edge Function - twilio-call-me/index.ts
+**Accept and forward caller name:**
+- Read `callerName` from request JSON body
+- Sanitize the name (remove special characters, limit length)
+- Add to voice webhook URL as query parameter: `&caller_name=<encoded-name>`
+- Log the name in console for debugging
+
+### 4. Edge Function - twilio-voice/index.ts
+**Use caller name in greeting:**
+- Read `caller_name` from URL query parameters
+- If `caller_name` is provided AND no member is found in database, use caller_name
+- Priority order for greeting personalization:
+  1. Known member's first_name from database
+  2. caller_name from query param (website callback)
+  3. Generic greeting (no name)
+- Build personalized greeting: "Hello [Name], I'm Isabel..."
 
 ---
 
 ## Technical Details
 
-### 1. Expand Settings Keys (lines 26-31)
+### Security Considerations
+- Name input validation: max 50 characters
+- URL-encode the name when passing as query parameter
+- Sanitize for TwiML/XML (escape special characters)
+- Name is only used for greeting, not for identity verification
 
-```typescript
-.in("key", [
-  "settings_twilio_account_sid",
-  "settings_twilio_auth_token",
-  "settings_twilio_phone_number",
-  "settings_emergency_phone",
-  // Voice script settings (editable via Admin Settings)
-  "voice_greeting_es",
-  "voice_greeting_en",
-  "voice_hold_es",
-  "voice_hold_en",
-  "voice_error_es",
-  "voice_error_en",
-  "voice_recording_notice_es",
-  "voice_recording_notice_en"
-]);
+### Greeting Logic (twilio-voice)
+```text
+if (member found in DB)
+    → Use member.first_name
+else if (caller_name query param exists)
+    → Use caller_name
+else
+    → Generic greeting without name
 ```
 
-### 2. Add getSetting Helper (after line 36)
+### Sample Personalized Greetings
+**Spanish (with name):**
+> "Hola María, bienvenida a ICE Alarm. Soy Isabel, su asistente virtual..."
 
-```typescript
-// Safe helper to get settings with fallback for missing/empty values
-const getSetting = (key: string, fallback: string): string => {
-  const v = twilioConfig[key];
-  return (v && String(v).trim().length > 0) ? String(v) : fallback;
-};
-```
-
-### 3. Update Wait Action (lines 52-62)
-
-Replace hardcoded Spanish/English hold messages with:
-```typescript
-const holdEs = getSetting("voice_hold_es", 
-  "Por favor, permanezca en la línea. Le conectamos en breve.");
-const holdEn = getSetting("voice_hold_en", 
-  "Please stay on the line. We are connecting you now.");
-```
-
-### 4. Update Incoming Greeting (lines 107-128)
-
-Add recording notice and make greetings configurable:
-```typescript
-// Get configurable greetings with fallbacks
-const baseGreetingEs = getSetting("voice_greeting_es", 
-  "Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual.");
-const baseGreetingEn = getSetting("voice_greeting_en", 
-  "Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant.");
-const recordingEs = getSetting("voice_recording_notice_es", 
-  "Esta llamada puede ser grabada para mejorar el servicio.");
-const recordingEn = getSetting("voice_recording_notice_en", 
-  "This call may be recorded to improve our service.");
-
-// Build personalized greeting if member known
-const greetingEs = member?.first_name 
-  ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel. ${recordingEs} ¿En qué puedo ayudarle hoy?`
-  : `${baseGreetingEs} ${recordingEs} ¿En qué puedo ayudarle hoy?`;
-
-const greetingEn = member?.first_name
-  ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
-  : `${baseGreetingEn} ${recordingEn} How can I help you today?`;
-```
-
-### 5. Add CRM Note on Call Completion (after line 459)
-
-Insert member note when call completes:
-```typescript
-// If call completed, create a CRM note for the member
-if (callStatus === "completed") {
-  const from = formData.get("From") as string | null;
-  const to = formData.get("To") as string | null;
-
-  if (from) {
-    const normalizedFrom = from.replace("+", "");
-
-    const { data: member } = await supabase
-      .from("members")
-      .select("id, first_name, last_name")
-      .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
-      .maybeSingle();
-
-    if (member) {
-      const dur = duration ? parseInt(duration) : 0;
-
-      const noteText =
-        `📞 AI Voice Call Completed\n` +
-        `• Member: ${member.first_name || ""} ${member.last_name || ""}\n` +
-        `• From: ${from}\n` +
-        `• To: ${to || ""}\n` +
-        `• Duration: ${dur} seconds\n` +
-        (recordingUrl ? `• Recording: ${recordingUrl}\n` : "") +
-        `• Status: ${callStatus}\n\n` +
-        `Summary: Call handled by AI voice assistant.`;
-
-      await supabase.from("member_notes").insert({
-        member_id: member.id,
-        content: noteText,
-        note_type: "support",
-        is_pinned: false
-      });
-    }
-  }
-}
-```
+**English (with name):**
+> "Hello John, welcome to ICE Alarm. I'm Isabel, your virtual assistant..."
 
 ---
 
 ## Files to Modify
 
-| File | Lines Changed |
-|------|---------------|
-| `supabase/functions/twilio-voice/index.ts` | ~26-31, ~36, ~52-62, ~107-128, ~459-480 |
+| File | Change |
+|------|--------|
+| `src/components/chat/CallMeModal.tsx` | Add name input field, state, validation, and API call update |
+| `src/components/chat/AIChatWidget.tsx` | Pass `memberName` as `defaultName` prop to CallMeModal |
+| `supabase/functions/twilio-call-me/index.ts` | Accept `callerName`, sanitize, add to voice URL |
+| `supabase/functions/twilio-voice/index.ts` | Read `caller_name` param, use in greeting if no member found |
 
 ---
 
-## Benefits
-
-1. **Platform Control** - Change voice scripts from Admin Settings without code changes
-2. **GDPR Compliance** - Recording notice at call start
-3. **CRM Visibility** - Every completed call creates a member note with duration/recording link
-4. **Resilience** - getSetting helper ensures missing settings don't break calls
-
----
-
-## Future Enhancement (Optional)
-
-After this change, you could add a "Voice Scripts" section to Admin Settings to edit:
-- `voice_greeting_es` / `voice_greeting_en`
-- `voice_hold_es` / `voice_hold_en`
-- `voice_recording_notice_es` / `voice_recording_notice_en`
-
+## Testing Checklist
+- [ ] Open homepage (not logged in)
+- [ ] Click "Call and Speak" → Name field should be empty
+- [ ] Enter name "Maria", phone "+34612345678", select Spanish
+- [ ] Click "Call me now"
+- [ ] Answer phone → AI should say: "Hola Maria, bienvenida a ICE Alarm..."
+- [ ] For logged-in member: Name should be pre-filled from profile
