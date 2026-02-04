@@ -129,11 +129,32 @@ export function storeReferralData(
 
 /**
  * Retrieve stored referral data
+ * Checks both tracked link storage (partner_referral) and regular referral (partner_ref)
  */
 export function getStoredReferralData(): {
   referralCode: string | null;
+  refPostId: string | null;
   utmParams: Record<string, string>;
 } {
+  // First, check for tracked link referral (partner_referral) - set by /r/<code>/<slug> links
+  const trackedReferral = localStorage.getItem("partner_referral");
+  if (trackedReferral) {
+    try {
+      const data = JSON.parse(trackedReferral);
+      // Check if not expired
+      if (data.ref_expires && data.ref_expires > Date.now()) {
+        return {
+          referralCode: data.ref_partner_code || null,
+          refPostId: data.ref_post_id || null,
+          utmParams: {},
+        };
+      }
+    } catch (e) {
+      console.error("Failed to parse tracked referral:", e);
+    }
+  }
+  
+  // Fall back to regular referral (partner_ref) - set by /?ref=CODE links
   const referralCode = localStorage.getItem("partner_ref");
   let utmParams: Record<string, string> = {};
   
@@ -146,7 +167,7 @@ export function getStoredReferralData(): {
     }
   }
   
-  return { referralCode, utmParams };
+  return { referralCode, refPostId: null, utmParams };
 }
 
 /**
@@ -155,4 +176,5 @@ export function getStoredReferralData(): {
 export function clearReferralData(): void {
   localStorage.removeItem("partner_ref");
   localStorage.removeItem("partner_utm");
+  localStorage.removeItem("partner_referral"); // Also clear tracked link data
 }

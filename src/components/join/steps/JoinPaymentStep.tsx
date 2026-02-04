@@ -37,8 +37,8 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
     setIsProcessing(true);
     setError(null);
     try {
-      const { referralCode: partnerRef, utmParams } = getStoredReferralData();
-      const { data: registrationResult, error: registrationError } = await supabase.functions.invoke("submit-registration", { body: { membershipType: data.membershipType, primaryMember: data.primaryMember, partnerMember: data.partnerMember, address: data.address, separateAddresses: data.separateAddresses, partnerAddress: data.partnerAddress, emergencyContacts: data.emergencyContacts, includePendant: data.includePendant, pendantCount: data.pendantCount, billingFrequency: data.billingFrequency, partnerRef, utmParams } });
+      const { referralCode: partnerRef, refPostId, utmParams } = getStoredReferralData();
+      const { data: registrationResult, error: registrationError } = await supabase.functions.invoke("submit-registration", { body: { membershipType: data.membershipType, primaryMember: data.primaryMember, partnerMember: data.partnerMember, address: data.address, separateAddresses: data.separateAddresses, partnerAddress: data.partnerAddress, emergencyContacts: data.emergencyContacts, includePendant: data.includePendant, pendantCount: data.pendantCount, billingFrequency: data.billingFrequency, partnerRef, refPostId, utmParams } });
       if (registrationError) throw new Error(registrationError.message || "Failed to submit registration");
       if (!registrationResult?.success) throw new Error(registrationResult?.error || "Registration failed");
       onUpdate({ memberId: registrationResult.memberId, orderId: registrationResult.orderNumber });
@@ -57,7 +57,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
     setIsProcessing(true);
     setError(null);
     try {
-      const { referralCode: partnerRef, utmParams } = getStoredReferralData();
+      const { referralCode: partnerRef, refPostId, utmParams } = getStoredReferralData();
       const { data: registrationResult, error: registrationError } = await supabase.functions.invoke("submit-registration", { 
         body: { 
           membershipType: data.membershipType, 
@@ -71,6 +71,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
           pendantCount: data.pendantCount, 
           billingFrequency: data.billingFrequency, 
           partnerRef, 
+          refPostId,
           utmParams,
           testMode: true 
         } 
