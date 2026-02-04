@@ -1,108 +1,196 @@
 
-# Fix "Call and Speak" Data Capture & Call Stability
+# Complete Review: Partner Share Distribution Feature
 
-## Issues Identified
-
-### Issue 1: Missing Data in Admin Leads
-The "Call and Speak" feature collects caller name, phone, and language, but **never creates a lead record** in the `leads` table. The `twilio-call-me` edge function initiates the Twilio call but does not insert into `leads`.
-
-### Issue 2: Call Cut Off After Answering
-The call was cut off because the `voice_call_sessions` table is missing the `conversation_id` column. The code tries to insert with this column, fails, then the fallback insert may also have issues. When the call proceeds to transcription, it can't find the session and returns an error, causing Twilio to hang up.
+## Overview
+After a thorough review of all the code changes for the Partner Share Distribution feature, I've identified several issues that need to be fixed for the feature to work 100%.
 
 ---
 
-## Solution Overview
+## Issues Found
 
-### Part A: Add Lead Creation to twilio-call-me
-When someone uses "Call and Speak", create a lead record immediately with the information we have.
+### 1. **CRITICAL: Referral Data Storage Mismatch**
+The tracked link redirect and the join wizard use different localStorage keys.
 
-### Part B: Add conversation_id column to voice_call_sessions
-Add the missing database column so voice sessions can properly link to conversations.
+**Problem:**
+- `ReferralRedirect.tsx` stores data in: `localStorage.setItem("partner_referral", JSON.stringify({ref_partner_id, ref_post_id, ...}))`
+- `crmEvents.ts` reads from: `localStorage.getItem("partner_ref")` (a different key!)
 
-### Part C: Save CRM Notes for Non-Members  
-When a call completes and no member is found, save the summary to the `conversations` table or create a minimal lead record with notes.
+**Impact:** When a user clicks a tracked partner link (`/r/ABC123/post-slug`) and then registers, the `refPostId` is never retrieved and passed to the `submit-registration` function, so post-specific attribution won't work.
+
+**Files to fix:**
+- `src/lib/crmEvents.ts` - Update `getStoredReferralData()` to also check `partner_referral` localStorage key
+- `src/components/join/steps/JoinPaymentStep.tsx` - Pass `refPostId` to submit-registration
 
 ---
 
-## Implementation Details
+### 2. **CRITICAL: refPostId Not Passed to submit-registration**
+The payment step calls submit-registration but doesn't include the `refPostId` parameter.
 
-### 1. Database Migration
-Add the missing `conversation_id` column to `voice_call_sessions`:
-
-```sql
-ALTER TABLE voice_call_sessions 
-ADD COLUMN IF NOT EXISTS conversation_id uuid REFERENCES conversations(id);
+**Current code (line 41):**
+```typescript
+body: { ..., partnerRef, utmParams }
 ```
 
-### 2. Update twilio-call-me Edge Function
-After validating the phone number and before initiating the call:
+**Should be:**
+```typescript
+body: { ..., partnerRef, utmParams, refPostId }
+```
 
-1. Check if caller is an existing member (by phone)
-2. If NOT a member, create a lead record:
-   - `first_name`: from `callerName` (split if contains space) or "Website"
-   - `last_name`: from `callerName` (second part) or "Caller"
-   - `email`: placeholder like `callme-{timestamp}@pending.icealarm.es`
-   - `phone`: the caller's phone number
-   - `preferred_language`: from the request
-   - `enquiry_type`: "callback"
-   - `source`: "website_call_me"
-   - `message`: "Requested callback via Call and Speak feature"
-   - `status`: "new"
-3. Store the lead ID in the conversation for later linking
-4. Pass lead_id to the voice webhook URL
+---
 
-### 3. Update twilio-voice Edge Function
-**In status callback (call completed):**
+### 3. **UI Issue: PartnerDistributionSection Not Visible in Media Manager**
+After verifying the code, the PartnerDistributionSection IS correctly imported and rendered in MediaManagerPage.tsx (lines 582-591). This appears correct.
 
-1. If no member_id but we have a conversation with lead_id:
-   - Update the lead's `notes` field with the CRM summary
-   - Mark lead as `contacted`
-2. If no member_id and no lead_id:
-   - Store the summary in the conversation's metadata or subject field as fallback
+---
+
+### 4. **Schema and Database - VERIFIED ✓**
+- `partner_post_links` table exists with correct columns
+- `partner_clicks` table exists with correct columns  
+- `social_posts` has partner distribution columns (`partner_enabled`, `partner_audience`, etc.)
+- Unique constraint on `(post_id, partner_id)` exists for upsert
+- RLS policies are configured for staff and partners
+
+---
+
+### 5. **Edge Functions - VERIFIED ✓**
+- `facebook-publish/index.ts` correctly generates partner links on publish
+- `track-referral-click/index.ts` correctly increments clicks and records click data
+- `submit-registration/index.ts` has logic to increment signups (but needs refPostId to be passed)
+
+---
+
+### 6. **Translations - VERIFIED ✓**
+Both `en.json` and `es.json` have complete translations for:
+- `mediaManager.partnerDistribution.*`
+- `partner.share.*`
+
+---
+
+### 7. **Partner Dashboard Share Tab - VERIFIED ✓**
+- `ShareContentSection.tsx` correctly displays shareable posts
+- `PartnerDashboard.tsx` has tabs for overview and share content
+- `usePartnerShareableContent` hook filters for published posts with active links
+
+---
+
+## Implementation Plan
+
+### Part A: Fix getStoredReferralData() in crmEvents.ts
+Update the function to check both storage locations:
+1. First check `partner_referral` (set by tracked links)
+2. Fall back to `partner_ref` (set by regular referral URLs)
+3. Extract `ref_post_id` from the partner_referral data
+
+### Part B: Fix JoinPaymentStep.tsx
+Update both payment handlers to pass `refPostId`:
+1. In `handlePayWithStripe()` - add refPostId to body
+2. In `handleTestModeComplete()` - add refPostId to body
 
 ---
 
 ## Technical Details
 
-### Lead Record Structure for "Call and Speak"
+### Updated getStoredReferralData Function
+```typescript
+export function getStoredReferralData(): {
+  referralCode: string | null;
+  refPostId: string | null;
+  utmParams: Record<string, string>;
+} {
+  // First, check for tracked link referral (partner_referral)
+  const trackedReferral = localStorage.getItem("partner_referral");
+  if (trackedReferral) {
+    try {
+      const data = JSON.parse(trackedReferral);
+      // Check if not expired
+      if (data.ref_expires && data.ref_expires > Date.now()) {
+        return {
+          referralCode: data.ref_partner_code || null,
+          refPostId: data.ref_post_id || null,
+          utmParams: {},
+        };
+      }
+    } catch (e) {
+      console.error("Failed to parse tracked referral:", e);
+    }
+  }
+  
+  // Fall back to regular referral (partner_ref)
+  const referralCode = localStorage.getItem("partner_ref");
+  let utmParams: Record<string, string> = {};
+  
+  const utmJson = localStorage.getItem("partner_utm");
+  if (utmJson) {
+    try {
+      utmParams = JSON.parse(utmJson);
+    } catch (e) {
+      console.error("Failed to parse UTM data:", e);
+    }
+  }
+  
+  return { referralCode, refPostId: null, utmParams };
+}
+```
 
-| Field | Value |
-|-------|-------|
-| first_name | Extracted from callerName or "Website" |
-| last_name | Extracted from callerName or "Caller" |
-| email | `call-{timestamp}@pending.icealarm.es` |
-| phone | The provided phone number |
-| preferred_language | "en" or "es" |
-| enquiry_type | "callback" |
-| source | "website_call_me" |
-| message | "Requested callback via Call and Speak feature" |
-| status | "new" → "contacted" after call completes |
+### Updated clearReferralData Function
+```typescript
+export function clearReferralData(): void {
+  localStorage.removeItem("partner_ref");
+  localStorage.removeItem("partner_utm");
+  localStorage.removeItem("partner_referral"); // Also clear tracked link data
+}
+```
 
-### Files to Modify
+### JoinPaymentStep Changes
+Both handlers need to extract and pass refPostId:
+```typescript
+const { referralCode: partnerRef, refPostId, utmParams } = getStoredReferralData();
+// ... in body:
+body: { ..., partnerRef, refPostId, utmParams }
+```
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| Database migration | Add `conversation_id` column to `voice_call_sessions` |
-| `supabase/functions/twilio-call-me/index.ts` | Create lead record before initiating call |
-| `supabase/functions/twilio-voice/index.ts` | Link lead_id to conversation; update lead notes on call completion |
-| `src/integrations/supabase/types.ts` | Will auto-update after migration |
+| `src/lib/crmEvents.ts` | Update `getStoredReferralData()` to check both storage keys and return `refPostId`; update `clearReferralData()` to clear both |
+| `src/components/join/steps/JoinPaymentStep.tsx` | Extract `refPostId` and pass to submit-registration in both handlers |
 
 ---
 
 ## Testing Plan
 
-1. Open website (not logged in)
-2. Click "Call and Speak"  
-3. Enter name "Maria Garcia", phone "+34612345678", select Spanish
-4. Click "Call me now"
-5. Check Admin → Leads → Should see new lead with:
-   - Name: Maria Garcia
-   - Phone: +34612345678
-   - Source: website_call_me
-   - Status: new
-6. Answer the call → AI should greet "Hola Maria..."
-7. Have a short conversation
-8. Hang up
-9. Check Admin → Leads again:
-   - Status should be "contacted"
-   - Notes should contain the conversation summary
+1. **Tracked Link Flow:**
+   - Visit `/r/PARTNERCODE/post-slug`
+   - Verify redirect to blog/home
+   - Check localStorage has `partner_referral` with post ID
+   - Complete registration
+   - Verify `partner_post_links.signups` increments
+   - Verify member has `ref_partner_id` and `ref_post_id`
+
+2. **Regular Referral Flow:**
+   - Visit `/?ref=PARTNERCODE`
+   - Complete registration
+   - Verify partner attribution created
+
+3. **Admin Media Manager:**
+   - Create draft with Partner Distribution enabled
+   - Approve and publish
+   - Verify `partner_post_links` records created
+
+4. **Partner Dashboard:**
+   - Log in as partner
+   - Go to Share Content tab
+   - Verify published posts appear with tracked links
+   - Copy link and verify it works
+
+---
+
+## Summary
+The feature is 95% complete. The main issues are:
+1. localStorage key mismatch between tracked link storage and join wizard retrieval
+2. refPostId not being passed to submit-registration
+
+Once these two fixes are applied, the Partner Share Distribution feature will work end-to-end with proper click tracking and signup attribution.
