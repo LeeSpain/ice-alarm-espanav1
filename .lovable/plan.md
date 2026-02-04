@@ -1,160 +1,148 @@
 
 
 ## Goal
-Add explicit English fallback values to all translation calls (`t()`) across all AI Agent components to ensure text always renders correctly, even during i18n loading timing edge cases. This matches the pattern already implemented in `AICommandCentre.tsx`.
+Merge the **Sales Expert** agent into the **Customer Service Expert** agent to create a unified **Customer Service & Sales Expert** that handles 100% of both responsibilities.
 
-## Files Requiring Updates
+## Current State
 
-| File | Translation Keys Count |
-|------|----------------------|
-| `src/pages/admin/AIAgentDetail.tsx` | 15 keys |
-| `src/components/admin/ai/AIInstructionsTab.tsx` | 7 keys |
-| `src/components/admin/ai/AIToolsTab.tsx` | 8 keys |
-| `src/components/admin/ai/AIMemoryTab.tsx` | 12 keys |
-| `src/components/admin/ai/AITrainingTab.tsx` | 3 keys |
-| `src/components/admin/ai/AISimulatorTab.tsx` | 8 keys |
-| `src/components/admin/ai/AIAuditTab.tsx` | 9 keys |
-| `src/components/admin/ai/AIAvatarUpload.tsx` | 11 keys |
+| Agent | Key | Description | Events Handled |
+|-------|-----|-------------|----------------|
+| Customer Service Expert | `customer_service_expert` | Support, questions, troubleshooting | `conversation.started`, `message.received` |
+| Sales Expert | `sales_expert` | Leads, sales enquiries, conversions | `lead.created`, `sale.enquiry`, `quote.requested` |
 
-## Implementation Details
+## After Merge
 
-### 1. AIAgentDetail.tsx (15 translations)
-Add fallbacks to all translation calls:
+| Agent | Key | Description | Events Handled |
+|-------|-----|-------------|----------------|
+| Customer Service & Sales Expert | `customer_service_expert` | Full 24/7 coverage: support + sales | All 5 events combined |
 
-```typescript
-// Tab labels
-t("ai.tabs.instructions", "Instructions")
-t("ai.tabs.tools", "Tools & Permissions")
-t("ai.tabs.memory", "Memory")
-t("ai.tabs.training", "Training")
-t("ai.tabs.simulator", "Run / Simulator")
-t("ai.tabs.audit", "Audit Log")
+## Implementation Plan
 
-// Status badges & buttons
-t("ai.enabled", "Enabled")
-t("ai.paused", "Paused")
-t("ai.pauseAgent", "Pause Agent")
-t("ai.enableAgent", "Enable Agent")
+### Step 1: Update Database Agent Record
+Update the `ai_agents` table to change the name and description:
 
-// Toast messages
-t("ai.agentPaused", "Agent Paused")
-t("ai.agentPausedDescription", "This agent will no longer process events.")
-t("ai.agentEnabled", "Agent Enabled")
-t("ai.agentEnabledDescription", "This agent is now active and processing events.")
-t("ai.toggleError", "Failed to toggle agent status")
-
-// Error states
-t("ai.agentNotFound", "Agent not found")
-t("common.goBack", "Go Back")
-t("common.error", "Error")
+```sql
+UPDATE ai_agents 
+SET 
+  name = 'Customer Service & Sales Expert',
+  description = '24/7 coverage for sales enquiries, lead qualification, pricing discussions, support questions, device troubleshooting, and general customer assistance.'
+WHERE agent_key = 'customer_service_expert';
 ```
 
-### 2. AIInstructionsTab.tsx (7 translations)
-```typescript
-t("ai.systemInstruction", "System Instruction")
-t("ai.systemInstructionDesc", "The core instructions that define how this agent behaves.")
-t("ai.businessContext", "Business Context")
-t("ai.businessContextDesc", "Additional context about your business for the agent.")
-t("ai.instructionsSaved", "Instructions saved successfully")
-t("common.saved", "Saved")
-t("common.save", "Save")
-t("common.error", "Error")
-```
+### Step 2: Merge System Prompts in Edge Function
+Update `supabase/functions/ai-run/index.ts`:
+- Combine `CUSTOMER_SERVICE_CHAT_PROMPT` and `SALES_EXPERT_CHAT_PROMPT` into a single comprehensive prompt
+- Remove the `sales_expert` case from the prompt selection logic
+- Keep the `customer_service_expert` key (used by chat widgets)
 
-### 3. AIToolsTab.tsx (8 translations)
-```typescript
-t("ai.operatingMode", "Operating Mode")
-t("ai.modes.adviseOnly", "Advise Only")
-t("ai.modes.draftOnly", "Draft Only")
-t("ai.modes.autoAct", "Auto Act")
-t("ai.readPermissions", "Read Permissions")
-t("ai.writePermissions", "Write Permissions")
-t("ai.autoExecute", "Auto Execute")
-t("common.saved", "Saved")
-t("common.save", "Save")
-t("common.error", "Error")
-```
+**New Combined Prompt** will include:
+- Customer service role (answering questions, troubleshooting)
+- Sales role (qualifying leads, handling objections, presenting value)
+- Pricing information (already shared between both)
+- Sales techniques (from sales expert)
+- Response guidelines (from customer service)
 
-### 4. AIMemoryTab.tsx (12 translations)
-```typescript
-t("ai.knowledgeBase", "Knowledge Base")
-t("ai.addMemory", "Add Memory")
-t("ai.memoryTitle", "Title")
-t("ai.memoryContent", "Content")
-t("ai.importance", "Importance")
-t("common.create", "Create")
-t("common.created", "Created")
-t("common.deleted", "Deleted")
-t("common.loading", "Loading...")
-t("common.error", "Error")
-```
-
-### 5. AITrainingTab.tsx (3 translations)
-```typescript
-t("ai.trainingData", "Training Data")
-t("ai.trainingDataDesc", "Q&A pairs and examples that help train this agent.")
-t("ai.noTrainingData", "No training data added yet. Add memory entries with the 'training' tag.")
-```
-
-### 6. AISimulatorTab.tsx (8 translations)
-```typescript
-t("ai.inputContext", "Input Context")
-t("ai.inputContextDesc", "Provide JSON context to simulate an agent run.")
-t("ai.runSimulation", "Run Simulation")
-t("ai.output", "Output")
-t("ai.noOutputYet", "Run a simulation to see the output here.")
-t("ai.simulationComplete", "Simulation completed")
-t("common.error", "Error")
-```
-
-### 7. AIAuditTab.tsx (9 translations)
-```typescript
-t("ai.recentRuns", "Recent Runs")
-t("ai.recentActions", "Recent Actions")
-t("ai.time", "Time")
-t("ai.status", "Status")
-t("ai.tokens", "Tokens")
-t("ai.duration", "Duration")
-t("ai.actionType", "Action Type")
-t("common.loading", "Loading...")
-```
-
-### 8. AIAvatarUpload.tsx (11 translations)
-Already has most fallbacks! Verify and standardize:
-```typescript
-t("ai.uploadAvatar", "Upload Avatar")
-t("ai.avatarDescription", "This image appears in the chat widget")
-t("ai.avatarUploaded", "Avatar uploaded")
-t("ai.avatarUploadedDescription", "Agent avatar has been updated")
-t("ai.avatarRemoved", "Avatar removed")
-t("ai.avatarRemovedDescription", "Agent avatar has been removed")
-t("ai.avatarInvalidType", "Please upload a JPG, PNG, or WebP image")
-t("ai.avatarTooLarge", "Image must be less than 5MB")
-t("ai.avatarUploadError", "Failed to upload avatar")
-t("ai.avatarRemoveError", "Failed to remove avatar")
-t("common.custom", "Custom")
-t("common.remove", "Remove")
-t("common.error", "Error")
-```
-
-## What Will NOT Change
-- No functionality changes
-- No UI layout changes
-- No removal of any features
-- All existing translation keys in locale files remain unchanged
-- Spanish translations continue to work as expected
-
-## Technical Pattern
-The fix follows the established pattern from `AICommandCentre.tsx`:
+### Step 3: Update Event Dispatch Mapping
+Update `supabase/functions/ai-dispatch-events/index.ts`:
+- Redirect all sales events to `customer_service_expert`
 
 ```typescript
-// BEFORE (can show literal key during loading)
-{t("ai.tabs.instructions")}
-
-// AFTER (always shows readable text)
-{t("ai.tabs.instructions", "Instructions")}
+// Customer Service & Sales Expert - combined
+"conversation.started": ["customer_service_expert"],
+"message.received": ["customer_service_expert"],
+"lead.created": ["customer_service_expert"],
+"sale.enquiry": ["customer_service_expert"],
+"quote.requested": ["customer_service_expert"],
 ```
 
-## Summary
-This is a defensive hardening update adding ~65 fallback strings across 8 files to ensure the AI Command Centre never displays raw translation keys like `ai.tabs.instructions` to users.
+### Step 4: Update AI Command Centre Icon
+Update `src/pages/admin/AICommandCentre.tsx`:
+- Remove `TrendingUp` import (no longer needed for sales_expert)
+- Keep `Headphones` icon for the combined agent
+
+### Step 5: Update Translations
+Update both locale files:
+
+**English (`en.json`):**
+```json
+"customerServiceExpert": "Customer Service & Sales Expert"
+```
+
+**Spanish (`es.json`):**
+```json
+"customerServiceExpert": "Experto en Atención al Cliente y Ventas"
+```
+
+### Step 6: Disable/Remove Sales Expert Agent
+Option A (Safe - Disable):
+```sql
+UPDATE ai_agents SET enabled = false WHERE agent_key = 'sales_expert';
+```
+
+Option B (Clean - Delete):
+```sql
+DELETE FROM ai_agent_configs WHERE agent_id = (SELECT id FROM ai_agents WHERE agent_key = 'sales_expert');
+DELETE FROM ai_agents WHERE agent_key = 'sales_expert';
+```
+
+We'll use Option A initially to keep the data, then Option B can be run later.
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/ai-run/index.ts` | Merge prompts, remove sales_expert case |
+| `supabase/functions/ai-dispatch-events/index.ts` | Redirect sales events |
+| `src/pages/admin/AICommandCentre.tsx` | Remove sales_expert icon case |
+| `src/i18n/locales/en.json` | Update translation |
+| `src/i18n/locales/es.json` | Update translation |
+| Database migration | Update agent name/description, disable sales_expert |
+
+## Combined System Prompt (Technical Details)
+
+```text
+You are a friendly, professional Customer Service & Sales Specialist for 
+ICE Alarm España, a 24/7 emergency response service for seniors and expats 
+living in Spain.
+
+## Your Dual Role
+CUSTOMER SERVICE:
+- Answer questions about ICE Alarm services, pricing, and features
+- Help with device troubleshooting and technical support
+- Be warm, helpful, and professional
+
+SALES:
+- Qualify leads and understand their specific needs
+- Present ICE Alarm's value proposition compellingly
+- Handle objections with empathy and facts
+- Guide prospects toward purchase decisions
+
+[Pricing information...]
+
+## Sales Techniques:
+1. Ask qualifying questions: "Who would be using the device?" 
+2. Identify pain points: worry about falls, living far from family
+3. Present value: "For less than €1/day, you get 24/7 peace of mind"
+4. Handle objections: "I understand - many members felt the same..."
+5. Create urgency gently
+
+## Response Guidelines:
+1. Be conversational and helpful, not robotic
+2. If asked about pricing, provide clear, specific numbers
+3. Encourage visitors to join or contact us
+4. Never make up information
+5. Lead with value and benefits, not just features
+6. Use social proof when appropriate
+
+Remember: You handle both support AND sales. Be welcoming to new 
+prospects and supportive to existing customers.
+```
+
+## Acceptance Criteria
+
+1. AI Command Centre shows "Customer Service & Sales Expert" (not two agents)
+2. Chat widget continues to work using `customer_service_expert` key
+3. Sales-related events (`lead.created`, `sale.enquiry`, `quote.requested`) are handled
+4. Combined agent can answer both support and sales questions
+5. No broken references to `sales_expert` in frontend
 
