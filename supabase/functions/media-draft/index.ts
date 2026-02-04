@@ -163,11 +163,31 @@ function generateVarietyContext(): {
 }
 
 // =============================================================================
+// COMPANY SETTINGS INTERFACE
+// =============================================================================
+
+interface CompanySettings {
+  company_name: string;
+  emergency_phone: string;
+  support_email: string;
+  address: string;
+  website?: string;
+}
+
+const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
+  company_name: "ICE Alarm España",
+  emergency_phone: "+34 900 123 456",
+  support_email: "info@icealarm.es",
+  address: "Calle Principal 1, Albox, 04800 Almería",
+  website: "www.icealarm.es"
+};
+
+// =============================================================================
 // ENHANCED SYSTEM PROMPT WITH VARIETY
 // =============================================================================
 
-function buildSystemPrompt(variety: ReturnType<typeof generateVarietyContext>): string {
-  return `You are the ICE Media Manager, an AI assistant specializing in creating compelling Facebook marketing content for ICE Alarm España - a 24/7 emergency response service for seniors and expats in Spain.
+function buildSystemPrompt(variety: ReturnType<typeof generateVarietyContext>, company: CompanySettings): string {
+  return `You are the Media Manager, an AI assistant specializing in creating compelling Facebook marketing content for ${company.company_name} - a 24/7 emergency response service for seniors and expats in Spain.
 
 ## Your Primary Mission
 Create draft social media posts that are:
@@ -203,7 +223,7 @@ Include exactly ${variety.hashtagCount} relevant hashtags
 
 ## ANTI-REPETITION RULES (CRITICAL)
 To keep content fresh, AVOID these overused patterns:
-- Don't start every post with "At ICE Alarm..." or "Here at ICE Alarm..."
+- Don't start every post with "At ${company.company_name}..." or "Here at ${company.company_name}..."
 - Vary the position of the CTA (sometimes middle, sometimes end)
 - Don't use "peace of mind" in every single post - find alternatives like "reassurance", "confidence", "security", "serenity"
 - Don't always mention "24/7" - sometimes just say "always here" or "round-the-clock"
@@ -222,8 +242,8 @@ To keep content fresh, AVOID these overused patterns:
 2. NO MEDICAL GUARANTEES - Never claim to save lives, prevent deaths, or guarantee medical outcomes
 3. COMPLIANT WORDING - Use phrases like "provides reassurance", "helps connect to emergency services", "offers support"
 4. ALWAYS INCLUDE CTA - Every post must include:
-   - Website: www.icealarm.es
-   - Phone: +34 965 020 675
+   - Website: ${company.website || "www.icealarm.es"}
+   - Phone: ${company.emergency_phone}
    - A message/contact encouragement
 
 ## Forbidden Phrases (Never Use)
@@ -238,7 +258,7 @@ To keep content fresh, AVOID these overused patterns:
 Warm, reassuring, professional, caring, trustworthy. Never fear-mongering. Always empowering.
 
 ## Business Context
-ICE Alarm España is a 24/7 emergency response service providing GPS SOS pendants for seniors, expats, and anyone who wants peace of mind in Spain. 
+${company.company_name} is a 24/7 emergency response service providing GPS SOS pendants for seniors, expats, and anyone who wants peace of mind in Spain. 
 
 Key Services:
 - GPS SOS Pendant with one-button emergency calling
@@ -295,6 +315,28 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
+    // Fetch company settings from database
+    const { data: settingsData } = await supabase
+      .from("system_settings")
+      .select("key, value")
+      .in("key", ["settings_company_name", "settings_emergency_phone", "settings_support_email", "settings_address", "settings_website"]);
+
+    const settingsMap = (settingsData || []).reduce((acc, setting) => {
+      const normalizedKey = setting.key.replace(/^settings_/, '');
+      acc[normalizedKey] = setting.value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const company: CompanySettings = {
+      company_name: settingsMap.company_name || DEFAULT_COMPANY_SETTINGS.company_name,
+      emergency_phone: settingsMap.emergency_phone || DEFAULT_COMPANY_SETTINGS.emergency_phone,
+      support_email: settingsMap.support_email || DEFAULT_COMPANY_SETTINGS.support_email,
+      address: settingsMap.address || DEFAULT_COMPANY_SETTINGS.address,
+      website: settingsMap.website || DEFAULT_COMPANY_SETTINGS.website
+    };
+
+    console.log("Using company settings:", company.company_name, company.emergency_phone);
+
     const { topic, goal, target_audience, language, post_id, workflow_type = "full" }: MediaDraftRequest = await req.json();
 
     if (!topic) {
@@ -336,7 +378,7 @@ serve(async (req) => {
       both: "Create equally compelling versions in both English and Spanish. The Spanish version should NOT be a direct translation - adapt it culturally with appropriate expressions, tone, and references that resonate with Spanish speakers.",
     };
 
-    // Build the user message with variety context
+    // Build the user message with variety context and company details
     const userMessage = `Create a Facebook post draft with the following parameters:
 
 **Topic**: ${topic}
@@ -356,12 +398,12 @@ Please generate:
 Remember: 
 - Follow the CREATIVE VARIETY INSTRUCTIONS in your system prompt for this specific post
 - Each post should feel fresh and unique, not templated
-- Include contact info: www.icealarm.es and +34 965 020 675`;
+- Include contact info: ${company.website || "www.icealarm.es"} and ${company.emergency_phone}`;
 
     console.log("Calling Lovable AI with variety engine...");
 
-    // Build system prompt with variety
-    const systemPrompt = buildSystemPrompt(variety);
+    // Build system prompt with variety and company settings
+    const systemPrompt = buildSystemPrompt(variety, company);
 
     // Call Lovable AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

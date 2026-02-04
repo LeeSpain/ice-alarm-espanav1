@@ -129,13 +129,27 @@ interface RequestBody {
   post_text?: string;
 }
 
+interface CompanySettings {
+  company_name: string;
+  emergency_phone: string;
+  support_email: string;
+  address: string;
+}
+
+const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
+  company_name: "ICE Alarm España",
+  emergency_phone: "+34 900 123 456",
+  support_email: "info@icealarm.es",
+  address: "Calle Principal 1, Albox, 04800 Almería"
+};
+
 // Helper function to select random element
 function selectRandom<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function buildImagePrompt(style: string, topic?: string, imageText?: ImageTextData, postText?: string): string {
-  const baseContext = `Create a professional, high-quality social media image for ICE Alarm España, a trusted 24/7 emergency response service for seniors living in Spain.`;
+function buildImagePrompt(style: string, company: CompanySettings, topic?: string, imageText?: ImageTextData, postText?: string): string {
+  const baseContext = `Create a professional, high-quality social media image for ${company.company_name}, a trusted 24/7 emergency response service for seniors living in Spain.`;
   
   // Select random variety elements
   const location = selectRandom(LOCATION_VARIANTS);
@@ -268,7 +282,33 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = buildImagePrompt(style, topic, image_text, post_text);
+    // Initialize Supabase client to fetch company settings
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch company settings from database
+    const { data: settingsData } = await supabase
+      .from("system_settings")
+      .select("key, value")
+      .in("key", ["settings_company_name", "settings_emergency_phone", "settings_support_email", "settings_address"]);
+
+    const settingsMap = (settingsData || []).reduce((acc, setting) => {
+      const normalizedKey = setting.key.replace(/^settings_/, '');
+      acc[normalizedKey] = setting.value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const company: CompanySettings = {
+      company_name: settingsMap.company_name || DEFAULT_COMPANY_SETTINGS.company_name,
+      emergency_phone: settingsMap.emergency_phone || DEFAULT_COMPANY_SETTINGS.emergency_phone,
+      support_email: settingsMap.support_email || DEFAULT_COMPANY_SETTINGS.support_email,
+      address: settingsMap.address || DEFAULT_COMPANY_SETTINGS.address
+    };
+
+    console.log("Using company settings:", company.company_name);
+
+    const prompt = buildImagePrompt(style, company, topic, image_text, post_text);
     console.log("Generating image with style:", style);
     console.log("Prompt preview:", prompt.substring(0, 300) + "...");
 
@@ -336,16 +376,11 @@ serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (reuse supabase client from earlier)
     const fileName = `ai-generated-${Date.now()}-${style}.${imageFormat}`;
     const filePath = fileName;
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("social-post-images")
       .upload(filePath, bytes, {
         contentType: `image/${imageFormat}`,
