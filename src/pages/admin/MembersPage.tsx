@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { 
   Search, 
   Plus, 
@@ -42,6 +43,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 const ITEMS_PER_PAGE = 20;
@@ -52,9 +63,35 @@ export default function MembersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [memberToDelete, setMemberToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { staffRole } = useAuth();
   const isSuperAdmin = staffRole === "super_admin";
+
+  const handleDeleteMember = async () => {
+    if (!memberToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("members")
+        .delete()
+        .eq("id", memberToDelete.id);
+
+      if (error) throw error;
+
+      toast.success(t("admin.members.deleteSuccess", { name: memberToDelete.name }));
+      queryClient.invalidateQueries({ queryKey: ["admin-members"] });
+    } catch (error: any) {
+      console.error("Error deleting member:", error);
+      toast.error(t("admin.members.deleteError"));
+    } finally {
+      setIsDeleting(false);
+      setMemberToDelete(null);
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-members", searchQuery, statusFilter, planFilter, page],
@@ -286,7 +323,13 @@ export default function MembersPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               className="text-destructive"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMemberToDelete({
+                                  id: member.id,
+                                  name: `${member.first_name} ${member.last_name}`
+                                });
+                              }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               {t("common.delete")}
@@ -340,6 +383,28 @@ export default function MembersPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!memberToDelete} onOpenChange={(open) => !open && setMemberToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.members.confirmDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.members.confirmDeleteDescription", { name: memberToDelete?.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMember}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t("common.deleting") : t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

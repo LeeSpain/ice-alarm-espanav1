@@ -2550,7 +2550,11 @@
       "showing": "Showing {{from}} to {{to}} of {{total}} members",
       "pageOf": "Page {{page}} of {{totalPages}}",
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "confirmDeleteTitle": "Delete Member",
+      "confirmDeleteDescription": "Are you sure you want to delete {{name}}? This action cannot be undone and will remove all associated data.",
+      "deleteSuccess": "{{name}} has been deleted successfully",
+      "deleteError": "Failed to delete member. Please try again."
     },
     "orders": {
       "title": "Orders",

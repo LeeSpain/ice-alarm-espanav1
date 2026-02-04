@@ -2526,7 +2526,11 @@
       "showing": "Mostrando {{from}} a {{to}} de {{total}} socios",
       "pageOf": "Página {{page}} de {{totalPages}}",
       "previous": "Anterior",
-      "next": "Siguiente"
+      "next": "Siguiente",
+      "confirmDeleteTitle": "Eliminar Socio",
+      "confirmDeleteDescription": "¿Está seguro de que desea eliminar a {{name}}? Esta acción no se puede deshacer y eliminará todos los datos asociados.",
+      "deleteSuccess": "{{name}} ha sido eliminado correctamente",
+      "deleteError": "Error al eliminar el socio. Por favor, inténtelo de nuevo."
     },
     "orders": {
       "title": "Pedidos",
