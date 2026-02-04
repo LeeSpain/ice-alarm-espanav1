@@ -1,124 +1,161 @@
 
-# Fix Member Deletion and AI Emergency Contact Hallucination
 
-## Problems Identified
+# Add Configurable Voice Scripts and CRM Note Logging to Twilio Voice
 
-### Problem 1: Member Deletion Fails
-The current delete logic in `MemberDetailPage.tsx` performs a simple `DELETE FROM members` which fails silently due to 5 foreign key constraints without `ON DELETE CASCADE`:
+## Overview
 
-- `internal_tickets.member_id`
-- `leads.converted_member_id`
-- `registration_drafts.converted_member_id`
-- `crm_contacts.linked_member_id`
-- `crm_import_rows.imported_member_id`
+This plan adds 4 key improvements to the `twilio-voice` edge function:
 
-### Problem 2: AI Hallucinated Emergency Contact Name
-When you asked about your emergency contact, the AI said "Sarah Wakeman" but the database shows **Daisy Wakeman**. 
-
-**Why?** The voice call handler in `ai-run` does NOT fetch emergency contacts - it only passes member name, location, and subscription data to the AI. The AI invented "Sarah" because it had no actual data to reference.
+1. **Voice Script Settings** - Make greetings, hold messages, and error prompts editable via `system_settings`
+2. **Safe getSetting Helper** - Ensure missing settings don't break calls (graceful fallbacks)
+3. **Recording Notice** - Add GDPR-compliant recording disclosure to greetings
+4. **CRM Note Logging** - Save completed calls as member notes for visibility in Member → Notes tab
 
 ---
 
-## Solution Overview
+## Changes Summary
 
-### Fix 1: Database Migration - Add Cascading Deletes
-Update the 5 foreign key constraints to use `ON DELETE SET NULL` so member deletion succeeds:
+| Location | Change |
+|----------|--------|
+| Lines 26-31 | Add 8 new settings keys for voice scripts |
+| After line 36 | Add `getSetting()` helper function |
+| Lines 52-62 (wait action) | Use editable hold messages |
+| Lines 107-140 (incoming action) | Use editable greetings with recording notice |
+| After line 459 (status action) | Insert member note on call completion |
 
-```sql
--- internal_tickets: SET NULL on delete
-ALTER TABLE internal_tickets 
-  DROP CONSTRAINT internal_tickets_member_id_fkey;
-ALTER TABLE internal_tickets 
-  ADD CONSTRAINT internal_tickets_member_id_fkey 
-  FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE SET NULL;
+---
 
--- leads: SET NULL on delete  
-ALTER TABLE leads
-  DROP CONSTRAINT leads_converted_member_id_fkey;
-ALTER TABLE leads
-  ADD CONSTRAINT leads_converted_member_id_fkey
-  FOREIGN KEY (converted_member_id) REFERENCES members(id) ON DELETE SET NULL;
+## Technical Details
 
--- registration_drafts: SET NULL on delete
-ALTER TABLE registration_drafts
-  DROP CONSTRAINT registration_drafts_converted_member_id_fkey;
-ALTER TABLE registration_drafts
-  ADD CONSTRAINT registration_drafts_converted_member_id_fkey
-  FOREIGN KEY (converted_member_id) REFERENCES members(id) ON DELETE SET NULL;
-
--- crm_contacts: SET NULL on delete
-ALTER TABLE crm_contacts
-  DROP CONSTRAINT crm_contacts_linked_member_id_fkey;
-ALTER TABLE crm_contacts
-  ADD CONSTRAINT crm_contacts_linked_member_id_fkey
-  FOREIGN KEY (linked_member_id) REFERENCES members(id) ON DELETE SET NULL;
-
--- crm_import_rows: SET NULL on delete
-ALTER TABLE crm_import_rows
-  DROP CONSTRAINT crm_import_rows_imported_member_id_fkey;
-ALTER TABLE crm_import_rows
-  ADD CONSTRAINT crm_import_rows_imported_member_id_fkey
-  FOREIGN KEY (imported_member_id) REFERENCES members(id) ON DELETE SET NULL;
-```
-
-### Fix 2: Add Emergency Contacts to AI Voice Context
-Update `supabase/functions/ai-run/index.ts` to fetch and include emergency contacts when handling voice calls:
+### 1. Expand Settings Keys (lines 26-31)
 
 ```typescript
-// After fetching member data (~line 1032)
-// Fetch emergency contacts
-const { data: emergencyContacts } = await supabase
-  .from("emergency_contacts")
-  .select("contact_name, relationship, phone, priority_order")
-  .eq("member_id", memberId)
-  .order("priority_order", { ascending: true });
+.in("key", [
+  "settings_twilio_account_sid",
+  "settings_twilio_auth_token",
+  "settings_twilio_phone_number",
+  "settings_emergency_phone",
+  // Voice script settings (editable via Admin Settings)
+  "voice_greeting_es",
+  "voice_greeting_en",
+  "voice_hold_es",
+  "voice_hold_en",
+  "voice_error_es",
+  "voice_error_en",
+  "voice_recording_notice_es",
+  "voice_recording_notice_en"
+]);
+```
 
-// Include in memberContext (~line 1046)
-memberContext = `
-## Caller Identity (VERIFIED MEMBER)
-- Name: ${member.first_name} ${member.last_name}
-- Location: ${member.city || "Spain"}
-- Status: ${member.status}
-- Subscription: ${subscription?.plan_type || "Unknown"}
+### 2. Add getSetting Helper (after line 36)
 
-## Emergency Contacts on File
-${emergencyContacts?.length 
-  ? emergencyContacts.map((c, i) => `${i+1}. ${c.contact_name} (${c.relationship}) - ${c.phone}`).join('\n')
-  : "No emergency contacts configured"}
+```typescript
+// Safe helper to get settings with fallback for missing/empty values
+const getSetting = (key: string, fallback: string): string => {
+  const v = twilioConfig[key];
+  return (v && String(v).trim().length > 0) ? String(v) : fallback;
+};
+```
 
-Use their name naturally in conversation. When discussing emergency contacts, use the EXACT names above.
-`;
+### 3. Update Wait Action (lines 52-62)
+
+Replace hardcoded Spanish/English hold messages with:
+```typescript
+const holdEs = getSetting("voice_hold_es", 
+  "Por favor, permanezca en la línea. Le conectamos en breve.");
+const holdEn = getSetting("voice_hold_en", 
+  "Please stay on the line. We are connecting you now.");
+```
+
+### 4. Update Incoming Greeting (lines 107-128)
+
+Add recording notice and make greetings configurable:
+```typescript
+// Get configurable greetings with fallbacks
+const baseGreetingEs = getSetting("voice_greeting_es", 
+  "Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual.");
+const baseGreetingEn = getSetting("voice_greeting_en", 
+  "Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant.");
+const recordingEs = getSetting("voice_recording_notice_es", 
+  "Esta llamada puede ser grabada para mejorar el servicio.");
+const recordingEn = getSetting("voice_recording_notice_en", 
+  "This call may be recorded to improve our service.");
+
+// Build personalized greeting if member known
+const greetingEs = member?.first_name 
+  ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel. ${recordingEs} ¿En qué puedo ayudarle hoy?`
+  : `${baseGreetingEs} ${recordingEs} ¿En qué puedo ayudarle hoy?`;
+
+const greetingEn = member?.first_name
+  ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
+  : `${baseGreetingEn} ${recordingEn} How can I help you today?`;
+```
+
+### 5. Add CRM Note on Call Completion (after line 459)
+
+Insert member note when call completes:
+```typescript
+// If call completed, create a CRM note for the member
+if (callStatus === "completed") {
+  const from = formData.get("From") as string | null;
+  const to = formData.get("To") as string | null;
+
+  if (from) {
+    const normalizedFrom = from.replace("+", "");
+
+    const { data: member } = await supabase
+      .from("members")
+      .select("id, first_name, last_name")
+      .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
+      .maybeSingle();
+
+    if (member) {
+      const dur = duration ? parseInt(duration) : 0;
+
+      const noteText =
+        `📞 AI Voice Call Completed\n` +
+        `• Member: ${member.first_name || ""} ${member.last_name || ""}\n` +
+        `• From: ${from}\n` +
+        `• To: ${to || ""}\n` +
+        `• Duration: ${dur} seconds\n` +
+        (recordingUrl ? `• Recording: ${recordingUrl}\n` : "") +
+        `• Status: ${callStatus}\n\n` +
+        `Summary: Call handled by AI voice assistant.`;
+
+      await supabase.from("member_notes").insert({
+        member_id: member.id,
+        content: noteText,
+        note_type: "support",
+        is_pinned: false
+      });
+    }
+  }
+}
 ```
 
 ---
 
-## Implementation Summary
+## Files to Modify
 
-| Change | Type | File/Location |
-|--------|------|---------------|
-| Update 5 FK constraints | Database Migration | New migration SQL |
-| Fetch emergency contacts | Edge Function | `ai-run/index.ts` lines 1029-1057 |
-| Add contacts to AI context | Edge Function | `ai-run/index.ts` memberContext variable |
+| File | Lines Changed |
+|------|---------------|
+| `supabase/functions/twilio-voice/index.ts` | ~26-31, ~36, ~52-62, ~107-128, ~459-480 |
 
 ---
 
-## After Implementation
+## Benefits
 
-### Deletion will work because:
-1. Child tables will SET NULL instead of blocking
-2. Tables with CASCADE already handle cleanup automatically
-3. No manual cascade logic needed in application code
-
-### AI will provide accurate emergency contact info because:
-1. Voice calls fetch actual emergency contacts from database
-2. Contact names, relationships, and phones are passed to AI
-3. AI is instructed to use EXACT names from the data
+1. **Platform Control** - Change voice scripts from Admin Settings without code changes
+2. **GDPR Compliance** - Recording notice at call start
+3. **CRM Visibility** - Every completed call creates a member note with duration/recording link
+4. **Resilience** - getSetting helper ensures missing settings don't break calls
 
 ---
 
-## Verification Steps
+## Future Enhancement (Optional)
 
-After implementation:
-1. Test deleting a member with related data - should succeed
-2. Call the AI and ask about emergency contacts - should say "Daisy Wakeman" not "Sarah"
-3. Verify database shows `Daisy Wakeman` unchanged (the AI never actually modified it)
+After this change, you could add a "Voice Scripts" section to Admin Settings to edit:
+- `voice_greeting_es` / `voice_greeting_en`
+- `voice_hold_es` / `voice_hold_en`
+- `voice_recording_notice_es` / `voice_recording_notice_en`
+
