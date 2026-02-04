@@ -82,18 +82,28 @@ serve(async (req) => {
 
     console.log("notify-admin called:", event_type, entity_type, entity_id);
 
-    // Get Twilio credentials
+    // Get Twilio credentials (with settings_ prefix)
     const { data: twilioSettings } = await supabase
       .from("system_settings")
       .select("key, value")
-      .in("key", ["twilio_account_sid", "twilio_auth_token", "twilio_whatsapp_number"]);
+      .in("key", [
+        "settings_twilio_account_sid", 
+        "settings_twilio_auth_token",
+        "settings_twilio_api_key_sid",
+        "settings_twilio_api_key_secret", 
+        "settings_twilio_whatsapp_number"
+      ]);
 
     const twilioConfig: Record<string, string> = {};
     twilioSettings?.forEach((s) => {
       twilioConfig[s.key] = s.value;
     });
 
-    if (!twilioConfig.twilio_account_sid || !twilioConfig.twilio_auth_token || !twilioConfig.twilio_whatsapp_number) {
+    // Prefer API Keys, fall back to Auth Token
+    const authUsername = twilioConfig.settings_twilio_api_key_sid || twilioConfig.settings_twilio_account_sid;
+    const authPassword = twilioConfig.settings_twilio_api_key_secret || twilioConfig.settings_twilio_auth_token;
+
+    if (!twilioConfig.settings_twilio_account_sid || !authPassword || !twilioConfig.settings_twilio_whatsapp_number) {
       console.error("Twilio not fully configured");
       return new Response(
         JSON.stringify({ error: "Twilio not configured", sent: false }),
@@ -154,12 +164,12 @@ serve(async (req) => {
         continue;
       }
 
-      // Send WhatsApp via Twilio
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.twilio_account_sid}/Messages.json`;
-      const authHeader = btoa(`${twilioConfig.twilio_account_sid}:${twilioConfig.twilio_auth_token}`);
+      // Send WhatsApp via Twilio (using API Keys or Auth Token)
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.settings_twilio_account_sid}/Messages.json`;
+      const authHeader = btoa(`${authUsername}:${authPassword}`);
 
       const formData = new URLSearchParams();
-      formData.append("From", `whatsapp:${twilioConfig.twilio_whatsapp_number}`);
+      formData.append("From", `whatsapp:${twilioConfig.settings_twilio_whatsapp_number}`);
       formData.append("To", `whatsapp:${settings.whatsapp_number}`);
       formData.append("Body", message);
 

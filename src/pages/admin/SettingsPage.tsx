@@ -24,7 +24,6 @@ import {
   Tag,
   Facebook,
   FlaskConical,
-  FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,13 +60,13 @@ const KEY = {
   STRIPE_PUBLISHABLE: "stripe_publishable_key",
   STRIPE_WEBHOOK: "stripe_webhook_secret",
 
-  // Twilio
-  TWILIO_SID: "twilio_account_sid",
-  TWILIO_TOKEN: "twilio_auth_token",
-  TWILIO_API_KEY_SID: "twilio_api_key_sid",
-  TWILIO_API_KEY_SECRET: "twilio_api_key_secret",
-  TWILIO_PHONE: "twilio_phone_number",
-  TWILIO_WA: "twilio_whatsapp_number",
+  // Twilio (stored with settings_ prefix)
+  TWILIO_SID: "settings_twilio_account_sid",
+  TWILIO_TOKEN: "settings_twilio_auth_token",
+  TWILIO_API_KEY_SID: "settings_twilio_api_key_sid",
+  TWILIO_API_KEY_SECRET: "settings_twilio_api_key_secret",
+  TWILIO_PHONE: "settings_twilio_phone_number",
+  TWILIO_WA: "settings_twilio_whatsapp_number",
 
   // Maps
   GOOGLE_MAPS: "google_maps_api_key",
@@ -127,6 +126,10 @@ export default function SettingsPage() {
 
   // Visibility toggles for Twilio API Key Secret
   const [showTwilioApiSecret, setShowTwilioApiSecret] = useState(false);
+  
+  // Twilio test state
+  const [twilioTestStatus, setTwilioTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [twilioTestMessage, setTwilioTestMessage] = useState("");
 
   const [googleMapsKey, setGoogleMapsKey] = useState("");
 
@@ -921,14 +924,63 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveTwilio} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Twilio Configuration
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button onClick={handleSaveTwilio} disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Twilio Configuration
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    setTwilioTestStatus("testing");
+                    setTwilioTestMessage("");
+                    try {
+                      const response = await supabase.functions.invoke("test-twilio");
+                      if (response.error) throw response.error;
+                      
+                      const data = response.data;
+                      if (data.success) {
+                        setTwilioTestStatus("success");
+                        setTwilioTestMessage(data.message || "Connection verified - Twilio is working");
+                      } else {
+                        setTwilioTestStatus("error");
+                        setTwilioTestMessage(data.error || "Connection test failed");
+                      }
+                    } catch (error: any) {
+                      setTwilioTestStatus("error");
+                      setTwilioTestMessage(error?.message || "Failed to test connection");
+                    }
+                  }}
+                  disabled={twilioTestStatus === "testing"}
+                >
+                  {twilioTestStatus === "testing" ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                  )}
+                  Test Connection
+                </Button>
+              </div>
+              
+              {twilioTestStatus !== "idle" && twilioTestStatus !== "testing" && (
+                <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${
+                  twilioTestStatus === "success" 
+                    ? "bg-alert-resolved/10 text-alert-resolved" 
+                    : "bg-destructive/10 text-destructive"
+                }`}>
+                  {twilioTestStatus === "success" ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">{twilioTestMessage}</span>
+                </div>
+              )}
 
               <Separator className="my-6" />
 
