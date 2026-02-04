@@ -36,8 +36,23 @@ serve(async (req) => {
     const accountSid = config.settings_twilio_account_sid;
     
     // Prefer API Keys, fall back to Auth Token
-    const authUsername = config.settings_twilio_api_key_sid || accountSid;
-    const authPassword = config.settings_twilio_api_key_secret || config.settings_twilio_auth_token;
+    const apiKeySid = config.settings_twilio_api_key_sid;
+    const apiKeySecret = config.settings_twilio_api_key_secret;
+    const authToken = config.settings_twilio_auth_token;
+    
+    // Debug logging (remove after debugging)
+    console.log("Twilio config check:", {
+      hasAccountSid: !!accountSid,
+      accountSidPrefix: accountSid?.substring(0, 6),
+      hasApiKeySid: !!apiKeySid,
+      apiKeySidPrefix: apiKeySid?.substring(0, 6),
+      hasApiKeySecret: !!apiKeySecret,
+      apiKeySecretLength: apiKeySecret?.length,
+      hasAuthToken: !!authToken,
+    });
+
+    const authUsername = apiKeySid || accountSid;
+    const authPassword = apiKeySecret || authToken;
 
     if (!accountSid) {
       return new Response(
@@ -62,6 +77,11 @@ serve(async (req) => {
     // Test credentials by fetching account info
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`;
     const auth = btoa(`${authUsername}:${authPassword}`);
+    
+    console.log("Testing Twilio with:", {
+      url: twilioUrl,
+      authUsernamePrefix: authUsername?.substring(0, 6),
+    });
 
     const response = await fetch(twilioUrl, {
       method: "GET",
