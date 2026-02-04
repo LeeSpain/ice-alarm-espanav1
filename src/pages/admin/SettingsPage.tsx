@@ -115,20 +115,24 @@ export default function SettingsPage() {
     webhook_secret: "",
   });
 
+  // Twilio non-secret fields (safe to populate from DB)
   const [twilioKeys, setTwilioKeys] = useState({
     account_sid: "",
-    auth_token: "",
     api_key_sid: "",
-    api_key_secret: "",
     phone_number: "",
     whatsapp_number: "",
   });
 
+  // Twilio secret inputs - NEVER auto-filled from DB, only user input
+  const [twilioAuthTokenInput, setTwilioAuthTokenInput] = useState("");
+  const [twilioApiKeySecretInput, setTwilioApiKeySecretInput] = useState("");
+  
+  // Twilio stored flags - derived from whether backend has a value
+  const [twilioAuthTokenStored, setTwilioAuthTokenStored] = useState(false);
+  const [twilioApiKeySecretStored, setTwilioApiKeySecretStored] = useState(false);
+
   // Visibility toggles for Twilio API Key Secret
   const [showTwilioApiSecret, setShowTwilioApiSecret] = useState(false);
-  
-  // Track if Twilio secrets are being edited (prevents useEffect from overwriting input)
-  const [twilioSecretsDirty, setTwilioSecretsDirty] = useState(false);
   
   // Twilio test state
   const [twilioTestStatus, setTwilioTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
@@ -201,17 +205,17 @@ export default function SettingsPage() {
       webhook_secret: mask(settingsMap[KEY.STRIPE_WEBHOOK]),
     });
 
-    // Twilio (masked for secrets) - only update if not being edited
-    if (!twilioSecretsDirty) {
-      setTwilioKeys({
-        account_sid: settingsMap[KEY.TWILIO_SID] || "",
-        auth_token: mask(settingsMap[KEY.TWILIO_TOKEN]),
-        api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
-        api_key_secret: mask(settingsMap[KEY.TWILIO_API_KEY_SECRET]),
-        phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
-        whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
-      });
-    }
+    // Twilio non-secret fields - safe to populate
+    setTwilioKeys({
+      account_sid: settingsMap[KEY.TWILIO_SID] || "",
+      api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
+      phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
+      whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
+    });
+    
+    // Twilio secret stored flags - NEVER touch the input fields
+    setTwilioAuthTokenStored(!!settingsMap[KEY.TWILIO_TOKEN]);
+    setTwilioApiKeySecretStored(!!settingsMap[KEY.TWILIO_API_KEY_SECRET]);
 
     setGoogleMapsKey(settingsMap[KEY.GOOGLE_MAPS] || "");
 
@@ -250,6 +254,13 @@ export default function SettingsPage() {
       if (recentlySavedSection === "facebook") {
         setFacebookTokenInput("");
         setFacebookTokenStored(true);
+      }
+      
+      if (recentlySavedSection === "twilio") {
+        // Clear secret inputs after successful save
+        setTwilioAuthTokenInput("");
+        setTwilioApiKeySecretInput("");
+        // Flags will be set to true by the subsequent refetch
       }
 
       queryClient.invalidateQueries({ queryKey: ["system-settings"] });
@@ -325,22 +336,29 @@ export default function SettingsPage() {
   const handleSaveTwilio = () => {
     const updates: Record<string, string> = {};
 
+    // Non-secret fields
     if (twilioKeys.account_sid) updates[KEY.TWILIO_SID] = twilioKeys.account_sid;
-    if (twilioKeys.auth_token && !twilioKeys.auth_token.includes("•"))
-      updates[KEY.TWILIO_TOKEN] = twilioKeys.auth_token;
     if (twilioKeys.api_key_sid) updates[KEY.TWILIO_API_KEY_SID] = twilioKeys.api_key_sid;
-    if (twilioKeys.api_key_secret && !twilioKeys.api_key_secret.includes("•"))
-      updates[KEY.TWILIO_API_KEY_SECRET] = twilioKeys.api_key_secret;
     if (twilioKeys.phone_number) updates[KEY.TWILIO_PHONE] = twilioKeys.phone_number;
     if (twilioKeys.whatsapp_number) updates[KEY.TWILIO_WA] = twilioKeys.whatsapp_number;
+
+    // Secret fields - only include if user typed something new
+    const trimmedAuthToken = twilioAuthTokenInput.trim();
+    const trimmedApiKeySecret = twilioApiKeySecretInput.trim();
+    
+    if (trimmedAuthToken.length > 0) {
+      updates[KEY.TWILIO_TOKEN] = trimmedAuthToken;
+    }
+    if (trimmedApiKeySecret.length > 0) {
+      updates[KEY.TWILIO_API_KEY_SECRET] = trimmedApiKeySecret;
+    }
 
     if (Object.keys(updates).length === 0) {
       toast({ title: "No changes to save", description: "Enter new values to update the keys." });
       return;
     }
 
-    // Reset dirty flag after save
-    setTwilioSecretsDirty(false);
+    setRecentlySavedSection("twilio");
     saveMutation.mutate(updates);
   };
 
@@ -852,16 +870,23 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Auth Token <span className="text-muted-foreground text-xs">(optional if using API Keys)</span></Label>
+                  <Label>
+                    Auth Token <span className="text-muted-foreground text-xs">(optional if using API Keys)</span>
+                  </Label>
+                  {twilioAuthTokenStored && !twilioAuthTokenInput && (
+                    <p className="text-xs text-alert-resolved flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Stored (hidden)
+                    </p>
+                  )}
+                  {!twilioAuthTokenStored && !twilioAuthTokenInput && (
+                    <p className="text-xs text-muted-foreground">Not set</p>
+                  )}
                   <div className="relative">
                     <Input
                       type={showTwilioToken ? "text" : "password"}
-                      value={twilioKeys.auth_token}
-                      onChange={(e) => {
-                        setTwilioSecretsDirty(true);
-                        setTwilioKeys((prev) => ({ ...prev, auth_token: e.target.value }));
-                      }}
-                      placeholder="Enter auth token"
+                      value={twilioAuthTokenInput}
+                      onChange={(e) => setTwilioAuthTokenInput(e.target.value)}
+                      placeholder={twilioAuthTokenStored ? "Paste new token to replace" : "Enter auth token"}
                       className="pr-10"
                     />
                     <Button
@@ -891,15 +916,20 @@ export default function SettingsPage() {
 
                 <div className="space-y-2">
                   <Label>API Key Secret</Label>
+                  {twilioApiKeySecretStored && !twilioApiKeySecretInput && (
+                    <p className="text-xs text-alert-resolved flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Stored (hidden)
+                    </p>
+                  )}
+                  {!twilioApiKeySecretStored && !twilioApiKeySecretInput && (
+                    <p className="text-xs text-muted-foreground">Not set</p>
+                  )}
                   <div className="relative">
                     <Input
                       type={showTwilioApiSecret ? "text" : "password"}
-                      value={twilioKeys.api_key_secret}
-                      onChange={(e) => {
-                        setTwilioSecretsDirty(true);
-                        setTwilioKeys((prev) => ({ ...prev, api_key_secret: e.target.value }));
-                      }}
-                      placeholder="Enter API key secret"
+                      value={twilioApiKeySecretInput}
+                      onChange={(e) => setTwilioApiKeySecretInput(e.target.value)}
+                      placeholder={twilioApiKeySecretStored ? "Paste new secret to replace" : "Enter API key secret"}
                       className="pr-10"
                     />
                     <Button
@@ -950,6 +980,16 @@ export default function SettingsPage() {
                 <Button 
                   variant="outline" 
                   onClick={async () => {
+                    // Warn if there are unsaved secret inputs
+                    if (twilioAuthTokenInput.trim() || twilioApiKeySecretInput.trim()) {
+                      toast({
+                        title: "Unsaved changes",
+                        description: "Please save your changes before testing the connection.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
                     setTwilioTestStatus("testing");
                     setTwilioTestMessage("");
                     try {
