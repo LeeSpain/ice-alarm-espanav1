@@ -59,7 +59,106 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
+    const conversationIdParam = url.searchParams.get("conversation_id");
     const baseUrl = Deno.env.get("SUPABASE_URL");
+
+    // Helper function to get or create conversation
+    async function getOrCreateConversation(
+      existingId: string | null, 
+      memberId: string | null, 
+      language: string,
+      source: string = "voice"
+    ): Promise<string | null> {
+      // If we have an existing conversation_id, verify it exists and update it
+      if (existingId) {
+        const { data: existing } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("id", existingId)
+          .maybeSingle();
+        
+        if (existing) {
+          // Update to mixed source if it was from chat
+          await supabase
+            .from("conversations")
+            .update({ 
+              source: "mixed", 
+              last_channel: "voice",
+              last_message_at: new Date().toISOString()
+            })
+            .eq("id", existingId);
+          return existingId;
+        }
+      }
+      
+      // Create new conversation
+      const { data: newConv, error } = await supabase
+        .from("conversations")
+        .insert({
+          member_id: memberId,
+          language: language.startsWith("es") ? "es" : "en",
+          source,
+          last_channel: "voice",
+          status: "open",
+          last_message_at: new Date().toISOString()
+        })
+        .select("id")
+        .single();
+      
+      if (error) {
+        console.error("Failed to create conversation:", error);
+        return null;
+      }
+      
+      return newConv.id;
+    }
+
+    // Helper to save voice message to conversation
+    async function saveVoiceMessage(
+      conversationId: string | null,
+      role: "user" | "assistant",
+      content: string,
+      meta?: Record<string, unknown>
+    ) {
+      if (!conversationId) return;
+      
+      try {
+        await supabase.from("conversation_messages").insert({
+          conversation_id: conversationId,
+          channel: "voice",
+          role,
+          content,
+          meta: meta || null
+        });
+      } catch (err) {
+        console.error("Failed to save voice message:", err);
+      }
+    }
+
+    // Helper to track call in conversation_calls
+    async function trackCall(
+      conversationId: string | null,
+      callSid: string,
+      direction: "inbound" | "outbound",
+      fromNumber: string,
+      toNumber: string
+    ) {
+      if (!conversationId) return;
+      
+      try {
+        await supabase.from("conversation_calls").insert({
+          conversation_id: conversationId,
+          call_sid: callSid,
+          direction,
+          from_number: fromNumber,
+          to_number: toNumber,
+          started_at: new Date().toISOString(),
+          status: "initiated"
+        });
+      } catch (err) {
+        console.error("Failed to track call:", err);
+      }
+    }
 
     // ============================================================
     // ACTION: WAIT - Hold message for queue
@@ -88,9 +187,11 @@ serve(async (req) => {
       try {
         const formData = await req.formData();
         const from = formData.get("From") as string;
+        const to = formData.get("To") as string;
         const callSid = formData.get("CallSid") as string;
+        const callDirection = formData.get("Direction") as string;
 
-        console.log("Incoming call from:", from, "CallSid:", callSid);
+        console.log("Incoming call from:", from, "CallSid:", callSid, "ConversationId:", conversationIdParam);
 
         // Try to find existing member by phone
         const { data: member } = await supabase
@@ -99,19 +200,54 @@ serve(async (req) => {
           .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
           .maybeSingle();
 
-        // Determine language (default Spanish for Spain)
-        const language = member?.preferred_language || "es";
+        // Determine language from param or member preference (default Spanish for Spain)
+        const langParam = url.searchParams.get("lang");
+        const language = langParam || member?.preferred_language || "es";
         const twimlLang = language === "es" ? "es-ES" : "en-GB";
 
-        // Create voice session
-        await supabase.from("voice_call_sessions").insert({
-          call_sid: callSid,
-          caller_phone: from,
-          member_id: member?.id || null,
-          language: twimlLang,
-          status: "active",
-          messages: []
-        });
+        // Get or create conversation for threading
+        const conversationId = await getOrCreateConversation(
+          conversationIdParam,
+          member?.id || null,
+          language,
+          conversationIdParam ? "mixed" : "voice"
+        );
+
+        // Create voice session with conversation link
+        try {
+          await supabase.from("voice_call_sessions").insert({
+            call_sid: callSid,
+            caller_phone: from,
+            member_id: member?.id || null,
+            language: twimlLang,
+            status: "active",
+            messages: [],
+            conversation_id: conversationId
+          });
+        } catch {
+          // If column doesn't exist, insert without it
+          await supabase.from("voice_call_sessions").insert({
+            call_sid: callSid,
+            caller_phone: from,
+            member_id: member?.id || null,
+            language: twimlLang,
+            status: "active",
+            messages: []
+          });
+        }
+
+        // Track call in conversation_calls
+        const direction = callDirection?.includes("outbound") ? "outbound" : "inbound";
+        await trackCall(conversationId, callSid, direction, from, to);
+
+        // Update conversation with member_id if found and not already set
+        if (conversationId && member?.id) {
+          await supabase
+            .from("conversations")
+            .update({ member_id: member.id })
+            .eq("id", conversationId)
+            .is("member_id", null);
+        }
 
         // Create an alert for tracking (if member found)
         if (member) {
@@ -142,6 +278,15 @@ serve(async (req) => {
           ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
           : `${baseGreetingEn} ${recordingEn} How can I help you today?`;
 
+        // Save AI greeting to conversation
+        const greeting = language === "es" ? greetingEs : greetingEn;
+        await saveVoiceMessage(conversationId, "assistant", greeting, { callSid, type: "greeting" });
+
+        // Build transcription URL with conversation_id
+        const transcriptionUrl = conversationId 
+          ? `${baseUrl}/functions/v1/twilio-voice?action=transcription&conversation_id=${encodeURIComponent(conversationId)}`
+          : `${baseUrl}/functions/v1/twilio-voice?action=transcription`;
+
         // Return TwiML with speech recognition
         const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -149,7 +294,7 @@ serve(async (req) => {
   <Pause length="1"/>
   <Say language="en-GB" voice="Polly.Amy">${escapeXml(greetingEn)}</Say>
   <Gather input="speech" 
-          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          action="${transcriptionUrl}" 
           language="${twimlLang}" 
           speechTimeout="auto"
           timeout="10"
@@ -223,6 +368,16 @@ serve(async (req) => {
       // Reset timeout counter on successful speech
       const currentMessages = (session.messages as Array<{ role: string; content: string }>) || [];
       currentMessages.push({ role: "user", content: speechResult });
+
+      // Get conversation_id from session or query param
+      const sessionConvId = session.conversation_id;
+      const activeConversationId = conversationIdParam || sessionConvId;
+
+      // Save user message to conversation_messages
+      await saveVoiceMessage(activeConversationId, "user", speechResult, { 
+        callSid, 
+        confidence: confidence ? parseFloat(confidence) : null 
+      });
 
       // Detect language from first message if not set by member
       let detectedLanguage = session.language;
@@ -373,14 +528,22 @@ serve(async (req) => {
         .update({ messages: currentMessages })
         .eq("call_sid", callSid);
 
+      // Save assistant response to conversation_messages
+      await saveVoiceMessage(activeConversationId, "assistant", responseText, { callSid });
+
       const lang = detectedLanguage.startsWith("es") ? "es-ES" : "en-GB";
       const voice = detectedLanguage.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+
+      // Build transcription URL with conversation_id for continuity
+      const nextTranscriptionUrl = activeConversationId 
+        ? `${baseUrl}/functions/v1/twilio-voice?action=transcription&conversation_id=${encodeURIComponent(activeConversationId)}`
+        : `${baseUrl}/functions/v1/twilio-voice?action=transcription`;
 
       const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say language="${lang}" voice="${voice}">${escapeXml(responseText)}</Say>
   <Gather input="speech" 
-          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          action="${nextTranscriptionUrl}" 
           language="${detectedLanguage}" 
           speechTimeout="auto"
           timeout="10"
@@ -485,8 +648,10 @@ serve(async (req) => {
       const callStatus = formData.get("CallStatus") as string;
       const duration = formData.get("CallDuration") as string;
       const recordingUrl = formData.get("RecordingUrl") as string;
+      const from = formData.get("From") as string | null;
+      const to = formData.get("To") as string | null;
 
-      console.log("Call status update:", callSid, callStatus, duration);
+      console.log("Call status update:", callSid, callStatus, duration, "ConversationId:", conversationIdParam);
 
       // Update voice session status
       if (callStatus === "completed" || callStatus === "busy" || callStatus === "failed" || callStatus === "no-answer") {
@@ -499,6 +664,16 @@ serve(async (req) => {
           .eq("call_sid", callSid);
       }
 
+      // Update conversation_calls with end time
+      await supabase
+        .from("conversation_calls")
+        .update({
+          ended_at: new Date().toISOString(),
+          recording_url: recordingUrl || null,
+          status: callStatus
+        })
+        .eq("call_sid", callSid);
+
       // Update alert_communications if exists
       await supabase
         .from("alert_communications")
@@ -509,40 +684,150 @@ serve(async (req) => {
         })
         .eq("twilio_sid", callSid);
 
-      // If call completed, create a CRM note for the member
+      // If call completed, generate CRM-ready summary note
       if (callStatus === "completed") {
-        const from = formData.get("From") as string | null;
-        const to = formData.get("To") as string | null;
+        try {
+          // Get conversation ID from param or look up from conversation_calls
+          let convId = conversationIdParam;
+          if (!convId) {
+            const { data: callRecord } = await supabase
+              .from("conversation_calls")
+              .select("conversation_id")
+              .eq("call_sid", callSid)
+              .maybeSingle();
+            convId = callRecord?.conversation_id;
+          }
 
-        if (from) {
-          const normalizedFrom = from.replace("+", "");
+          // Get member info
+          let memberId: string | null = null;
+          let memberName = "";
+          
+          if (from) {
+            const normalizedFrom = from.replace("+", "");
+            const { data: member } = await supabase
+              .from("members")
+              .select("id, first_name, last_name")
+              .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
+              .maybeSingle();
+            
+            if (member) {
+              memberId = member.id;
+              memberName = `${member.first_name || ""} ${member.last_name || ""}`.trim();
+            }
+          }
 
-          const { data: member } = await supabase
-            .from("members")
-            .select("id, first_name, last_name")
-            .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
-            .maybeSingle();
+          // If we have a conversation, get full transcript and generate summary
+          let transcript = "";
+          let aiSummary = "";
+          
+          if (convId) {
+            // Fetch all messages from conversation_messages
+            const { data: messages } = await supabase
+              .from("conversation_messages")
+              .select("channel, role, content, created_at")
+              .eq("conversation_id", convId)
+              .order("created_at", { ascending: true });
 
-          if (member) {
-            const dur = duration ? parseInt(duration) : 0;
+            if (messages && messages.length > 0) {
+              // Build transcript
+              transcript = messages.map(m => {
+                const channelLabel = m.channel === "chat" ? "[CHAT]" : "[VOICE]";
+                const roleLabel = m.role === "user" ? "User" : "Assistant";
+                return `${channelLabel} ${roleLabel}: ${m.content}`;
+              }).join("\n");
 
-            const noteText =
-              `📞 AI Voice Call Completed\n` +
-              `• Member: ${member.first_name || ""} ${member.last_name || ""}\n` +
-              `• From: ${from}\n` +
-              `• To: ${to || ""}\n` +
-              `• Duration: ${dur} seconds\n` +
-              (recordingUrl ? `• Recording: ${recordingUrl}\n` : "") +
-              `• Status: ${callStatus}\n\n` +
-              `Summary: Call handled by AI voice assistant.`;
+              // Generate AI summary
+              try {
+                const summaryResponse = await fetch(`${baseUrl}/functions/v1/ai-run`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`
+                  },
+                  body: JSON.stringify({
+                    agentKey: "customer_service_expert",
+                    context: {
+                      source: "crm_summary",
+                      task: "summarize_conversation",
+                      transcript,
+                      memberName: memberName || "Unknown",
+                      callDuration: duration ? parseInt(duration) : 0,
+                      userLanguage: "en"
+                    }
+                  })
+                });
 
+                if (summaryResponse.ok) {
+                  const summaryResult = await summaryResponse.json();
+                  aiSummary = summaryResult.output?.response || summaryResult.output?.summary || "";
+                }
+              } catch (summaryErr) {
+                console.error("Failed to generate AI summary:", summaryErr);
+              }
+            }
+
+            // Update conversation as closed
+            await supabase
+              .from("conversations")
+              .update({ 
+                status: "closed",
+                last_message_at: new Date().toISOString(),
+                member_id: memberId || undefined
+              })
+              .eq("id", convId);
+
+            // Update member_id on conversation if found
+            if (memberId) {
+              await supabase
+                .from("conversations")
+                .update({ member_id: memberId })
+                .eq("id", convId)
+                .is("member_id", null);
+            }
+          }
+
+          // Build comprehensive CRM note
+          const dur = duration ? parseInt(duration) : 0;
+          const timestamp = new Date().toISOString();
+          
+          let noteContent = `📞 Voice + Chat Summary\n`;
+          noteContent += `═══════════════════════════════════════\n\n`;
+          noteContent += `📅 Date/Time: ${new Date(timestamp).toLocaleString()}\n`;
+          noteContent += `👤 Member: ${memberName || "Unknown"}\n`;
+          noteContent += `📱 From: ${from || "Unknown"}\n`;
+          noteContent += `📞 To: ${to || "Unknown"}\n`;
+          noteContent += `⏱️ Duration: ${dur} seconds\n`;
+          noteContent += `🎫 CallSid: ${callSid}\n`;
+          if (recordingUrl) {
+            noteContent += `🎙️ Recording: ${recordingUrl}\n`;
+          }
+          noteContent += `\n`;
+
+          if (aiSummary) {
+            noteContent += `📋 AI SUMMARY\n`;
+            noteContent += `───────────────────────────────────────\n`;
+            noteContent += `${aiSummary}\n\n`;
+          }
+
+          if (transcript) {
+            noteContent += `📝 FULL TRANSCRIPT\n`;
+            noteContent += `───────────────────────────────────────\n`;
+            noteContent += `${transcript}\n`;
+          } else {
+            noteContent += `Summary: Call handled by AI voice assistant.\n`;
+          }
+
+          // Save to member_notes if we have a member
+          if (memberId) {
             await supabase.from("member_notes").insert({
-              member_id: member.id,
-              content: noteText,
+              member_id: memberId,
+              content: noteContent,
               note_type: "support",
               is_pinned: false
             });
           }
+        } catch (noteErr) {
+          console.error("Failed to create CRM note:", noteErr);
         }
       }
 

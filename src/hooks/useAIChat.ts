@@ -18,6 +18,11 @@ interface UseAIChatOptions {
   userRole?: "member" | "admin" | "public" | "staff";
 }
 
+// Conversation storage keys
+const CONVERSATION_STORAGE_KEY = "ice_conversation_id";
+const CONVERSATION_EXPIRY_KEY = "ice_conversation_expiry";
+const CONVERSATION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
 // Get time-appropriate greeting
 function getTimeGreeting(language: string): string {
   const hour = new Date().getHours();
@@ -51,8 +56,9 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
+  const [dbConversationId, setDbConversationId] = useState<string | null>(null);
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const isCreatingConversation = useRef(false);
   const [imagePreloaded, setImagePreloaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +75,109 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
       img.onload = () => setImagePreloaded(true);
     }
   }, [avatarUrl, imagePreloaded]);
+
+  // Load existing conversation from localStorage on mount
+  useEffect(() => {
+    const storedId = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    const storedExpiry = localStorage.getItem(CONVERSATION_EXPIRY_KEY);
+    
+    if (storedId && storedExpiry) {
+      const expiryTime = parseInt(storedExpiry, 10);
+      if (Date.now() < expiryTime) {
+        setDbConversationId(storedId);
+      } else {
+        // Expired - clean up
+        localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+        localStorage.removeItem(CONVERSATION_EXPIRY_KEY);
+      }
+    }
+  }, []);
+
+  // Create or get database conversation
+  const getOrCreateDbConversation = useCallback(async (): Promise<string | null> => {
+    if (dbConversationId) {
+      // Refresh expiry
+      localStorage.setItem(CONVERSATION_EXPIRY_KEY, String(Date.now() + CONVERSATION_TTL_MS));
+      return dbConversationId;
+    }
+
+    // Check localStorage again
+    const storedId = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    const storedExpiry = localStorage.getItem(CONVERSATION_EXPIRY_KEY);
+    
+    if (storedId && storedExpiry && Date.now() < parseInt(storedExpiry, 10)) {
+      setDbConversationId(storedId);
+      localStorage.setItem(CONVERSATION_EXPIRY_KEY, String(Date.now() + CONVERSATION_TTL_MS));
+      return storedId;
+    }
+
+    // Prevent duplicate creation
+    if (isCreatingConversation.current) {
+      while (isCreatingConversation.current) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      return localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    }
+
+    isCreatingConversation.current = true;
+
+    try {
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({
+          member_id: memberId || null,
+          language: i18n.language,
+          source: "chat",
+          last_channel: "chat",
+          status: "open",
+          last_message_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Failed to create conversation:", error);
+        return null;
+      }
+
+      const newId = data.id;
+      setDbConversationId(newId);
+      localStorage.setItem(CONVERSATION_STORAGE_KEY, newId);
+      localStorage.setItem(CONVERSATION_EXPIRY_KEY, String(Date.now() + CONVERSATION_TTL_MS));
+      return newId;
+    } catch (err) {
+      console.error("Failed to create conversation:", err);
+      return null;
+    } finally {
+      isCreatingConversation.current = false;
+    }
+  }, [dbConversationId, memberId, i18n.language]);
+
+  // Save message to database
+  const saveMessageToDb = useCallback(async (
+    content: string,
+    role: "user" | "assistant"
+  ) => {
+    const convId = await getOrCreateDbConversation();
+    if (!convId) return;
+
+    try {
+      await supabase.from("conversation_messages").insert({
+        conversation_id: convId,
+        channel: "chat",
+        role,
+        content,
+      });
+
+      // Update conversation last_message_at
+      await supabase
+        .from("conversations")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", convId);
+    } catch (err) {
+      console.error("Failed to save message:", err);
+    }
+  }, [getOrCreateDbConversation]);
 
   // Create welcome message helper - personalized for different user roles
   const createWelcomeMessage = useCallback((): ChatMessage => {
@@ -110,11 +219,27 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
   }, [t, i18n.language, memberName, staffName, userRole]);
 
   // Reset conversation
-  const resetConversation = useCallback(() => {
-    setConversationId(crypto.randomUUID());
+  const resetConversation = useCallback(async () => {
+    // Close existing conversation in DB
+    if (dbConversationId) {
+      try {
+        await supabase
+          .from("conversations")
+          .update({ status: "closed" })
+          .eq("id", dbConversationId);
+      } catch (err) {
+        console.error("Failed to close conversation:", err);
+      }
+    }
+    
+    // Clear local storage
+    localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+    localStorage.removeItem(CONVERSATION_EXPIRY_KEY);
+    setDbConversationId(null);
+    
     setMessages([createWelcomeMessage()]);
     setCurrentLanguage(i18n.language);
-  }, [i18n.language, createWelcomeMessage]);
+  }, [i18n.language, createWelcomeMessage, dbConversationId]);
 
   // Detect language changes and reset conversation
   useEffect(() => {
@@ -152,6 +277,9 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
     setInputValue("");
     setIsLoading(true);
 
+    // Save user message to database (don't await to keep UI fast)
+    saveMessageToDb(userMessage.content, "user");
+
     try {
       // Build conversation history for context
       const conversationHistory = messages.map((m) => ({
@@ -164,7 +292,7 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
         body: {
           agentKey,
           context: {
-            conversationId,
+            conversationId: dbConversationId,
             userLanguage: i18n.language,
             conversationHistory,
             currentMessage: userMessage.content,
@@ -199,6 +327,9 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Save assistant message to database (don't await)
+      saveMessageToDb(responseText, "assistant");
     } catch (error) {
       console.error("Chat error:", error);
       const errorMessage: ChatMessage = {
@@ -234,5 +365,7 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
     avatarUrl,
     agentLoading,
     imagePreloaded,
+    conversationId: dbConversationId,
+    getOrCreateDbConversation,
   };
 }

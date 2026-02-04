@@ -51,6 +51,8 @@ export function AIChatWidget({
     avatarUrl,
     agentLoading,
     imagePreloaded,
+    conversationId,
+    getOrCreateDbConversation,
   } = useAIChat({ agentKey, memberId, memberName, staffName, userRole });
 
   // Focus input when chat opens
@@ -146,7 +148,11 @@ export function AIChatWidget({
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
-              onClick={() => setShowCallModal(true)}
+              onClick={async () => {
+                // Ensure conversation exists before opening call modal
+                await getOrCreateDbConversation();
+                setShowCallModal(true);
+              }}
               aria-label={t("callMe.title", "Call and Speak")}
               title={t("callMe.title", "Call and Speak")}
             >
@@ -256,6 +262,7 @@ export function AIChatWidget({
         open={showCallModal}
         onOpenChange={setShowCallModal}
         defaultLanguage={defaultLanguage as "en" | "es"}
+        conversationId={conversationId}
       />
     </>
   );

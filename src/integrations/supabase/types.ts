@@ -538,15 +538,107 @@ export type Database = {
           },
         ]
       }
+      conversation_calls: {
+        Row: {
+          call_sid: string | null
+          conversation_id: string
+          created_at: string | null
+          direction: string | null
+          ended_at: string | null
+          from_number: string | null
+          id: string
+          recording_url: string | null
+          started_at: string | null
+          status: string | null
+          to_number: string | null
+        }
+        Insert: {
+          call_sid?: string | null
+          conversation_id: string
+          created_at?: string | null
+          direction?: string | null
+          ended_at?: string | null
+          from_number?: string | null
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          to_number?: string | null
+        }
+        Update: {
+          call_sid?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          direction?: string | null
+          ended_at?: string | null
+          from_number?: string | null
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          to_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_calls_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_messages: {
+        Row: {
+          channel: string
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          meta: Json | null
+          role: string
+        }
+        Insert: {
+          channel: string
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          role: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           assigned_to: string | null
           conversation_type: string | null
           created_at: string | null
           id: string
+          language: string | null
+          last_channel: string | null
           last_message_at: string | null
+          lead_id: string | null
           member_id: string | null
           priority: string | null
+          source: string | null
           staff_participants: string[] | null
           status: string | null
           subject: string | null
@@ -557,9 +649,13 @@ export type Database = {
           conversation_type?: string | null
           created_at?: string | null
           id?: string
+          language?: string | null
+          last_channel?: string | null
           last_message_at?: string | null
+          lead_id?: string | null
           member_id?: string | null
           priority?: string | null
+          source?: string | null
           staff_participants?: string[] | null
           status?: string | null
           subject?: string | null
@@ -570,9 +666,13 @@ export type Database = {
           conversation_type?: string | null
           created_at?: string | null
           id?: string
+          language?: string | null
+          last_channel?: string | null
           last_message_at?: string | null
+          lead_id?: string | null
           member_id?: string | null
           priority?: string | null
+          source?: string | null
           staff_participants?: string[] | null
           status?: string | null
           subject?: string | null

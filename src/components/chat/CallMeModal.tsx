@@ -26,6 +26,7 @@ interface CallMeModalProps {
   onOpenChange: (open: boolean) => void;
   defaultPhone?: string;
   defaultLanguage?: "en" | "es";
+  conversationId?: string | null;
 }
 
 type CallStatus = "idle" | "calling" | "success" | "error";
@@ -35,6 +36,7 @@ export function CallMeModal({
   onOpenChange,
   defaultPhone = "",
   defaultLanguage = "es",
+  conversationId = null,
 }: CallMeModalProps) {
   const { t } = useTranslation();
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
@@ -68,6 +70,7 @@ export function CallMeModal({
         body: {
           phoneNumber: phoneNumber.replace(/\s/g, ""),
           language,
+          conversationId: conversationId || undefined,
         },
       });
 
