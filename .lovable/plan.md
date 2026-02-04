@@ -1,98 +1,92 @@
 
+
 ## Goal
-Fix the Twilio “API Key Secret keeps reverting / not saving” behavior by removing the “masked value in the input” approach and switching to a safe, stable “stored vs input” pattern (the same pattern already used for the Facebook token). This prevents:
-- overwriting freshly pasted secrets with old masked placeholders during refetch/invalidation
-- accidentally re-saving masked dots or stale values
-- confusion about whether the secret is actually stored
+Fix the Twilio integration by:
+1. Correcting the **key name mismatch** across all Twilio edge functions (critical bug)
+2. Adding **Auth Token fallback** support for testing
+3. Ensuring consistent credential retrieval across SMS, Voice, and WhatsApp functions
 
-## What’s happening now (root cause)
-In `src/pages/admin/SettingsPage.tsx`:
-- Twilio secrets are loaded into inputs as masked dots (`••••••••••••`) via `mask(settingsMap[...])`.
-- When you save, React Query invalidates `system-settings` which refetches.
-- The effect that re-populates `twilioKeys` can run while the UI is mid-edit / mid-save and overwrite your newly pasted secret with the masked value from the previously stored key (or with whichever value the refetch returns at that moment).
-- Additionally, the current “dirty flag” is reset *before* the save has actually succeeded (`setTwilioSecretsDirty(false); saveMutation.mutate(...)`), which re-enables overwriting at the worst possible time.
+## Issues Found
 
-Net result: you paste a new secret, hit save, the UI flips back and it looks like it didn’t store your new value (and in some cases the wrong value may be what gets tested next).
+### Issue 1: Key Name Mismatch (CRITICAL)
+The database stores keys with `settings_` prefix, but the operational functions look for keys without the prefix:
 
-## Implementation approach (safe token UX pattern)
-### A) Split Twilio secret fields into “stored flags” + “input values”
-Refactor Twilio state from:
-- `twilioKeys.auth_token = "••••••••••••"` (masked)
-- `twilioKeys.api_key_secret = "••••••••••••"` (masked)
+| Function | Keys it queries | Keys in database | Status |
+|----------|----------------|------------------|--------|
+| test-twilio | `settings_twilio_account_sid` | `settings_twilio_account_sid` | Works |
+| twilio-sms | `twilio_account_sid` | (doesn't exist) | BROKEN |
+| twilio-voice | `twilio_account_sid` | (doesn't exist) | BROKEN |
+| twilio-whatsapp | `twilio_account_sid` | (doesn't exist) | BROKEN |
 
-to:
-- `twilioAuthTokenInput: string` (always real user input; default empty; never auto-filled)
-- `twilioApiKeySecretInput: string` (always real user input; default empty; never auto-filled)
-- `twilioAuthTokenStored: boolean` (derived from whether the backend has a value)
-- `twilioApiKeySecretStored: boolean` (derived from whether the backend has a value)
+This means the Test Connection may pass, but actual SMS/Voice/WhatsApp calls would fail with "Twilio not configured".
 
-Keep non-secret Twilio fields as normal editable values:
-- account SID, API key SID, phone number, WhatsApp number
+### Issue 2: No Auth Token Stored
+Currently no Auth Token is configured in the database. We need to add Auth Token support to the Settings UI and edge functions for fallback testing.
 
-### B) Update the “populate from settings” useEffect
-Instead of setting the secret inputs, the effect should:
-- set `twilioAuthTokenStored = !!settingsMap[KEY.TWILIO_TOKEN]`
-- set `twilioApiKeySecretStored = !!settingsMap[KEY.TWILIO_API_KEY_SECRET]`
-- leave `twilioAuthTokenInput` and `twilioApiKeySecretInput` untouched
+## Implementation Plan
 
-This guarantees refetches can’t overwrite what the user is typing/pasting.
+### Step 1: Fix twilio-sms function
+Update key names from `twilio_*` to `settings_twilio_*`:
+```typescript
+.in("key", [
+  "settings_twilio_account_sid",
+  "settings_twilio_auth_token",
+  "settings_twilio_api_key_sid",
+  "settings_twilio_api_key_secret",
+  "settings_twilio_phone_number"
+])
+```
+And update all references:
+```typescript
+twilioConfig.settings_twilio_account_sid  // instead of twilio_account_sid
+```
 
-### C) Update save logic to only send secrets when the user typed something
-In `handleSaveTwilio`:
-- For secrets, only include them in `updates` if the corresponding input is non-empty after trimming:
-  - if `twilioApiKeySecretInput.trim().length > 0` then save it
-  - if `twilioAuthTokenInput.trim().length > 0` then save it
-- Do not rely on `includes("•")` checks anymore (those checks exist because we were mixing masked and real values in the same state; the refactor eliminates that entire class of bugs).
+### Step 2: Fix twilio-voice function
+Same key name corrections as SMS.
 
-On save success:
-- clear `twilioAuthTokenInput` and `twilioApiKeySecretInput`
-- set stored flags to true (or just rely on the subsequent refetch)
-- show a toast like “Saved (hidden)”
+### Step 3: Fix twilio-whatsapp function  
+Same key name corrections, plus fix `twilio_whatsapp_number` to `settings_twilio_whatsapp_number`.
 
-### D) Fix the timing bug with twilioSecretsDirty (or remove it)
-After the refactor, the dirty flag becomes mostly unnecessary for secrets because secrets will never be overwritten by the effect.
+### Step 4: Add Auth Token field to Settings UI
+Add an Auth Token input field in the Twilio Configuration card using the same "stored flag + input value" pattern we implemented for API Key Secret:
+- `twilioAuthTokenInput` (string) - for new user input
+- `twilioAuthTokenStored` (boolean) - derived from database
 
-We should either:
-1) Remove `twilioSecretsDirty` entirely (recommended after refactor), or
-2) If kept for non-secret Twilio fields, only reset it inside `saveMutation.onSuccess` (never before the request finishes).
+### Step 5: Verify test-twilio supports both auth methods
+The test function already supports falling back to Auth Token if API Key isn't configured. Once we add the Auth Token to the UI, users can test with either method.
 
-### E) Improve clarity in the UI (so it’s obvious it’s stored)
-In the Twilio card:
-- Under “Auth Token” and “API Key Secret”, display status text:
-  - “Stored (hidden)” when stored flag is true
-  - “Not set” when stored flag is false
-- Inputs should be empty by default and say “Paste a new token to replace”.
-- Optional: add a small “Clear stored secret” button per secret (only if you want the ability to remove it; if implemented it would require a safe backend path to delete keys or set them to empty, and careful policy checks).
+## Files to Modify
 
-### F) Ensure the Test Connection button tests what’s actually stored
-We’ll keep the test button behavior but ensure the expectation is clear:
-- Test validates **stored credentials** in the backend.
-- If the user pastes a new secret but doesn’t click Save, the Test button should warn: “Please save changes before testing” (only if we can detect unsaved input; easy since inputs will be non-empty).
+1. `supabase/functions/twilio-sms/index.ts` - Fix key prefixes
+2. `supabase/functions/twilio-voice/index.ts` - Fix key prefixes  
+3. `supabase/functions/twilio-whatsapp/index.ts` - Fix key prefixes
+4. `src/pages/admin/SettingsPage.tsx` - Add Auth Token input field (already partially set up)
 
-## Files to review/change
-1) `src/pages/admin/SettingsPage.tsx`
-   - Refactor Twilio secrets state to “stored flag + input value”
-   - Update useEffect population logic
-   - Update `handleSaveTwilio` to use trimmed inputs and clear them on success
-   - Update UI copy to show “Stored (hidden)” and prevent confusion
-   - Remove or adjust `twilioSecretsDirty` so it can’t cause regressions
+## Technical Details
 
-2) (Optional sanity check) `supabase/functions/test-twilio/index.ts`
-   - Confirm it reads the correct prefixed keys and uses API Key auth first
-   - Ensure it returns a helpful error message if only partial credentials exist (e.g., SID present but secret missing)
+### Key Mapping (Before/After)
 
-## Acceptance criteria (how we’ll know it’s fixed)
-- Paste a new API Key Secret → click Save → the input clears and shows “Stored (hidden)” (no reverting to an old value in the input).
-- Refresh the page → still shows “Stored (hidden)” (and badge stays Configured).
-- Click “Test Connection” → succeeds with correct credentials, or returns a real Twilio error if the secret is genuinely wrong.
-- No scenario where a background refetch overwrites a secret the user is currently typing.
+```text
+BEFORE (broken):              AFTER (fixed):
+twilio_account_sid      →     settings_twilio_account_sid
+twilio_auth_token       →     settings_twilio_auth_token
+twilio_api_key_sid      →     settings_twilio_api_key_sid
+twilio_api_key_secret   →     settings_twilio_api_key_secret
+twilio_phone_number     →     settings_twilio_phone_number
+twilio_whatsapp_number  →     settings_twilio_whatsapp_number
+```
 
-## Notes / security
-- Longer-term, sensitive credentials should live in backend environment secrets rather than a database table. For now, we’ll focus on making the current flow reliable and testable without surprise overwrites.
+## Acceptance Criteria
 
-## Feature suggestions (next)
-1) Add an end-to-end “Send Test SMS / Test Call / Test WhatsApp” flow after saving, so you can verify real delivery (not just auth).
-2) Add a “Credential health” panel that checks required fields for each channel (SMS/Voice/WhatsApp) and highlights exactly what’s missing.
-3) Add a “Rotate API Key” guided checklist in the UI (save new key → test → deactivate old key).
-4) Add audit logging for who changed Twilio credentials and when (admin accountability).
-5) Add a staging/test mode toggle for Twilio routing (send tests to a fixed internal number).
+1. Test Connection works with API Key method
+2. Test Connection works with Auth Token method (fallback)
+3. SMS/Voice/WhatsApp functions correctly retrieve credentials from database
+4. No "Twilio not configured" errors when credentials are properly saved
+
+## Next Steps After Fix
+
+1. Save your Twilio Auth Token via the Settings page as a backup
+2. Test API Key authentication first
+3. If API Key still fails with 20003, clear it and test with Auth Token only
+4. This will isolate whether the issue is with your specific API Key or account-level
+
