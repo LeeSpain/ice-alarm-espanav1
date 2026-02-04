@@ -47,58 +47,73 @@ serve(async (req) => {
     const baseUrl = Deno.env.get("SUPABASE_URL");
 
     // ============================================================
+    // ACTION: WAIT - Hold message for queue
+    // ============================================================
+    if (action === "wait") {
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="es-ES" voice="Polly.Lucia">Por favor, permanezca en la línea. Le conectamos en breve.</Say>
+  <Say language="en-GB" voice="Polly.Amy">Please stay on the line. We are connecting you now.</Say>
+  <Pause length="10"/>
+</Response>`;
+      return new Response(twiml, {
+        headers: { ...corsHeaders, "Content-Type": "application/xml" },
+      });
+    }
+
+    // ============================================================
     // ACTION: INCOMING - Initial greeting with speech recognition
     // ============================================================
     if (action === "incoming") {
-      const formData = await req.formData();
-      const from = formData.get("From") as string;
-      const callSid = formData.get("CallSid") as string;
-      const to = formData.get("To") as string;
+      try {
+        const formData = await req.formData();
+        const from = formData.get("From") as string;
+        const callSid = formData.get("CallSid") as string;
 
-      console.log("Incoming call from:", from, "CallSid:", callSid);
+        console.log("Incoming call from:", from, "CallSid:", callSid);
 
-      // Try to find existing member by phone
-      const { data: member } = await supabase
-        .from("members")
-        .select("id, first_name, last_name, preferred_language")
-        .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
-        .maybeSingle();
+        // Try to find existing member by phone
+        const { data: member } = await supabase
+          .from("members")
+          .select("id, first_name, last_name, preferred_language")
+          .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
+          .maybeSingle();
 
-      // Determine language (default Spanish for Spain)
-      const language = member?.preferred_language || "es";
-      const twimlLang = language === "es" ? "es-ES" : "en-GB";
+        // Determine language (default Spanish for Spain)
+        const language = member?.preferred_language || "es";
+        const twimlLang = language === "es" ? "es-ES" : "en-GB";
 
-      // Create voice session
-      await supabase.from("voice_call_sessions").insert({
-        call_sid: callSid,
-        caller_phone: from,
-        member_id: member?.id || null,
-        language: twimlLang,
-        status: "active",
-        messages: []
-      });
-
-      // Create an alert for tracking (if member found)
-      if (member) {
-        await supabase.from("alerts").insert({
-          member_id: member.id,
-          alert_type: "sos_button",
-          status: "incoming",
-          message: `Voice call from ${from}`
+        // Create voice session
+        await supabase.from("voice_call_sessions").insert({
+          call_sid: callSid,
+          caller_phone: from,
+          member_id: member?.id || null,
+          language: twimlLang,
+          status: "active",
+          messages: []
         });
-      }
 
-      // Build greeting based on whether member is known
-      const greetingEs = member?.first_name 
-        ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`
-        : `Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`;
-      
-      const greetingEn = member?.first_name
-        ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel, your virtual assistant. How can I help you today?`
-        : `Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant. How can I help you today?`;
+        // Create an alert for tracking (if member found)
+        if (member) {
+          await supabase.from("alerts").insert({
+            member_id: member.id,
+            alert_type: "sos_button",
+            status: "incoming",
+            message: `Voice call from ${from}`
+          });
+        }
 
-      // Return TwiML with speech recognition
-      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+        // Build greeting based on whether member is known
+        const greetingEs = member?.first_name 
+          ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`
+          : `Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`;
+        
+        const greetingEn = member?.first_name
+          ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel, your virtual assistant. How can I help you today?`
+          : `Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant. How can I help you today?`;
+
+        // Return TwiML with speech recognition
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say language="es-ES" voice="Polly.Lucia">${greetingEs}</Say>
   <Pause length="1"/>
@@ -112,9 +127,22 @@ serve(async (req) => {
   </Gather>
 </Response>`;
 
-      return new Response(twiml, {
-        headers: { ...corsHeaders, "Content-Type": "application/xml" },
-      });
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      } catch (error) {
+        console.error("Incoming call error, falling back to queue:", error);
+        // FALLBACK: Return simple queue TwiML if any error occurs
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="es-ES" voice="Polly.Lucia">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>
+  <Say language="en-GB" voice="Polly.Amy">Thank you for calling ICE Alarm. An operator will be with you shortly.</Say>
+  <Enqueue waitUrl="${baseUrl}/functions/v1/twilio-voice?action=wait">ice-alarm-queue</Enqueue>
+</Response>`;
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
     }
 
     // ============================================================
