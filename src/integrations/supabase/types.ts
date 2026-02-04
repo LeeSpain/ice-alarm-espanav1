@@ -4118,6 +4118,7 @@ export type Database = {
         Row: {
           call_sid: string
           caller_phone: string
+          conversation_id: string | null
           created_at: string | null
           escalated_at: string | null
           escalation_reason: string | null
@@ -4132,6 +4133,7 @@ export type Database = {
         Insert: {
           call_sid: string
           caller_phone: string
+          conversation_id?: string | null
           created_at?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
@@ -4146,6 +4148,7 @@ export type Database = {
         Update: {
           call_sid?: string
           caller_phone?: string
+          conversation_id?: string | null
           created_at?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
@@ -4158,6 +4161,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "voice_call_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "voice_call_sessions_member_id_fkey"
             columns: ["member_id"]
