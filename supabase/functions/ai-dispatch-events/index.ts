@@ -16,14 +16,12 @@ const EVENT_AGENT_MAP: Record<string, string[]> = {
   "conversation.escalated": ["main_brain"],
   "alert.created": ["main_brain"],
   
-  // Customer Service Expert - support and general enquiries
+// Customer Service & Sales Expert - combined support + sales
   "conversation.started": ["customer_service_expert"],
   "message.received": ["customer_service_expert"],
-  
-  // Sales Expert - lead and sales handling
-  "lead.created": ["sales_expert"],
-  "sale.enquiry": ["sales_expert"],
-  "quote.requested": ["sales_expert"],
+  "lead.created": ["customer_service_expert"],
+  "sale.enquiry": ["customer_service_expert"],
+  "quote.requested": ["customer_service_expert"],
   
   // Member Specialist - logged-in member support
   "member.support_request": ["member_specialist"],
