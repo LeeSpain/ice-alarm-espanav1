@@ -1,166 +1,230 @@
 
-# Media Manager - Published Performance Review
+# Media Manager - Unpublish Post Feature
 
-## Summary of Investigation
+## Summary
 
-I've completed a thorough review of the Published Performance feature. The code architecture is **correctly connected and well-structured**, but there's a **critical configuration issue** preventing metrics from updating.
-
----
-
-## Root Cause Identified
-
-### The Problem: Expired Facebook Access Token
-
-The edge function logs reveal the exact issue:
-
-```
-Error validating access token: Session has expired on Tuesday, 03-Feb-26 04:00:00 PST.
-The current time is Wednesday, 04-Feb-26 01:19:22 PST.
-```
-
-**Your Facebook Page Access Token stored in `system_settings` has expired.** This is why:
-1. When you like a post on Facebook, nothing changes in the app
-2. The `social_post_metrics` table is empty (no metrics have ever been successfully fetched)
-3. All refresh attempts fail silently (returning 0 values)
+You want to completely remove a published post from **both Facebook and the blog**. Currently, the Published Performance section only shows metrics and links to view posts - there's no way to unpublish or delete content once it's live.
 
 ---
 
-## Architecture Review (All Working Correctly)
-
-### Data Flow
+## Current Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Published Posts Flow                         │
+│                     Publishing Flow (Existing)                       │
 └─────────────────────────────────────────────────────────────────────┘
 
-  1. User clicks "Refresh" or "Refresh All"
-                ↓
-  2. usePublishedPosts hook calls facebook-metrics edge function
-                ↓
-  3. Edge function fetches credentials from system_settings:
-     - settings_facebook_page_id: 107949497473966 ✓
-     - settings_facebook_page_access_token: [EXPIRED] ✗
-                ↓
-  4. Edge function calls Facebook Graph API v24.0:
-     - /[post_id]?fields=reactions.summary,comments.summary,shares
-     - /[post_id]/insights?metric=post_impressions
-     - /[post_id]/reactions?summary=total_count
-                ↓
-  5. Metrics upserted to social_post_metrics table
-                ↓
-  6. UI refreshes via React Query invalidation
+  social_posts (status: approved)
+         ↓
+  facebook-publish edge function
+         ↓
+  ┌──────────────┬──────────────────┐
+  │   Facebook   │    blog_posts    │
+  │  (external)  │   (database)     │
+  └──────────────┴──────────────────┘
+         ↓
+  social_posts (status: published, facebook_post_id set)
 ```
 
-### Components Reviewed
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `PublishedPostsSection.tsx` | Working | Correctly uses hook, handles loading/empty states |
-| `PublishedPostCard.tsx` | Working | Displays metrics, refresh button, "View on Facebook" link |
-| `PublishedOverviewCard.tsx` | Working | Aggregates metrics across all posts |
-| `usePublishedPosts.ts` | Working | Correct query structure, proper cache invalidation |
-| `facebook-metrics` edge function | Working | Correct API calls, proper upsert logic |
-| `social_post_metrics` table | Working | Correct schema with unique constraint on `social_post_id` |
-
-### Database State
-
-- **Published posts**: 3 posts with valid `facebook_post_id` values
-- **Metrics table**: Empty (0 records) - because token expired before any successful fetch
-- **Token storage**: Token exists in `system_settings` but has expired
+### Data Relationships
+- Each `social_post` has a linked `blog_posts` record via `social_post_id`
+- The `facebook_post_id` is stored in both tables
+- Currently there's no "unpublish" workflow
 
 ---
 
-## Resolution Plan
+## Proposed Solution
 
-### Step 1: Generate a New Long-Lived Facebook Page Access Token
+### New Edge Function: `facebook-unpublish`
 
-Facebook Page Access Tokens expire after ~60 days. You need to:
+Create a new backend function that:
+1. Accepts a `post_id` (social_posts.id)
+2. Calls Facebook Graph API to DELETE the post
+3. Unpublishes/deletes the linked blog post
+4. Updates the social post status back to "draft" or marks it as "archived"
+5. Cleans up metrics from `social_post_metrics`
 
-1. Go to [Facebook Graph API Explorer](https://developers.facebook.com/tools/explorer/)
-2. Select your App
-3. Add permissions: `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`, `pages_read_user_content`
-4. Click "Generate Access Token"
-5. Convert to long-lived token using the token debugger or API call
-6. Update the token in Admin Settings → Integrations
+### UI Changes
 
-### Step 2: Code Improvements (Recommended)
-
-Even though the architecture is correct, I'll add these enhancements:
-
-1. **Better error visibility**: Show token expiry errors clearly in the UI instead of silent failures
-2. **Token health check**: Add a "Test Connection" button to verify Facebook credentials
-3. **Graceful degradation**: Show "Token expired" badge on posts when metrics fetch fails
-4. **Auto-retry with backoff**: Don't hammer the API when token is expired
+Add an "Unpublish" button to each published post card with a confirmation dialog that explains:
+- The post will be deleted from Facebook
+- The blog article will be removed
+- Engagement metrics will be lost
 
 ---
 
-## Files to Modify
+## Implementation Plan
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/facebook-metrics/index.ts` | Return structured error for expired token (code 190) |
-| `src/hooks/usePublishedPosts.ts` | Surface token errors, add connection status |
-| `src/components/admin/media/PublishedPostsSection.tsx` | Show error banner when token expired |
-| `src/components/admin/media/PublishedOverviewCard.tsx` | Add "Test Connection" button |
-| `src/components/admin/media/PublishedPostCard.tsx` | Show error badge on failed refresh |
+### Step 1: Create `facebook-unpublish` Edge Function
 
----
+**File**: `supabase/functions/facebook-unpublish/index.ts`
 
-## Implementation Details
+The function will:
+1. Authenticate the request (staff only)
+2. Fetch the post and verify it's published
+3. Get Facebook credentials from `system_settings`
+4. Call Facebook Graph API: `DELETE /{post_id}?access_token=...`
+5. Delete or unpublish the linked blog post
+6. Delete metrics from `social_post_metrics`
+7. Update social post status to "archived" (new status) or "draft"
+8. Return success/failure
 
-### 1. Enhanced Edge Function Error Response
+```text
+POST /facebook-unpublish
+Body: { post_id: "uuid" }
+Response: { success: true, deleted_from_facebook: true, blog_removed: true }
+```
 
-Detect OAuth errors (code 190) and return a specific error type so the frontend can display helpful guidance:
+### Step 2: Update Database Schema
+
+Add a new status value "archived" to track unpublished posts:
+
+```sql
+-- Option A: Update social_posts to allow "archived" status
+-- (The status column is text, so no schema change needed)
+
+-- Delete metrics when post is unpublished
+-- (Will be done programmatically in the edge function)
+```
+
+### Step 3: Add `unpublishPost` Mutation to Hook
+
+**File**: `src/hooks/usePublishedPosts.ts`
+
+Add a new mutation that calls the edge function:
 
 ```typescript
-// In facebook-metrics/index.ts
-if (engagementData.error?.code === 190) {
-  return {
-    error: "token_expired",
-    message: "Facebook access token has expired. Please generate a new token in Settings.",
-    details: engagementData.error.message
-  };
+const unpublishMutation = useMutation({
+  mutationFn: async (postId: string) => {
+    const { data, error } = await supabase.functions.invoke("facebook-unpublish", {
+      body: { post_id: postId },
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
+    toast({ title: "Post unpublished", description: "..." });
+  }
+});
+```
+
+### Step 4: Add Unpublish Button with Confirmation Dialog
+
+**File**: `src/components/admin/media/PublishedPostCard.tsx`
+
+Add a dropdown menu or secondary button with:
+- "Unpublish" option
+- Confirmation dialog explaining the consequences
+- Loading state during unpublish
+
+```text
+┌─────────────────────────────────────────────────┐
+│  [Image]                                        │
+│  Topic: Living in Spain...                      │
+│  📅 Published: Feb 4, 2026                      │
+│  ❤️ 12 reactions  💬 3 comments  🔄 2 shares   │
+│                                                 │
+│  [Refresh]  [View on Facebook]  [⋮]            │
+│                               ↓                 │
+│                          ┌──────────┐           │
+│                          │ Unpublish│           │
+│                          └──────────┘           │
+└─────────────────────────────────────────────────┘
+```
+
+### Step 5: Create Confirmation Dialog Component
+
+**File**: `src/components/admin/media/UnpublishPostDialog.tsx`
+
+A dialog that warns the user about permanent deletion from:
+- Facebook (cannot be recovered)
+- Blog page (will return 404)
+- Metrics data (will be deleted)
+
+### Step 6: Add Translations
+
+**Files**: `src/i18n/locales/en.json` and `es.json`
+
+```json
+"unpublish": {
+  "button": "Unpublish",
+  "title": "Unpublish Post",
+  "description": "This will permanently remove the post from Facebook and delete the associated blog article. This action cannot be undone.",
+  "warning": "All engagement metrics will be lost.",
+  "confirm": "Yes, Unpublish",
+  "cancel": "Cancel",
+  "success": "Post unpublished successfully",
+  "error": "Failed to unpublish post"
 }
 ```
 
-### 2. Connection Status in Hook
+---
 
-Add a `connectionStatus` field to track whether Facebook is properly connected:
+## Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/functions/facebook-unpublish/index.ts` | **Create** | New edge function for unpublishing |
+| `supabase/config.toml` | **Update** | Add function config with `verify_jwt = false` |
+| `src/hooks/usePublishedPosts.ts` | **Update** | Add `unpublishPost` mutation |
+| `src/components/admin/media/PublishedPostCard.tsx` | **Update** | Add dropdown menu with Unpublish option |
+| `src/components/admin/media/UnpublishPostDialog.tsx` | **Create** | Confirmation dialog component |
+| `src/i18n/locales/en.json` | **Update** | Add unpublish translations |
+| `src/i18n/locales/es.json` | **Update** | Add Spanish unpublish translations |
+
+---
+
+## Technical Details
+
+### Facebook Graph API Delete Request
 
 ```typescript
-// In usePublishedPosts.ts
-connectionStatus: "connected" | "token_expired" | "not_configured" | "unknown"
+// DELETE request to remove a post from Facebook
+const deleteUrl = `https://graph.facebook.com/v24.0/${facebookPostId}?access_token=${accessToken}`;
+const response = await fetch(deleteUrl, { method: "DELETE" });
+const result = await response.json();
+
+if (result.success) {
+  // Post deleted successfully
+}
 ```
 
-### 3. Error Banner in Published Section
+### Blog Post Handling
 
-When token is expired, show a prominent banner with instructions:
+Two options for the blog post:
+1. **Delete completely** - Remove from `blog_posts` table
+2. **Soft delete** - Set `published = false` (keeps content for potential republishing)
 
-```text
-⚠️ Facebook Token Expired
-Your Facebook access token has expired. Metrics cannot be refreshed until you generate a new token.
-[Go to Settings →]
-```
+I recommend Option 1 (complete delete) since the Facebook post is also deleted, and keeping orphaned blog content could cause confusion.
 
-### 4. Test Connection Button
+### Audit Logging
 
-Add a button in the overview card that calls the edge function with a simple test request to verify the token is valid before showing all metrics.
+The unpublish action will be logged to the audit trail for accountability.
 
 ---
 
-## Expected Results After Fix
+## Edge Cases Handled
 
-1. **Token Renewal**: Once you update the token, clicking "Refresh All" will fetch real metrics
-2. **Visible Errors**: If the token expires again, users will see a clear error message
-3. **Better UX**: Test connection before publishing to avoid failed posts
-4. **Metrics Display**: All engagement data (reactions, comments, shares, reach) will populate
+1. **Facebook API fails**: Blog post still removed locally, error message shown
+2. **Token expired**: Show token expired error, prompt to update in Settings
+3. **Post already deleted from Facebook**: Gracefully handle 404, still clean up local data
+4. **Blog post doesn't exist**: Skip blog deletion step (some older posts may not have linked blogs)
+5. **Metrics don't exist**: Skip metrics cleanup if none found
 
 ---
 
-## Technical Notes
+## Expected Results
 
-- The Facebook Graph API v24.0 is correctly used
-- The `post_impressions` insight requires `pages_read_engagement` permission
-- Reaction breakdown fetching is working but will only show types after token renewal
-- The 15-minute cache prevents API rate limiting (this is good)
+After implementation:
+1. Each published post card will have an "Unpublish" option in a dropdown menu
+2. Clicking it shows a confirmation dialog with clear warnings
+3. Upon confirmation:
+   - Post is deleted from Facebook
+   - Blog article is removed from the database
+   - Metrics are cleaned up
+   - Social post status changes to "archived"
+4. Toast notification confirms success/failure
+5. Post disappears from the Published Performance grid
