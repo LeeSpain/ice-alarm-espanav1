@@ -92,10 +92,11 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    // Get user from JWT token
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !userData?.user) {
+      console.error("Auth error:", userError?.message || "No user found");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -103,7 +104,7 @@ serve(async (req) => {
     }
 
     // ───────────────────────── STAFF CHECK ─────────────────────────
-    const userId = claimsData.claims.sub;
+    const userId = userData.user.id;
     const { data: staffData, error: staffError } = await supabase
       .from("staff")
       .select("role")
@@ -112,6 +113,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (staffError || !staffData) {
+      console.error("Staff check failed:", staffError?.message || "Not staff");
       return new Response(JSON.stringify({ error: "Forbidden - Staff access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
