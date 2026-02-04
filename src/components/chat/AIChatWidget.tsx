@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Send, Loader2, Bot, RotateCcw } from "lucide-react";
+import { X, Send, Loader2, Bot, RotateCcw, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import { useAIChat } from "@/hooks/useAIChat";
 import { cn } from "@/lib/utils";
-
+import { CallMeModal } from "./CallMeModal";
 interface AIChatWidgetProps {
   defaultOpen?: boolean;
   onClose?: () => void;
@@ -27,8 +27,12 @@ export function AIChatWidget({
   staffName,
   userRole = "public"
 }: AIChatWidgetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [showCallModal, setShowCallModal] = useState(false);
+  
+  // Get default language for the call modal
+  const defaultLanguage = i18n.language?.startsWith("es") ? "es" : "en";
   
   // Hide the floating button when triggered from header
   const showFloatingButton = !defaultOpen;
@@ -142,6 +146,16 @@ export function AIChatWidget({
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={() => setShowCallModal(true)}
+              aria-label={t("callMe.title", "Call and Speak")}
+              title={t("callMe.title", "Call and Speak")}
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20"
               onClick={resetConversation}
               aria-label={t("chat.newChat", "New chat")}
               title={t("chat.newChat", "New chat")}
@@ -236,6 +250,13 @@ export function AIChatWidget({
           </div>
         </div>
       </div>
+
+      {/* Call Me Modal */}
+      <CallMeModal
+        open={showCallModal}
+        onOpenChange={setShowCallModal}
+        defaultLanguage={defaultLanguage as "en" | "es"}
+      />
     </>
   );
 }
