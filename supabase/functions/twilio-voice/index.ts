@@ -27,13 +27,28 @@ serve(async (req) => {
         "settings_twilio_account_sid",
         "settings_twilio_auth_token",
         "settings_twilio_phone_number",
-        "settings_emergency_phone"
+        "settings_emergency_phone",
+        // Voice script settings (editable via Admin Settings)
+        "voice_greeting_es",
+        "voice_greeting_en",
+        "voice_hold_es",
+        "voice_hold_en",
+        "voice_error_es",
+        "voice_error_en",
+        "voice_recording_notice_es",
+        "voice_recording_notice_en"
       ]);
 
     const twilioConfig = settings?.reduce((acc, s) => {
       acc[s.key] = s.value;
       return acc;
     }, {} as Record<string, string>) || {};
+
+    // Safe helper to get settings with fallback for missing/empty values
+    const getSetting = (key: string, fallback: string): string => {
+      const v = twilioConfig[key];
+      return (v && String(v).trim().length > 0) ? String(v) : fallback;
+    };
 
     if (!twilioConfig.settings_twilio_account_sid || !twilioConfig.settings_twilio_auth_token) {
       return new Response(
@@ -50,10 +65,15 @@ serve(async (req) => {
     // ACTION: WAIT - Hold message for queue
     // ============================================================
     if (action === "wait") {
+      const holdEs = getSetting("voice_hold_es", 
+        "Por favor, permanezca en la línea. Le conectamos en breve.");
+      const holdEn = getSetting("voice_hold_en", 
+        "Please stay on the line. We are connecting you now.");
+      
       const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="es-ES" voice="Polly.Lucia">Por favor, permanezca en la línea. Le conectamos en breve.</Say>
-  <Say language="en-GB" voice="Polly.Amy">Please stay on the line. We are connecting you now.</Say>
+  <Say language="es-ES" voice="Polly.Lucia">${escapeXml(holdEs)}</Say>
+  <Say language="en-GB" voice="Polly.Amy">${escapeXml(holdEn)}</Say>
   <Pause length="10"/>
 </Response>`;
       return new Response(twiml, {
@@ -103,21 +123,31 @@ serve(async (req) => {
           });
         }
 
-        // Build greeting based on whether member is known
+        // Get configurable greetings with fallbacks
+        const baseGreetingEs = getSetting("voice_greeting_es", 
+          "Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual.");
+        const baseGreetingEn = getSetting("voice_greeting_en", 
+          "Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant.");
+        const recordingEs = getSetting("voice_recording_notice_es", 
+          "Esta llamada puede ser grabada para mejorar el servicio.");
+        const recordingEn = getSetting("voice_recording_notice_en", 
+          "This call may be recorded to improve our service.");
+
+        // Build personalized greeting if member known
         const greetingEs = member?.first_name 
-          ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`
-          : `Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`;
+          ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel. ${recordingEs} ¿En qué puedo ayudarle hoy?`
+          : `${baseGreetingEs} ${recordingEs} ¿En qué puedo ayudarle hoy?`;
         
         const greetingEn = member?.first_name
-          ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel, your virtual assistant. How can I help you today?`
-          : `Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant. How can I help you today?`;
+          ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel. ${recordingEn} How can I help you today?`
+          : `${baseGreetingEn} ${recordingEn} How can I help you today?`;
 
         // Return TwiML with speech recognition
         const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="es-ES" voice="Polly.Lucia">${greetingEs}</Say>
+  <Say language="es-ES" voice="Polly.Lucia">${escapeXml(greetingEs)}</Say>
   <Pause length="1"/>
-  <Say language="en-GB" voice="Polly.Amy">${greetingEn}</Say>
+  <Say language="en-GB" voice="Polly.Amy">${escapeXml(greetingEn)}</Say>
   <Gather input="speech" 
           action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
           language="${twimlLang}" 
@@ -478,6 +508,43 @@ serve(async (req) => {
           notes: `Call ${callStatus}`
         })
         .eq("twilio_sid", callSid);
+
+      // If call completed, create a CRM note for the member
+      if (callStatus === "completed") {
+        const from = formData.get("From") as string | null;
+        const to = formData.get("To") as string | null;
+
+        if (from) {
+          const normalizedFrom = from.replace("+", "");
+
+          const { data: member } = await supabase
+            .from("members")
+            .select("id, first_name, last_name")
+            .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
+            .maybeSingle();
+
+          if (member) {
+            const dur = duration ? parseInt(duration) : 0;
+
+            const noteText =
+              `📞 AI Voice Call Completed\n` +
+              `• Member: ${member.first_name || ""} ${member.last_name || ""}\n` +
+              `• From: ${from}\n` +
+              `• To: ${to || ""}\n` +
+              `• Duration: ${dur} seconds\n` +
+              (recordingUrl ? `• Recording: ${recordingUrl}\n` : "") +
+              `• Status: ${callStatus}\n\n` +
+              `Summary: Call handled by AI voice assistant.`;
+
+            await supabase.from("member_notes").insert({
+              member_id: member.id,
+              content: noteText,
+              note_type: "support",
+              is_pinned: false
+            });
+          }
+        }
+      }
 
       return new Response(
         JSON.stringify({ received: true }),
