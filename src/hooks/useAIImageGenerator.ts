@@ -10,16 +10,29 @@ export type ImageStyle =
   | "spanish_lifestyle" 
   | "independence" 
   | "peace_of_mind"
-  | "from_post_text";
+  | "from_post_text"
+  // New variety styles
+  | "social_connection"
+  | "daily_routine"
+  | "outdoor_adventure"
+  | "home_comfort"
+  | "technology_simple"
+  | "surprise_me";
 
 export const IMAGE_STYLE_OPTIONS: { value: ImageStyle; labelKey: string }[] = [
   { value: "from_post_text", labelKey: "mediaManager.imageStyles.fromPostText" },
+  { value: "surprise_me", labelKey: "mediaManager.imageStyles.surpriseMe" },
   { value: "senior_active", labelKey: "mediaManager.imageStyles.seniorActive" },
   { value: "family_peace", labelKey: "mediaManager.imageStyles.familyPeace" },
   { value: "pendant_focus", labelKey: "mediaManager.imageStyles.pendantFocus" },
   { value: "spanish_lifestyle", labelKey: "mediaManager.imageStyles.spanishLifestyle" },
   { value: "independence", labelKey: "mediaManager.imageStyles.independence" },
   { value: "peace_of_mind", labelKey: "mediaManager.imageStyles.peaceOfMind" },
+  { value: "social_connection", labelKey: "mediaManager.imageStyles.socialConnection" },
+  { value: "daily_routine", labelKey: "mediaManager.imageStyles.dailyRoutine" },
+  { value: "outdoor_adventure", labelKey: "mediaManager.imageStyles.outdoorAdventure" },
+  { value: "home_comfort", labelKey: "mediaManager.imageStyles.homeComfort" },
+  { value: "technology_simple", labelKey: "mediaManager.imageStyles.technologySimple" },
 ];
 
 interface ImageTextData {
