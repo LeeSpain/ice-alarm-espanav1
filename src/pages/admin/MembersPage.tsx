@@ -278,7 +278,7 @@ export default function MembersPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/admin/members/${member.id}/edit`);
+                              navigate(`/admin/members/${member.id}`);
                             }}>
                               <Edit className="mr-2 h-4 w-4" />
                               {t("common.edit")}
