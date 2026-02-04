@@ -30,6 +30,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const BlogListPage = lazy(() => import("./pages/blog/BlogListPage"));
 const BlogPostPage = lazy(() => import("./pages/blog/BlogPostPage"));
+const ReferralRedirect = lazy(() => import("./pages/ReferralRedirect"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Join Flow - Lazy loaded
@@ -347,6 +348,9 @@ const App = () => {
                   <Route path="support" element={<SupportPage />} />
                   <Route path="messages" element={<ClientMessagesPage />} />
                 </Route>
+
+                {/* Referral Tracking Route */}
+                <Route path="/r/:partnerCode/:postSlug" element={<ReferralRedirect />} />
 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />

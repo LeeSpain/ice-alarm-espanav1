@@ -2689,6 +2689,24 @@
     "toast": {
       "previewOnly": "Esta es una vista previa de plantilla - el enlace de referido es solo de demostración",
       "linkCopied": "¡Enlace de referido copiado al portapapeles!"
+    },
+    "share": {
+      "title": "Compartir Contenido",
+      "subtitle": "Comparta contenido de marca con su audiencia usando sus enlaces rastreados",
+      "noContent": "Aún no hay contenido disponible para compartir",
+      "noContentHint": "El contenido aparecerá aquí cuando el administrador lo comparta con los socios",
+      "untitled": "Publicación Sin Título",
+      "copyCaption": "Copiar Texto",
+      "copyLink": "Copiar Mi Enlace",
+      "noCaptionAvailable": "No hay texto disponible para esta publicación",
+      "captionCopied": "Texto copiado al portapapeles",
+      "linkCopied": "Su enlace rastreado copiado al portapapeles",
+      "stats": {
+        "clicks": "Clics",
+        "signups": "Registros",
+        "purchases": "Compras",
+        "commission": "Comisión"
+      }
     }
   },
   "legal": {

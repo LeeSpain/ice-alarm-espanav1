@@ -180,6 +180,28 @@
       "success": "Post unpublished successfully",
       "error": "Failed to unpublish post"
     },
+    "partnerDistribution": {
+      "title": "Partner Distribution",
+      "configure": "Configure partner access",
+      "allPartners": "All Partners",
+      "selected": "selected",
+      "none": "None",
+      "infoText": "When enabled, after publishing this post will be available for partners to share with their tracked links. Partners earn commission on conversions.",
+      "audienceLabel": "Who can share this content?",
+      "allActivePartners": "All active partners",
+      "partners": "partners",
+      "selectedPartners": "Selected partners only",
+      "selectPartners": "Choose partners",
+      "noActivePartners": "No active partners found",
+      "trackingNote": "Each partner receives a unique tracked link for attribution",
+      "status": {
+        "enabled": "Partner Sharing Enabled",
+        "disabled": "Partner Sharing Disabled"
+      },
+      "viewLinks": "View Partner Links",
+      "disableSharing": "Disable Partner Sharing",
+      "enableSharing": "Enable Partner Sharing"
+    },
     "help": {
       "title": "Media Manager Guide",
       "description": "Learn how to create, manage, and publish social media content",
@@ -2713,6 +2735,24 @@
     "toast": {
       "previewOnly": "This is a template preview - referral link is for demo only",
       "linkCopied": "Referral link copied to clipboard!"
+    },
+    "share": {
+      "title": "Share Content",
+      "subtitle": "Share branded content with your audience using your tracked links",
+      "noContent": "No shareable content available yet",
+      "noContentHint": "Content will appear here when the admin shares it with partners",
+      "untitled": "Untitled Post",
+      "copyCaption": "Copy Caption",
+      "copyLink": "Copy My Link",
+      "noCaptionAvailable": "No caption available for this post",
+      "captionCopied": "Caption copied to clipboard",
+      "linkCopied": "Your tracked link copied to clipboard",
+      "stats": {
+        "clicks": "Clicks",
+        "signups": "Signups",
+        "purchases": "Purchases",
+        "commission": "Commission"
+      }
     }
   },
   "legal": {

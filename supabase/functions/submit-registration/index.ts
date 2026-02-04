@@ -172,6 +172,7 @@ interface RegistrationRequest {
   pendantCount: number;
   billingFrequency: "monthly" | "annual";
   partnerRef?: string; // Partner referral code for attribution
+  refPostId?: string; // Post ID from partner share link for attribution
   utmParams?: {
     utm_source?: string;
     utm_medium?: string;
@@ -714,6 +715,36 @@ serve(async (req) => {
                 utm_params: body.utmParams || null,
               },
             });
+
+            // Track post-specific referral if ref_post_id is provided
+            if (body.refPostId) {
+              console.log("Processing post-specific attribution for post:", body.refPostId);
+              
+              // Update member with ref_partner_id and ref_post_id
+              await supabase
+                .from("members")
+                .update({
+                  ref_partner_id: partner.id,
+                  ref_post_id: body.refPostId,
+                })
+                .eq("id", primaryMemberData.id);
+
+              // Increment signups counter on partner_post_links
+              const { data: linkData } = await supabase
+                .from("partner_post_links")
+                .select("id, signups")
+                .eq("post_id", body.refPostId)
+                .eq("partner_id", partner.id)
+                .maybeSingle();
+
+              if (linkData) {
+                await supabase
+                  .from("partner_post_links")
+                  .update({ signups: (linkData.signups || 0) + 1 })
+                  .eq("id", linkData.id);
+                console.log("Updated partner_post_links signups for link:", linkData.id);
+              }
+            }
           }
         } else {
           console.log("Attribution already exists for member, skipping (first-touch wins)");

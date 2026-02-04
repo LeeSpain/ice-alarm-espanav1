@@ -1606,6 +1606,8 @@ export type Database = {
           notes: string | null
           phone: string
           preferred_language: string
+          ref_partner_id: string | null
+          ref_post_id: string | null
           source: string | null
           status: string
           updated_at: string
@@ -1625,6 +1627,8 @@ export type Database = {
           notes?: string | null
           phone: string
           preferred_language?: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           source?: string | null
           status?: string
           updated_at?: string
@@ -1644,6 +1648,8 @@ export type Database = {
           notes?: string | null
           phone?: string
           preferred_language?: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           source?: string | null
           status?: string
           updated_at?: string
@@ -1661,6 +1667,20 @@ export type Database = {
             columns: ["converted_member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_ref_partner_id_fkey"
+            columns: ["ref_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_ref_post_id_fkey"
+            columns: ["ref_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -2313,6 +2333,8 @@ export type Database = {
             | Database["public"]["Enums"]["preferred_language"]
             | null
           province: string
+          ref_partner_id: string | null
+          ref_post_id: string | null
           special_instructions: string | null
           status: Database["public"]["Enums"]["member_status"] | null
           updated_at: string | null
@@ -2342,6 +2364,8 @@ export type Database = {
             | Database["public"]["Enums"]["preferred_language"]
             | null
           province: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           updated_at?: string | null
@@ -2371,12 +2395,29 @@ export type Database = {
             | Database["public"]["Enums"]["preferred_language"]
             | null
           province?: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "members_ref_partner_id_fkey"
+            columns: ["ref_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_ref_post_id_fkey"
+            columns: ["ref_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -2617,6 +2658,8 @@ export type Database = {
           member_id: string
           notes: string | null
           order_number: string
+          ref_partner_id: string | null
+          ref_post_id: string | null
           shipped_at: string | null
           shipping_address_line_1: string
           shipping_address_line_2: string | null
@@ -2638,6 +2681,8 @@ export type Database = {
           member_id: string
           notes?: string | null
           order_number: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           shipped_at?: string | null
           shipping_address_line_1: string
           shipping_address_line_2?: string | null
@@ -2659,6 +2704,8 @@ export type Database = {
           member_id?: string
           notes?: string | null
           order_number?: string
+          ref_partner_id?: string | null
+          ref_post_id?: string | null
           shipped_at?: string | null
           shipping_address_line_1?: string
           shipping_address_line_2?: string | null
@@ -2679,6 +2726,20 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_ref_partner_id_fkey"
+            columns: ["ref_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_ref_post_id_fkey"
+            columns: ["ref_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -3239,6 +3300,64 @@ export type Database = {
           },
         ]
       }
+      partner_clicks: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_hash: string | null
+          link_id: string | null
+          partner_id: string | null
+          post_id: string | null
+          referrer: string | null
+          session_id: string | null
+          ua_hash: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          link_id?: string | null
+          partner_id?: string | null
+          post_id?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          ua_hash?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          link_id?: string | null
+          partner_id?: string | null
+          post_id?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          ua_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_clicks_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "partner_post_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_clicks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_clicks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_commissions: {
         Row: {
           amount_eur: number
@@ -3378,6 +3497,69 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_post_links: {
+        Row: {
+          clicks: number | null
+          commission: number | null
+          created_at: string | null
+          id: string
+          partner_id: string
+          post_id: string
+          purchases: number | null
+          revenue: number | null
+          signups: number | null
+          status: string | null
+          tracked_code: string
+          tracked_path: string
+          tracked_url: string
+        }
+        Insert: {
+          clicks?: number | null
+          commission?: number | null
+          created_at?: string | null
+          id?: string
+          partner_id: string
+          post_id: string
+          purchases?: number | null
+          revenue?: number | null
+          signups?: number | null
+          status?: string | null
+          tracked_code: string
+          tracked_path: string
+          tracked_url: string
+        }
+        Update: {
+          clicks?: number | null
+          commission?: number | null
+          created_at?: string | null
+          id?: string
+          partner_id?: string
+          post_id?: string
+          purchases?: number | null
+          revenue?: number | null
+          signups?: number | null
+          status?: string | null
+          tracked_code?: string
+          tracked_path?: string
+          tracked_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_post_links_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_post_links_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -3814,6 +3996,7 @@ export type Database = {
       social_posts: {
         Row: {
           approved_by: string | null
+          content_channels: string[] | null
           created_at: string
           created_by: string | null
           error_message: string | null
@@ -3822,8 +4005,13 @@ export type Database = {
           id: string
           image_url: string | null
           language: string
+          partner_audience: string | null
+          partner_enabled: boolean | null
+          partner_published_at: string | null
+          partner_selected_partner_ids: string[] | null
           platform: string
           post_text: string | null
+          primary_url: string | null
           published_at: string | null
           scheduled_for: string | null
           status: string
@@ -3833,6 +4021,7 @@ export type Database = {
         }
         Insert: {
           approved_by?: string | null
+          content_channels?: string[] | null
           created_at?: string
           created_by?: string | null
           error_message?: string | null
@@ -3841,8 +4030,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           language?: string
+          partner_audience?: string | null
+          partner_enabled?: boolean | null
+          partner_published_at?: string | null
+          partner_selected_partner_ids?: string[] | null
           platform?: string
           post_text?: string | null
+          primary_url?: string | null
           published_at?: string | null
           scheduled_for?: string | null
           status?: string
@@ -3852,6 +4046,7 @@ export type Database = {
         }
         Update: {
           approved_by?: string | null
+          content_channels?: string[] | null
           created_at?: string
           created_by?: string | null
           error_message?: string | null
@@ -3860,8 +4055,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           language?: string
+          partner_audience?: string | null
+          partner_enabled?: boolean | null
+          partner_published_at?: string | null
+          partner_selected_partner_ids?: string[] | null
           platform?: string
           post_text?: string | null
+          primary_url?: string | null
           published_at?: string | null
           scheduled_for?: string | null
           status?: string
@@ -4341,6 +4541,8 @@ export type Database = {
             | Database["public"]["Enums"]["preferred_language"]
             | null
           province: string
+          ref_partner_id: string | null
+          ref_post_id: string | null
           special_instructions: string | null
           status: Database["public"]["Enums"]["member_status"] | null
           updated_at: string | null
@@ -4354,6 +4556,10 @@ export type Database = {
         }
       }
       get_user_role_info: { Args: { _user_id: string }; Returns: Json }
+      increment_partner_link_clicks: {
+        Args: { link_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_partner: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }

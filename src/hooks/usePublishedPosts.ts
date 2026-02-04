@@ -67,6 +67,12 @@ export function usePublishedPosts() {
         ...post,
         status: post.status as SocialPost["status"],
         language: post.language as SocialPost["language"],
+        partner_audience: (post.partner_audience || "none") as SocialPost["partner_audience"],
+        partner_enabled: post.partner_enabled ?? false,
+        partner_selected_partner_ids: post.partner_selected_partner_ids ?? null,
+        partner_published_at: post.partner_published_at ?? null,
+        content_channels: post.content_channels ?? [],
+        primary_url: post.primary_url ?? null,
         metrics: metricsMap.get(post.id) || null,
       }));
 

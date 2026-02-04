@@ -328,6 +328,9 @@ serve(async (req) => {
     const facebookPostId = fbResult.post_id || fbResult.id;
 
     // ───────────────────────── UPDATE RECORDS WITH FACEBOOK ID ─────────────────────────
+    // Build primary URL for partner tracking
+    const primaryUrl = blogSlug ? `${SITE_URL}/blog/${blogSlug}` : null;
+
     // Update social post
     await adminClient
       .from("social_posts")
@@ -337,6 +340,8 @@ serve(async (req) => {
         published_at: new Date().toISOString(),
         error_message: null,
         updated_at: new Date().toISOString(),
+        primary_url: primaryUrl,
+        content_channels: ["facebook", ...(blogPostId ? ["blog"] : [])],
       })
       .eq("id", post_id);
 
@@ -348,12 +353,75 @@ serve(async (req) => {
         .eq("id", blogPostId);
     }
 
+    // ───────────────────────── GENERATE PARTNER LINKS IF ENABLED ─────────────────────────
+    if (post.partner_enabled && (post.partner_audience === "all" || post.partner_audience === "selected")) {
+      try {
+        console.log("Generating partner links...");
+        
+        // Get partners based on audience
+        let partnersQuery = adminClient
+          .from("partners")
+          .select("id, referral_code")
+          .eq("status", "active");
+
+        if (post.partner_audience === "selected" && post.partner_selected_partner_ids?.length) {
+          partnersQuery = partnersQuery.in("id", post.partner_selected_partner_ids);
+        }
+
+        const { data: partners, error: partnersError } = await partnersQuery;
+        
+        if (partnersError) {
+          console.error("Error fetching partners:", partnersError);
+        } else if (partners?.length) {
+          // Generate slug from topic
+          const slug = (post.topic || "post")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .substring(0, 30);
+
+          // Create links for each partner
+          const links = partners.map((partner: { id: string; referral_code: string }) => ({
+            post_id: post_id,
+            partner_id: partner.id,
+            tracked_code: partner.referral_code,
+            tracked_path: `/r/${partner.referral_code}/${slug}`,
+            tracked_url: `${SITE_URL}/r/${partner.referral_code}/${slug}`,
+          }));
+
+          // Insert all links (upsert to handle re-publish)
+          const { error: linksError } = await adminClient
+            .from("partner_post_links")
+            .upsert(links, { 
+              onConflict: "post_id,partner_id",
+              ignoreDuplicates: false 
+            });
+
+          if (linksError) {
+            console.error("Error creating partner links:", linksError);
+          } else {
+            console.log(`Created ${links.length} partner links`);
+            
+            // Update partner_published_at
+            await adminClient
+              .from("social_posts")
+              .update({ partner_published_at: new Date().toISOString() })
+              .eq("id", post_id);
+          }
+        }
+      } catch (partnerError) {
+        console.error("Partner link generation failed:", partnerError);
+        // Don't fail the publish - just log the error
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         facebook_post_id: facebookPostId,
         blog_post_id: blogPostId,
         blog_slug: blogSlug,
+        partner_links_generated: post.partner_enabled,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
