@@ -32,6 +32,7 @@ import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab
 import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
 import { EmailSettingsTab } from "@/components/admin/settings/EmailSettingsTab";
 import { EmailTemplatesTab } from "@/components/admin/settings/EmailTemplatesTab";
+import { VoiceSettingsSection } from "@/components/admin/settings/VoiceSettingsSection";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -1151,6 +1152,9 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Voice Settings Section */}
+          <VoiceSettingsSection />
 
           {/* Email Settings Section */}
           <Separator className="my-6" />
