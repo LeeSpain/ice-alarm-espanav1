@@ -24,10 +24,16 @@ export function useBlogPosts(limit?: number) {
   return useQuery({
     queryKey: ["blog-posts", limit],
     queryFn: async () => {
+      // Only show blog posts linked to published social posts
+      // This ensures the blog page matches the "Published Performance" section
       let query = supabase
         .from("blog_posts")
-        .select("*")
+        .select(`
+          *,
+          social_posts!inner(id, status)
+        `)
         .eq("published", true)
+        .eq("social_posts.status", "published")
         .not("published_at", "is", null)
         .lte("published_at", new Date().toISOString())
         .order("published_at", { ascending: false });
@@ -39,7 +45,9 @@ export function useBlogPosts(limit?: number) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as BlogPost[];
+      
+      // Strip the joined social_posts data from response
+      return (data || []).map(({ social_posts, ...blog }) => blog) as BlogPost[];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
