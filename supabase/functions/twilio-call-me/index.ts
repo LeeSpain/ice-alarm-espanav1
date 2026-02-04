@@ -42,7 +42,7 @@ serve(async (req) => {
                      req.headers.get("x-real-ip") || 
                      "unknown";
     
-    const { phoneNumber, language } = await req.json();
+    const { phoneNumber, language, conversationId } = await req.json();
     
     // Validate phone number (must start with + and contain digits)
     if (!phoneNumber || typeof phoneNumber !== "string") {
@@ -129,6 +129,12 @@ serve(async (req) => {
     
     const baseUrl = Deno.env.get("SUPABASE_URL");
     
+    // Build voice webhook URL with conversation context
+    let voiceUrl = `${baseUrl}/functions/v1/twilio-voice?action=incoming&lang=${lang}&source=website`;
+    if (conversationId) {
+      voiceUrl += `&conversation_id=${encodeURIComponent(conversationId)}`;
+    }
+    
     // Make outbound call using Twilio API
     // The URL points to the existing twilio-voice function with action=incoming_ai
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.settings_twilio_account_sid}/Calls.json`;
@@ -143,10 +149,10 @@ serve(async (req) => {
       body: new URLSearchParams({
         To: cleanPhone,
         From: twilioConfig.settings_twilio_phone_number,
-        // Point to existing AI voice handler with language parameter
-        Url: `${baseUrl}/functions/v1/twilio-voice?action=incoming&lang=${lang}&source=website`,
+        // Point to existing AI voice handler with language and conversation context
+        Url: voiceUrl,
         Method: "POST",
-        StatusCallback: `${baseUrl}/functions/v1/twilio-voice?action=status`,
+        StatusCallback: `${baseUrl}/functions/v1/twilio-voice?action=status${conversationId ? `&conversation_id=${encodeURIComponent(conversationId)}` : ""}`,
         StatusCallbackMethod: "POST",
         StatusCallbackEvent: "initiated ringing answered completed",
       }),
