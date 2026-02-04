@@ -1,160 +1,108 @@
 
+# Fix Twilio Configuration Status Detection + Add Test Button
 
-# Switch to Twilio API Keys for Enhanced Security
+## Problem Identified
 
-## Overview
+Your Twilio settings are actually saved correctly but the UI shows "Not Configured" because:
 
-This change replaces the current authentication method (Account SID + Auth Token) with Twilio API Keys (Account SID + API Key SID + API Key Secret). This is a security best practice that allows you to:
+### Key Prefix Mismatch
 
-- **Restrict permissions** - API Keys can have limited scope
-- **Rotate keys safely** - Revoke compromised keys without affecting the main account
-- **Better audit trail** - Track which key was used for each request
+| What's Saved (in database) | What UI Checks For |
+|---------------------------|-------------------|
+| `settings_twilio_account_sid` | `twilio_account_sid` |
+| `settings_twilio_api_key_sid` | `twilio_api_key_sid` |
+| `settings_twilio_api_key_secret` | `twilio_api_key_secret` |
 
-## Current Implementation
+The `save-api-keys` function adds `settings_` prefix to all keys, but the SettingsPage KEY constants don't include this prefix.
 
-Currently, all 3 Twilio edge functions authenticate using:
-```
-Authorization: Basic base64(AccountSID:AuthToken)
-```
+### Affected Areas
 
-**Files affected:**
-- `supabase/functions/twilio-sms/index.ts`
-- `supabase/functions/twilio-voice/index.ts`
-- `supabase/functions/twilio-whatsapp/index.ts`
-
-**Settings stored in `system_settings`:**
-- `twilio_account_sid`
-- `twilio_auth_token`
-- `twilio_phone_number`
-- `twilio_whatsapp_number`
+1. **Admin Settings UI** - Badge always shows "Not Configured" 
+2. **notify-admin function** - Can't send WhatsApp because it looks for wrong keys
+3. **Form values don't load** - Values appear empty because they're read from wrong keys
 
 ---
 
-## Proposed Changes
+## Solution
 
-### 1. Add New Database Settings Keys
+### Step 1: Fix KEY Constants in SettingsPage.tsx
 
-Add two new settings to store the API Key credentials:
-
-| New Key | Description |
-|---------|-------------|
-| `twilio_api_key_sid` | The API Key SID (starts with `SK...`) |
-| `twilio_api_key_secret` | The API Key Secret |
-
-The existing `twilio_account_sid` remains required for API calls.
-
-### 2. Update Admin Settings UI
-
-Modify `src/pages/admin/SettingsPage.tsx` to:
-
-- Add input fields for **API Key SID** and **API Key Secret**
-- Keep the Auth Token field for backward compatibility (optional fallback)
-- Update the save handler to include new keys
-- Add helper text explaining the API Key benefits
-
-```text
-Current UI:
-+-----------------------+-----------------------+
-| Account SID           | Auth Token            |
-+-----------------------+-----------------------+
-| Phone Number          | WhatsApp Number       |
-+-----------------------+-----------------------+
-
-New UI:
-+-----------------------+-----------------------+
-| Account SID           | Auth Token (optional) |
-+-----------------------+-----------------------+
-| API Key SID           | API Key Secret        |
-+-----------------------+-----------------------+
-| Phone Number          | WhatsApp Number       |
-+-----------------------+-----------------------+
-```
-
-### 3. Update Edge Functions
-
-Modify all 3 Twilio edge functions to:
-
-1. Fetch the new API Key settings alongside existing ones
-2. Prefer API Keys for authentication when available
-3. Fall back to Auth Token if API Keys not configured
-
-**Authentication logic change:**
+Update the Twilio key constants to include the `settings_` prefix:
 
 ```typescript
-// BEFORE (current)
-const auth = btoa(`${accountSid}:${authToken}`);
-
-// AFTER (with API Keys)
-const username = apiKeySid || accountSid;
-const password = apiKeySecret || authToken;
-const auth = btoa(`${username}:${password}`);
-```
-
----
-
-## Technical Implementation
-
-### Step 1: Update SettingsPage.tsx
-
-**Add new KEY constants:**
-```typescript
+// BEFORE (current - broken)
+TWILIO_SID: "twilio_account_sid",
+TWILIO_TOKEN: "twilio_auth_token",
 TWILIO_API_KEY_SID: "twilio_api_key_sid",
 TWILIO_API_KEY_SECRET: "twilio_api_key_secret",
+TWILIO_PHONE: "twilio_phone_number",
+TWILIO_WA: "twilio_whatsapp_number",
+
+// AFTER (fixed)
+TWILIO_SID: "settings_twilio_account_sid",
+TWILIO_TOKEN: "settings_twilio_auth_token",
+TWILIO_API_KEY_SID: "settings_twilio_api_key_sid",
+TWILIO_API_KEY_SECRET: "settings_twilio_api_key_secret",
+TWILIO_PHONE: "settings_twilio_phone_number",
+TWILIO_WA: "settings_twilio_whatsapp_number",
 ```
 
-**Update twilioKeys state:**
+### Step 2: Update notify-admin Edge Function
+
+Fix the keys it queries to include the `settings_` prefix:
+
 ```typescript
-const [twilioKeys, setTwilioKeys] = useState({
-  account_sid: "",
-  auth_token: "",
-  api_key_sid: "",      // NEW
-  api_key_secret: "",   // NEW
-  phone_number: "",
-  whatsapp_number: "",
-});
+// BEFORE
+.in("key", ["twilio_account_sid", "twilio_auth_token", "twilio_whatsapp_number"]);
+
+// AFTER
+.in("key", [
+  "settings_twilio_account_sid", 
+  "settings_twilio_auth_token",
+  "settings_twilio_api_key_sid",
+  "settings_twilio_api_key_secret", 
+  "settings_twilio_whatsapp_number"
+]);
 ```
 
-**Add new input fields in the UI** for API Key SID and API Key Secret with masked input and visibility toggle.
-
-### Step 2: Update twilio-sms/index.ts
-
-**Fetch new settings:**
+Also update the auth logic to support API Keys:
 ```typescript
-const { data: settings } = await supabase
-  .from("system_settings")
-  .select("key, value")
-  .in("key", [
-    "twilio_account_sid",
-    "twilio_auth_token",
-    "twilio_api_key_sid",      // NEW
-    "twilio_api_key_secret",   // NEW
-    "twilio_phone_number"
-  ]);
+const authUsername = config.settings_twilio_api_key_sid || config.settings_twilio_account_sid;
+const authPassword = config.settings_twilio_api_key_secret || config.settings_twilio_auth_token;
 ```
 
-**Updated authentication:**
+### Step 3: Add Test Button with Live Status
+
+Add a "Test Connection" button to the Twilio section that:
+1. Attempts to validate credentials with Twilio's API
+2. Shows real-time feedback (success/failure)
+3. Displays the actual error from Twilio if something is wrong
+
+```text
+┌────────────────────────────────────────────────────┐
+│  Twilio Configuration              [✓ Configured] │
+├────────────────────────────────────────────────────┤
+│  Account SID: [AC3b6fa0fa90...]                   │
+│  API Key SID: [SKe9e478eb...]                     │
+│  API Secret:  [••••••••••]                        │
+│  Phone:       [+18143833159]                      │
+│  WhatsApp:    [+18143833159]                      │
+│                                                    │
+│  [Save Configuration]  [Test Connection]          │
+│                                                    │
+│  ✅ Connection verified - Twilio is working       │
+└────────────────────────────────────────────────────┘
+```
+
+### Step 4: Create test-twilio Edge Function
+
+New edge function to validate Twilio credentials:
+
 ```typescript
-// Prefer API Keys, fall back to Auth Token
-const authUsername = twilioConfig.twilio_api_key_sid || twilioConfig.twilio_account_sid;
-const authPassword = twilioConfig.twilio_api_key_secret || twilioConfig.twilio_auth_token;
-
-if (!twilioConfig.twilio_account_sid || !authPassword) {
-  return new Response(
-    JSON.stringify({ error: "Twilio not configured" }),
-    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
-}
-
-const auth = btoa(`${authUsername}:${authPassword}`);
+// Fetches account info from Twilio API
+// If credentials are valid, returns success
+// If invalid, returns the specific error
 ```
-
-### Step 3: Update twilio-voice/index.ts
-
-Apply the same authentication pattern changes as twilio-sms.
-
-### Step 4: Update twilio-whatsapp/index.ts
-
-Apply the same authentication pattern changes as twilio-sms, also including the WhatsApp number in settings fetch.
 
 ---
 
@@ -162,38 +110,17 @@ Apply the same authentication pattern changes as twilio-sms, also including the 
 
 | File | Change |
 |------|--------|
-| `src/pages/admin/SettingsPage.tsx` | Add API Key SID/Secret fields and state |
-| `supabase/functions/twilio-sms/index.ts` | Fetch new keys, prefer API Key auth |
-| `supabase/functions/twilio-voice/index.ts` | Fetch new keys, prefer API Key auth |
-| `supabase/functions/twilio-whatsapp/index.ts` | Fetch new keys, prefer API Key auth |
-
----
-
-## Migration Path
-
-1. **No breaking changes** - Auth Token continues to work
-2. Generate API Key in Twilio Console (Account > API keys)
-3. Enter API Key SID and Secret in admin settings
-4. (Optional) Remove Auth Token after confirming API Keys work
-
----
-
-## How to Create a Twilio API Key
-
-1. Go to [Twilio Console](https://console.twilio.com/)
-2. Navigate to **Account** > **API keys & tokens**
-3. Click **Create API Key**
-4. Choose **Standard** or **Restricted** key type
-5. Copy the **SID** (starts with `SK`) and **Secret**
-6. Enter these values in the admin settings panel
+| `src/pages/admin/SettingsPage.tsx` | Fix KEY constants, add Test button with state |
+| `supabase/functions/notify-admin/index.ts` | Fix key names, add API Key support |
+| `supabase/functions/test-twilio/index.ts` | New function to validate credentials |
 
 ---
 
 ## Expected Result
 
 After implementation:
-- Admin settings will show new API Key fields
-- Edge functions will use API Keys when configured
-- Backward compatible with Auth Token if API Keys not set
-- No changes needed to webhook URLs or call logic
-
+- Badge will show **"Configured"** (green) when credentials exist
+- Values will populate correctly in the form fields
+- **Test Connection** button verifies credentials are actually working
+- WhatsApp notifications via notify-admin will work again
+- Clear error messages if something is misconfigured
