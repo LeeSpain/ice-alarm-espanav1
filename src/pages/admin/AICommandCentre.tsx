@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAIAgents, useAIAgentStats } from "@/hooks/useAIAgents";
 import { formatDistanceToNow } from "date-fns";
-
 function AgentCard({ 
   agent, 
   icon: Icon,
@@ -32,9 +31,9 @@ function AgentCard({
 
   const getModeLabel = (mode: string) => {
     switch (mode) {
-      case "auto_act": return t("ai.modes.autoAct");
-      case "draft_only": return t("ai.modes.draftOnly");
-      case "advise_only": return t("ai.modes.adviseOnly");
+      case "auto_act": return t("ai.modes.autoAct", "Auto Act");
+      case "draft_only": return t("ai.modes.draftOnly", "Draft Only");
+      case "advise_only": return t("ai.modes.adviseOnly", "Advise Only");
       default: return mode;
     }
   };
@@ -68,7 +67,7 @@ function AgentCard({
             variant="outline" 
             className={agent?.enabled ? "bg-green-500/10 text-green-500 border-green-500/20" : ""}
           >
-            {agent?.enabled ? t("ai.enabled") : t("ai.paused")}
+            {agent?.enabled ? t("ai.enabled", "Enabled") : t("ai.paused", "Paused")}
           </Badge>
         </div>
       </CardHeader>
@@ -80,7 +79,7 @@ function AgentCard({
           </Badge>
           {agent?.instance_count > 1 && (
             <Badge variant="secondary">
-              {agent.instance_count} {t("ai.instances")}
+              {agent.instance_count} {t("ai.instances", "instances")}
             </Badge>
           )}
         </div>
@@ -96,32 +95,32 @@ function AgentCard({
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <Clock className="h-3 w-3" />
-                  {t("ai.lastRun")}
+                  {t("ai.lastRun", "Last Run")}
                 </div>
                 <p className="text-sm font-medium">
                   {stats?.lastRunAt 
                     ? formatDistanceToNow(new Date(stats.lastRunAt), { addSuffix: true })
-                    : t("ai.never")}
+                    : t("ai.never", "Never")}
                 </p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <Activity className="h-3 w-3" />
-                  {t("ai.actionsCreated")}
+                  {t("ai.actionsCreated", "Actions (24h)")}
                 </div>
                 <p className="text-sm font-medium">{stats?.actionsLast24h || 0}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <Zap className="h-3 w-3" />
-                  {t("ai.runsToday")}
+                  {t("ai.runsToday", "Runs (24h)")}
                 </div>
                 <p className="text-sm font-medium">{stats?.runsLast24h || 0}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <AlertTriangle className="h-3 w-3" />
-                  {t("ai.escalations")}
+                  {t("ai.escalations", "Escalations")}
                 </div>
                 <p className="text-sm font-medium">{stats?.escalationsReceived || 0}</p>
               </div>
@@ -130,7 +129,7 @@ function AgentCard({
         </div>
 
         <Button onClick={onOpen} className="w-full mt-4" variant="outline">
-          {t("ai.openAgent")}
+          {t("ai.openAgent", "Open Agent")}
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </CardContent>
@@ -166,9 +165,11 @@ export default function AICommandCentre() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t("ai.commandCentre")}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("ai.commandCentre", "AI Command Centre")}
+        </h1>
         <p className="text-muted-foreground mt-1">
-          {t("ai.commandCentreDescription")}
+          {t("ai.commandCentreDescription", "Monitor and manage your AI agents from a single dashboard.")}
         </p>
       </div>
 
@@ -195,29 +196,29 @@ export default function AICommandCentre() {
       {/* Quick Stats */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t("ai.systemOverview")}</CardTitle>
+          <CardTitle className="text-lg">{t("ai.systemOverview", "System Overview")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 rounded-lg bg-muted/50">
               <p className="text-2xl font-bold text-primary">{agents?.length || 0}</p>
-              <p className="text-sm text-muted-foreground">{t("ai.totalAgents")}</p>
+              <p className="text-sm text-muted-foreground">{t("ai.totalAgents", "Total Agents")}</p>
             </div>
             <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold text-green-500">
+              <p className="text-2xl font-bold text-status-active">
                 {agents?.filter(a => a.enabled).length || 0}
               </p>
-              <p className="text-sm text-muted-foreground">{t("ai.activeAgents")}</p>
+              <p className="text-sm text-muted-foreground">{t("ai.activeAgents", "Active Agents")}</p>
             </div>
             <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold text-yellow-500">
+              <p className="text-2xl font-bold text-alert-battery">
                 {agents?.reduce((sum, a) => sum + a.instance_count, 0) || 0}
               </p>
-              <p className="text-sm text-muted-foreground">{t("ai.totalInstances")}</p>
+              <p className="text-sm text-muted-foreground">{t("ai.totalInstances", "Total Instances")}</p>
             </div>
             <div className="text-center p-4 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold text-blue-500">2</p>
-              <p className="text-sm text-muted-foreground">{t("ai.phase")}</p>
+              <p className="text-2xl font-bold text-primary">2</p>
+              <p className="text-sm text-muted-foreground">{t("ai.phase", "Phase")}</p>
             </div>
           </div>
         </CardContent>
