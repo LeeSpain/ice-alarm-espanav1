@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.facebook-unpublish]
 verify_jwt = false
+
+[functions.test-twilio]
+verify_jwt = false
