@@ -60,6 +60,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
     const conversationIdParam = url.searchParams.get("conversation_id");
+    const leadIdParam = url.searchParams.get("lead_id");
     const baseUrl = Deno.env.get("SUPABASE_URL");
 
     // Helper function to get or create conversation
@@ -67,7 +68,8 @@ serve(async (req) => {
       existingId: string | null, 
       memberId: string | null, 
       language: string,
-      source: string = "voice"
+      source: string = "voice",
+      leadId: string | null = null
     ): Promise<string | null> {
       // If we have an existing conversation_id, verify it exists and update it
       if (existingId) {
@@ -78,30 +80,39 @@ serve(async (req) => {
           .maybeSingle();
         
         if (existing) {
-          // Update to mixed source if it was from chat
+          // Update to mixed source if it was from chat, and link lead if provided
+          const updateData: Record<string, unknown> = { 
+            source: "mixed", 
+            last_channel: "voice",
+            last_message_at: new Date().toISOString()
+          };
+          if (leadId) {
+            updateData.lead_id = leadId;
+          }
           await supabase
             .from("conversations")
-            .update({ 
-              source: "mixed", 
-              last_channel: "voice",
-              last_message_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq("id", existingId);
           return existingId;
         }
       }
       
       // Create new conversation
+      const insertData: Record<string, unknown> = {
+        member_id: memberId,
+        language: language.startsWith("es") ? "es" : "en",
+        source,
+        last_channel: "voice",
+        status: "open",
+        last_message_at: new Date().toISOString()
+      };
+      if (leadId) {
+        insertData.lead_id = leadId;
+      }
+      
       const { data: newConv, error } = await supabase
         .from("conversations")
-        .insert({
-          member_id: memberId,
-          language: language.startsWith("es") ? "es" : "en",
-          source,
-          last_channel: "voice",
-          status: "open",
-          last_message_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select("id")
         .single();
       
@@ -209,12 +220,13 @@ serve(async (req) => {
         const language = langParam || member?.preferred_language || "es";
         const twimlLang = language === "es" ? "es-ES" : "en-GB";
 
-        // Get or create conversation for threading
+        // Get or create conversation for threading (with lead_id if available)
         const conversationId = await getOrCreateConversation(
           conversationIdParam,
           member?.id || null,
           language,
-          conversationIdParam ? "mixed" : "voice"
+          conversationIdParam ? "mixed" : "voice",
+          leadIdParam || null
         );
 
         // Create voice session with conversation link
@@ -657,7 +669,7 @@ serve(async (req) => {
       const from = formData.get("From") as string | null;
       const to = formData.get("To") as string | null;
 
-      console.log("Call status update:", callSid, callStatus, duration, "ConversationId:", conversationIdParam);
+      console.log("Call status update:", callSid, callStatus, duration, "ConversationId:", conversationIdParam, "LeadId:", leadIdParam);
 
       // Update voice session status
       if (callStatus === "completed" || callStatus === "busy" || callStatus === "failed" || callStatus === "no-answer") {
@@ -831,6 +843,27 @@ serve(async (req) => {
               note_type: "support",
               is_pinned: false
             });
+          }
+          
+          // If no member but we have a lead_id (from Call and Speak), update the lead
+          const activeLeadId = leadIdParam || (convId ? (await supabase
+            .from("conversations")
+            .select("lead_id")
+            .eq("id", convId)
+            .maybeSingle()
+          ).data?.lead_id : null);
+          
+          if (!memberId && activeLeadId) {
+            // Update lead with notes and mark as contacted
+            await supabase
+              .from("leads")
+              .update({
+                status: "contacted",
+                notes: aiSummary || `Call completed - Duration: ${dur} seconds`
+              })
+              .eq("id", activeLeadId);
+            
+            console.log(`Updated lead ${activeLeadId} with call summary, marked as contacted`);
           }
         } catch (noteErr) {
           console.error("Failed to create CRM note:", noteErr);

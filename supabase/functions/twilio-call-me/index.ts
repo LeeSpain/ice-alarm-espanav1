@@ -31,6 +31,24 @@ function checkRateLimit(key: string, maxCalls: number): { allowed: boolean; rema
   return { allowed: true, remaining: maxCalls - entry.count, resetIn: entry.resetAt - now };
 }
 
+// Helper to parse name into first/last
+function parseName(fullName: string): { firstName: string; lastName: string } {
+  const trimmed = fullName.trim();
+  if (!trimmed) {
+    return { firstName: "Website", lastName: "Caller" };
+  }
+  
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: "Caller" };
+  }
+  
+  return { 
+    firstName: parts[0], 
+    lastName: parts.slice(1).join(" ") 
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -101,6 +119,49 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
     
+    // Check if caller is an existing member by phone
+    const normalizedPhone = cleanPhone.replace("+", "");
+    const { data: existingMember } = await supabase
+      .from("members")
+      .select("id, first_name")
+      .or(`phone.eq.${cleanPhone},phone.eq.${normalizedPhone}`)
+      .maybeSingle();
+    
+    let leadId: string | null = null;
+    
+    // If NOT a member, create a lead record
+    if (!existingMember) {
+      const { firstName, lastName } = parseName(sanitizedName);
+      const timestamp = Date.now();
+      const placeholderEmail = `call-${timestamp}@pending.icealarm.es`;
+      
+      const { data: newLead, error: leadError } = await supabase
+        .from("leads")
+        .insert({
+          first_name: firstName,
+          last_name: lastName,
+          email: placeholderEmail,
+          phone: cleanPhone,
+          preferred_language: lang,
+          enquiry_type: "callback",
+          source: "website_call_me",
+          message: "Requested callback via Call and Speak feature",
+          status: "new"
+        })
+        .select("id")
+        .single();
+      
+      if (leadError) {
+        console.error("Failed to create lead:", leadError);
+        // Continue anyway - call is more important than lead creation
+      } else {
+        leadId = newLead.id;
+        console.log(`Created lead ${leadId} for website caller: ${firstName} ${lastName}`);
+      }
+    } else {
+      console.log(`Caller is existing member: ${existingMember.id} (${existingMember.first_name})`);
+    }
+    
     // Get Twilio credentials from settings
     const { data: settings } = await supabase
       .from("system_settings")
@@ -142,9 +203,20 @@ serve(async (req) => {
     if (sanitizedName) {
       voiceUrl += `&caller_name=${encodeURIComponent(sanitizedName)}`;
     }
+    if (leadId) {
+      voiceUrl += `&lead_id=${encodeURIComponent(leadId)}`;
+    }
+    
+    // Build status callback URL with lead_id
+    let statusUrl = `${baseUrl}/functions/v1/twilio-voice?action=status`;
+    if (conversationId) {
+      statusUrl += `&conversation_id=${encodeURIComponent(conversationId)}`;
+    }
+    if (leadId) {
+      statusUrl += `&lead_id=${encodeURIComponent(leadId)}`;
+    }
     
     // Make outbound call using Twilio API
-    // The URL points to the existing twilio-voice function with action=incoming_ai
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioConfig.settings_twilio_account_sid}/Calls.json`;
     const auth = btoa(`${twilioConfig.settings_twilio_account_sid}:${twilioConfig.settings_twilio_auth_token}`);
     
@@ -157,10 +229,9 @@ serve(async (req) => {
       body: new URLSearchParams({
         To: cleanPhone,
         From: twilioConfig.settings_twilio_phone_number,
-        // Point to existing AI voice handler with language and conversation context
         Url: voiceUrl,
         Method: "POST",
-        StatusCallback: `${baseUrl}/functions/v1/twilio-voice?action=status${conversationId ? `&conversation_id=${encodeURIComponent(conversationId)}` : ""}`,
+        StatusCallback: statusUrl,
         StatusCallbackMethod: "POST",
         StatusCallbackEvent: "initiated ringing answered completed",
       }),
@@ -177,12 +248,13 @@ serve(async (req) => {
     
     const callData = await callResponse.json();
     
-    console.log(`Call initiated successfully: CallSid=${callData.sid}, To=${cleanPhone}`);
+    console.log(`Call initiated successfully: CallSid=${callData.sid}, To=${cleanPhone}, LeadId=${leadId || "(member)"}`);
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         callSid: callData.sid,
+        leadId,
         message: "Call is being initiated. Please answer your phone."
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
