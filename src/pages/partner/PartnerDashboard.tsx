@@ -3,11 +3,13 @@ import { usePartnerData } from "@/hooks/usePartnerData";
 import { usePartnerStats } from "@/hooks/usePartnerStats";
 import { StatsCards } from "@/components/partner/StatsCards";
 import { ReferralPipeline } from "@/components/partner/ReferralPipeline";
+import { ShareContentSection } from "@/components/partner/ShareContentSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Link, ArrowLeft, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Copy, Link, ArrowLeft, Eye, Share2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { generateReferralLink } from "@/lib/crmEvents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +48,7 @@ export default function PartnerDashboard() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [referralDialogOpen, setReferralDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "share">("overview");
 
   const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
   const partnerIdParam = searchParams.get("partnerId");
@@ -199,22 +202,60 @@ export default function PartnerDashboard() {
       {/* Stats Cards */}
       <StatsCards stats={displayStats} isLoading={!isTemplatePreview && statsLoading} />
 
-      {/* Referral Pipeline - show empty state for template preview */}
-      {isTemplatePreview ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("partner.dashboard.pipeline.title")}</CardTitle>
-            <CardDescription>{t("partner.dashboard.pipeline.subtitle")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <p>{t("partner.dashboard.pipeline.emptyPreview")}</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <ReferralPipeline partnerId={partner!.id} />
-      )}
+      {/* Tabs for Overview and Share Content */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "share")}>
+        <TabsList>
+          <TabsTrigger value="overview" className="gap-2">
+            <Users className="h-4 w-4" />
+            {t("partner.dashboard.pipeline.title")}
+          </TabsTrigger>
+          <TabsTrigger value="share" className="gap-2">
+            <Share2 className="h-4 w-4" />
+            {t("partner.share.title")}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          {/* Referral Pipeline - show empty state for template preview */}
+          {isTemplatePreview ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("partner.dashboard.pipeline.title")}</CardTitle>
+                <CardDescription>{t("partner.dashboard.pipeline.subtitle")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>{t("partner.dashboard.pipeline.emptyPreview")}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <ReferralPipeline partnerId={partner!.id} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="share" className="mt-6">
+          {isTemplatePreview ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5" />
+                  {t("partner.share.title")}
+                </CardTitle>
+                <CardDescription>{t("partner.share.subtitle")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Share2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p>{t("partner.share.noContent")}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <ShareContentSection partnerId={partner!.id} />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

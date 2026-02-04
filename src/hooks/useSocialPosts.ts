@@ -25,6 +25,13 @@ export interface SocialPost {
   published_at: string | null;
   facebook_post_id: string | null;
   error_message: string | null;
+  // Partner distribution fields
+  partner_enabled: boolean;
+  partner_audience: "none" | "all" | "selected";
+  partner_selected_partner_ids: string[] | null;
+  partner_published_at: string | null;
+  content_channels: string[];
+  primary_url: string | null;
 }
 
 export interface SocialPostResearch {
@@ -43,11 +50,17 @@ export interface CreateSocialPostData {
   language?: SocialPostLanguage;
   post_text?: string;
   image_url?: string;
+  // Partner distribution
+  partner_enabled?: boolean;
+  partner_audience?: "none" | "all" | "selected";
+  partner_selected_partner_ids?: string[];
+  content_channels?: string[];
 }
 
 export interface UpdateSocialPostData extends Partial<CreateSocialPostData> {
   status?: SocialPostStatus;
   scheduled_for?: string | null;
+  primary_url?: string | null;
 }
 
 export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {

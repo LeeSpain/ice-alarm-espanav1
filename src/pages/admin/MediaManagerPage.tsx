@@ -25,6 +25,7 @@ import { PostPreviewDialog } from "@/components/admin/media/PostPreviewDialog";
 import { PublishedPostsSection } from "@/components/admin/media/PublishedPostsSection";
 import { MediaStrategySection } from "@/components/admin/media/strategy/MediaStrategySection";
 import { MediaHelpDialog } from "@/components/admin/media/MediaHelpDialog";
+import { PartnerDistributionSection } from "@/components/admin/media/PartnerDistributionSection";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -57,6 +58,10 @@ export default function MediaManagerPage() {
   const [complianceWarnings, setComplianceWarnings] = useState<ComplianceWarning[]>([]);
   const [showComplianceDialog, setShowComplianceDialog] = useState(false);
   const [imageStyle, setImageStyle] = useState<ImageStyle>("senior_active");
+  // Partner distribution state
+  const [partnerEnabled, setPartnerEnabled] = useState(false);
+  const [partnerAudience, setPartnerAudience] = useState<"none" | "all" | "selected">("all");
+  const [partnerSelectedIds, setPartnerSelectedIds] = useState<string[]>([]);
 
   const { posts, isLoading, createDraft, updateDraft, approvePost, retryPost, publishPost, deletePost, isCreating, isUpdating, isApproving, isRetrying, isPublishing } = useSocialPosts(statusFilter);
   const { data: selectedPost } = useSocialPost(selectedPostId);
@@ -78,6 +83,10 @@ export default function MediaManagerPage() {
     setLanguage(post.language);
     setPostText(post.post_text || "");
     setImageUrl(post.image_url || "");
+    // Partner distribution
+    setPartnerEnabled(post.partner_enabled || false);
+    setPartnerAudience(post.partner_audience || "all");
+    setPartnerSelectedIds(post.partner_selected_partner_ids || []);
   };
 
   const handleClearForm = () => {
@@ -88,6 +97,10 @@ export default function MediaManagerPage() {
     setLanguage("both");
     setPostText("");
     setImageUrl("");
+    // Reset partner distribution
+    setPartnerEnabled(false);
+    setPartnerAudience("all");
+    setPartnerSelectedIds([]);
   };
 
   const handleSaveDraft = async () => {
@@ -99,6 +112,10 @@ export default function MediaManagerPage() {
         language,
         post_text: postText || undefined,
         image_url: imageUrl || undefined,
+        // Partner distribution
+        partner_enabled: partnerEnabled,
+        partner_audience: partnerEnabled ? partnerAudience : "none",
+        partner_selected_partner_ids: partnerEnabled && partnerAudience === "selected" ? partnerSelectedIds : undefined,
       };
 
       if (selectedPostId) {
@@ -561,6 +578,17 @@ export default function MediaManagerPage() {
                 </div>
               )}
             </div>
+
+            {/* Partner Distribution Section */}
+            <PartnerDistributionSection
+              enabled={partnerEnabled}
+              audience={partnerAudience}
+              selectedPartnerIds={partnerSelectedIds}
+              onEnabledChange={setPartnerEnabled}
+              onAudienceChange={setPartnerAudience}
+              onSelectedPartnersChange={setPartnerSelectedIds}
+              disabled={selectedPost?.status === "published"}
+            />
 
             {/* Action Buttons */}
             <div className="flex gap-2 pt-2">
