@@ -23,9 +23,7 @@ serve(async (req) => {
       .select("key, value")
       .in("key", [
         "settings_twilio_account_sid",
-        "settings_twilio_auth_token",
-        "settings_twilio_api_key_sid",
-        "settings_twilio_api_key_secret"
+        "settings_twilio_auth_token"
       ]);
 
     const config: Record<string, string> = {};
@@ -34,25 +32,7 @@ serve(async (req) => {
     });
 
     const accountSid = config.settings_twilio_account_sid;
-    
-    // Prefer API Keys, fall back to Auth Token
-    const apiKeySid = config.settings_twilio_api_key_sid;
-    const apiKeySecret = config.settings_twilio_api_key_secret;
     const authToken = config.settings_twilio_auth_token;
-    
-    // Debug logging (remove after debugging)
-    console.log("Twilio config check:", {
-      hasAccountSid: !!accountSid,
-      accountSidPrefix: accountSid?.substring(0, 6),
-      hasApiKeySid: !!apiKeySid,
-      apiKeySidPrefix: apiKeySid?.substring(0, 6),
-      hasApiKeySecret: !!apiKeySecret,
-      apiKeySecretLength: apiKeySecret?.length,
-      hasAuthToken: !!authToken,
-    });
-
-    const authUsername = apiKeySid || accountSid;
-    const authPassword = apiKeySecret || authToken;
 
     if (!accountSid) {
       return new Response(
@@ -64,11 +44,11 @@ serve(async (req) => {
       );
     }
 
-    if (!authPassword) {
+    if (!authToken) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "No authentication configured (API Key Secret or Auth Token required)" 
+          error: "Auth Token not configured" 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -76,12 +56,7 @@ serve(async (req) => {
 
     // Test credentials by fetching account info
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`;
-    const auth = btoa(`${authUsername}:${authPassword}`);
-    
-    console.log("Testing Twilio with:", {
-      url: twilioUrl,
-      authUsernamePrefix: authUsername?.substring(0, 6),
-    });
+    const auth = btoa(`${accountSid}:${authToken}`);
 
     const response = await fetch(twilioUrl, {
       method: "GET",
@@ -93,14 +68,12 @@ serve(async (req) => {
     const data = await response.json();
 
     if (response.ok) {
-      const authMethod = config.settings_twilio_api_key_sid ? "API Key" : "Auth Token";
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: `✓ Connected to Twilio account "${data.friendly_name}" using ${authMethod}`,
+          message: `✓ Connected to Twilio account "${data.friendly_name}"`,
           account_name: data.friendly_name,
-          account_status: data.status,
-          auth_method: authMethod
+          account_status: data.status
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

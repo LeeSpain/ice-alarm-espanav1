@@ -63,8 +63,6 @@ const KEY = {
   // Twilio (stored with settings_ prefix)
   TWILIO_SID: "settings_twilio_account_sid",
   TWILIO_TOKEN: "settings_twilio_auth_token",
-  TWILIO_API_KEY_SID: "settings_twilio_api_key_sid",
-  TWILIO_API_KEY_SECRET: "settings_twilio_api_key_secret",
   TWILIO_PHONE: "settings_twilio_phone_number",
   TWILIO_WA: "settings_twilio_whatsapp_number",
 
@@ -118,21 +116,15 @@ export default function SettingsPage() {
   // Twilio non-secret fields (safe to populate from DB)
   const [twilioKeys, setTwilioKeys] = useState({
     account_sid: "",
-    api_key_sid: "",
     phone_number: "",
     whatsapp_number: "",
   });
 
   // Twilio secret inputs - NEVER auto-filled from DB, only user input
   const [twilioAuthTokenInput, setTwilioAuthTokenInput] = useState("");
-  const [twilioApiKeySecretInput, setTwilioApiKeySecretInput] = useState("");
   
   // Twilio stored flags - derived from whether backend has a value
   const [twilioAuthTokenStored, setTwilioAuthTokenStored] = useState(false);
-  const [twilioApiKeySecretStored, setTwilioApiKeySecretStored] = useState(false);
-
-  // Visibility toggles for Twilio API Key Secret
-  const [showTwilioApiSecret, setShowTwilioApiSecret] = useState(false);
   
   // Twilio test state
   const [twilioTestStatus, setTwilioTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
@@ -208,14 +200,12 @@ export default function SettingsPage() {
     // Twilio non-secret fields - safe to populate
     setTwilioKeys({
       account_sid: settingsMap[KEY.TWILIO_SID] || "",
-      api_key_sid: settingsMap[KEY.TWILIO_API_KEY_SID] || "",
       phone_number: settingsMap[KEY.TWILIO_PHONE] || "",
       whatsapp_number: settingsMap[KEY.TWILIO_WA] || "",
     });
     
     // Twilio secret stored flags - NEVER touch the input fields
     setTwilioAuthTokenStored(!!settingsMap[KEY.TWILIO_TOKEN]);
-    setTwilioApiKeySecretStored(!!settingsMap[KEY.TWILIO_API_KEY_SECRET]);
 
     setGoogleMapsKey(settingsMap[KEY.GOOGLE_MAPS] || "");
 
@@ -259,7 +249,6 @@ export default function SettingsPage() {
       if (recentlySavedSection === "twilio") {
         // Clear secret inputs after successful save
         setTwilioAuthTokenInput("");
-        setTwilioApiKeySecretInput("");
         // Flags will be set to true by the subsequent refetch
       }
 
@@ -338,19 +327,14 @@ export default function SettingsPage() {
 
     // Non-secret fields
     if (twilioKeys.account_sid) updates[KEY.TWILIO_SID] = twilioKeys.account_sid;
-    if (twilioKeys.api_key_sid) updates[KEY.TWILIO_API_KEY_SID] = twilioKeys.api_key_sid;
     if (twilioKeys.phone_number) updates[KEY.TWILIO_PHONE] = twilioKeys.phone_number;
     if (twilioKeys.whatsapp_number) updates[KEY.TWILIO_WA] = twilioKeys.whatsapp_number;
 
     // Secret fields - only include if user typed something new
     const trimmedAuthToken = twilioAuthTokenInput.trim();
-    const trimmedApiKeySecret = twilioApiKeySecretInput.trim();
     
     if (trimmedAuthToken.length > 0) {
       updates[KEY.TWILIO_TOKEN] = trimmedAuthToken;
-    }
-    if (trimmedApiKeySecret.length > 0) {
-      updates[KEY.TWILIO_API_KEY_SECRET] = trimmedApiKeySecret;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -832,9 +816,7 @@ export default function SettingsPage() {
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
                 Twilio Configuration
-                {getIntegrationStatus([KEY.TWILIO_SID]) && 
-                 (getIntegrationStatus([KEY.TWILIO_API_KEY_SID, KEY.TWILIO_API_KEY_SECRET]) || 
-                  getIntegrationStatus([KEY.TWILIO_TOKEN])) ? (
+                {getIntegrationStatus([KEY.TWILIO_SID, KEY.TWILIO_TOKEN]) ? (
                   <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
                     <Check className="mr-1 h-3 w-3" />
                     Configured
@@ -867,12 +849,13 @@ export default function SettingsPage() {
                     onChange={(e) => setTwilioKeys((prev) => ({ ...prev, account_sid: e.target.value }))}
                     placeholder="AC..."
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Found in Twilio Console dashboard
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
-                    Auth Token <span className="text-muted-foreground text-xs">(optional if using API Keys)</span>
-                  </Label>
+                  <Label>Auth Token</Label>
                   {twilioAuthTokenStored && !twilioAuthTokenInput && (
                     <p className="text-xs text-alert-resolved flex items-center gap-1">
                       <Check className="h-3 w-3" /> Stored (hidden)
@@ -900,51 +883,8 @@ export default function SettingsPage() {
                       {showTwilioToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>API Key SID <span className="text-muted-foreground text-xs">(recommended)</span></Label>
-                  <Input
-                    value={twilioKeys.api_key_sid}
-                    onChange={(e) => setTwilioKeys((prev) => ({ ...prev, api_key_sid: e.target.value }))}
-                    placeholder="SK..."
-                  />
                   <p className="text-xs text-muted-foreground">
-                    Starts with SK. Create in Twilio Console → Account → API keys
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>API Key Secret</Label>
-                  {twilioApiKeySecretStored && !twilioApiKeySecretInput && (
-                    <p className="text-xs text-alert-resolved flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Stored (hidden)
-                    </p>
-                  )}
-                  {!twilioApiKeySecretStored && !twilioApiKeySecretInput && (
-                    <p className="text-xs text-muted-foreground">Not set</p>
-                  )}
-                  <div className="relative">
-                    <Input
-                      type={showTwilioApiSecret ? "text" : "password"}
-                      value={twilioApiKeySecretInput}
-                      onChange={(e) => setTwilioApiKeySecretInput(e.target.value)}
-                      placeholder={twilioApiKeySecretStored ? "Paste new secret to replace" : "Enter API key secret"}
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 z-10"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setShowTwilioApiSecret((prev) => !prev)}
-                    >
-                      {showTwilioApiSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Shown only once when creating the API Key
+                    Click "Show" next to Auth Token in Twilio Console
                   </p>
                 </div>
 
@@ -981,7 +921,7 @@ export default function SettingsPage() {
                   variant="outline" 
                   onClick={async () => {
                     // Warn if there are unsaved secret inputs
-                    if (twilioAuthTokenInput.trim() || twilioApiKeySecretInput.trim()) {
+                    if (twilioAuthTokenInput.trim()) {
                       toast({
                         title: "Unsaved changes",
                         description: "Please save your changes before testing the connection.",
