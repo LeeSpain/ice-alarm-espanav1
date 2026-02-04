@@ -1,76 +1,160 @@
 
 
-# Fix Blog Page to Show Published Posts
+# Switch to Twilio API Keys for Enhanced Security
 
-## Problem Identified
+## Overview
 
-The blog page shows "No articles yet" because:
+This change replaces the current authentication method (Account SID + Auth Token) with Twilio API Keys (Account SID + API Key SID + API Key Secret). This is a security best practice that allows you to:
 
-1. **RLS Policy Conflict**: The `social_posts` table only allows **staff** to SELECT records
-2. **Join Failure**: The `!inner` join in `useBlogPosts` requires read access to both `blog_posts` AND `social_posts`
-3. **Anonymous Access Blocked**: Public visitors (unauthenticated) cannot read `social_posts`, so the join returns empty
+- **Restrict permissions** - API Keys can have limited scope
+- **Rotate keys safely** - Revoke compromised keys without affecting the main account
+- **Better audit trail** - Track which key was used for each request
 
-## Solution
+## Current Implementation
 
-Two options to fix this:
-
-### Option A: Add Public Read Policy for Published Social Posts (Recommended)
-
-Add an RLS policy that allows anonymous users to read social posts with `status = 'published'`. This is safe since published posts are already public on Facebook.
-
-```sql
-CREATE POLICY "Anyone can read published social posts"
-ON social_posts FOR SELECT
-USING (status = 'published');
+Currently, all 3 Twilio edge functions authenticate using:
+```
+Authorization: Basic base64(AccountSID:AuthToken)
 ```
 
-This approach:
-- Keeps the blog/social post relationship intact
-- Allows the `!inner` join to work for public visitors
-- Only exposes already-public content (Facebook posts)
-- Maintains staff-only access for non-published content
+**Files affected:**
+- `supabase/functions/twilio-sms/index.ts`
+- `supabase/functions/twilio-voice/index.ts`
+- `supabase/functions/twilio-whatsapp/index.ts`
 
-### Option B: Rewrite Query Without Join (Alternative)
-
-Change the hook to:
-1. First fetch published social post IDs
-2. Then filter blog posts by those IDs
-
-This is more complex and requires extra logic.
+**Settings stored in `system_settings`:**
+- `twilio_account_sid`
+- `twilio_auth_token`
+- `twilio_phone_number`
+- `twilio_whatsapp_number`
 
 ---
 
-## Implementation Plan
+## Proposed Changes
 
-### Step 1: Add Database Migration
+### 1. Add New Database Settings Keys
 
-Create a new RLS policy on `social_posts` to allow public read access for published posts:
+Add two new settings to store the API Key credentials:
 
-```sql
--- Allow public read access to published social posts
-CREATE POLICY "Anyone can read published social posts"
-ON social_posts FOR SELECT
-USING (status = 'published');
+| New Key | Description |
+|---------|-------------|
+| `twilio_api_key_sid` | The API Key SID (starts with `SK...`) |
+| `twilio_api_key_secret` | The API Key Secret |
+
+The existing `twilio_account_sid` remains required for API calls.
+
+### 2. Update Admin Settings UI
+
+Modify `src/pages/admin/SettingsPage.tsx` to:
+
+- Add input fields for **API Key SID** and **API Key Secret**
+- Keep the Auth Token field for backward compatibility (optional fallback)
+- Update the save handler to include new keys
+- Add helper text explaining the API Key benefits
+
+```text
+Current UI:
++-----------------------+-----------------------+
+| Account SID           | Auth Token            |
++-----------------------+-----------------------+
+| Phone Number          | WhatsApp Number       |
++-----------------------+-----------------------+
+
+New UI:
++-----------------------+-----------------------+
+| Account SID           | Auth Token (optional) |
++-----------------------+-----------------------+
+| API Key SID           | API Key Secret        |
++-----------------------+-----------------------+
+| Phone Number          | WhatsApp Number       |
++-----------------------+-----------------------+
 ```
 
-### Step 2: Verify Hook Logic
+### 3. Update Edge Functions
 
-The current `useBlogPosts` query will work correctly once the RLS policy is added:
+Modify all 3 Twilio edge functions to:
+
+1. Fetch the new API Key settings alongside existing ones
+2. Prefer API Keys for authentication when available
+3. Fall back to Auth Token if API Keys not configured
+
+**Authentication logic change:**
 
 ```typescript
-// This will now return results for anonymous users
-let query = supabase
-  .from("blog_posts")
-  .select(`
-    *,
-    social_posts!inner(id, status)
-  `)
-  .eq("published", true)
-  .eq("social_posts.status", "published")
-  .not("published_at", "is", null)
-  .lte("published_at", new Date().toISOString())
-  .order("published_at", { ascending: false });
+// BEFORE (current)
+const auth = btoa(`${accountSid}:${authToken}`);
+
+// AFTER (with API Keys)
+const username = apiKeySid || accountSid;
+const password = apiKeySecret || authToken;
+const auth = btoa(`${username}:${password}`);
 ```
+
+---
+
+## Technical Implementation
+
+### Step 1: Update SettingsPage.tsx
+
+**Add new KEY constants:**
+```typescript
+TWILIO_API_KEY_SID: "twilio_api_key_sid",
+TWILIO_API_KEY_SECRET: "twilio_api_key_secret",
+```
+
+**Update twilioKeys state:**
+```typescript
+const [twilioKeys, setTwilioKeys] = useState({
+  account_sid: "",
+  auth_token: "",
+  api_key_sid: "",      // NEW
+  api_key_secret: "",   // NEW
+  phone_number: "",
+  whatsapp_number: "",
+});
+```
+
+**Add new input fields in the UI** for API Key SID and API Key Secret with masked input and visibility toggle.
+
+### Step 2: Update twilio-sms/index.ts
+
+**Fetch new settings:**
+```typescript
+const { data: settings } = await supabase
+  .from("system_settings")
+  .select("key, value")
+  .in("key", [
+    "twilio_account_sid",
+    "twilio_auth_token",
+    "twilio_api_key_sid",      // NEW
+    "twilio_api_key_secret",   // NEW
+    "twilio_phone_number"
+  ]);
+```
+
+**Updated authentication:**
+```typescript
+// Prefer API Keys, fall back to Auth Token
+const authUsername = twilioConfig.twilio_api_key_sid || twilioConfig.twilio_account_sid;
+const authPassword = twilioConfig.twilio_api_key_secret || twilioConfig.twilio_auth_token;
+
+if (!twilioConfig.twilio_account_sid || !authPassword) {
+  return new Response(
+    JSON.stringify({ error: "Twilio not configured" }),
+    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+const auth = btoa(`${authUsername}:${authPassword}`);
+```
+
+### Step 3: Update twilio-voice/index.ts
+
+Apply the same authentication pattern changes as twilio-sms.
+
+### Step 4: Update twilio-whatsapp/index.ts
+
+Apply the same authentication pattern changes as twilio-sms, also including the WhatsApp number in settings fetch.
 
 ---
 
@@ -78,23 +162,38 @@ let query = supabase
 
 | File | Change |
 |------|--------|
-| Database migration | Add RLS policy for public read of published social posts |
+| `src/pages/admin/SettingsPage.tsx` | Add API Key SID/Secret fields and state |
+| `supabase/functions/twilio-sms/index.ts` | Fetch new keys, prefer API Key auth |
+| `supabase/functions/twilio-voice/index.ts` | Fetch new keys, prefer API Key auth |
+| `supabase/functions/twilio-whatsapp/index.ts` | Fetch new keys, prefer API Key auth |
+
+---
+
+## Migration Path
+
+1. **No breaking changes** - Auth Token continues to work
+2. Generate API Key in Twilio Console (Account > API keys)
+3. Enter API Key SID and Secret in admin settings
+4. (Optional) Remove Auth Token after confirming API Keys work
+
+---
+
+## How to Create a Twilio API Key
+
+1. Go to [Twilio Console](https://console.twilio.com/)
+2. Navigate to **Account** > **API keys & tokens**
+3. Click **Create API Key**
+4. Choose **Standard** or **Restricted** key type
+5. Copy the **SID** (starts with `SK`) and **Secret**
+6. Enter these values in the admin settings panel
 
 ---
 
 ## Expected Result
 
 After implementation:
-- Blog page will display **3 blog posts** (matching the published social posts with linked blogs)
-- New Facebook publications will automatically appear on the blog
-- Unpublishing from Media Manager will remove posts from the blog
-- Staff-only social posts (drafts, approved, failed) remain hidden from public
-
----
-
-## Technical Notes
-
-- The existing `Anyone can read published posts` policy on `blog_posts` remains unchanged
-- The new policy on `social_posts` is additive (doesn't affect existing staff policies)
-- This follows the principle of least privilege - only exposing what's already public
+- Admin settings will show new API Key fields
+- Edge functions will use API Keys when configured
+- Backward compatible with Auth Token if API Keys not set
+- No changes needed to webhook URLs or call logic
 
