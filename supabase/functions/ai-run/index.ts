@@ -1042,7 +1042,18 @@ REMEMBER: Every word you write will be spoken aloud. Write as you would naturall
           .eq("status", "active")
           .maybeSingle();
 
+        // Fetch emergency contacts for this member
+        const { data: emergencyContacts } = await supabase
+          .from("emergency_contacts")
+          .select("contact_name, relationship, phone, priority_order")
+          .eq("member_id", memberId)
+          .order("priority_order", { ascending: true });
+
         if (member) {
+          const emergencyContactsList = emergencyContacts?.length 
+            ? emergencyContacts.map((c, i) => `${i + 1}. ${c.contact_name} (${c.relationship}) - ${c.phone}`).join('\n')
+            : "No emergency contacts configured";
+
           memberContext = `
 
 ## Caller Identity (VERIFIED MEMBER)
@@ -1051,7 +1062,11 @@ REMEMBER: Every word you write will be spoken aloud. Write as you would naturall
 - Status: ${member.status}
 - Subscription: ${subscription?.plan_type || "Unknown"} (${subscription?.status || "check"})
 
+## Emergency Contacts on File
+${emergencyContactsList}
+
 Use their name naturally in conversation. They are an existing member.
+When discussing emergency contacts, use the EXACT names listed above - never invent or guess names.
 `;
         }
       }
