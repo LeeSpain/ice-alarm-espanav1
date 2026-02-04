@@ -27,9 +27,9 @@ export function AIInstructionsTab({ agent, config }: AIInstructionsTabProps) {
         configId: config.id,
         updates: { system_instruction: systemInstruction, business_context: businessContext }
       });
-      toast({ title: t("common.saved"), description: t("ai.instructionsSaved") });
+      toast({ title: t("common.saved", "Saved"), description: t("ai.instructionsSaved", "Instructions saved successfully") });
     } catch {
-      toast({ title: t("common.error"), variant: "destructive" });
+      toast({ title: t("common.error", "Error"), variant: "destructive" });
     }
   };
 
@@ -37,8 +37,8 @@ export function AIInstructionsTab({ agent, config }: AIInstructionsTabProps) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{t("ai.systemInstruction")}</CardTitle>
-          <CardDescription>{t("ai.systemInstructionDesc")}</CardDescription>
+          <CardTitle>{t("ai.systemInstruction", "System Instruction")}</CardTitle>
+          <CardDescription>{t("ai.systemInstructionDesc", "The core instructions that define how this agent behaves.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -51,8 +51,8 @@ export function AIInstructionsTab({ agent, config }: AIInstructionsTabProps) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{t("ai.businessContext")}</CardTitle>
-          <CardDescription>{t("ai.businessContextDesc")}</CardDescription>
+          <CardTitle>{t("ai.businessContext", "Business Context")}</CardTitle>
+          <CardDescription>{t("ai.businessContextDesc", "Additional context about your business for the agent.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
@@ -63,7 +63,7 @@ export function AIInstructionsTab({ agent, config }: AIInstructionsTabProps) {
           />
           <Button onClick={handleSave} disabled={updateConfig.isPending}>
             <Save className="h-4 w-4 mr-2" />
-            {t("common.save")}
+            {t("common.save", "Save")}
           </Button>
         </CardContent>
       </Card>

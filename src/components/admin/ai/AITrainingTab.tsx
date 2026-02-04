@@ -13,12 +13,12 @@ export function AITrainingTab({ agent }: AITrainingTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("ai.trainingData")}</CardTitle>
-        <CardDescription>{t("ai.trainingDataDesc")}</CardDescription>
+        <CardTitle>{t("ai.trainingData", "Training Data")}</CardTitle>
+        <CardDescription>{t("ai.trainingDataDesc", "Q&A pairs and examples that help train this agent.")}</CardDescription>
       </CardHeader>
       <CardContent>
         {trainingEntries.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t("ai.noTrainingData")}</p>
+          <p className="text-muted-foreground text-sm">{t("ai.noTrainingData", "No training data added yet. Add memory entries with the 'training' tag.")}</p>
         ) : (
           <div className="space-y-2">
             {trainingEntries.map(e => (

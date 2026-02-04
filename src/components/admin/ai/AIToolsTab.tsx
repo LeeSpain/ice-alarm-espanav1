@@ -40,9 +40,9 @@ export function AIToolsTab({ agent, config }: AIToolsTabProps) {
         configId: config.id,
         updates: { read_permissions: readPerms, write_permissions: writePerms, tool_policy: toolPolicy }
       });
-      toast({ title: t("common.saved") });
+      toast({ title: t("common.saved", "Saved") });
     } catch {
-      toast({ title: t("common.error"), variant: "destructive" });
+      toast({ title: t("common.error", "Error"), variant: "destructive" });
     }
   };
 
@@ -50,21 +50,21 @@ export function AIToolsTab({ agent, config }: AIToolsTabProps) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{t("ai.operatingMode")}</CardTitle>
+          <CardTitle>{t("ai.operatingMode", "Operating Mode")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Select value={mode} onValueChange={(v: any) => setMode(v)}>
             <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="advise_only">{t("ai.modes.adviseOnly")}</SelectItem>
-              <SelectItem value="draft_only">{t("ai.modes.draftOnly")}</SelectItem>
-              <SelectItem value="auto_act">{t("ai.modes.autoAct")}</SelectItem>
+              <SelectItem value="advise_only">{t("ai.modes.adviseOnly", "Advise Only")}</SelectItem>
+              <SelectItem value="draft_only">{t("ai.modes.draftOnly", "Draft Only")}</SelectItem>
+              <SelectItem value="auto_act">{t("ai.modes.autoAct", "Auto Act")}</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>{t("ai.readPermissions")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("ai.readPermissions", "Read Permissions")}</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {ALL_READ_PERMISSIONS.map(perm => (
             <Badge key={perm} variant={readPerms.includes(perm) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleReadPerm(perm)}>{perm}</Badge>
@@ -72,7 +72,7 @@ export function AIToolsTab({ agent, config }: AIToolsTabProps) {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>{t("ai.writePermissions")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("ai.writePermissions", "Write Permissions")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {ALL_WRITE_PERMISSIONS.map(perm => (
             <div key={perm} className="flex items-center justify-between">
@@ -82,7 +82,7 @@ export function AIToolsTab({ agent, config }: AIToolsTabProps) {
               </div>
               {writePerms.includes(perm) && mode === "auto_act" && (
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">{t("ai.autoExecute")}</Label>
+                  <Label className="text-xs text-muted-foreground">{t("ai.autoExecute", "Auto Execute")}</Label>
                   <Switch checked={!!toolPolicy[perm]} onCheckedChange={() => toggleToolPolicy(perm)} />
                 </div>
               )}
@@ -90,7 +90,7 @@ export function AIToolsTab({ agent, config }: AIToolsTabProps) {
           ))}
         </CardContent>
       </Card>
-      <Button onClick={handleSave}><Save className="h-4 w-4 mr-2" />{t("common.save")}</Button>
+      <Button onClick={handleSave}><Save className="h-4 w-4 mr-2" />{t("common.save", "Save")}</Button>
     </div>
   );
 }

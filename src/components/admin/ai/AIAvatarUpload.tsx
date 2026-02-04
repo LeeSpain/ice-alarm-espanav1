@@ -28,7 +28,7 @@ export function AIAvatarUpload({ agent }: AIAvatarUploadProps) {
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
       toast({
-        title: t("common.error"),
+        title: t("common.error", "Error"),
         description: t("ai.avatarInvalidType", "Please upload a JPG, PNG, or WebP image"),
         variant: "destructive",
       });
@@ -38,7 +38,7 @@ export function AIAvatarUpload({ agent }: AIAvatarUploadProps) {
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: t("common.error"),
+        title: t("common.error", "Error"),
         description: t("ai.avatarTooLarge", "Image must be less than 5MB"),
         variant: "destructive",
       });
@@ -90,7 +90,7 @@ export function AIAvatarUpload({ agent }: AIAvatarUploadProps) {
     } catch (error) {
       console.error("Avatar upload error:", error);
       toast({
-        title: t("common.error"),
+        title: t("common.error", "Error"),
         description: t("ai.avatarUploadError", "Failed to upload avatar"),
         variant: "destructive",
       });
@@ -132,7 +132,7 @@ export function AIAvatarUpload({ agent }: AIAvatarUploadProps) {
     } catch (error) {
       console.error("Avatar remove error:", error);
       toast({
-        title: t("common.error"),
+        title: t("common.error", "Error"),
         description: t("ai.avatarRemoveError", "Failed to remove avatar"),
         variant: "destructive",
       });
