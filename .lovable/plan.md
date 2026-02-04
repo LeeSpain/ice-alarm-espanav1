@@ -1,230 +1,294 @@
 
-# Media Manager - Unpublish Post Feature
+# Media Manager - Enhanced Content Variety & Image Diversity
 
-## Summary
+## Problem Analysis
 
-You want to completely remove a published post from **both Facebook and the blog**. Currently, the Published Performance section only shows metrics and links to view posts - there's no way to unpublish or delete content once it's live.
+Based on my review of your current implementation, I've identified two key issues:
 
----
+### 1. Repetitive AI-Written Content
+The current `media-draft` edge function uses a **static system prompt** with:
+- Fixed messaging themes (only 6 approved themes)
+- Same tone/style instructions every time
+- No randomization or variety mechanisms
+- Limited creative direction for different post types
 
-## Current Architecture
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Publishing Flow (Existing)                       │
-└─────────────────────────────────────────────────────────────────────┘
-
-  social_posts (status: approved)
-         ↓
-  facebook-publish edge function
-         ↓
-  ┌──────────────┬──────────────────┐
-  │   Facebook   │    blog_posts    │
-  │  (external)  │   (database)     │
-  └──────────────┴──────────────────┘
-         ↓
-  social_posts (status: published, facebook_post_id set)
-```
-
-### Data Relationships
-- Each `social_post` has a linked `blog_posts` record via `social_post_id`
-- The `facebook_post_id` is stored in both tables
-- Currently there's no "unpublish" workflow
+### 2. Similar-Looking Images
+The `generate-ai-image` function has:
+- Only 6 fixed image style templates
+- Very similar prompts with the same camera angles, lighting, and compositions
+- No variety modifiers for scene, time of day, subjects, or settings
+- All images end up with the same "golden Mediterranean light" look
 
 ---
 
-## Proposed Solution
+## Solution Overview
 
-### New Edge Function: `facebook-unpublish`
+I'll implement a **Variety Engine** that introduces controlled randomization while maintaining brand consistency.
 
-Create a new backend function that:
-1. Accepts a `post_id` (social_posts.id)
-2. Calls Facebook Graph API to DELETE the post
-3. Unpublishes/deletes the linked blog post
-4. Updates the social post status back to "draft" or marks it as "archived"
-5. Cleans up metrics from `social_post_metrics`
+### Content Improvements
+1. **Writing Style Variations** - Add tone modifiers (heartfelt, informative, celebratory, conversational)
+2. **Post Format Templates** - Different structures (story, question, statistic, testimonial-style, tip list)
+3. **Hook Library** - Randomized opening lines that grab attention
+4. **Seasonal/Contextual Awareness** - Time-appropriate content angles
 
-### UI Changes
-
-Add an "Unpublish" button to each published post card with a confirmation dialog that explains:
-- The post will be deleted from Facebook
-- The blog article will be removed
-- Engagement metrics will be lost
+### Image Improvements
+1. **Expanded Style Variations** - Add sub-variations within each style category
+2. **Scene Randomization** - Different locations, times of day, weather, activities
+3. **Subject Diversity** - Varied ages (65-85), ethnicities, gender combinations
+4. **Composition Variety** - Different camera angles, framing, focal points
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Create `facebook-unpublish` Edge Function
+### Step 1: Enhanced `media-draft` Edge Function
 
-**File**: `supabase/functions/facebook-unpublish/index.ts`
+**File**: `supabase/functions/media-draft/index.ts`
 
-The function will:
-1. Authenticate the request (staff only)
-2. Fetch the post and verify it's published
-3. Get Facebook credentials from `system_settings`
-4. Call Facebook Graph API: `DELETE /{post_id}?access_token=...`
-5. Delete or unpublish the linked blog post
-6. Delete metrics from `social_post_metrics`
-7. Update social post status to "archived" (new status) or "draft"
-8. Return success/failure
-
-```text
-POST /facebook-unpublish
-Body: { post_id: "uuid" }
-Response: { success: true, deleted_from_facebook: true, blog_removed: true }
-```
-
-### Step 2: Update Database Schema
-
-Add a new status value "archived" to track unpublished posts:
-
-```sql
--- Option A: Update social_posts to allow "archived" status
--- (The status column is text, so no schema change needed)
-
--- Delete metrics when post is unpublished
--- (Will be done programmatically in the edge function)
-```
-
-### Step 3: Add `unpublishPost` Mutation to Hook
-
-**File**: `src/hooks/usePublishedPosts.ts`
-
-Add a new mutation that calls the edge function:
+Add variety mechanisms to the content generation:
 
 ```typescript
-const unpublishMutation = useMutation({
-  mutationFn: async (postId: string) => {
-    const { data, error } = await supabase.functions.invoke("facebook-unpublish", {
-      body: { post_id: postId },
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
-    toast({ title: "Post unpublished", description: "..." });
-  }
-});
+// NEW: Writing tone variations (randomly selected)
+const WRITING_TONES = [
+  "heartfelt and emotional - focus on family connections",
+  "informative and educational - share valuable tips",
+  "conversational and friendly - like chatting with a neighbor",
+  "celebratory and positive - highlight independence and joy",
+  "reassuring and calm - address common concerns gently",
+  "inspiring and motivational - encourage active aging"
+];
+
+// NEW: Post format templates
+const POST_FORMATS = [
+  "story_format: Start with 'Imagine...' or 'Picture this...' and tell a brief scenario",
+  "question_hook: Open with a thought-provoking question that resonates with the audience",
+  "statistic_lead: Lead with a compelling statistic about seniors/safety in Spain",
+  "tip_list: Present 2-3 quick, actionable tips in a numbered format",
+  "testimonial_style: Write as if sharing a customer's experience (without naming)",
+  "day_in_life: Describe a typical peaceful day with ICE Alarm providing background safety",
+  "myth_buster: Address a common misconception about elderly care or emergency pendants"
+];
+
+// NEW: Seasonal hooks (based on current date)
+const SEASONAL_HOOKS = {
+  winter: ["staying safe during cooler months", "holiday family gatherings"],
+  spring: ["enjoying outdoor activities", "gardening safely"],
+  summer: ["beach safety", "staying active in the heat", "travel with peace of mind"],
+  autumn: ["cozy indoor activities", "preparing for winter"]
+};
 ```
 
-### Step 4: Add Unpublish Button with Confirmation Dialog
+The AI prompt will now include:
+- A randomly selected **tone modifier**
+- A randomly selected **post format**
+- Seasonal context based on current date
+- Instructions to **avoid** recently used phrases (anti-repetition)
 
-**File**: `src/components/admin/media/PublishedPostCard.tsx`
+### Step 2: Enhanced System Prompt with Variety Instructions
 
-Add a dropdown menu or secondary button with:
-- "Unpublish" option
-- Confirmation dialog explaining the consequences
-- Loading state during unpublish
+Update the `MEDIA_MANAGER_PROMPT` to include:
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  [Image]                                        │
-│  Topic: Living in Spain...                      │
-│  📅 Published: Feb 4, 2026                      │
-│  ❤️ 12 reactions  💬 3 comments  🔄 2 shares   │
-│                                                 │
-│  [Refresh]  [View on Facebook]  [⋮]            │
-│                               ↓                 │
-│                          ┌──────────┐           │
-│                          │ Unpublish│           │
-│                          └──────────┘           │
-└─────────────────────────────────────────────────┘
+## Creative Variety Instructions
+
+For THIS specific post, use the following creative direction:
+- **Writing Tone**: ${selectedTone}
+- **Post Format**: ${selectedFormat}
+- **Seasonal Context**: ${seasonalHook}
+
+ANTI-REPETITION RULES:
+- Do NOT use these overused phrases: "peace of mind", "24/7 support" in every post
+- Vary your emoji placement and quantity (sometimes 0-2, sometimes 4-5)
+- Use different CTA phrasing each time (examples: "Message us today", "Let's chat", "Get started", "Learn more")
+- Vary hashtag count between 3-7
+- Mix sentence lengths: combine short punchy lines with longer descriptive ones
+
+CREATIVITY REQUIREMENTS:
+- Include at least ONE unexpected or creative element (metaphor, question, mini-story)
+- Vary paragraph structure (single block vs. broken into lines)
+- Occasionally address the reader directly ("You deserve...", "Have you ever...")
 ```
 
-### Step 5: Create Confirmation Dialog Component
+### Step 3: Enhanced `generate-ai-image` Edge Function
 
-**File**: `src/components/admin/media/UnpublishPostDialog.tsx`
+**File**: `supabase/functions/generate-ai-image/index.ts`
 
-A dialog that warns the user about permanent deletion from:
-- Facebook (cannot be recovered)
-- Blog page (will return 404)
-- Metrics data (will be deleted)
+Add image variety modifiers:
 
-### Step 6: Add Translations
+```typescript
+// NEW: Scene variations for each location type
+const LOCATION_VARIANTS = [
+  "sunny terrace overlooking the Mediterranean sea",
+  "charming courtyard with potted plants and tile work",
+  "olive grove with dappled sunlight",
+  "seaside promenade at golden hour",
+  "traditional Spanish plaza with café tables",
+  "colorful flower garden with stone walls",
+  "rustic vineyard in Andalusia",
+  "whitewashed village street in Costa Blanca",
+  "modern apartment balcony with sea views",
+  "peaceful park bench under pine trees"
+];
 
-**Files**: `src/i18n/locales/en.json` and `es.json`
+// NEW: Time of day/lighting variations
+const LIGHTING_VARIANTS = [
+  "warm golden hour morning light, long soft shadows",
+  "bright midday Spanish sun, vibrant colors",
+  "soft overcast day, even gentle lighting",
+  "late afternoon warmth, amber tones",
+  "early morning mist with soft diffused light"
+];
 
-```json
-"unpublish": {
-  "button": "Unpublish",
-  "title": "Unpublish Post",
-  "description": "This will permanently remove the post from Facebook and delete the associated blog article. This action cannot be undone.",
-  "warning": "All engagement metrics will be lost.",
-  "confirm": "Yes, Unpublish",
-  "cancel": "Cancel",
-  "success": "Post unpublished successfully",
-  "error": "Failed to unpublish post"
-}
+// NEW: Activity variations
+const ACTIVITY_VARIANTS = [
+  "enjoying a cup of coffee",
+  "reading a book",
+  "walking with a small dog",
+  "tending to garden flowers",
+  "playing cards or dominoes",
+  "having lunch with friends",
+  "doing gentle stretching exercises",
+  "chatting on the phone with family",
+  "painting or doing crafts",
+  "watching the sunset"
+];
+
+// NEW: Subject demographic variations
+const SUBJECT_VARIANTS = [
+  "a cheerful woman in her early 70s with silver hair",
+  "a distinguished gentleman in his late 60s",
+  "a couple in their 70s, holding hands",
+  "an elegant woman in her 80s, well-dressed",
+  "a fit, active-looking man in his early 70s",
+  "a grandmother-type figure with warm smile",
+  "a stylish retired professional woman",
+  "a friendly-looking widower in his 70s"
+];
+
+// NEW: Camera/composition variations
+const COMPOSITION_VARIANTS = [
+  "medium shot, subject centered, environmental context visible",
+  "close-up portrait style, shallow depth of field",
+  "wide establishing shot showing the beautiful setting",
+  "candid moment, slightly off-center composition",
+  "three-quarter view, natural interaction with environment"
+];
 ```
+
+The image prompt will now randomly select:
+- 1 location variant
+- 1 lighting variant
+- 1 activity variant
+- 1 subject variant
+- 1 composition variant
+
+This creates **thousands of unique combinations** instead of 6 fixed templates.
+
+### Step 4: Add More Image Style Options
+
+**File**: `src/hooks/useAIImageGenerator.ts`
+
+Expand the image style options:
+
+```typescript
+export type ImageStyle = 
+  | "senior_active" 
+  | "family_peace" 
+  | "pendant_focus" 
+  | "spanish_lifestyle" 
+  | "independence" 
+  | "peace_of_mind"
+  | "from_post_text"
+  // NEW styles:
+  | "social_connection"    // Friends meeting, community
+  | "daily_routine"        // Morning coffee, reading, hobbies
+  | "outdoor_adventure"    // Walking, beach, nature
+  | "home_comfort"         // Cozy interiors, safe at home
+  | "technology_simple"    // Easy tech, modern living
+  | "surprise_me";         // Fully randomized
+```
+
+### Step 5: "Surprise Me" Randomization Mode
+
+Add a special **"Surprise Me"** option that:
+- Randomly picks a base style
+- Applies random modifiers for location, lighting, activity, subject, and composition
+- Guarantees every image is unique
 
 ---
 
-## Files to Create/Modify
+## Files to Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `supabase/functions/facebook-unpublish/index.ts` | **Create** | New edge function for unpublishing |
-| `supabase/config.toml` | **Update** | Add function config with `verify_jwt = false` |
-| `src/hooks/usePublishedPosts.ts` | **Update** | Add `unpublishPost` mutation |
-| `src/components/admin/media/PublishedPostCard.tsx` | **Update** | Add dropdown menu with Unpublish option |
-| `src/components/admin/media/UnpublishPostDialog.tsx` | **Create** | Confirmation dialog component |
-| `src/i18n/locales/en.json` | **Update** | Add unpublish translations |
-| `src/i18n/locales/es.json` | **Update** | Add Spanish unpublish translations |
+| File | Changes |
+|------|---------|
+| `supabase/functions/media-draft/index.ts` | Add variety engine with tone/format/seasonal randomization |
+| `supabase/functions/generate-ai-image/index.ts` | Add location/lighting/activity/subject/composition variants |
+| `src/hooks/useAIImageGenerator.ts` | Add new image styles including "surprise_me" |
+| `src/i18n/locales/en.json` | Add translations for new image styles |
+| `src/i18n/locales/es.json` | Add Spanish translations for new styles |
 
 ---
 
 ## Technical Details
 
-### Facebook Graph API Delete Request
+### Variety Selection Logic (Backend)
 
 ```typescript
-// DELETE request to remove a post from Facebook
-const deleteUrl = `https://graph.facebook.com/v24.0/${facebookPostId}?access_token=${accessToken}`;
-const response = await fetch(deleteUrl, { method: "DELETE" });
-const result = await response.json();
-
-if (result.success) {
-  // Post deleted successfully
+function selectVariety<T>(array: T[]): T {
+  const randomIndex = Math.floor(Math.random() * array.length);
+  return array[randomIndex];
 }
+
+function getCurrentSeason(): string {
+  const month = new Date().getMonth();
+  if (month >= 2 && month <= 4) return "spring";
+  if (month >= 5 && month <= 7) return "summer";
+  if (month >= 8 && month <= 10) return "autumn";
+  return "winter";
+}
+
+// Build dynamic prompt with variety
+const tone = selectVariety(WRITING_TONES);
+const format = selectVariety(POST_FORMATS);
+const season = getCurrentSeason();
+const seasonalHooks = selectVariety(SEASONAL_HOOKS[season]);
 ```
 
-### Blog Post Handling
+### Image Prompt Construction (Example Output)
 
-Two options for the blog post:
-1. **Delete completely** - Remove from `blog_posts` table
-2. **Soft delete** - Set `published = false` (keeps content for potential republishing)
+**Before (static):**
+> "A happy senior wearing an ICE Alarm SOS pendant, enjoying outdoor activities in a sunny Spanish Mediterranean setting..."
 
-I recommend Option 1 (complete delete) since the Facebook post is also deleted, and keeping orphaned blog content could cause confusion.
-
-### Audit Logging
-
-The unpublish action will be logged to the audit trail for accountability.
-
----
-
-## Edge Cases Handled
-
-1. **Facebook API fails**: Blog post still removed locally, error message shown
-2. **Token expired**: Show token expired error, prompt to update in Settings
-3. **Post already deleted from Facebook**: Gracefully handle 404, still clean up local data
-4. **Blog post doesn't exist**: Skip blog deletion step (some older posts may not have linked blogs)
-5. **Metrics don't exist**: Skip metrics cleanup if none found
+**After (dynamic):**
+> "A distinguished gentleman in his late 60s wearing an ICE Alarm SOS pendant around his neck, playing dominoes at a traditional Spanish plaza with café tables. Late afternoon warmth with amber tones. Candid moment, slightly off-center composition. Professional documentary-style photography..."
 
 ---
 
 ## Expected Results
 
-After implementation:
-1. Each published post card will have an "Unpublish" option in a dropdown menu
-2. Clicking it shows a confirmation dialog with clear warnings
-3. Upon confirmation:
-   - Post is deleted from Facebook
-   - Blog article is removed from the database
-   - Metrics are cleaned up
-   - Social post status changes to "archived"
-4. Toast notification confirms success/failure
-5. Post disappears from the Published Performance grid
+### Content Variety
+- Posts will have different **tones** (heartfelt vs informative vs celebratory)
+- Different **formats** (questions vs stories vs tip lists)
+- Different **CTAs** and **hashtag counts**
+- Seasonal relevance
+
+### Image Variety
+- Different **locations** (terrace, plaza, garden, beach, village)
+- Different **lighting** (morning, midday, golden hour, overcast)
+- Different **activities** (reading, walking, gardening, socializing)
+- Different **subjects** (varied ages 65-85, gender mix, couples/individuals)
+- Different **compositions** (close-up, wide, candid, centered)
+
+This creates **10,000+ unique combinations** while staying 100% on-brand with the warm, caring, trustworthy ICE Alarm voice.
+
+---
+
+## Preserved Brand Guardrails
+
+All compliance rules remain unchanged:
+- No medical guarantees
+- Forbidden phrases still blocked
+- CTAs always included
+- Pendant visibility requirement for images
+- Mediterranean warm color palette maintained
+- Professional photography quality standard
