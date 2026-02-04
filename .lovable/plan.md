@@ -1,103 +1,124 @@
 
+# Fix Member Deletion and AI Emergency Contact Hallucination
 
-# Fix Twilio 11200 Error - Simplified Queue Approach
+## Problems Identified
 
-## Problem Analysis
+### Problem 1: Member Deletion Fails
+The current delete logic in `MemberDetailPage.tsx` performs a simple `DELETE FROM members` which fails silently due to 5 foreign key constraints without `ON DELETE CASCADE`:
 
-The current AI-powered `incoming` handler performs multiple async operations (member lookup, session creation, alert insertion) before returning TwiML. If **any** of these fail, Twilio gets no response → error 11200.
+- `internal_tickets.member_id`
+- `leads.converted_member_id`
+- `registration_drafts.converted_member_id`
+- `crm_contacts.linked_member_id`
+- `crm_import_rows.imported_member_id`
 
-## Your Proposed Fix
+### Problem 2: AI Hallucinated Emergency Contact Name
+When you asked about your emergency contact, the AI said "Sarah Wakeman" but the database shows **Daisy Wakeman**. 
 
-Simplify the `incoming` action to return minimal valid TwiML immediately:
+**Why?** The voice call handler in `ai-run` does NOT fetch emergency contacts - it only passes member name, location, and subscription data to the AI. The AI invented "Sarah" because it had no actual data to reference.
 
-```xml
-<Response>
-  <Say language="es-ES">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>
-  <Say language="en-GB">Thank you for calling ICE Alarm. An operator will be with you shortly.</Say>
-  <Enqueue waitUrl="...?action=wait">ice-alarm-queue</Enqueue>
-</Response>
+---
+
+## Solution Overview
+
+### Fix 1: Database Migration - Add Cascading Deletes
+Update the 5 foreign key constraints to use `ON DELETE SET NULL` so member deletion succeeds:
+
+```sql
+-- internal_tickets: SET NULL on delete
+ALTER TABLE internal_tickets 
+  DROP CONSTRAINT internal_tickets_member_id_fkey;
+ALTER TABLE internal_tickets 
+  ADD CONSTRAINT internal_tickets_member_id_fkey 
+  FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE SET NULL;
+
+-- leads: SET NULL on delete  
+ALTER TABLE leads
+  DROP CONSTRAINT leads_converted_member_id_fkey;
+ALTER TABLE leads
+  ADD CONSTRAINT leads_converted_member_id_fkey
+  FOREIGN KEY (converted_member_id) REFERENCES members(id) ON DELETE SET NULL;
+
+-- registration_drafts: SET NULL on delete
+ALTER TABLE registration_drafts
+  DROP CONSTRAINT registration_drafts_converted_member_id_fkey;
+ALTER TABLE registration_drafts
+  ADD CONSTRAINT registration_drafts_converted_member_id_fkey
+  FOREIGN KEY (converted_member_id) REFERENCES members(id) ON DELETE SET NULL;
+
+-- crm_contacts: SET NULL on delete
+ALTER TABLE crm_contacts
+  DROP CONSTRAINT crm_contacts_linked_member_id_fkey;
+ALTER TABLE crm_contacts
+  ADD CONSTRAINT crm_contacts_linked_member_id_fkey
+  FOREIGN KEY (linked_member_id) REFERENCES members(id) ON DELETE SET NULL;
+
+-- crm_import_rows: SET NULL on delete
+ALTER TABLE crm_import_rows
+  DROP CONSTRAINT crm_import_rows_imported_member_id_fkey;
+ALTER TABLE crm_import_rows
+  ADD CONSTRAINT crm_import_rows_imported_member_id_fkey
+  FOREIGN KEY (imported_member_id) REFERENCES members(id) ON DELETE SET NULL;
 ```
 
-And add a `wait` action handler for the queue hold message.
-
-## Trade-off
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Your Simple Queue Fix** | Guaranteed valid TwiML, immediate stability | No AI agent (Isabel), just hold music/queue |
-| **Current AI Flow** | Full AI conversation | Multiple failure points causing 11200 |
-
-## Recommendation
-
-I suggest a **hybrid approach**:
-
-1. **Add try/catch wrapping** around database operations in the current AI flow
-2. **Return basic queue TwiML as fallback** if any errors occur
-3. **Keep AI integration** when everything works
-
-This gives you stability (fallback to queue if something fails) while preserving the AI capability.
-
----
-
-## Implementation Plan
-
-### Option A: Your Simple Queue Fix (Quick)
-
-Replace `incoming` block (lines 52-118) and add `wait` handler.
-
-**Changes:**
-- Replace lines 52-118 with simple greeting + `<Enqueue>` 
-- Add `wait` handler after line 118 (before `transcription` block)
-
-**Result:** Stable calls, but no AI - callers go straight to queue.
-
----
-
-### Option B: Robust AI with Fallback (Recommended)
-
-Wrap the current AI flow in try/catch with graceful fallback:
+### Fix 2: Add Emergency Contacts to AI Voice Context
+Update `supabase/functions/ai-run/index.ts` to fetch and include emergency contacts when handling voice calls:
 
 ```typescript
-if (action === "incoming") {
-  try {
-    // Existing AI flow code...
-    const formData = await req.formData();
-    // ... member lookup, session creation, etc.
-    // Return AI-powered TwiML with <Gather>
-  } catch (error) {
-    console.error("Incoming call error, falling back to queue:", error);
-    // FALLBACK: Return simple queue TwiML
-    const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say language="es-ES">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>
-  <Say language="en-GB">Thank you for calling ICE Alarm. An operator will be with you shortly.</Say>
-  <Enqueue waitUrl="${baseUrl}/functions/v1/twilio-voice?action=wait">ice-alarm-queue</Enqueue>
-</Response>`;
-    return new Response(twiml, {
-      headers: { ...corsHeaders, "Content-Type": "application/xml" },
-    });
-  }
-}
+// After fetching member data (~line 1032)
+// Fetch emergency contacts
+const { data: emergencyContacts } = await supabase
+  .from("emergency_contacts")
+  .select("contact_name, relationship, phone, priority_order")
+  .eq("member_id", memberId)
+  .order("priority_order", { ascending: true });
+
+// Include in memberContext (~line 1046)
+memberContext = `
+## Caller Identity (VERIFIED MEMBER)
+- Name: ${member.first_name} ${member.last_name}
+- Location: ${member.city || "Spain"}
+- Status: ${member.status}
+- Subscription: ${subscription?.plan_type || "Unknown"}
+
+## Emergency Contacts on File
+${emergencyContacts?.length 
+  ? emergencyContacts.map((c, i) => `${i+1}. ${c.contact_name} (${c.relationship}) - ${c.phone}`).join('\n')
+  : "No emergency contacts configured"}
+
+Use their name naturally in conversation. When discussing emergency contacts, use the EXACT names above.
+`;
 ```
 
-Also add the `wait` handler for Enqueue stability.
+---
 
-**Result:** AI works when database is healthy, falls back to queue if any errors.
+## Implementation Summary
+
+| Change | Type | File/Location |
+|--------|------|---------------|
+| Update 5 FK constraints | Database Migration | New migration SQL |
+| Fetch emergency contacts | Edge Function | `ai-run/index.ts` lines 1029-1057 |
+| Add contacts to AI context | Edge Function | `ai-run/index.ts` memberContext variable |
 
 ---
 
-## Files to Modify
+## After Implementation
 
-| File | Change |
-|------|--------|
-| `supabase/functions/twilio-voice/index.ts` | Wrap incoming in try/catch, add `wait` handler |
+### Deletion will work because:
+1. Child tables will SET NULL instead of blocking
+2. Tables with CASCADE already handle cleanup automatically
+3. No manual cascade logic needed in application code
+
+### AI will provide accurate emergency contact info because:
+1. Voice calls fetch actual emergency contacts from database
+2. Contact names, relationships, and phones are passed to AI
+3. AI is instructed to use EXACT names from the data
 
 ---
 
-## Which Approach?
+## Verification Steps
 
-- **If you want to test connectivity first** → Option A (your simple queue)
-- **If you want AI with safety net** → Option B (try/catch with fallback)
-
-Let me know which you'd prefer, or approve this plan and I'll implement Option B (robust AI with fallback).
-
+After implementation:
+1. Test deleting a member with related data - should succeed
+2. Call the AI and ask about emergency contacts - should say "Daisy Wakeman" not "Sarah"
+3. Verify database shows `Daisy Wakeman` unchanged (the AI never actually modified it)
