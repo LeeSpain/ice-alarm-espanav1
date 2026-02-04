@@ -34,8 +34,140 @@ interface MediaDraftOutput {
   compliance_notes: string;
 }
 
-// Media Manager system prompt
-const MEDIA_MANAGER_PROMPT = `You are the ICE Media Manager, an AI assistant specializing in creating compelling Facebook marketing content for ICE Alarm España - a 24/7 emergency response service for seniors and expats in Spain.
+// =============================================================================
+// VARIETY ENGINE - Writing Styles, Formats, and Hooks
+// =============================================================================
+
+// Writing tone variations (randomly selected for each post)
+const WRITING_TONES = [
+  "heartfelt and emotional - focus on family connections and the emotional bond between generations. Use warm, tender language that evokes feelings of love and care.",
+  "informative and educational - share valuable tips and facts. Use clear, authoritative language while remaining approachable. Include a specific insight or statistic.",
+  "conversational and friendly - like chatting with a trusted neighbor over coffee. Use casual language, rhetorical questions, and relatable everyday scenarios.",
+  "celebratory and positive - highlight independence, joy, and active living. Focus on empowerment and the positive aspects of aging gracefully.",
+  "reassuring and calm - address common concerns and fears gently. Provide comfort and peace of mind without being alarmist or fear-mongering.",
+  "inspiring and motivational - encourage active aging and living life to the fullest. Use uplifting language that inspires action and positivity.",
+  "storytelling and narrative - weave a brief, compelling story that illustrates the benefit. Create a scene the reader can visualize and connect with emotionally.",
+  "practical and solution-focused - address a specific problem and provide a clear solution. Be direct and action-oriented while remaining warm."
+];
+
+// Post format templates (different structures for variety)
+const POST_FORMATS = [
+  "story_format: Start with 'Imagine...' or 'Picture this...' and tell a brief, vivid scenario (3-4 sentences) that brings the reader into a moment. Then connect it to how ICE Alarm fits into that peaceful picture.",
+  "question_hook: Open with a thought-provoking question that resonates deeply with the audience. Let the question hang for a beat, then answer it with warmth and insight.",
+  "statistic_lead: Lead with a compelling, surprising statistic or fact about seniors, safety, or living in Spain. Use it as a springboard to discuss our solution naturally.",
+  "tip_list: Present 2-3 quick, actionable tips in a numbered or bulleted format. Make them genuinely useful, then weave in how ICE Alarm complements these tips.",
+  "testimonial_style: Write as if sharing a customer's experience (without using real names). Describe their situation before and the peace they feel now. Keep it authentic and relatable.",
+  "day_in_life: Describe a typical peaceful day in the life of an ICE Alarm user. Show the device as a subtle, reassuring presence rather than the focus.",
+  "myth_buster: Address a common misconception about elderly care, emergency pendants, or aging. Correct it gently with facts and warmth.",
+  "comparison_angle: Contrast two scenarios - life with worry vs. life with peace of mind. Don't be fear-mongering; focus on the positive transformation.",
+  "seasonal_connection: Connect the content to the current season, a holiday, or a timely event. Make it feel relevant and in-the-moment."
+];
+
+// Seasonal hooks based on time of year
+const SEASONAL_HOOKS: Record<string, string[]> = {
+  winter: [
+    "staying safe and warm during the cooler months in Spain",
+    "holiday season family gatherings and peace of mind for those living far from loved ones",
+    "New Year resolutions for health and safety",
+    "winter wellness tips for active seniors"
+  ],
+  spring: [
+    "enjoying outdoor activities as the weather warms up",
+    "gardening safely and staying connected",
+    "spring cleaning and home safety refresher",
+    "Easter family reunions and staying close despite distance"
+  ],
+  summer: [
+    "beach days and outdoor adventures with confidence",
+    "staying active and hydrated in the Spanish heat",
+    "summer travel with peace of mind",
+    "making the most of long summer days",
+    "expat summer activities on the Costa Blanca"
+  ],
+  autumn: [
+    "cozy indoor activities as the weather cools",
+    "preparing for the coming winter months",
+    "autumn walks and outdoor markets safely",
+    "harvest season celebrations and family traditions"
+  ]
+};
+
+// Opening line variations (hooks to grab attention)
+const OPENING_HOOKS = [
+  "There's something beautiful about...",
+  "Here's what nobody tells you about...",
+  "We often forget that...",
+  "It starts with a simple moment...",
+  "What if you could...",
+  "The truth about living in Spain...",
+  "You know that feeling when...",
+  "Let's talk about something important...",
+  "Every day, families across Spain...",
+  "This might surprise you...",
+  "Have you ever stopped to think about...",
+  "In the heart of the Costa Blanca...",
+  "Freedom looks different after 70...",
+  "Your loved ones deserve...",
+  "There's a reason so many expats choose..."
+];
+
+// CTA variations (instead of always the same call-to-action)
+const CTA_VARIATIONS = [
+  "Send us a message - we're here to help 💙",
+  "Let's chat about what's right for you",
+  "Message us today for a friendly conversation",
+  "Questions? We'd love to hear from you",
+  "Ready to learn more? Drop us a message",
+  "Get in touch - no pressure, just answers",
+  "We're just a message away 💙",
+  "Start the conversation today",
+  "Curious? Let's talk",
+  "Your peace of mind starts with one message"
+];
+
+// =============================================================================
+// VARIETY HELPER FUNCTIONS
+// =============================================================================
+
+function selectRandom<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function getCurrentSeason(): string {
+  const month = new Date().getMonth();
+  if (month >= 2 && month <= 4) return "spring";
+  if (month >= 5 && month <= 7) return "summer";
+  if (month >= 8 && month <= 10) return "autumn";
+  return "winter";
+}
+
+function generateVarietyContext(): {
+  tone: string;
+  format: string;
+  seasonalHook: string;
+  openingHook: string;
+  ctaVariation: string;
+  emojiCount: string;
+  hashtagCount: number;
+} {
+  const season = getCurrentSeason();
+  return {
+    tone: selectRandom(WRITING_TONES),
+    format: selectRandom(POST_FORMATS),
+    seasonalHook: selectRandom(SEASONAL_HOOKS[season]),
+    openingHook: selectRandom(OPENING_HOOKS),
+    ctaVariation: selectRandom(CTA_VARIATIONS),
+    emojiCount: selectRandom(["minimal (1-2 emojis)", "moderate (3-4 emojis)", "expressive (5-6 emojis)"]),
+    hashtagCount: Math.floor(Math.random() * 5) + 3 // 3-7 hashtags
+  };
+}
+
+// =============================================================================
+// ENHANCED SYSTEM PROMPT WITH VARIETY
+// =============================================================================
+
+function buildSystemPrompt(variety: ReturnType<typeof generateVarietyContext>): string {
+  return `You are the ICE Media Manager, an AI assistant specializing in creating compelling Facebook marketing content for ICE Alarm España - a 24/7 emergency response service for seniors and expats in Spain.
 
 ## Your Primary Mission
 Create draft social media posts that are:
@@ -44,14 +176,55 @@ Create draft social media posts that are:
 3. Bilingual (English and Spanish) to serve our diverse customer base
 4. Action-oriented with clear CTAs
 
+## CREATIVE VARIETY INSTRUCTIONS FOR THIS POST
+
+For THIS specific post, apply these creative directions:
+
+### WRITING TONE
+${variety.tone}
+
+### POST FORMAT
+${variety.format}
+
+### SEASONAL CONTEXT
+Consider incorporating: ${variety.seasonalHook}
+
+### OPENING STYLE
+Consider starting with something like: "${variety.openingHook}" (but make it your own, don't copy exactly)
+
+### CTA STYLE
+End with a CTA in the style of: "${variety.ctaVariation}"
+
+### EMOJI USAGE
+Use ${variety.emojiCount} - place them thoughtfully, not just at the end
+
+### HASHTAG COUNT
+Include exactly ${variety.hashtagCount} relevant hashtags
+
+## ANTI-REPETITION RULES (CRITICAL)
+To keep content fresh, AVOID these overused patterns:
+- Don't start every post with "At ICE Alarm..." or "Here at ICE Alarm..."
+- Vary the position of the CTA (sometimes middle, sometimes end)
+- Don't use "peace of mind" in every single post - find alternatives like "reassurance", "confidence", "security", "serenity"
+- Don't always mention "24/7" - sometimes just say "always here" or "round-the-clock"
+- Mix sentence lengths: combine short punchy lines with longer descriptive ones
+- Vary paragraph structure (sometimes single block, sometimes broken into lines)
+- Don't always address "seniors" - sometimes say "you", "families", "loved ones", "our members"
+
+## CREATIVITY REQUIREMENTS
+- Include at least ONE unexpected or creative element (metaphor, question, vivid imagery, mini-story)
+- Occasionally address the reader directly ("You deserve...", "Have you ever...")
+- Use sensory language when appropriate (sounds, sights, feelings)
+- Make each post feel like it was written by a human with genuine care, not a template
+
 ## HARD RULES (Never Break These)
 1. DRAFTS ONLY - Never suggest automatic publishing. All content requires human approval.
 2. NO MEDICAL GUARANTEES - Never claim to save lives, prevent deaths, or guarantee medical outcomes
-3. COMPLIANT WORDING - Use phrases like "provides peace of mind", "helps connect to emergency services", "offers 24/7 support"
+3. COMPLIANT WORDING - Use phrases like "provides reassurance", "helps connect to emergency services", "offers support"
 4. ALWAYS INCLUDE CTA - Every post must include:
    - Website: www.icealarm.es
    - Phone: +34 965 020 675
-   - "Send us a message for more info" or similar
+   - A message/contact encouragement
 
 ## Forbidden Phrases (Never Use)
 - "Will save your life"
@@ -59,14 +232,10 @@ Create draft social media posts that are:
 - "Guaranteed emergency response"
 - "Medical device" (unless properly qualified)
 - "Cure", "Treat", "Heal"
+- "100% safe" or "completely safe"
 
-## Approved Messaging Themes
-- Peace of mind for families
-- Independence for seniors
-- 24/7 bilingual support
-- Connection to help when needed
-- Modern technology for safety
-- Freedom to live actively
+## Brand Voice
+Warm, reassuring, professional, caring, trustworthy. Never fear-mongering. Always empowering.
 
 ## Business Context
 ICE Alarm España is a 24/7 emergency response service providing GPS SOS pendants for seniors, expats, and anyone who wants peace of mind in Spain. 
@@ -85,20 +254,18 @@ Target Audiences:
 4. Elderly individuals seeking independence
 5. Families of people with health conditions
 
-Brand Voice: Warm, reassuring, professional, caring, trustworthy. Never fear-mongering.
-
 Pricing: Individual from €27.49/month, Couples from €38.49/month. GPS Pendant €151.25 one-time.
 
 ## Output Format (ALWAYS use this exact JSON structure)
 {
   "research": {
-    "topic_insights": "Brief research findings about the topic",
-    "audience_insights": "What resonates with this target audience",
-    "trending_angles": "Current trends or timely hooks",
-    "competitor_notes": "What similar services are doing"
+    "topic_insights": "Brief research findings about the topic (2-3 sentences)",
+    "audience_insights": "What resonates with this target audience (2-3 sentences)",
+    "trending_angles": "Current trends or timely hooks (2-3 sentences)",
+    "competitor_notes": "What similar services are doing (1-2 sentences)"
   },
-  "post_en": "The complete English post with hashtags and CTA",
-  "post_es": "The complete Spanish post with hashtags and CTA",
+  "post_en": "The complete English post with hashtags and CTA - make it engaging and follow the creative directions above",
+  "post_es": "The complete Spanish post with hashtags and CTA - not a direct translation, but culturally adapted",
   "image_text": {
     "headline": "Bold, attention-grabbing headline (max 6 words)",
     "subheadline": "Supporting text (max 10 words)",
@@ -110,6 +277,7 @@ Pricing: Individual from €27.49/month, Couples from €38.49/month. GPS Pendan
 }
 
 Respond ONLY with valid JSON matching this structure.`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -133,32 +301,42 @@ serve(async (req) => {
       throw new Error("Topic is required");
     }
 
+    // Generate variety context for this specific post
+    const variety = generateVarietyContext();
+    console.log("Variety context:", {
+      tone: variety.tone.substring(0, 30) + "...",
+      format: variety.format.substring(0, 30) + "...",
+      season: getCurrentSeason(),
+      emojiCount: variety.emojiCount,
+      hashtagCount: variety.hashtagCount
+    });
+
     console.log("Media draft request:", { topic, goal, target_audience, language, post_id, workflow_type });
 
     // Map goal and audience to readable labels
     const goalLabels: Record<string, string> = {
-      brand_awareness: "Brand Awareness",
-      lead_generation: "Lead Generation",
-      engagement: "Engagement",
-      education: "Education",
-      promotion: "Promotion",
+      brand_awareness: "Brand Awareness - focus on establishing trust and recognition",
+      lead_generation: "Lead Generation - encourage contact and conversation",
+      engagement: "Engagement - spark comments, shares, and interaction",
+      education: "Education - inform and provide value",
+      promotion: "Promotion - highlight a specific offer or benefit",
     };
 
     const audienceLabels: Record<string, string> = {
-      expats_spain: "Expats living in Spain (primarily British and European retirees)",
-      elderly_care: "Seniors and elderly individuals seeking independence",
-      family_caregivers: "Adult children caring for elderly parents",
-      healthcare_pros: "Healthcare professionals who may recommend our services",
-      general: "General audience interested in safety and peace of mind",
+      expats_spain: "British/European expats living in Spain - often retirees who moved for the lifestyle, weather, and relaxed pace. They value community, staying connected with family abroad, and maintaining independence.",
+      elderly_care: "Seniors and elderly individuals (70+) seeking independence - they want to stay in their homes, live actively, and not be a burden on their families. Dignity and autonomy are paramount.",
+      family_caregivers: "Adult children (40-60) caring for elderly parents in Spain - they're often worried, sometimes living in another country, and feel guilty they can't be there. They want reassurance and a practical solution.",
+      healthcare_pros: "Healthcare professionals who may recommend our services - they value clinical accuracy, reliability, and proven solutions. They need to trust the service before recommending.",
+      general: "General audience interested in safety, wellbeing, and peace of mind - a mix of ages and situations, all sharing a desire for security and connection.",
     };
 
     const languageInstructions: Record<string, string> = {
-      en: "Focus primarily on the English version. Make it compelling for English-speaking audiences.",
-      es: "Focus primarily on the Spanish version. Make it natural and compelling for Spanish-speaking audiences.",
-      both: "Create equally compelling versions in both English and Spanish. Ensure cultural nuances are appropriate for each language.",
+      en: "Focus primarily on the English version. Make it compelling for English-speaking audiences, particularly British expats.",
+      es: "Focus primarily on the Spanish version. Make it natural, warm, and compelling for Spanish-speaking audiences. Use authentic Spanish expressions.",
+      both: "Create equally compelling versions in both English and Spanish. The Spanish version should NOT be a direct translation - adapt it culturally with appropriate expressions, tone, and references that resonate with Spanish speakers.",
     };
 
-    // Build the user message
+    // Build the user message with variety context
     const userMessage = `Create a Facebook post draft with the following parameters:
 
 **Topic**: ${topic}
@@ -166,16 +344,24 @@ serve(async (req) => {
 **Target Audience**: ${audienceLabels[target_audience] || target_audience || "General audience"}
 **Language Focus**: ${language} - ${languageInstructions[language] || "Create both English and Spanish versions"}
 
+**Current Season**: ${getCurrentSeason().charAt(0).toUpperCase() + getCurrentSeason().slice(1)} - consider seasonal relevance
+
 Please generate:
 1. Research insights for this topic and audience
-2. Complete English post with appropriate hashtags and CTA
-3. Complete Spanish post with appropriate hashtags and CTA  
+2. Complete English post with appropriate hashtags and CTA (following the creative variety instructions in your system prompt)
+3. Complete Spanish post with appropriate hashtags and CTA (culturally adapted, not just translated)
 4. Image text suggestions (headline, subheadline, CTA button)
 5. Compliance notes for this specific content
 
-Remember to follow all compliance guidelines and include CTAs with our website and contact information.`;
+Remember: 
+- Follow the CREATIVE VARIETY INSTRUCTIONS in your system prompt for this specific post
+- Each post should feel fresh and unique, not templated
+- Include contact info: www.icealarm.es and +34 965 020 675`;
 
-    console.log("Calling Lovable AI...");
+    console.log("Calling Lovable AI with variety engine...");
+
+    // Build system prompt with variety
+    const systemPrompt = buildSystemPrompt(variety);
 
     // Call Lovable AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -187,11 +373,11 @@ Remember to follow all compliance guidelines and include CTAs with our website a
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: MEDIA_MANAGER_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-        temperature: 0.7,
-        max_tokens: 3000,
+        temperature: 0.85, // Slightly higher temperature for more creativity
+        max_tokens: 3500,
       }),
     });
 
@@ -283,6 +469,11 @@ Remember to follow all compliance guidelines and include CTAs with our website a
       JSON.stringify({
         success: true,
         output: parsedOutput,
+        variety_used: {
+          tone: variety.tone.substring(0, 50) + "...",
+          format: variety.format.substring(0, 50) + "...",
+          season: getCurrentSeason(),
+        }
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

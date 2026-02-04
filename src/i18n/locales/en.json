@@ -108,12 +108,18 @@
     },
     "imageStyles": {
       "fromPostText": "Based on Post Text",
+      "surpriseMe": "🎲 Surprise Me!",
       "seniorActive": "Active Senior",
       "familyPeace": "Family Moment",
       "pendantFocus": "Pendant Focus",
       "spanishLifestyle": "Spanish Lifestyle",
       "independence": "Independence",
-      "peaceOfMind": "Peace of Mind"
+      "peaceOfMind": "Peace of Mind",
+      "socialConnection": "Social Connection",
+      "dailyRoutine": "Daily Routine",
+      "outdoorAdventure": "Outdoor Adventure",
+      "homeComfort": "Home Comfort",
+      "technologySimple": "Easy Technology"
     },
     "preview": {
       "title": "Post Preview",
