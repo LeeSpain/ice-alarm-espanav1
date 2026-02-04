@@ -164,11 +164,11 @@ Deno.serve(async (req) => {
       console.log("[facebook-unpublish] Deleted metrics for post");
     }
 
-    // 6. Update social post status to "archived"
+    // 6. Update social post status to "draft" (archived not in constraint)
     const { error: updateError } = await supabase
       .from("social_posts")
       .update({ 
-        status: "archived",
+        status: "draft",
         facebook_post_id: null // Clear the facebook_post_id
       })
       .eq("id", post_id);
@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("[facebook-unpublish] Post status updated to archived");
+    console.log("[facebook-unpublish] Post status updated to draft");
 
     // 7. Log to activity_logs for audit
     await supabase.from("activity_logs").insert({
