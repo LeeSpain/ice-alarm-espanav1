@@ -130,6 +130,18 @@
       "refreshAll": "Refresh All",
       "viewOnFacebook": "View on Facebook",
       "lastUpdated": "Updated",
+      "testConnection": "Test Connection",
+      "metricsError": "Error",
+      "tokenExpired": {
+        "title": "Facebook Token Expired",
+        "description": "Your Facebook access token has expired. Metrics cannot be refreshed until you generate a new token.",
+        "goToSettings": "Go to Settings"
+      },
+      "connection": {
+        "connected": "Connected",
+        "expired": "Token Expired",
+        "notConfigured": "Not Configured"
+      },
       "overview": {
         "title": "Published Performance",
         "subtitle": "Aggregated engagement metrics from all published posts",

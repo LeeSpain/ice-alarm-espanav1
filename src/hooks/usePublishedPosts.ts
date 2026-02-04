@@ -1,7 +1,10 @@
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SocialPost } from "@/hooks/useSocialPosts";
+
+export type ConnectionStatus = "connected" | "token_expired" | "not_configured" | "unknown";
 
 export interface SocialPostMetrics {
   id: string;
@@ -30,6 +33,8 @@ export interface AggregatedMetrics {
 export function usePublishedPosts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("unknown");
+  const [lastError, setLastError] = useState<string | null>(null);
 
   // Fetch all published posts with their cached metrics
   const postsQuery = useQuery({
@@ -78,6 +83,53 @@ export function usePublishedPosts() {
     totalReach: postsQuery.data?.reduce((sum, post) => sum + (post.metrics?.impressions || 0), 0) || 0,
   };
 
+  // Test Facebook connection
+  const testConnection = useCallback(async (): Promise<ConnectionStatus> => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if (!accessToken) {
+        setConnectionStatus("unknown");
+        return "unknown";
+      }
+
+      const { data, error } = await supabase.functions.invoke("facebook-metrics", {
+        body: { test_connection: true },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (error) {
+        setConnectionStatus("unknown");
+        setLastError(error.message);
+        return "unknown";
+      }
+
+      if (data?.error === "token_expired") {
+        setConnectionStatus("token_expired");
+        setLastError(data.message || "Token expired");
+        return "token_expired";
+      }
+
+      if (data?.success) {
+        setConnectionStatus("connected");
+        setLastError(null);
+        return "connected";
+      }
+
+      setConnectionStatus("unknown");
+      setLastError(data?.message || "Unknown error");
+      return "unknown";
+    } catch (err) {
+      setConnectionStatus("unknown");
+      setLastError(err instanceof Error ? err.message : "Connection test failed");
+      return "unknown";
+    }
+  }, []);
+
   // Refresh metrics for a single post
   const refreshSingleMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -97,8 +149,18 @@ export function usePublishedPosts() {
       });
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      
+      // Check for token expiry error
+      if (data?.error === "token_expired") {
+        setConnectionStatus("token_expired");
+        setLastError(data.message);
+        throw new Error(data.message || "Facebook token expired");
+      }
 
+      if (data?.error) throw new Error(data.error);
+      
+      setConnectionStatus("connected");
+      setLastError(null);
       return data;
     },
     onSuccess: () => {
@@ -106,9 +168,13 @@ export function usePublishedPosts() {
       toast({ title: "Metrics refreshed", description: "Post engagement data has been updated." });
     },
     onError: (error: Error) => {
+      const isTokenError = error.message.toLowerCase().includes("token") || 
+                           error.message.toLowerCase().includes("expired");
       toast({
-        title: "Failed to refresh metrics",
-        description: error.message,
+        title: isTokenError ? "Facebook Token Expired" : "Failed to refresh metrics",
+        description: isTokenError 
+          ? "Please update your Facebook access token in Settings → Integrations."
+          : error.message,
         variant: "destructive",
       });
     },
@@ -133,8 +199,18 @@ export function usePublishedPosts() {
       });
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      
+      // Check for token expiry error
+      if (data?.error === "token_expired") {
+        setConnectionStatus("token_expired");
+        setLastError(data.message);
+        throw new Error(data.message || "Facebook token expired");
+      }
 
+      if (data?.error) throw new Error(data.error);
+      
+      setConnectionStatus("connected");
+      setLastError(null);
       return data;
     },
     onSuccess: () => {
@@ -142,9 +218,13 @@ export function usePublishedPosts() {
       toast({ title: "All metrics refreshed", description: "Engagement data for all posts has been updated." });
     },
     onError: (error: Error) => {
+      const isTokenError = error.message.toLowerCase().includes("token") || 
+                           error.message.toLowerCase().includes("expired");
       toast({
-        title: "Failed to refresh metrics",
-        description: error.message,
+        title: isTokenError ? "Facebook Token Expired" : "Failed to refresh metrics",
+        description: isTokenError 
+          ? "Please update your Facebook access token in Settings → Integrations."
+          : error.message,
         variant: "destructive",
       });
     },
@@ -174,5 +254,9 @@ export function usePublishedPosts() {
     isRefreshing: refreshSingleMutation.isPending,
     isRefreshingAll: refreshAllMutation.isPending,
     needsAutoRefresh,
+    // New connection status features
+    connectionStatus,
+    lastError,
+    testConnection,
   };
 }

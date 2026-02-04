@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { usePublishedPosts } from "@/hooks/usePublishedPosts";
 import { PublishedOverviewCard } from "./PublishedOverviewCard";
 import { PublishedPostCard } from "./PublishedPostCard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export function PublishedPostsSection() {
   const { t } = useTranslation();
@@ -16,6 +19,8 @@ export function PublishedPostsSection() {
     isRefreshing,
     isRefreshingAll,
     needsAutoRefresh,
+    connectionStatus,
+    testConnection,
   } = usePublishedPosts();
 
   const [refreshingPostId, setRefreshingPostId] = useState<string | null>(null);
@@ -56,11 +61,30 @@ export function PublishedPostsSection() {
 
   return (
     <div className="space-y-6">
+      {/* Token Expired Warning Banner */}
+      {connectionStatus === "token_expired" && (
+        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t("mediaManager.published.tokenExpired.title")}</AlertTitle>
+          <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <span>{t("mediaManager.published.tokenExpired.description")}</span>
+            <Button asChild variant="outline" size="sm" className="w-fit gap-1">
+              <Link to="/admin/settings">
+                {t("mediaManager.published.tokenExpired.goToSettings")}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Overview Card */}
       <PublishedOverviewCard
         metrics={aggregatedMetrics}
         onRefreshAll={refreshAllMetrics}
         isRefreshing={isRefreshingAll}
+        connectionStatus={connectionStatus}
+        onTestConnection={testConnection}
       />
 
       {/* Posts Grid */}
@@ -71,6 +95,7 @@ export function PublishedPostsSection() {
             post={post}
             onRefresh={handleRefreshSingle}
             isRefreshing={refreshingPostId === post.id || isRefreshing}
+            hasError={connectionStatus === "token_expired"}
           />
         ))}
       </div>

@@ -2,17 +2,19 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, RefreshCw, Heart, MessageCircle, Share2, Eye, Loader2, Clock, Image as ImageIcon } from "lucide-react";
+import { ExternalLink, RefreshCw, Heart, MessageCircle, Share2, Eye, Loader2, Clock, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { PublishedPostWithMetrics } from "@/hooks/usePublishedPosts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PublishedPostCardProps {
   post: PublishedPostWithMetrics;
   onRefresh: (postId: string) => void;
   isRefreshing: boolean;
+  hasError?: boolean;
 }
 
-export function PublishedPostCard({ post, onRefresh, isRefreshing }: PublishedPostCardProps) {
+export function PublishedPostCard({ post, onRefresh, isRefreshing, hasError }: PublishedPostCardProps) {
   const { t } = useTranslation();
 
   const facebookUrl = post.facebook_post_id
@@ -29,7 +31,7 @@ export function PublishedPostCard({ post, onRefresh, isRefreshing }: PublishedPo
     : null;
 
   return (
-    <Card className="flex flex-col overflow-hidden">
+    <Card className={`flex flex-col overflow-hidden ${hasError ? "ring-1 ring-destructive/30" : ""}`}>
       {/* Image or Placeholder */}
       <div className="relative aspect-video bg-muted">
         {post.image_url ? (
@@ -47,6 +49,22 @@ export function PublishedPostCard({ post, onRefresh, isRefreshing }: PublishedPo
         <Badge variant="secondary" className="absolute top-2 left-2">
           {t(`mediaManager.languages.${post.language}`)}
         </Badge>
+        {/* Error badge */}
+        {hasError && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="destructive" className="absolute top-2 right-2 gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {t("mediaManager.published.metricsError")}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("mediaManager.published.tokenExpired.description")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       <CardContent className="flex-1 p-4 space-y-3">
