@@ -4014,6 +4014,59 @@ export type Database = {
           },
         ]
       }
+      voice_call_sessions: {
+        Row: {
+          call_sid: string
+          caller_phone: string
+          created_at: string | null
+          escalated_at: string | null
+          escalation_reason: string | null
+          id: string
+          language: string | null
+          member_id: string | null
+          messages: Json | null
+          status: string | null
+          timeout_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          call_sid: string
+          caller_phone: string
+          created_at?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          id?: string
+          language?: string | null
+          member_id?: string | null
+          messages?: Json | null
+          status?: string | null
+          timeout_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          call_sid?: string
+          caller_phone?: string
+          created_at?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          id?: string
+          language?: string | null
+          member_id?: string | null
+          messages?: Json | null
+          status?: string | null
+          timeout_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_sessions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_events: {
         Row: {
           browser: string | null

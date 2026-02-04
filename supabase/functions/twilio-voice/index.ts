@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MAX_TIMEOUT_RETRIES = 3;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +26,8 @@ serve(async (req) => {
       .in("key", [
         "settings_twilio_account_sid",
         "settings_twilio_auth_token",
-        "settings_twilio_phone_number"
+        "settings_twilio_phone_number",
+        "settings_emergency_phone"
       ]);
 
     const twilioConfig = settings?.reduce((acc, s) => {
@@ -41,38 +44,72 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
+    const baseUrl = Deno.env.get("SUPABASE_URL");
 
+    // ============================================================
+    // ACTION: INCOMING - Initial greeting with speech recognition
+    // ============================================================
     if (action === "incoming") {
-      // Handle incoming call - return TwiML
       const formData = await req.formData();
       const from = formData.get("From") as string;
-      const to = formData.get("To") as string;
       const callSid = formData.get("CallSid") as string;
+      const to = formData.get("To") as string;
 
-      console.log("Incoming call from:", from, "to:", to, "SID:", callSid);
+      console.log("Incoming call from:", from, "CallSid:", callSid);
 
-      // Find member by phone
+      // Try to find existing member by phone
       const { data: member } = await supabase
         .from("members")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, preferred_language")
         .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
-        .single();
+        .maybeSingle();
 
-      // Create or update alert for incoming call
+      // Determine language (default Spanish for Spain)
+      const language = member?.preferred_language || "es";
+      const twimlLang = language === "es" ? "es-ES" : "en-GB";
+
+      // Create voice session
+      await supabase.from("voice_call_sessions").insert({
+        call_sid: callSid,
+        caller_phone: from,
+        member_id: member?.id || null,
+        language: twimlLang,
+        status: "active",
+        messages: []
+      });
+
+      // Create an alert for tracking (if member found)
       if (member) {
         await supabase.from("alerts").insert({
           member_id: member.id,
           alert_type: "sos_button",
-          status: "incoming"
+          status: "incoming",
+          message: `Voice call from ${from}`
         });
       }
 
-      // TwiML response - put caller in queue
+      // Build greeting based on whether member is known
+      const greetingEs = member?.first_name 
+        ? `Hola ${member.first_name}, bienvenido a ICE Alarm. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`
+        : `Gracias por llamar a ICE Alarm España. Soy Isabel, su asistente virtual. ¿En qué puedo ayudarle hoy?`;
+      
+      const greetingEn = member?.first_name
+        ? `Hello ${member.first_name}, welcome to ICE Alarm. I'm Isabel, your virtual assistant. How can I help you today?`
+        : `Thank you for calling ICE Alarm Spain. I'm Isabel, your virtual assistant. How can I help you today?`;
+
+      // Return TwiML with speech recognition
       const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="es-ES">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>
-  <Say language="en-GB">Thank you for calling ICE Alarm. An operator will be with you shortly.</Say>
-  <Enqueue waitUrl="/api/twilio-voice?action=wait">emergency-queue</Enqueue>
+  <Say language="es-ES" voice="Polly.Lucia">${greetingEs}</Say>
+  <Pause length="1"/>
+  <Say language="en-GB" voice="Polly.Amy">${greetingEn}</Say>
+  <Gather input="speech" 
+          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          language="${twimlLang}" 
+          speechTimeout="auto"
+          timeout="10"
+          actionOnEmptyResult="true">
+  </Gather>
 </Response>`;
 
       return new Response(twiml, {
@@ -80,12 +117,217 @@ serve(async (req) => {
       });
     }
 
-    if (action === "wait") {
-      // Hold music/message while waiting
+    // ============================================================
+    // ACTION: TRANSCRIPTION - Process speech and get AI response
+    // ============================================================
+    if (action === "transcription") {
+      const formData = await req.formData();
+      const speechResult = formData.get("SpeechResult") as string || "";
+      const callSid = formData.get("CallSid") as string;
+      const confidence = formData.get("Confidence") as string;
+
+      console.log("Transcription received:", speechResult, "Confidence:", confidence, "CallSid:", callSid);
+
+      // Handle empty speech (timeout)
+      if (!speechResult || speechResult.trim() === "") {
+        // Redirect to timeout handler
+        const redirectUrl = `${baseUrl}/functions/v1/twilio-voice?action=timeout&callSid=${encodeURIComponent(callSid)}`;
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Redirect method="POST">${redirectUrl}</Redirect>
+</Response>`;
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      // Load session
+      const { data: session, error: sessionError } = await supabase
+        .from("voice_call_sessions")
+        .select("*")
+        .eq("call_sid", callSid)
+        .single();
+
+      if (sessionError || !session) {
+        console.error("Session not found:", callSid);
+        // Create emergency response if session missing
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="es-ES" voice="Polly.Lucia">Lo siento, ha ocurrido un error técnico. Por favor, vuelva a llamar.</Say>
+  <Say language="en-GB" voice="Polly.Amy">Sorry, a technical error occurred. Please call back.</Say>
+  <Hangup/>
+</Response>`;
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      // Reset timeout counter on successful speech
+      const currentMessages = (session.messages as Array<{ role: string; content: string }>) || [];
+      currentMessages.push({ role: "user", content: speechResult });
+
+      // Detect language from first message if not set by member
+      let detectedLanguage = session.language;
+      if (currentMessages.length === 1) {
+        // Simple language detection - Spanish keywords
+        const spanishIndicators = /\b(hola|gracias|buenos|buenas|sí|si|no|quiero|necesito|tengo|puedo|por favor|ayuda|cómo|qué|cuánto)\b/i;
+        if (spanishIndicators.test(speechResult)) {
+          detectedLanguage = "es-ES";
+        } else {
+          detectedLanguage = "en-GB";
+        }
+        
+        // Update session with detected language
+        await supabase
+          .from("voice_call_sessions")
+          .update({ language: detectedLanguage })
+          .eq("call_sid", callSid);
+      }
+
+      // Update session with new message
+      await supabase
+        .from("voice_call_sessions")
+        .update({ 
+          messages: currentMessages,
+          timeout_count: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq("call_sid", callSid);
+
+      // Call ai-run for response
+      const aiResponse = await fetch(`${baseUrl}/functions/v1/ai-run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`
+        },
+        body: JSON.stringify({
+          agentKey: "customer_service_expert",
+          context: {
+            source: "voice_call",
+            isVoiceCall: true,
+            callDirection: "inbound",
+            callerPhone: session.caller_phone,
+            memberId: session.member_id,
+            conversationHistory: currentMessages.slice(0, -1), // All but current message
+            currentMessage: speechResult,
+            userLanguage: detectedLanguage.startsWith("es") ? "es" : "en"
+          }
+        })
+      });
+
+      if (!aiResponse.ok) {
+        console.error("AI-run error:", await aiResponse.text());
+        const errorLang = detectedLanguage.startsWith("es") ? "es-ES" : "en-GB";
+        const errorVoice = detectedLanguage.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+        const errorMsg = detectedLanguage.startsWith("es") 
+          ? "Lo siento, tengo dificultades técnicas. ¿Puede repetir su pregunta?"
+          : "Sorry, I'm having technical difficulties. Could you repeat your question?";
+        
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="${errorLang}" voice="${errorVoice}">${errorMsg}</Say>
+  <Gather input="speech" 
+          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          language="${detectedLanguage}" 
+          speechTimeout="auto"
+          timeout="10"
+          actionOnEmptyResult="true">
+  </Gather>
+</Response>`;
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      const aiResult = await aiResponse.json();
+      let responseText = aiResult.output?.response || "";
+
+      console.log("AI Response:", responseText);
+
+      // Check for escalation trigger
+      const escalationMatch = responseText.match(/\[ESCALATE:\s*(.+?)\]/i);
+      if (escalationMatch) {
+        const escalationReason = escalationMatch[1];
+        responseText = responseText.replace(/\[ESCALATE:\s*.+?\]/i, "").trim();
+
+        // Update session with escalation
+        await supabase
+          .from("voice_call_sessions")
+          .update({ 
+            status: "escalated",
+            escalated_at: new Date().toISOString(),
+            escalation_reason: escalationReason
+          })
+          .eq("call_sid", callSid);
+
+        // Add the final response to messages
+        currentMessages.push({ role: "assistant", content: responseText });
+        await supabase
+          .from("voice_call_sessions")
+          .update({ messages: currentMessages })
+          .eq("call_sid", callSid);
+
+        // Get staff number for escalation (fallback to emergency phone)
+        const { data: staffSettings } = await supabase
+          .from("system_settings")
+          .select("key, value")
+          .in("key", ["settings_call_centre_phone", "settings_emergency_phone"]);
+        
+        const staffConfig = staffSettings?.reduce((acc, s) => {
+          acc[s.key] = s.value;
+          return acc;
+        }, {} as Record<string, string>) || {};
+
+        const escalatePhone = staffConfig.settings_call_centre_phone || 
+                             staffConfig.settings_emergency_phone || 
+                             twilioConfig.settings_twilio_phone_number;
+
+        const lang = detectedLanguage.startsWith("es") ? "es-ES" : "en-GB";
+        const voice = detectedLanguage.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+        const connectMsg = detectedLanguage.startsWith("es")
+          ? "Entiendo. Voy a conectarle con uno de nuestros especialistas. Por favor, espere un momento."
+          : "I understand. I'm connecting you with one of our specialists. Please hold for a moment.";
+        const failMsg = detectedLanguage.startsWith("es")
+          ? "Lo sentimos, nuestros operadores están ocupados. Por favor, inténtelo de nuevo más tarde."
+          : "Sorry, our operators are busy. Please try again later.";
+
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  ${responseText ? `<Say language="${lang}" voice="${voice}">${escapeXml(responseText)}</Say>` : ""}
+  <Say language="${lang}" voice="${voice}">${connectMsg}</Say>
+  <Dial timeout="30" callerId="${twilioConfig.settings_twilio_phone_number}">
+    ${escalatePhone}
+  </Dial>
+  <Say language="${lang}" voice="${voice}">${failMsg}</Say>
+  <Hangup/>
+</Response>`;
+
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      // Normal response - add to messages and continue conversation
+      currentMessages.push({ role: "assistant", content: responseText });
+      await supabase
+        .from("voice_call_sessions")
+        .update({ messages: currentMessages })
+        .eq("call_sid", callSid);
+
+      const lang = detectedLanguage.startsWith("es") ? "es-ES" : "en-GB";
+      const voice = detectedLanguage.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+
       const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say language="es-ES">Por favor, permanezca en línea.</Say>
-  <Play>http://com.twilio.music.classical.s3.amazonaws.com/BusssessAnt498_1702.mp3</Play>
+  <Say language="${lang}" voice="${voice}">${escapeXml(responseText)}</Say>
+  <Gather input="speech" 
+          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          language="${detectedLanguage}" 
+          speechTimeout="auto"
+          timeout="10"
+          actionOnEmptyResult="true">
+  </Gather>
 </Response>`;
 
       return new Response(twiml, {
@@ -93,8 +335,93 @@ serve(async (req) => {
       });
     }
 
+    // ============================================================
+    // ACTION: TIMEOUT - Handle no speech detected
+    // ============================================================
+    if (action === "timeout") {
+      const callSid = url.searchParams.get("callSid") || "";
+      
+      // Also try to get from form data if available
+      let actualCallSid = callSid;
+      try {
+        const formData = await req.formData();
+        actualCallSid = (formData.get("CallSid") as string) || callSid;
+      } catch {
+        // Form data might not be available
+      }
+
+      console.log("Timeout handler for CallSid:", actualCallSid);
+
+      // Load session
+      const { data: session } = await supabase
+        .from("voice_call_sessions")
+        .select("*")
+        .eq("call_sid", actualCallSid)
+        .single();
+
+      const timeoutCount = (session?.timeout_count || 0) + 1;
+      const language = session?.language || "es-ES";
+      const lang = language.startsWith("es") ? "es-ES" : "en-GB";
+      const voice = language.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+
+      // Update timeout count
+      if (session) {
+        await supabase
+          .from("voice_call_sessions")
+          .update({ timeout_count: timeoutCount, updated_at: new Date().toISOString() })
+          .eq("call_sid", actualCallSid);
+      }
+
+      // Check if max retries exceeded
+      if (timeoutCount >= MAX_TIMEOUT_RETRIES) {
+        const endMsg = language.startsWith("es")
+          ? "No he podido escucharle. Si necesita asistencia urgente, por favor llame de nuevo. Adiós."
+          : "I couldn't hear you. If you need urgent assistance, please call back. Goodbye.";
+
+        // Mark session as ended
+        if (session) {
+          await supabase
+            .from("voice_call_sessions")
+            .update({ status: "timeout_ended" })
+            .eq("call_sid", actualCallSid);
+        }
+
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="${lang}" voice="${voice}">${endMsg}</Say>
+  <Hangup/>
+</Response>`;
+        return new Response(twiml, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      // Prompt user to speak again
+      const retryMsg = language.startsWith("es")
+        ? "Disculpe, no le he escuchado bien. ¿Podría repetir, por favor?"
+        : "Sorry, I didn't catch that. Could you please repeat?";
+
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="${lang}" voice="${voice}">${retryMsg}</Say>
+  <Gather input="speech" 
+          action="${baseUrl}/functions/v1/twilio-voice?action=transcription" 
+          language="${language}" 
+          speechTimeout="auto"
+          timeout="10"
+          actionOnEmptyResult="true">
+  </Gather>
+</Response>`;
+
+      return new Response(twiml, {
+        headers: { ...corsHeaders, "Content-Type": "application/xml" },
+      });
+    }
+
+    // ============================================================
+    // ACTION: STATUS - Call status callback
+    // ============================================================
     if (action === "status") {
-      // Call status callback
       const formData = await req.formData();
       const callSid = formData.get("CallSid") as string;
       const callStatus = formData.get("CallStatus") as string;
@@ -102,6 +429,17 @@ serve(async (req) => {
       const recordingUrl = formData.get("RecordingUrl") as string;
 
       console.log("Call status update:", callSid, callStatus, duration);
+
+      // Update voice session status
+      if (callStatus === "completed" || callStatus === "busy" || callStatus === "failed" || callStatus === "no-answer") {
+        await supabase
+          .from("voice_call_sessions")
+          .update({ 
+            status: callStatus === "completed" ? "completed" : callStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq("call_sid", callSid);
+      }
 
       // Update alert_communications if exists
       await supabase
@@ -119,8 +457,10 @@ serve(async (req) => {
       );
     }
 
+    // ============================================================
+    // ACTION: RECORDING - Recording completed callback
+    // ============================================================
     if (action === "recording") {
-      // Recording completed callback
       const formData = await req.formData();
       const callSid = formData.get("CallSid") as string;
       const recordingUrl = formData.get("RecordingUrl") as string;
@@ -138,7 +478,9 @@ serve(async (req) => {
       );
     }
 
-    // Outbound call initiation (requires auth)
+    // ============================================================
+    // OUTBOUND CALL - Requires authentication
+    // ============================================================
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -153,10 +495,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -179,9 +520,9 @@ serve(async (req) => {
         To: to,
         From: twilioConfig.settings_twilio_phone_number || "+34900000000",
         Record: "true",
-        StatusCallback: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice?action=status`,
-        RecordingStatusCallback: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice?action=recording`,
-        Url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice?action=connect`,
+        StatusCallback: `${baseUrl}/functions/v1/twilio-voice?action=status`,
+        RecordingStatusCallback: `${baseUrl}/functions/v1/twilio-voice?action=recording`,
+        Url: `${baseUrl}/functions/v1/twilio-voice?action=outbound_connect`,
       }),
     });
 
@@ -196,7 +537,7 @@ serve(async (req) => {
         recipient_type: "member",
         recipient_phone: to,
         twilio_sid: callData.sid,
-        staff_id: claimsData.claims.sub
+        staff_id: user.id
       });
     }
 
@@ -213,3 +554,13 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function to escape XML special characters
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
