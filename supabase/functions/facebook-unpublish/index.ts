@@ -125,28 +125,38 @@ Deno.serve(async (req) => {
       deletedFromFacebook = true; // Nothing to delete
     }
 
-    // 4. Delete the linked blog post
+    // 4. Delete ALL linked blog posts (by social_post_id OR facebook_post_id)
     let blogRemoved = false;
-    const { data: blogPost, error: blogFetchError } = await supabase
+    let blogsDeletedCount = 0;
+
+    // Build OR condition for deletion
+    const orConditions: string[] = [];
+    orConditions.push(`social_post_id.eq.${post_id}`);
+    if (post.facebook_post_id) {
+      orConditions.push(`facebook_post_id.eq.${post.facebook_post_id}`);
+    }
+
+    const { data: matchingBlogs, error: blogFetchError } = await supabase
       .from("blog_posts")
       .select("id")
-      .eq("social_post_id", post_id)
-      .single();
+      .or(orConditions.join(","));
 
-    if (blogPost && !blogFetchError) {
+    if (matchingBlogs && matchingBlogs.length > 0 && !blogFetchError) {
+      const blogIds = matchingBlogs.map(b => b.id);
       const { error: blogDeleteError } = await supabase
         .from("blog_posts")
         .delete()
-        .eq("id", blogPost.id);
+        .in("id", blogIds);
 
       if (blogDeleteError) {
-        console.error("[facebook-unpublish] Failed to delete blog post:", blogDeleteError);
+        console.error("[facebook-unpublish] Failed to delete blog posts:", blogDeleteError);
       } else {
         blogRemoved = true;
-        console.log(`[facebook-unpublish] Deleted blog post: ${blogPost.id}`);
+        blogsDeletedCount = blogIds.length;
+        console.log(`[facebook-unpublish] Deleted ${blogsDeletedCount} blog post(s): ${blogIds.join(", ")}`);
       }
     } else {
-      console.log("[facebook-unpublish] No linked blog post found");
+      console.log("[facebook-unpublish] No linked blog posts found");
       blogRemoved = true; // Nothing to remove
     }
 

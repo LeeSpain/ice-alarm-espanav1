@@ -140,6 +140,35 @@ serve(async (req) => {
       const postText = slot.generated_post_text || "";
       const imageUrl = slot.generated_image_url;
 
+      // ─────────────────────────── CREATE SOCIAL POST RECORD ───────────────────────────
+      let socialPostId: string | null = null;
+      
+      if (postText) {
+        try {
+          const { data: socialPost, error: socialPostError } = await adminClient
+            .from("social_posts")
+            .insert({
+              post_text: postText,
+              post_text_es: slot.generated_post_text_es || null,
+              image_url: imageUrl,
+              language: "en",
+              status: "published",
+              published_at: new Date().toISOString(),
+            })
+            .select("id")
+            .single();
+
+          if (socialPostError) {
+            console.error("Failed to create social_posts record:", socialPostError);
+          } else {
+            socialPostId = socialPost?.id || null;
+            console.log(`Created social_posts record: ${socialPostId}`);
+          }
+        } catch (err) {
+          console.error("Error creating social_posts record:", err);
+        }
+      }
+
       // ─────────────────────────── PUBLISH TO BLOG (mandatory) ───────────────────────────
       if (slot.publish_to_blog && postText) {
         try {
@@ -181,6 +210,7 @@ serve(async (req) => {
               image_url: imageUrl,
               seo_title: title,
               seo_description: excerpt,
+              social_post_id: socialPostId, // Link to social post
             })
             .select("id, slug")
             .single();
