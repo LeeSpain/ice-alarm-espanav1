@@ -99,7 +99,7 @@ async function sendTestViaResend(
 
   const resend = new Resend(resendApiKey);
   const fromName = settings.from_name || "ICE Alarm España";
-  const fromEmail = settings.from_email || "noreply@icealarm.es";
+  const fromEmail = settings.from_email || "onboarding@resend.dev";
 
   const { data, error } = await resend.emails.send({
     from: `${fromName} <${fromEmail}>`,

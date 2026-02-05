@@ -146,7 +146,7 @@ serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "ICE Alarm Partners <partners@icealarm.es>",
+          from: "ICE Alarm Partners <onboarding@resend.dev>",
           to: [recipient],
           subject: subject,
           html: `

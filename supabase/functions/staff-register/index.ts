@@ -229,7 +229,7 @@ serve(async (req: Request) => {
           `;
 
         await resend.emails.send({
-          from: "ICE Alarm <noreply@icealarm.es>",
+          from: "ICE Alarm <onboarding@resend.dev>",
           to: [email],
           subject: preferred_language === "es" 
             ? "Tu cuenta de personal de ICE Alarm ha sido creada" 
