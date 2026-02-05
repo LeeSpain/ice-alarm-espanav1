@@ -8,8 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
@@ -28,8 +26,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users, Send,
-  DollarSign, Check, XCircle, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, User, Building2, Bell
+  ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users,
+  DollarSign, Check, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, Building2, Bell, Eye
 } from "lucide-react";
 import { PartnerOrganizationTab } from "@/components/admin/partner/PartnerOrganizationTab";
 import { PartnerMembersTab } from "@/components/admin/partner/PartnerMembersTab";
@@ -72,20 +70,6 @@ interface Partner {
   alert_visibility_enabled: boolean;
   billing_model: string;
   custom_rate_monthly: number | null;
-}
-
-interface PartnerAgreement {
-  id: string;
-  partner_id: string;
-  version: string;
-  signer_name: string;
-  signer_id_type: string;
-  signer_id_number: string;
-  signed_at: string;
-  ip_address: string | null;
-  confirmed_read: boolean;
-  confirmed_understand: boolean;
-  confirmed_accept: boolean;
 }
 
 interface Invite {
@@ -375,12 +359,46 @@ export default function PartnerDetailPage() {
             <Badge className={statusColors[partner.status]}>
               {partner.status.charAt(0).toUpperCase() + partner.status.slice(1)}
             </Badge>
+            <Badge 
+              variant="outline"
+              className={
+                partner.partner_type === "care" ? "border-blue-500 text-blue-600" :
+                partner.partner_type === "residential" ? "border-purple-500 text-purple-600" :
+                "border-muted-foreground"
+              }
+            >
+              {partner.partner_type?.charAt(0).toUpperCase() + partner.partner_type?.slice(1) || "Referral"}
+            </Badge>
           </div>
           {partner.company_name && (
             <p className="text-muted-foreground">{partner.company_name}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Quick Actions */}
+          <Button variant="outline" size="sm" onClick={() => {
+            const pricingTab = document.querySelector('[data-value="pricing"]') as HTMLElement;
+            pricingTab?.click();
+          }}>
+            <DollarSign className="mr-2 h-4 w-4" />
+            Set Pricing
+          </Button>
+          {partner.partner_type === "residential" && (
+            <Button variant="outline" size="sm" onClick={() => {
+              toast.info("Invoice generation coming soon");
+            }}>
+              <FileText className="mr-2 h-4 w-4" />
+              Generate Invoice
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => {
+            window.open(`/partner-dashboard?partnerId=${partner.id}`, '_blank');
+          }}>
+            <Eye className="mr-2 h-4 w-4" />
+            View as Partner
+          </Button>
+          
+          {/* Status Actions */}
           {partner.status === "pending" && (
             <AlertDialog>
               <AlertDialogTrigger asChild>

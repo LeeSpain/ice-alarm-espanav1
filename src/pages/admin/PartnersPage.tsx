@@ -28,6 +28,8 @@ interface Partner {
   phone: string | null;
   preferred_language: string;
   partner_type: string;
+  organization_type: string | null;
+  facility_resident_count: number | null;
 }
 
 interface PartnerStats {
@@ -355,6 +357,7 @@ export default function PartnersPage() {
                 <TableRow>
                    <TableHead>Partner</TableHead>
                    <TableHead>Type</TableHead>
+                   <TableHead>Organization</TableHead>
                    <TableHead>Code</TableHead>
                    <TableHead>Status</TableHead>
                    <TableHead className="text-center">Invites</TableHead>
@@ -396,6 +399,22 @@ export default function PartnersPage() {
                         >
                           {partner.partner_type?.charAt(0).toUpperCase() + partner.partner_type?.slice(1) || "Referral"}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(partner.partner_type === "care" || partner.partner_type === "residential") ? (
+                          <div>
+                            <div className="text-sm">
+                              {partner.organization_type?.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") || "—"}
+                            </div>
+                            {partner.partner_type === "residential" && partner.facility_resident_count !== null && (
+                              <div className="text-xs text-muted-foreground">
+                                {partner.facility_resident_count} residents
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <code className="rounded bg-muted px-2 py-1 text-xs">
