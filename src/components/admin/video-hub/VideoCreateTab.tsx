@@ -55,6 +55,16 @@ const STEPS_BY_MODE: Record<CreationMode, string[]> = {
   quick: ["quick-setup", "preview"],
 };
 
+// Fields required for each step (for step-level validation)
+const STEP_FIELDS: Record<string, string[]> = {
+  template: ["name", "template_id"],
+  format: ["format", "duration", "language"],
+  content: ["headline", "bullets", "ctaText"],
+  assets: [], // No required validation fields
+  preview: [], // All fields validated here
+  "quick-setup": ["name", "headline", "bullets", "ctaText", "format", "duration", "language"],
+};
+
 // Validation constants
 const MAX_HEADLINE_LENGTH = 60;
 const MAX_BULLET_LENGTH = 80;
@@ -211,6 +221,24 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
 
   const handleNext = () => {
     if (currentStep < currentSteps.length - 1) {
+      const stepName = currentSteps[currentStep];
+      const stepFields = STEP_FIELDS[stepName] || [];
+      
+      // Mark current step fields as touched
+      setTouched(prev => {
+        const newTouched = new Set(prev);
+        stepFields.forEach(field => newTouched.add(field));
+        return newTouched;
+      });
+      
+      // Check if current step has validation errors
+      const stepHasErrors = stepFields.some(field => validationErrors[field as keyof ValidationErrors]);
+      
+      if (stepHasErrors) {
+        toast.error(t("videoHub.validation.fixStepErrors", "Please fix errors on this step before continuing"));
+        return;
+      }
+      
       setCurrentStep(currentStep + 1);
     }
   };
@@ -641,7 +669,22 @@ function TemplateSelectionStep({ templates, templatesLoading, projectData, setPr
                 projectData.template_id === template.id ? "border-2 border-primary" : ""
               }`}
               onClick={() => {
-                setProjectData({ ...projectData, template_id: template.id });
+                // Auto-sync format/duration to first allowed values if current is invalid
+                const allowedFormats = template.allowed_formats || ["16:9"];
+                const allowedDurations = template.allowed_durations || [15];
+                const newFormat = allowedFormats.includes(projectData.format) 
+                  ? projectData.format 
+                  : allowedFormats[0];
+                const newDuration = allowedDurations.includes(projectData.duration) 
+                  ? projectData.duration 
+                  : allowedDurations[0];
+                
+                setProjectData({ 
+                  ...projectData, 
+                  template_id: template.id,
+                  format: newFormat,
+                  duration: newDuration
+                });
                 onBlur("template_id");
               }}
             >

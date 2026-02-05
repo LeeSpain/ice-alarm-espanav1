@@ -3462,6 +3462,7 @@
       "durationNotAllowed": "This duration is not allowed by the selected template",
       "notAllowed": "Not allowed",
       "fixErrors": "Please fix the validation errors",
+      "fixStepErrors": "Please fix errors on this step before continuing",
       "hasErrors": "Please fix validation errors before rendering"
     },
     "create": {

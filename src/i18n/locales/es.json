@@ -3438,6 +3438,7 @@
       "durationNotAllowed": "Esta duración no está permitida por la plantilla seleccionada",
       "notAllowed": "No permitido",
       "fixErrors": "Por favor, corrige los errores de validación",
+      "fixStepErrors": "Por favor, corrige los errores en este paso antes de continuar",
       "hasErrors": "Por favor, corrige los errores antes de renderizar"
     },
     "create": {
