@@ -1,6 +1,46 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// Gmail SMTP helper function
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Gmail SMTP error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -368,11 +408,9 @@ serve(async (req) => {
             console.error("Failed to call notify-admin:", notifyError);
           }
 
-          // Send member welcome email
-          const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-          if (RESEND_API_KEY && memberData?.email) {
+          // Send member welcome email via Gmail SMTP
+          if (memberData?.email) {
             try {
-              const resend = new Resend(RESEND_API_KEY);
               const orderNum = orderData?.order_number || session.metadata.order_id;
               const amount = session.amount_total ? session.amount_total / 100 : 0;
               const lang = memberData?.preferred_language || "es";
@@ -387,17 +425,14 @@ serve(async (req) => {
                 dashboardUrl
               );
 
-              const { error: emailError } = await resend.emails.send({
-                from: "ICE Alarm <onboarding@resend.dev>",
-                to: [memberData.email],
-                subject: lang === "es" || lang === "ES"
-                  ? "¡Bienvenido a ICE Alarm! Tu membresía está activa"
-                  : "Welcome to ICE Alarm! Your membership is active",
-                html: emailHtml,
-              });
+              const emailSubject = lang === "es" || lang === "ES"
+                ? "¡Bienvenido a ICE Alarm! Tu membresía está activa"
+                : "Welcome to ICE Alarm! Your membership is active";
 
-              if (emailError) {
-                console.error("Error sending member welcome email:", emailError);
+              const emailResult = await sendViaGmailSMTP(memberData.email, emailSubject, emailHtml);
+
+              if (!emailResult.success) {
+                console.error("Error sending member welcome email:", emailResult.error);
               } else {
                 console.log("Member welcome email sent to:", memberData.email);
               }

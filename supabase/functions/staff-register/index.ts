@@ -1,6 +1,46 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// Gmail SMTP helper function
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Gmail SMTP error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -193,55 +233,52 @@ serve(async (req: Request) => {
       },
     });
 
-    // Send welcome email with credentials
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (resendApiKey) {
-      try {
-        const resend = new Resend(resendApiKey);
-        const staffLoginUrl = `${req.headers.get("origin") || "https://shelter-span.lovable.app"}/staff/login`;
-        
-        const emailContent = preferred_language === "es" 
-          ? `
-            <h1>Bienvenido al Portal de Personal de ICE Alarm</h1>
-            <p>Hola ${first_name},</p>
-            <p>Tu cuenta de personal ha sido creada con el rol: <strong>${getRoleDisplayName(role)}</strong></p>
-            <p>Tus credenciales de acceso temporales:</p>
-            <ul>
-              <li><strong>Email:</strong> ${email}</li>
-              <li><strong>Contraseña temporal:</strong> ${tempPassword}</li>
-            </ul>
-            <p>Por favor, inicia sesión y cambia tu contraseña inmediatamente.</p>
-            <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Iniciar Sesión</a></p>
-            <p>Si tienes alguna pregunta, contacta con tu supervisor.</p>
-          `
-          : `
-            <h1>Welcome to ICE Alarm Staff Portal</h1>
-            <p>Hello ${first_name},</p>
-            <p>Your staff account has been created with the role: <strong>${getRoleDisplayName(role)}</strong></p>
-            <p>Your temporary login credentials:</p>
-            <ul>
-              <li><strong>Email:</strong> ${email}</li>
-              <li><strong>Temporary Password:</strong> ${tempPassword}</li>
-            </ul>
-            <p>Please log in and change your password immediately.</p>
-            <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to Staff Portal</a></p>
-            <p>If you have any questions, please contact your supervisor.</p>
-          `;
+    // Send welcome email with credentials via Gmail SMTP
+    try {
+      const staffLoginUrl = `${req.headers.get("origin") || "https://shelter-span.lovable.app"}/staff/login`;
+      
+      const emailContent = preferred_language === "es" 
+        ? `
+          <h1>Bienvenido al Portal de Personal de ICE Alarm</h1>
+          <p>Hola ${first_name},</p>
+          <p>Tu cuenta de personal ha sido creada con el rol: <strong>${getRoleDisplayName(role)}</strong></p>
+          <p>Tus credenciales de acceso temporales:</p>
+          <ul>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Contraseña temporal:</strong> ${tempPassword}</li>
+          </ul>
+          <p>Por favor, inicia sesión y cambia tu contraseña inmediatamente.</p>
+          <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Iniciar Sesión</a></p>
+          <p>Si tienes alguna pregunta, contacta con tu supervisor.</p>
+        `
+        : `
+          <h1>Welcome to ICE Alarm Staff Portal</h1>
+          <p>Hello ${first_name},</p>
+          <p>Your staff account has been created with the role: <strong>${getRoleDisplayName(role)}</strong></p>
+          <p>Your temporary login credentials:</p>
+          <ul>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Temporary Password:</strong> ${tempPassword}</li>
+          </ul>
+          <p>Please log in and change your password immediately.</p>
+          <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to Staff Portal</a></p>
+          <p>If you have any questions, please contact your supervisor.</p>
+        `;
 
-        await resend.emails.send({
-          from: "ICE Alarm <onboarding@resend.dev>",
-          to: [email],
-          subject: preferred_language === "es" 
-            ? "Tu cuenta de personal de ICE Alarm ha sido creada" 
-            : "Your ICE Alarm Staff Account Has Been Created",
-          html: emailContent,
-        });
+      const emailSubject = preferred_language === "es" 
+        ? "Tu cuenta de personal de ICE Alarm ha sido creada" 
+        : "Your ICE Alarm Staff Account Has Been Created";
 
+      const emailResult = await sendViaGmailSMTP(email, emailSubject, emailContent);
+
+      if (emailResult.success) {
         console.log("Welcome email sent successfully to:", email);
-      } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError);
-        // Don't fail the request if email fails - staff account was created successfully
+      } else {
+        console.error("Failed to send welcome email:", emailResult.error);
       }
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't fail the request if email fails - staff account was created successfully
     }
 
     return new Response(

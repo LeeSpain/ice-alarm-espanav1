@@ -1,6 +1,46 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// Gmail SMTP helper function
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Gmail SMTP error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -844,12 +884,9 @@ serve(async (req) => {
       console.log("TEST MODE: All records marked as completed");
     }
 
-    // 14. SEND REGISTRATION CONFIRMATION EMAIL
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (RESEND_API_KEY && body.primaryMember.email) {
+    // 14. SEND REGISTRATION CONFIRMATION EMAIL via Gmail SMTP
+    if (body.primaryMember.email) {
       try {
-        const resend = new Resend(RESEND_API_KEY);
-        
         const emailHtml = buildRegistrationConfirmationEmail(
           body.primaryMember.firstName,
           body.membershipType,
@@ -859,17 +896,14 @@ serve(async (req) => {
           body.primaryMember.preferredLanguage
         );
 
-        const { error: emailError } = await resend.emails.send({
-          from: "ICE Alarm <onboarding@resend.dev>",
-          to: [body.primaryMember.email],
-          subject: body.primaryMember.preferredLanguage === "es"
-            ? "Completa tu registro en ICE Alarm"
-            : "Complete Your ICE Alarm Registration",
-          html: emailHtml,
-        });
+        const emailSubject = body.primaryMember.preferredLanguage === "es"
+          ? "Completa tu registro en ICE Alarm"
+          : "Complete Your ICE Alarm Registration";
 
-        if (emailError) {
-          console.error("Error sending registration confirmation email:", emailError);
+        const emailResult = await sendViaGmailSMTP(body.primaryMember.email, emailSubject, emailHtml);
+
+        if (!emailResult.success) {
+          console.error("Error sending registration confirmation email:", emailResult.error);
         } else {
           console.log("Registration confirmation email sent to:", body.primaryMember.email);
         }
