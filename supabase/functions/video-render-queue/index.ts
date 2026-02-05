@@ -140,16 +140,20 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       .update({ status: "approved" })
       .eq("id", projectId);
 
-    // Create a placeholder export record
+    // Create export record with demo video placeholder
+    // In production, this would be the actual rendered video URL from storage
+    const demoVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    const demoThumbnail = "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+
     await supabase
       .from("video_exports")
       .insert({
         project_id: projectId,
         render_id: renderId,
-        mp4_url: null,
+        mp4_url: demoVideoUrl,
         srt_url: null,
         vtt_url: null,
-        thumbnail_url: null,
+        thumbnail_url: demoThumbnail,
       });
 
     console.log(`Render ${renderId} completed successfully (simulated)`);
