@@ -1,261 +1,451 @@
 
 
-# Complete Review: Partner Distribution Feature
+# B2B Partner System Upgrade - Implementation Plan
 
-## Executive Summary
+## Overview
 
-After a thorough review of all components, I found that the **Partner Distribution feature is 95% complete** but has **one critical issue** that prevents posts from appearing in the Partner Marketing Tools: the **deployed edge function may not have the partner link generation code**.
-
----
-
-## Architecture Overview
-
-The Partner Distribution system consists of:
-
-| Component | Status | Location |
-|-----------|--------|----------|
-| Admin UI (enable distribution) | ✅ Working | `MediaManagerPage.tsx` + `PartnerDistributionSection.tsx` |
-| Database schema | ✅ Complete | `social_posts` columns + `partner_post_links` table |
-| Save distribution settings | ✅ Working | `useSocialPosts.ts` |
-| Generate links on publish | ❌ **NOT EXECUTING** | `facebook-publish/index.ts` |
-| Tracked link handler | ✅ Complete | `ReferralRedirect.tsx` + `track-referral-click` edge function |
-| Partner Dashboard display | ✅ Complete | `PartnerDashboard.tsx` (Share tab) |
-| Attribution on signup | ✅ Complete | `crmEvents.ts` + `submit-registration` |
+This plan adds B2B capabilities to the existing partner system, enabling three partner types: **Referral** (individual affiliates), **Care** (agencies/charities), and **Residential** (care homes, urbanizations). The upgrade introduces partner-specific pricing, ongoing member relationships, and alert visibility features for residential partners.
 
 ---
 
-## Issues Found
+## Current System Analysis
 
-### Issue #1: CRITICAL - Partner Links Not Being Generated
+### What Already Exists (Will Not Duplicate)
 
-**Evidence:**
-- Post `c0aa35e3-87e4-46cb-81e4-bd015f9a74ae` has:
-  - `partner_enabled = true`
-  - `partner_audience = 'all'`
-  - `status = 'published'`
-- BUT:
-  - `partner_published_at = null`
-  - `content_channels = []` (empty, should be `['facebook', 'blog']`)
-  - `primary_url = null` (should be the blog URL)
-  - `partner_post_links` table is **empty**
-
-**Edge function logs show:**
-```
-INFO Blog post created successfully
-INFO AI intro generated: success
-```
-But NO log for "Generating partner links..." which is the first line in the partner generation block.
-
-**Root Cause:** The `facebook-publish` edge function was likely not redeployed after the partner distribution code was added. The deployed version does not include the partner link generation logic.
-
-**Fix Required:** Redeploy the `facebook-publish` edge function.
+| Component | Status |
+|-----------|--------|
+| `partners` table with basic fields | ✅ Exists |
+| `company_name` column | ✅ Exists |
+| `cif` column (Spanish tax ID) | ✅ Exists |
+| `partner_commissions` table | ✅ Exists |
+| `partner_invites` table | ✅ Exists |
+| `partner_attributions` table | ✅ Exists |
+| `partner_clicks` table | ✅ Exists |
+| `partner_post_links` table | ✅ Exists |
+| `partner_presentations` table | ✅ Exists |
+| `partner_agreements` table | ✅ Exists |
+| `members.ref_partner_id` column | ✅ Exists |
+| All partner pages (Join, Login, Dashboard, etc.) | ✅ Exist |
+| Admin partner management pages | ✅ Exist |
 
 ---
 
-### Issue #2: ShareContentSection Not in Marketing Page
+## Database Schema Changes
 
-**Current State:**
-- `ShareContentSection` is in the **Dashboard** page under a "Share" tab
-- `PartnerMarketingPage` (sidebar item "Marketing") contains:
-  - Referral link + QR code
-  - Presentations upload
-  - **No shareable posts section**
+### 1. New Columns for `partners` Table
 
-**User Expectation:** Per the request, shareable posts should appear in "Marketing Tools"
-
-**Fix Required:** Add `ShareContentSection` to `PartnerMarketingPage.tsx` to display shareable posts with tracked links, alongside the existing referral link/QR code/presentations sections.
-
----
-
-### Issue #3: Missing Fallback for Pre-Existing Posts
-
-Posts published BEFORE the partner distribution feature was added cannot retroactively generate partner links. There's no admin action to regenerate links for already-published posts.
-
-**Fix Required (Optional Enhancement):** Add a "Generate Partner Links" button in admin for published posts that have `partner_enabled=true` but `partner_published_at=null`.
-
----
-
-## Data Flow Analysis
-
-### When Admin Saves Draft with Partner Distribution:
-
-```
-1. Admin toggles "Make available to partners" → setPartnerEnabled(true)
-2. Admin selects "All active partners" → setPartnerAudience("all")
-3. Admin clicks "Save Draft"
-   ↓
-4. handleSaveDraft() → createDraft() or updateDraft()
-   ↓
-5. social_posts INSERT/UPDATE with:
-   - partner_enabled: true
-   - partner_audience: 'all'
-   - partner_selected_partner_ids: null (for 'all')
-```
-
-### When Admin Publishes:
-
-```
-1. Admin clicks "Publish"
-   ↓
-2. publishPost() → supabase.functions.invoke("facebook-publish")
-   ↓
-3. facebook-publish edge function:
-   a. Creates blog post ✅
-   b. Publishes to Facebook ✅
-   c. Updates social_posts with primary_url, content_channels ❌ NOT HAPPENING
-   d. If partner_enabled:
-      - Fetches active partners
-      - Generates partner_post_links entries ❌ NOT HAPPENING
-      - Updates partner_published_at ❌ NOT HAPPENING
-```
-
-### When Partner Visits Dashboard:
-
-```
-1. Partner navigates to Dashboard → "Share" tab
-   ↓
-2. ShareContentSection renders
-   ↓
-3. usePartnerShareableContent(partnerId) queries:
-   SELECT * FROM partner_post_links
-   WHERE partner_id = :partnerId
-   AND status = 'active'
-   JOIN social_posts WHERE status = 'published'
-   ↓
-4. RESULT: Empty array (no links exist!)
-   ↓
-5. UI shows: "No content available for sharing"
-```
-
----
-
-## Verified Working Components
-
-### 1. Admin Partner Distribution UI ✅
-- Location: `src/pages/admin/MediaManagerPage.tsx` lines 582-591
-- Toggle appears in post editor
-- Audience selection (all/selected) works
-- State saved to social_posts table correctly
-
-### 2. Database Schema ✅
-- `social_posts` has all required columns:
-  - `partner_enabled` (boolean, default false)
-  - `partner_audience` (text, default 'none')
-  - `partner_selected_partner_ids` (uuid[])
-  - `partner_published_at` (timestamptz)
-  - `content_channels` (text[])
-  - `primary_url` (text)
-- `partner_post_links` table exists with correct structure
-- RLS policies configured for staff and partners
-
-### 3. Tracked Link Handler ✅
-- Route: `/r/:partnerCode/:postSlug`
-- Resolves link from `partner_post_links`
-- Calls `track-referral-click` edge function
-- Sets localStorage with `partner_referral` data
-- Redirects to primary_url or blog
-
-### 4. Attribution on Signup ✅
-- `getStoredReferralData()` checks `partner_referral` localStorage
-- Extracts `refPostId` and `referralCode`
-- `JoinPaymentStep` passes both to `submit-registration`
-- Edge function increments `partner_post_links.signups`
-
-### 5. Partner Dashboard Share Tab ✅
-- `ShareContentSection` renders post cards with:
-  - Copy Caption button
-  - Copy Link button
-  - WhatsApp/Email share buttons
-  - Stats (clicks, signups, purchases, commission)
-
----
-
-## Implementation Plan
-
-### Part A: Redeploy facebook-publish Edge Function
-The edge function code is correct but needs to be redeployed to include the partner link generation logic.
-
-### Part B: Add ShareContentSection to Marketing Page
-Update `PartnerMarketingPage.tsx` to include the `ShareContentSection` component, providing partners access to shareable posts from the Marketing Tools page (in addition to the Dashboard Share tab).
-
-### Part C: Regenerate Links for Existing Post
-For the already-published post with `partner_enabled=true`:
-- Manually trigger link generation via a database operation or
-- Re-publish the post (not ideal as it would duplicate Facebook post)
-
----
-
-## Technical Details
-
-### File Changes Required
-
-| File | Change |
-|------|--------|
-| `supabase/functions/facebook-publish/index.ts` | Redeploy (no code changes needed) |
-| `src/pages/partner/PartnerMarketingPage.tsx` | Add ShareContentSection import and render |
-
-### Marketing Page Update
-
-Add to PartnerMarketingPage.tsx:
-1. Import ShareContentSection component
-2. Add section after presentations for shareable posts
-3. Pass partner.id as prop
-
-### Database Fix for Existing Post
-
-Run SQL to generate links for the already-published post:
 ```sql
--- Insert partner link for the existing post
-INSERT INTO partner_post_links (post_id, partner_id, tracked_code, tracked_path, tracked_url)
-SELECT 
-  'c0aa35e3-87e4-46cb-81e4-bd015f9a74ae',
-  p.id,
-  p.referral_code,
-  '/r/' || p.referral_code || '/looking-after-family-can-be-h',
-  'https://icealarm.es/r/' || p.referral_code || '/looking-after-family-can-be-h'
-FROM partners p
-WHERE p.status = 'active'
-ON CONFLICT (post_id, partner_id) DO NOTHING;
+-- Partner type categorization
+ALTER TABLE partners ADD COLUMN partner_type text NOT NULL DEFAULT 'referral'
+  CHECK (partner_type IN ('referral', 'care', 'residential'));
 
--- Update the social_post with missing fields
-UPDATE social_posts 
-SET 
-  partner_published_at = NOW(),
-  content_channels = ARRAY['facebook', 'blog'],
-  primary_url = 'https://icealarm.es/blog/have-you-ever-stopped-to-think-about-how-much-easier-it-woul'
-WHERE id = 'c0aa35e3-87e4-46cb-81e4-bd015f9a74ae';
+-- Organization classification
+ALTER TABLE partners ADD COLUMN organization_type text DEFAULT 'individual'
+  CHECK (organization_type IN (
+    'individual', 'charity', 'care_agency', 'home_care',
+    'care_home', 'urbanization', 'retirement_community', 'other'
+  ));
+
+-- Organization details
+ALTER TABLE partners ADD COLUMN organization_registration text;
+ALTER TABLE partners ADD COLUMN organization_website text;
+
+-- Care partner specific
+ALTER TABLE partners ADD COLUMN estimated_monthly_referrals text
+  CHECK (estimated_monthly_referrals IN ('1-5', '5-10', '10-20', '20+'));
+
+-- Residential partner specific
+ALTER TABLE partners ADD COLUMN facility_address text;
+ALTER TABLE partners ADD COLUMN facility_resident_count integer;
+ALTER TABLE partners ADD COLUMN alert_visibility_enabled boolean DEFAULT false;
+ALTER TABLE partners ADD COLUMN billing_model text DEFAULT 'commission'
+  CHECK (billing_model IN ('commission', 'per_resident', 'custom'));
+ALTER TABLE partners ADD COLUMN custom_rate_monthly numeric(10,2);
+```
+
+### 2. New Table: `partner_members`
+
+Links residential/care partners to members for ongoing relationships (beyond initial referral attribution).
+
+```sql
+CREATE TABLE partner_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id uuid NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  relationship_type text DEFAULT 'resident'
+    CHECK (relationship_type IN ('resident', 'client', 'beneficiary')),
+  added_at timestamptz DEFAULT now(),
+  added_by uuid REFERENCES auth.users(id),
+  removed_at timestamptz,
+  notes text,
+  UNIQUE(partner_id, member_id)
+);
+
+-- RLS policies
+ALTER TABLE partner_members ENABLE ROW LEVEL SECURITY;
+
+-- Partners can view their own member relationships
+CREATE POLICY "Partners view own member relationships"
+  ON partner_members FOR SELECT
+  USING (partner_id IN (
+    SELECT id FROM partners WHERE user_id = auth.uid()
+  ));
+
+-- Staff can manage all partner member relationships
+CREATE POLICY "Staff manage partner members"
+  ON partner_members FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      WHERE user_id = auth.uid() AND is_active = true
+    )
+  );
+```
+
+### 3. New Table: `partner_pricing_tiers`
+
+Custom pricing for B2B partners.
+
+```sql
+CREATE TABLE partner_pricing_tiers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id uuid NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  membership_type text NOT NULL CHECK (membership_type IN ('single', 'couple')),
+  billing_frequency text NOT NULL CHECK (billing_frequency IN ('monthly', 'annual')),
+  subscription_net_price numeric(10,2) NOT NULL,
+  registration_fee numeric(10,2) DEFAULT 0,
+  registration_fee_discount_percent integer DEFAULT 0,
+  pendant_net_price numeric(10,2),
+  commission_amount numeric(10,2) DEFAULT 50,
+  effective_from timestamptz DEFAULT now(),
+  effective_to timestamptz,
+  created_by uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(partner_id, membership_type, billing_frequency, effective_from)
+);
+
+-- RLS policies
+ALTER TABLE partner_pricing_tiers ENABLE ROW LEVEL SECURITY;
+
+-- Partners can view their own pricing
+CREATE POLICY "Partners view own pricing"
+  ON partner_pricing_tiers FOR SELECT
+  USING (partner_id IN (
+    SELECT id FROM partners WHERE user_id = auth.uid()
+  ));
+
+-- Staff can manage all pricing tiers
+CREATE POLICY "Staff manage pricing tiers"
+  ON partner_pricing_tiers FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      WHERE user_id = auth.uid() AND is_active = true
+    )
+  );
+```
+
+### 4. New Table: `partner_alert_subscriptions`
+
+For residential partners to subscribe to member alerts.
+
+```sql
+CREATE TABLE partner_alert_subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id uuid NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  member_id uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  notify_email boolean DEFAULT true,
+  notify_sms boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(partner_id, member_id)
+);
+
+-- RLS policies
+ALTER TABLE partner_alert_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Partners can view/manage their own subscriptions
+CREATE POLICY "Partners manage own alert subscriptions"
+  ON partner_alert_subscriptions FOR ALL
+  USING (partner_id IN (
+    SELECT id FROM partners 
+    WHERE user_id = auth.uid() AND alert_visibility_enabled = true
+  ));
+
+-- Staff can manage all subscriptions
+CREATE POLICY "Staff manage alert subscriptions"
+  ON partner_alert_subscriptions FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      WHERE user_id = auth.uid() AND is_active = true
+    )
+  );
+```
+
+### 5. New Table: `partner_alert_notifications`
+
+Audit log of alert notifications sent to partners.
+
+```sql
+CREATE TABLE partner_alert_notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id uuid NOT NULL REFERENCES partners(id),
+  alert_id uuid NOT NULL REFERENCES alerts(id),
+  member_id uuid NOT NULL REFERENCES members(id),
+  notification_method text NOT NULL CHECK (notification_method IN ('email', 'sms', 'dashboard')),
+  sent_at timestamptz DEFAULT now(),
+  acknowledged_at timestamptz,
+  acknowledged_by text
+);
+
+-- RLS policies
+ALTER TABLE partner_alert_notifications ENABLE ROW LEVEL SECURITY;
+
+-- Partners can view their own notifications
+CREATE POLICY "Partners view own alert notifications"
+  ON partner_alert_notifications FOR SELECT
+  USING (partner_id IN (
+    SELECT id FROM partners WHERE user_id = auth.uid()
+  ));
+
+-- Staff can view all notifications
+CREATE POLICY "Staff view all alert notifications"
+  ON partner_alert_notifications FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM staff
+      WHERE user_id = auth.uid() AND is_active = true
+    )
+  );
 ```
 
 ---
 
-## Testing Checklist
+## Frontend Changes
 
-After implementation:
+### 1. Partner Registration Updates
 
-1. **Admin Flow:**
-   - [ ] Create new draft post
-   - [ ] Enable Partner Distribution, select "All partners"
-   - [ ] Save draft → Verify `partner_enabled=true` in database
-   - [ ] Approve post
-   - [ ] Publish post
-   - [ ] Verify `partner_post_links` entries created
-   - [ ] Verify `partner_published_at` is set
-   - [ ] Verify `content_channels` and `primary_url` are set
+**File: `src/pages/partner/PartnerJoin.tsx`**
 
-2. **Partner Dashboard:**
-   - [ ] Log in as partner
-   - [ ] Go to Dashboard → Share tab → See published post
-   - [ ] Go to Marketing Tools → See same shareable posts section
-   - [ ] Copy tracked link → Verify format `/r/PARTNERCODE/slug`
+Add a multi-step flow with partner type selection:
+- Step 1: Choose partner type (Referral / Care Partner / Residential Partner)
+- Step 2: Basic contact info (existing fields)
+- Step 3: Organization details (conditional - for Care/Residential)
+- Step 4: Payout information (existing fields)
+- Step 5: Account creation
 
-3. **Tracked Link Click:**
-   - [ ] Open tracked link in incognito
-   - [ ] Verify redirect to blog post
-   - [ ] Verify `partner_post_links.clicks` incremented
-   - [ ] Verify `partner_clicks` row created
+New form fields based on partner type:
+- **Care Partners**: Organization type, registration number, website, estimated monthly referrals
+- **Residential Partners**: Organization type, facility address, resident count, alert visibility preference
 
-4. **Attribution:**
-   - [ ] After clicking tracked link, complete signup
-   - [ ] Verify `partner_post_links.signups` incremented
-   - [ ] Verify member has `ref_partner_id` and `ref_post_id`
+### 2. Partner Settings Updates
+
+**File: `src/pages/partner/PartnerSettingsPage.tsx`**
+
+Add new sections:
+- Organization Details card (for Care/Residential partners)
+- Facility Information card (for Residential partners)
+- Alert Preferences card (for Residential partners with alert visibility enabled)
+
+### 3. New Partner Member Management Page
+
+**New File: `src/pages/partner/PartnerMembersPage.tsx`**
+
+For Care/Residential partners to view and manage their associated members:
+- List of members with relationship type
+- Add member (staff feature) / view member details
+- For Residential: alert subscription toggle per member
+- Export functionality
+
+### 4. Partner Alerts Dashboard
+
+**New File: `src/pages/partner/PartnerAlertsPage.tsx`**
+
+For Residential partners with alert visibility:
+- Real-time alert feed for subscribed members
+- Alert history with filters
+- Acknowledge alert button
+- Member status overview
+
+### 5. Admin Partner Detail Updates
+
+**File: `src/pages/admin/PartnerDetailPage.tsx`**
+
+Add new tabs:
+- **Organization Tab**: View/edit organization details, partner type
+- **Members Tab**: Manage partner_members relationships
+- **Pricing Tab**: Configure custom pricing tiers
+- **Alerts Tab**: View alert notification history (for Residential partners)
+
+### 6. Admin Add Partner Updates
+
+**File: `src/pages/admin/AddPartnerPage.tsx`**
+
+Add fields for:
+- Partner type selection
+- Organization type and details
+- Facility information (for Residential)
+- Alert visibility toggle
+- Initial pricing tier setup
+
+---
+
+## Edge Function Changes
+
+### 1. Update Partner Registration
+
+**File: `supabase/functions/partner-register/index.ts`**
+
+Accept new fields:
+- `partner_type`
+- `organization_type`
+- `organization_registration`
+- `organization_website`
+- `estimated_monthly_referrals`
+- `facility_address`
+- `facility_resident_count`
+
+### 2. Update Admin Partner Create
+
+**File: `supabase/functions/partner-admin-create/index.ts`**
+
+Accept same new fields as above, plus:
+- `billing_model`
+- `custom_rate_monthly`
+- Initial pricing tier data
+
+### 3. New Edge Function: Partner Alert Notifications
+
+**New File: `supabase/functions/partner-alert-notify/index.ts`**
+
+Triggered when an alert is created:
+1. Find partner_alert_subscriptions for the member
+2. For each subscription, check partner's alert_visibility_enabled
+3. Send notification via email/SMS based on preferences
+4. Log to partner_alert_notifications
+
+---
+
+## Hooks and API
+
+### New Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `usePartnerMembers.ts` | CRUD for partner_members table |
+| `usePartnerPricing.ts` | CRUD for partner_pricing_tiers table |
+| `usePartnerAlertSubscriptions.ts` | Manage alert subscriptions |
+| `usePartnerAlertNotifications.ts` | View alert notification history |
+
+### Updated Hooks
+
+| Hook | Changes |
+|------|---------|
+| `usePartnerData.ts` | Include new fields in queries |
+| `usePartnerStats.ts` | Add member count for Care/Residential partners |
+
+---
+
+## Navigation Updates
+
+### Partner Sidebar
+
+Add new items for Care/Residential partners:
+- "My Members" link (visible for Care/Residential partners)
+- "Alerts" link (visible for Residential partners with alert_visibility_enabled)
+
+**File: `src/components/layout/PartnerSidebar.tsx` or `PartnerLayout.tsx`**
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/pages/partner/PartnerMembersPage.tsx` | Member management for Care/Residential |
+| `src/pages/partner/PartnerAlertsPage.tsx` | Alert visibility for Residential |
+| `src/hooks/usePartnerMembers.ts` | Hook for partner_members operations |
+| `src/hooks/usePartnerPricing.ts` | Hook for pricing tier operations |
+| `src/hooks/usePartnerAlertSubscriptions.ts` | Hook for alert subscriptions |
+| `src/hooks/usePartnerAlertNotifications.ts` | Hook for alert notifications |
+| `src/components/partner/PartnerTypeSelector.tsx` | Partner type selection component |
+| `src/components/partner/OrganizationDetailsForm.tsx` | Organization details form |
+| `src/components/partner/FacilityDetailsForm.tsx` | Facility details form (Residential) |
+| `src/components/partner/MemberList.tsx` | Member list component |
+| `src/components/partner/AlertFeed.tsx` | Alert feed component |
+| `src/components/admin/partner/PartnerOrganizationTab.tsx` | Admin org details tab |
+| `src/components/admin/partner/PartnerMembersTab.tsx` | Admin members tab |
+| `src/components/admin/partner/PartnerPricingTab.tsx` | Admin pricing tab |
+| `supabase/functions/partner-alert-notify/index.ts` | Alert notification edge function |
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/partner/PartnerJoin.tsx` | Add partner type selection, multi-step flow |
+| `src/pages/partner/PartnerSettingsPage.tsx` | Add organization & facility sections |
+| `src/pages/admin/AddPartnerPage.tsx` | Add new B2B fields |
+| `src/pages/admin/PartnerDetailPage.tsx` | Add new tabs |
+| `src/pages/admin/PartnersPage.tsx` | Add partner type filter |
+| `src/hooks/usePartnerData.ts` | Include new fields |
+| `supabase/functions/partner-register/index.ts` | Accept new fields |
+| `supabase/functions/partner-admin-create/index.ts` | Accept new fields |
+| `src/components/layout/PartnerLayout.tsx` | Add new sidebar items |
+| `src/App.tsx` | Add new routes |
+| `src/i18n/locales/en.json` | Add translations |
+| `src/i18n/locales/es.json` | Add translations |
+
+---
+
+## Implementation Phases
+
+### Phase 1: Database Schema (Migration)
+1. Add new columns to partners table
+2. Create partner_members table
+3. Create partner_pricing_tiers table
+4. Create partner_alert_subscriptions table
+5. Create partner_alert_notifications table
+6. Set up RLS policies
+
+### Phase 2: Backend (Edge Functions)
+1. Update partner-register to accept new fields
+2. Update partner-admin-create to accept new fields
+3. Create partner-alert-notify edge function
+
+### Phase 3: Hooks & Types
+1. Create new hooks for new tables
+2. Update existing hooks for new fields
+3. TypeScript types will auto-update from migration
+
+### Phase 4: Admin UI
+1. Update AddPartnerPage with B2B fields
+2. Update PartnerDetailPage with new tabs
+3. Update PartnersPage with type filter
+
+### Phase 5: Partner UI
+1. Update PartnerJoin with type selection
+2. Update PartnerSettingsPage with org details
+3. Create PartnerMembersPage
+4. Create PartnerAlertsPage
+5. Update navigation/layout
+
+### Phase 6: Integration
+1. Wire up alert notifications trigger
+2. Test pricing tier application on registration
+3. End-to-end testing
+
+---
+
+## Summary
+
+This upgrade transforms the partner system from a simple referral program into a comprehensive B2B platform supporting:
+
+- **Referral Partners**: Individual affiliates (existing functionality preserved)
+- **Care Partners**: Agencies and charities with organization details and volume tracking
+- **Residential Partners**: Care homes and urbanizations with member management, custom pricing, and alert visibility
+
+All changes are additive - existing partner functionality is preserved with new fields defaulting to maintain backward compatibility.
 
