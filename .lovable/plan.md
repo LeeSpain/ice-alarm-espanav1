@@ -1,275 +1,215 @@
 
-# Video Hub Complete Improvement Plan
 
-## Summary of Findings
+# Communications Tab Redesign Plan
 
-### Current State
-- **Edge function is working**: Successfully tested - renders complete and exports are created
-- **1 project exists**: "ICE Personal Safety Pendant" (approved status)
-- **1 render complete**: Status "done", progress 100%
-- **1 export exists**: Placeholder URLs (null) since this is simulated
+## Current State Analysis
 
-### Key Issue: Visibility Gap
-When a user creates a project and just clicks "Save as Draft" or "Approve" without clicking "Render Video", no render is queued. The user needs to explicitly trigger rendering to see the video in Exports.
+The Communications tab is currently a long vertical scroll of 6 separate cards:
+1. **Twilio Configuration** - Voice, SMS, WhatsApp credentials
+2. **Google Maps Configuration** - Optional API key
+3. **Facebook Page Configuration** - Social media publishing
+4. **Voice Settings** - AI phone system scripts (VoiceSettingsSection component)
+5. **Email Configuration** - Provider settings (EmailSettingsTab component)
+6. **Email Templates** - Template editor (EmailTemplatesTab component)
 
----
-
-## New Feature: Video Gallery Tab
-
-### Why an Album/Gallery?
-The Exports tab shows downloadable files but lacks a visual, browsable gallery experience. Users want to:
-- Quickly preview completed videos
-- See thumbnails at a glance
-- Filter by status (published/rendered/pending)
-- Share videos directly
-
-### Implementation Plan
-
-**Add new tab: "Gallery"** between Exports and Settings
-
-| Tab | Purpose |
-|-----|---------|
-| Projects | Work-in-progress, drafts, all projects |
-| Create Video | Wizard to create new videos |
-| Templates | Browse templates |
-| **Gallery** (NEW) | Visual album of completed/published videos |
-| Exports | Download files, captions, send to outreach |
-| Settings | Brand configuration |
-
-### Gallery Tab Features
-
-1. **Grid View**: Large thumbnail cards (16:9/9:16/1:1 aspect ratios)
-2. **Filter by Status**: All / Published / Ready / Pending
-3. **Quick Actions**: Play preview, Copy link, Share, Download
-4. **Video Details Modal**: Full preview with metadata
-5. **Publish Status**: Badge showing if sent to AI Outreach
-
-### Database Changes
-
-Add `published_at` column to `video_exports` to track when a video was marked as "published":
-
-```sql
-ALTER TABLE video_exports ADD COLUMN published_at TIMESTAMPTZ;
-```
+**Problem**: Hard to navigate, no logical grouping, requires excessive scrolling.
 
 ---
 
-## Performance & UX Improvements
+## New Structure: Nested Sub-Tabs
 
-### 1. Auto-render on Approve
+Reorganize into 5 logical sub-tabs with clear icons:
 
-When user clicks "Approve" on a project, automatically queue a render if one doesn't exist:
+| Sub-Tab | Icon | Contents |
+|---------|------|----------|
+| **Phone & SMS** | Phone | Twilio credentials + Voice Settings |
+| **Email** | Mail | Email provider + Email templates |
+| **Social Media** | Share2 | Facebook configuration |
+| **Maps** | Map | Google Maps API key |
+| **WhatsApp** | MessageCircle | WhatsApp-specific settings (extracted from Twilio) |
 
-**File:** `VideoProjectsTab.tsx`
-```typescript
-const handleApprove = async (projectId: string) => {
-  // Update status to approved
-  await updateProjectStatus(projectId, "approved");
-  
-  // Check if render exists
-  const existingRender = latestRenderByProject.get(projectId);
-  if (!existingRender) {
-    // Auto-queue render
-    await supabase.functions.invoke('video-render-queue', {
-      body: { project_id: projectId }
-    });
-    toast.success(t("videoHub.projects.approvedAndQueued"));
-  }
-};
-```
-
-### 2. Better Render Status Visibility
-
-Add a prominent status banner in the Projects tab when renders are in progress:
-
-```tsx
-{activeRenders.length > 0 && (
-  <Alert className="mb-4">
-    <Loader2 className="h-4 w-4 animate-spin" />
-    <AlertTitle>{activeRenders.length} video(s) rendering...</AlertTitle>
-    <AlertDescription>Check back in a few moments</AlertDescription>
-  </Alert>
-)}
-```
-
-### 3. Realtime Updates for Exports Tab
-
-Add realtime subscription to `video_exports` table so new exports appear immediately:
-
-**File:** `useVideoExports.ts`
-```typescript
-useEffect(() => {
-  const channel = supabase
-    .channel('video-exports-changes')
-    .on('postgres_changes', 
-      { event: 'INSERT', schema: 'public', table: 'video_exports' },
-      () => queryClient.invalidateQueries({ queryKey: ['video-exports'] })
-    )
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}, []);
-```
-
-### 4. Add "Re-render" Action
-
-In Projects dropdown, add ability to re-render a video:
-
-```typescript
-<DropdownMenuItem onClick={() => handleRerender(project.id)}>
-  <RefreshCw className="mr-2 h-4 w-4" />
-  {t("videoHub.projects.rerender")}
-</DropdownMenuItem>
-```
-
-### 5. Quick Render from Exports
-
-Show "Render Missing" button for exports without mp4_url:
-
-```tsx
-{!exp.mp4_url && (
-  <Button variant="outline" size="sm" onClick={() => handleRerender(exp.project_id)}>
-    <RefreshCw className="mr-1 h-4 w-4" />
-    Re-render
-  </Button>
-)}
-```
-
----
-
-## File Changes Summary
-
-| File | Changes |
-|------|---------|
-| `VideoHubPage.tsx` | Add "Gallery" tab (new 6th tab) |
-| `VideoGalleryTab.tsx` (NEW) | Grid view of completed videos with previews |
-| `VideoProjectsTab.tsx` | Add auto-render on approve, re-render action |
-| `VideoExportsTab.tsx` | Add realtime subscription, re-render for missing files |
-| `useVideoExports.ts` | Add realtime subscription for new exports |
-| `useVideoRenders.ts` | Already has realtime - just verify it's working |
-| `en.json` / `es.json` | Add gallery translations |
-
-### Database Migration
-
-```sql
--- Add published_at column for tracking when videos are "published"
-ALTER TABLE video_exports ADD COLUMN published_at TIMESTAMPTZ;
-
--- Enable realtime for video_exports table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.video_exports;
-```
-
----
-
-## VideoGalleryTab Component Structure
-
-```typescript
-// New file: VideoGalleryTab.tsx
-interface VideoGalleryTabProps {
-  searchQuery: string;
-}
-
-export function VideoGalleryTab({ searchQuery }: VideoGalleryTabProps) {
-  // Filter: all | published | ready | pending
-  const [filter, setFilter] = useState("all");
-  
-  // Grid of video cards
-  // Each card shows:
-  // - Thumbnail (or placeholder with video icon)
-  // - Project name
-  // - Format badge (9:16, 16:9, 1:1)
-  // - Language badge (EN/ES)
-  // - Status: Published ✓ / Ready to Publish / Rendering...
-  // - Actions: Preview, Download, Share, Publish
-}
-```
-
-### Gallery Card Design
+### Tab Layout Design
 
 ```text
-┌────────────────────────────────────┐
-│                                    │
-│         [VIDEO THUMBNAIL]          │
-│         or placeholder             │
-│                                    │
-├────────────────────────────────────┤
-│ ICE Safety Pendant                 │
-│ ┌──────┐ ┌────┐ ┌──────────┐      │
-│ │ 16:9 │ │ EN │ │ ✓ Ready  │      │
-│ └──────┘ └────┘ └──────────┘      │
-│                                    │
-│ [▶ Preview]  [↓ Download]  [Share] │
-└────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ Communications                                                       │
+│ Configure phone, email, social media and messaging integrations     │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Phone & SMS] [Email] [Social Media] [WhatsApp] [Maps]              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  [Selected sub-tab content renders here]                            │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Translation Keys to Add
+## Implementation Details
 
-```json
-{
-  "videoHub": {
-    "tabs": {
-      "gallery": "Gallery"
-    },
-    "gallery": {
-      "title": "Video Gallery",
-      "subtitle": "Browse and share your completed videos",
-      "noVideos": "No completed videos yet",
-      "noVideosDesc": "Render a project to see it here",
-      "filter": {
-        "all": "All Videos",
-        "published": "Published",
-        "ready": "Ready to Publish",
-        "pending": "Rendering"
-      },
-      "preview": "Preview",
-      "share": "Share",
-      "publish": "Mark as Published",
-      "unpublish": "Unpublish",
-      "copyLink": "Copy Link",
-      "linkCopied": "Link copied to clipboard"
-    },
-    "projects": {
-      "rerender": "Re-render Video",
-      "approvedAndQueued": "Project approved and render queued"
-    }
-  }
+### 1. New Component: CommunicationsTab.tsx
+
+Create a dedicated component that owns the nested tab structure:
+
+```typescript
+// src/components/admin/settings/CommunicationsTab.tsx
+export function CommunicationsTab({
+  twilioKeys,
+  setTwilioKeys,
+  twilioAuthTokenInput,
+  setTwilioAuthTokenInput,
+  twilioAuthTokenStored,
+  // ... other props
+}) {
+  const [subTab, setSubTab] = useState("phone");
+  
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Communications</h2>
+        <p className="text-muted-foreground">
+          Configure phone, email, social media and messaging integrations
+        </p>
+      </div>
+      
+      <Tabs value={subTab} onValueChange={setSubTab}>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="phone">
+            <Phone className="h-4 w-4 mr-2" />
+            Phone & SMS
+          </TabsTrigger>
+          <TabsTrigger value="email">
+            <Mail className="h-4 w-4 mr-2" />
+            Email
+          </TabsTrigger>
+          <TabsTrigger value="social">
+            <Share2 className="h-4 w-4 mr-2" />
+            Social Media
+          </TabsTrigger>
+          <TabsTrigger value="whatsapp">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            WhatsApp
+          </TabsTrigger>
+          <TabsTrigger value="maps">
+            <Map className="h-4 w-4 mr-2" />
+            Maps
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="phone">
+          <PhoneSmsSection ... />
+        </TabsContent>
+        
+        <TabsContent value="email">
+          <EmailSection ... />
+        </TabsContent>
+        
+        {/* etc */}
+      </Tabs>
+    </div>
+  );
 }
 ```
 
+### 2. Sub-Tab Components
+
+Create focused section components for cleaner code:
+
+| Component | Contents |
+|-----------|----------|
+| `PhoneSmsSection.tsx` | Twilio credentials (SID, Auth Token, Phone) + VoiceSettingsSection |
+| `WhatsAppSection.tsx` | WhatsApp number + webhook info (extracted from Twilio card) |
+| `SocialMediaSection.tsx` | Facebook configuration (existing card content) |
+| `MapsSection.tsx` | Google Maps API key (existing card content) |
+
+The Email sub-tab will directly render the existing `EmailSettingsTab` and `EmailTemplatesTab` components.
+
+### 3. Visual Improvements
+
+- **Status badges in tabs**: Show connection status (green checkmark or amber warning) next to each tab label
+- **Cleaner cards**: Remove redundant headers where tab title is clear
+- **Collapsible webhook sections**: Make webhook URL sections collapsible to reduce visual clutter
+- **Consistent spacing**: Use consistent gap-6 between sections
+
+### 4. Keep All Existing Functionality
+
+All state management, save handlers, and API calls remain in SettingsPage.tsx - we just pass them down as props. This preserves:
+- Twilio credential handling (including the secure token pattern)
+- Test connection functionality
+- Facebook token stored flag pattern
+- Voice settings UPSERT logic
+- Email provider switching
+- Email template editor
+
 ---
 
-## Expected User Flow After Changes
+## File Changes
 
-1. **Create Video** → Wizard → Save Draft
-2. **Projects Tab** → See draft with "Render: -" column
-3. **Approve Project** → Auto-queues render → Shows progress bar
-4. **Render Completes** → Export created → Appears in Gallery
-5. **Gallery Tab** → See thumbnail grid → Preview/Download/Share
-6. **Mark as Published** → Video shows "✓ Published" badge
-7. **Exports Tab** → Download MP4/SRT/VTT, Send to AI Outreach
-
----
-
-## Technical Improvements
-
-### Memoization Audit
-
-- `VideoGalleryTab`: Memoize filtered videos
-- `RenderProgressBadge`: Already memoized with React.memo
-- `projectMap` in Exports: Already using useMemo
-
-### Edge Function Improvements
-
-Consider adding a webhook callback when render completes to push notification to user (future enhancement).
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/admin/settings/CommunicationsTab.tsx` | CREATE | New wrapper with nested tabs |
+| `src/components/admin/settings/PhoneSmsSection.tsx` | CREATE | Twilio + Voice settings |
+| `src/components/admin/settings/WhatsAppSection.tsx` | CREATE | WhatsApp configuration |
+| `src/components/admin/settings/SocialMediaSection.tsx` | CREATE | Facebook configuration |
+| `src/components/admin/settings/MapsSection.tsx` | CREATE | Google Maps configuration |
+| `src/pages/admin/SettingsPage.tsx` | EDIT | Replace inline Communications content with CommunicationsTab component |
 
 ---
 
-## Priority Order
+## Technical Notes
 
-1. **High**: Add Gallery tab with visual grid
-2. **High**: Auto-render on approve
-3. **Medium**: Add realtime to exports
-4. **Medium**: Add re-render action
-5. **Low**: Add published_at tracking
+### Props Passed to CommunicationsTab
+
+```typescript
+interface CommunicationsTabProps {
+  // Twilio
+  twilioKeys: { account_sid: string; phone_number: string; whatsapp_number: string };
+  setTwilioKeys: React.Dispatch<...>;
+  twilioAuthTokenInput: string;
+  setTwilioAuthTokenInput: React.Dispatch<...>;
+  twilioAuthTokenStored: boolean;
+  showTwilioToken: boolean;
+  setShowTwilioToken: React.Dispatch<...>;
+  twilioTestStatus: "idle" | "testing" | "success" | "error";
+  twilioTestMessage: string;
+  handleSaveTwilio: () => void;
+  handleTestTwilio: () => Promise<void>;
+  
+  // Facebook
+  facebookPageId: string;
+  setFacebookPageId: React.Dispatch<...>;
+  facebookTokenInput: string;
+  setFacebookTokenInput: React.Dispatch<...>;
+  facebookTokenStored: boolean;
+  showFacebookToken: boolean;
+  setShowFacebookToken: React.Dispatch<...>;
+  handleSaveFacebook: () => void;
+  
+  // Google Maps
+  googleMapsKey: string;
+  setGoogleMapsKey: React.Dispatch<...>;
+  handleSaveGoogleMaps: () => void;
+  
+  // Status helpers
+  getIntegrationStatus: (keys: string[]) => boolean;
+  saveMutation: UseMutationResult<...>;
+  KEY: typeof KEY;
+}
+```
+
+### URL Persistence
+
+Add URL hash support so users can deep-link to sub-tabs:
+- `/admin/settings#communications/email` opens Email sub-tab
+- Default to "phone" if no hash specified
+
+---
+
+## Summary
+
+- **No functionality removed** - all existing features preserved
+- **Better organization** - 5 logical sub-tabs vs 6 stacked cards
+- **Cleaner code** - extracted into focused section components
+- **Better UX** - status badges, less scrolling, collapsible sections
+- **Maintainable** - each communication channel in its own component
 
