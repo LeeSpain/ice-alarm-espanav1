@@ -25,7 +25,9 @@ export interface PartnerAlertNotification {
 }
 
 export function usePartnerAlertNotifications(partnerId: string | undefined, limit = 50) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["partner-alert-notifications", partnerId, limit],
     queryFn: async () => {
       if (!partnerId) return [];
@@ -47,6 +49,34 @@ export function usePartnerAlertNotifications(partnerId: string | undefined, limi
     enabled: !!partnerId,
     staleTime: 30 * 1000, // 30 seconds - alerts need to be fresh
   });
+
+  const acknowledgeNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { data, error } = await supabase
+        .from("partner_alert_notifications")
+        .update({
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_by: "Partner",
+        })
+        .eq("id", notificationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-alert-notifications", partnerId] });
+      queryClient.invalidateQueries({ queryKey: ["partner-unacknowledged-alerts", partnerId] });
+    },
+  });
+
+  return {
+    notifications: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    acknowledgeNotification,
+  };
 }
 
 export function useUnacknowledgedAlerts(partnerId: string | undefined) {
