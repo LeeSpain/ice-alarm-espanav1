@@ -3366,6 +3366,10 @@
       "duplicate": "Duplicar",
       "approve": "Aprobar",
       "archive": "Archivar",
+      "delete": "Eliminar",
+      "deleted": "Proyecto eliminado correctamente",
+      "deleteConfirmTitle": "¿Eliminar Proyecto?",
+      "deleteConfirmDesc": "Esta acción no se puede deshacer. Esto eliminará permanentemente el proyecto de video y todos los datos asociados.",
       "noProjects": "Aún no hay proyectos de video",
       "createFirst": "Crea tu primer video para empezar"
     },
@@ -3375,6 +3379,8 @@
       "step3": "Contenido",
       "step4": "Recursos",
       "step5": "Vista Previa",
+      "step": "Paso",
+      "of": "de",
       "stepOf": "Paso {{current}} de {{total}}",
       "projectName": "Nombre del Proyecto",
       "projectNamePlaceholder": "ej., Campaña de Seguridad de Verano",
@@ -3389,6 +3395,9 @@
       "selectLanguage": "Seleccionar Idioma",
       "render": "Renderizar Video",
       "saveDraft": "Guardar Borrador",
+      "updateProject": "Actualizar Proyecto",
+      "editProject": "Editar Proyecto",
+      "projectUpdated": "Proyecto actualizado correctamente",
       "nameRequired": "Por favor, introduce un nombre de proyecto",
       "draftSaved": "Borrador guardado correctamente",
       "renderQueued": "Renderizado de video en cola correctamente",
@@ -3462,7 +3471,8 @@
       "defaultLogo": "Logo de ICE Alarm España",
       "backgroundUrl": "URL de Imagen/Video de Fondo",
       "backgroundHint": "Opcional: Introduce una URL para una imagen o video de fondo",
-      "productIcons": "Iconos de Productos"
+      "productIcons": "Iconos de Productos",
+      "noIcons": "No se han seleccionado iconos de productos"
     },
     "help": {
       "title": "Guía del Centro de Video",

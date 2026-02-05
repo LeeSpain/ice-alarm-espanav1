@@ -1,32 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Wand2, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useVideoTemplates } from "@/hooks/useVideoTemplates";
-import { useVideoProjects } from "@/hooks/useVideoProjects";
+import { useVideoProjects, VideoProject } from "@/hooks/useVideoProjects";
 import { useVideoBrandSettings } from "@/hooks/useVideoBrandSettings";
+import { useVideoRenders } from "@/hooks/useVideoRenders";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface VideoCreateTabProps {
   onComplete: () => void;
+  editingProject?: VideoProject | null;
+  initialTemplateId?: string | null;
+}
+
+interface ProjectDataJson {
+  headline?: string;
+  bullets?: string[];
+  ctaText?: string;
+  contactLine?: string;
+  includeDisclaimer?: boolean;
+  backgroundUrl?: string;
+  productIcons?: string[];
 }
 
 const STEPS = ["template", "format", "content", "assets", "preview"];
 
-export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
+export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }: VideoCreateTabProps) {
   const { t } = useTranslation();
   const { templates, isLoading: templatesLoading } = useVideoTemplates();
-  const { createProject, isCreating } = useVideoProjects();
+  const { createProject, updateProject, isCreating, isUpdating } = useVideoProjects();
   const { settings } = useVideoBrandSettings();
+  const { queueRender, isQueuing } = useVideoRenders();
+
+  const isEditMode = !!editingProject;
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [isRendering, setIsRendering] = useState(false);
   const [projectData, setProjectData] = useState({
     name: "",
     template_id: "",
@@ -42,6 +59,30 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
     productIcons: [] as string[],
   });
 
+  // Initialize form when editing or selecting template
+  useEffect(() => {
+    if (editingProject) {
+      const dataJson = editingProject.data_json as ProjectDataJson;
+      setProjectData({
+        name: editingProject.name,
+        template_id: editingProject.template_id || "",
+        format: editingProject.format,
+        duration: editingProject.duration,
+        language: editingProject.language,
+        headline: dataJson?.headline || "",
+        bullets: dataJson?.bullets?.length ? dataJson.bullets : ["", "", ""],
+        ctaText: dataJson?.ctaText || "",
+        contactLine: dataJson?.contactLine || "",
+        includeDisclaimer: dataJson?.includeDisclaimer ?? true,
+        backgroundUrl: dataJson?.backgroundUrl || "",
+        productIcons: dataJson?.productIcons || [],
+      });
+      setCurrentStep(0);
+    } else if (initialTemplateId) {
+      setProjectData(prev => ({ ...prev, template_id: initialTemplateId }));
+    }
+  }, [editingProject, initialTemplateId]);
+
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -54,19 +95,13 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
     }
   };
 
-  const handleSaveDraft = async () => {
-    if (!projectData.name) {
-      toast.error(t("videoHub.create.nameRequired"));
-      return;
-    }
-
-    await createProject({
+  const prepareProjectPayload = useCallback(() => {
+    return {
       name: projectData.name,
       template_id: projectData.template_id || null,
       format: projectData.format,
       duration: projectData.duration,
       language: projectData.language,
-      status: "draft",
       data_json: {
         headline: projectData.headline,
         bullets: projectData.bullets.filter(b => b.trim()),
@@ -76,9 +111,37 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
         backgroundUrl: projectData.backgroundUrl,
         productIcons: projectData.productIcons,
       },
-    });
-    toast.success(t("videoHub.create.draftSaved"));
-    onComplete();
+    };
+  }, [projectData]);
+
+  const handleSaveDraft = async () => {
+    if (!projectData.name) {
+      toast.error(t("videoHub.create.nameRequired"));
+      return;
+    }
+
+    try {
+      const payload = prepareProjectPayload();
+      
+      if (isEditMode && editingProject) {
+        await updateProject({
+          id: editingProject.id,
+          ...payload,
+          status: editingProject.status,
+        });
+        toast.success(t("videoHub.create.projectUpdated"));
+      } else {
+        await createProject({
+          ...payload,
+          status: "draft",
+        });
+        toast.success(t("videoHub.create.draftSaved"));
+      }
+      onComplete();
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error(t("common.error"));
+    }
   };
 
   const handleRender = async () => {
@@ -87,25 +150,46 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
       return;
     }
 
-    await createProject({
-      name: projectData.name,
-      template_id: projectData.template_id || null,
-      format: projectData.format,
-      duration: projectData.duration,
-      language: projectData.language,
-      status: "draft",
-      data_json: {
-        headline: projectData.headline,
-        bullets: projectData.bullets.filter(b => b.trim()),
-        ctaText: projectData.ctaText,
-        contactLine: projectData.contactLine,
-        includeDisclaimer: projectData.includeDisclaimer,
-        backgroundUrl: projectData.backgroundUrl,
-        productIcons: projectData.productIcons,
-      },
-    });
-    toast.success(t("videoHub.create.renderQueued"));
-    onComplete();
+    setIsRendering(true);
+    
+    try {
+      const payload = prepareProjectPayload();
+      let projectId: string;
+      
+      // Create or update the project first
+      if (isEditMode && editingProject) {
+        await updateProject({
+          id: editingProject.id,
+          ...payload,
+          status: "draft",
+        });
+        projectId = editingProject.id;
+      } else {
+        const newProject = await createProject({
+          ...payload,
+          status: "draft",
+        });
+        projectId = newProject.id;
+      }
+      
+      // Queue the render via edge function
+      const { error } = await supabase.functions.invoke('video-render-queue', {
+        body: { project_id: projectId }
+      });
+      
+      if (error) throw error;
+      
+      // Also create local render record for tracking
+      await queueRender(projectId);
+      
+      toast.success(t("videoHub.create.renderQueued"));
+      onComplete();
+    } catch (error) {
+      console.error("Render error:", error);
+      toast.error(t("common.error"));
+    } finally {
+      setIsRendering(false);
+    }
   };
 
   const addBullet = () => {
@@ -126,6 +210,9 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
     newBullets[index] = value;
     setProjectData({ ...projectData, bullets: newBullets });
   };
+
+  const isSaving = isCreating || isUpdating;
+  const isProcessing = isSaving || isRendering || isQueuing;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -435,10 +522,6 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
                 <h4 className="font-medium mb-2">{t("videoHub.create.summary")}</h4>
                 <dl className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">{t("videoHub.projects.template")}:</dt>
-                    <dd>{templates?.find(t => t.id === projectData.template_id)?.name || "-"}</dd>
-                  </div>
-                  <div className="flex justify-between">
                     <dt className="text-muted-foreground">{t("videoHub.projects.format")}:</dt>
                     <dd>{projectData.format}</dd>
                   </div>
@@ -448,9 +531,26 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">{t("videoHub.projects.language")}:</dt>
-                    <dd className="uppercase">{projectData.language}</dd>
+                    <dd>{projectData.language.toUpperCase()}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">{t("videoHub.create.disclaimer")}:</dt>
+                    <dd>{projectData.includeDisclaimer ? t("common.yes") : t("common.no")}</dd>
                   </div>
                 </dl>
+              </div>
+              
+              <div className="rounded-lg border p-4">
+                <h4 className="font-medium mb-2">{t("videoHub.assets.productIcons")}</h4>
+                {projectData.productIcons.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {projectData.productIcons.map(icon => (
+                      <Badge key={icon} variant="secondary">{icon}</Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t("videoHub.assets.noIcons")}</p>
+                )}
               </div>
             </div>
           </div>
@@ -462,66 +562,78 @@ export function VideoCreateTab({ onComplete }: VideoCreateTabProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wand2 className="h-5 w-5" />
-              {t(`videoHub.create.step${currentStep + 1}`)}
-            </CardTitle>
-            <CardDescription>
-              {t("videoHub.create.stepOf", { current: currentStep + 1, total: STEPS.length })}
-            </CardDescription>
-          </div>
-          {/* Step indicators */}
-          <div className="flex gap-1">
-            {STEPS.map((_, index) => (
-              <div
-                key={index}
-                className={`h-2 w-8 rounded-full transition-colors ${
-                  index <= currentStep ? "bg-primary" : "bg-muted"
-                }`}
-              />
-            ))}
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Wand2 className="h-5 w-5" />
+            {isEditMode ? t("videoHub.create.editProject") : t("videoHub.tabs.create")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("videoHub.create.step")} {currentStep + 1} {t("videoHub.create.of")} {STEPS.length}: {t(`videoHub.create.step${currentStep + 1}`)}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {renderStep()}
+      </div>
 
-        <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 0}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            {t("common.back")}
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSaveDraft} disabled={isCreating}>
-              {isCreating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              {t("videoHub.create.saveDraft")}
-            </Button>
-            {currentStep < STEPS.length - 1 ? (
-              <Button onClick={handleNext}>
-                {t("common.next")}
-                <ChevronRight className="ml-2 h-4 w-4" />
+      {/* Step Progress */}
+      <div className="flex gap-2">
+        {STEPS.map((step, index) => (
+          <div
+            key={step}
+            className={`h-2 flex-1 rounded-full transition-colors ${
+              index <= currentStep ? "bg-primary" : "bg-muted"
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Step Content */}
+      <Card>
+        <CardContent className="pt-6">
+          {renderStep()}
+        </CardContent>
+      </Card>
+
+      {/* Navigation */}
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={currentStep === 0}
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          {t("common.back")}
+        </Button>
+
+        <div className="flex gap-2">
+          {currentStep === STEPS.length - 1 ? (
+            <>
+              <Button variant="outline" onClick={handleSaveDraft} disabled={isProcessing}>
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                {isEditMode ? t("videoHub.create.updateProject") : t("videoHub.create.saveDraft")}
               </Button>
-            ) : (
-              <Button onClick={handleRender} disabled={isCreating}>
-                {isCreating ? (
+              <Button onClick={handleRender} disabled={isProcessing}>
+                {isRendering || isQueuing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Wand2 className="mr-2 h-4 w-4" />
                 )}
                 {t("videoHub.create.render")}
               </Button>
-            )}
-          </div>
+            </>
+          ) : (
+            <Button onClick={handleNext}>
+              {t("common.next")}
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

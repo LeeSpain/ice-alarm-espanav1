@@ -7,7 +7,7 @@ import { useVideoTemplates } from "@/hooks/useVideoTemplates";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoTemplatesTabProps {
-  onSelectTemplate: () => void;
+  onSelectTemplate: (templateId: string) => void;
 }
 
 export function VideoTemplatesTab({ onSelectTemplate }: VideoTemplatesTabProps) {
@@ -107,7 +107,11 @@ export function VideoTemplatesTab({ onSelectTemplate }: VideoTemplatesTabProps) 
             </CardContent>
 
             <div className="p-4 pt-0">
-              <Button className="w-full" variant="outline" onClick={onSelectTemplate}>
+              <Button 
+                className="w-full" 
+                variant="outline" 
+                onClick={() => onSelectTemplate(template.id)}
+              >
                 {t("videoHub.templates.useTemplate")}
               </Button>
             </div>

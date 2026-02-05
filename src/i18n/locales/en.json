@@ -3390,6 +3390,10 @@
       "duplicate": "Duplicate",
       "approve": "Approve",
       "archive": "Archive",
+      "delete": "Delete",
+      "deleted": "Project deleted successfully",
+      "deleteConfirmTitle": "Delete Project?",
+      "deleteConfirmDesc": "This action cannot be undone. This will permanently delete the video project and all associated data.",
       "noProjects": "No video projects yet",
       "createFirst": "Create your first video to get started"
     },
@@ -3399,6 +3403,8 @@
       "step3": "Content",
       "step4": "Assets",
       "step5": "Preview",
+      "step": "Step",
+      "of": "of",
       "stepOf": "Step {{current}} of {{total}}",
       "projectName": "Project Name",
       "projectNamePlaceholder": "e.g., Summer Safety Campaign",
@@ -3413,6 +3419,9 @@
       "selectLanguage": "Select Language",
       "render": "Render Video",
       "saveDraft": "Save as Draft",
+      "updateProject": "Update Project",
+      "editProject": "Edit Project",
+      "projectUpdated": "Project updated successfully",
       "nameRequired": "Please enter a project name",
       "draftSaved": "Draft saved successfully",
       "renderQueued": "Video render queued successfully",
@@ -3486,7 +3495,8 @@
       "defaultLogo": "ICE Alarm España Logo",
       "backgroundUrl": "Background Image/Video URL",
       "backgroundHint": "Optional: Enter a URL for a background image or video",
-      "productIcons": "Product Icons"
+      "productIcons": "Product Icons",
+      "noIcons": "No product icons selected"
     },
     "help": {
       "title": "Video Hub Guide",
