@@ -860,7 +860,7 @@ serve(async (req) => {
         );
 
         const { error: emailError } = await resend.emails.send({
-          from: "ICE Alarm <welcome@icealarm.es>",
+          from: "ICE Alarm <onboarding@resend.dev>",
           to: [body.primaryMember.email],
           subject: body.primaryMember.preferredLanguage === "es"
             ? "Completa tu registro en ICE Alarm"

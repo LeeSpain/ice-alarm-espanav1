@@ -170,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
 </html>`;
 
     const emailResult = await resend.emails.send({
-      from: "ICE Alarm España <noreply@icealarm.es>",
+      from: "ICE Alarm España <onboarding@resend.dev>",
       to: [recipientEmail],
       subject: emailSubject,
       html: emailHtml,
