@@ -302,7 +302,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                         projectStatus={project.status}
                         existingExports={projectExports}
                         onRenderQueued={() => {
-                          // Refetch will happen automatically via React Query invalidation
+                          toast.success(t("videoHub.variants.queued", { format: project.format }));
                         }}
                       />
                     </TableCell>

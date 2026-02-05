@@ -3553,6 +3553,7 @@
       "noExportsDesc": "Los videos renderizados aparecerán aquí",
       "available": "exportaciones disponibles",
       "notAvailable": "Archivo no disponible",
+      "videoNotAvailable": "Video no disponible",
       "sentToOutreach": "Exportación vinculada a AI Outreach",
       "files": "Archivos",
       "download": "Descargar",

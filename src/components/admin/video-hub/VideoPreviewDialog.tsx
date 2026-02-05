@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Play, Pause, Volume2, VolumeX, Download, ExternalLink, Subtitles } from "lucide-react";
+import { Play, Download, ExternalLink, Subtitles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,13 +16,15 @@ interface VideoPreviewDialogProps {
   onOpenChange: (open: boolean) => void;
   export_: VideoExport | null;
   projectName: string;
+  projectLanguage?: string;
 }
 
 export function VideoPreviewDialog({ 
   open, 
   onOpenChange, 
   export_, 
-  projectName 
+  projectName,
+  projectLanguage = "en"
 }: VideoPreviewDialogProps) {
   const { t } = useTranslation();
   const [showCaptions, setShowCaptions] = useState(true);
@@ -58,8 +60,8 @@ export function VideoPreviewDialog({
                   <track
                     kind="captions"
                     src={export_.vtt_url!}
-                    srcLang="en"
-                    label="Captions"
+                    srcLang={projectLanguage}
+                    label={projectLanguage === "es" ? "Subtítulos" : "Captions"}
                     default
                   />
                 )}
