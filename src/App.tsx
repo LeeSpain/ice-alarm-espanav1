@@ -77,6 +77,7 @@ const EV07BPage = lazy(() => import("./pages/admin/EV07BPage"));
 const MediaManagerPage = lazy(() => import("./pages/admin/MediaManagerPage"));
 const AIOutreachPage = lazy(() => import("./pages/admin/AIOutreachPage"));
 const PartnerPricingSettingsPage = lazy(() => import("./pages/admin/PartnerPricingSettingsPage"));
+const VideoHubPage = lazy(() => import("./pages/admin/VideoHubPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -284,6 +285,7 @@ const App = () => {
                   <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
                   <Route path="media-manager" element={<MediaManagerPage />} />
                   <Route path="ai-outreach" element={<AIOutreachPage />} />
+                  <Route path="video-hub" element={<VideoHubPage />} />
                   <Route path="partner-pricing" element={<PartnerPricingSettingsPage />} />
                 </Route>
 

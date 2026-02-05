@@ -4548,6 +4548,255 @@ export type Database = {
           },
         ]
       }
+      video_brand_settings: {
+        Row: {
+          created_at: string | null
+          default_cta_en: string | null
+          default_cta_es: string | null
+          disclaimers_en: string | null
+          disclaimers_es: string | null
+          font_family: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+          watermark_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_cta_en?: string | null
+          default_cta_es?: string | null
+          disclaimers_en?: string | null
+          disclaimers_es?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+          watermark_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          default_cta_en?: string | null
+          default_cta_es?: string | null
+          disclaimers_en?: string | null
+          disclaimers_es?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+          watermark_enabled?: boolean | null
+        }
+        Relationships: []
+      }
+      video_exports: {
+        Row: {
+          created_at: string | null
+          id: string
+          mp4_url: string | null
+          project_id: string
+          render_id: string | null
+          srt_url: string | null
+          thumbnail_url: string | null
+          vtt_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mp4_url?: string | null
+          project_id: string
+          render_id?: string | null
+          srt_url?: string | null
+          thumbnail_url?: string | null
+          vtt_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mp4_url?: string | null
+          project_id?: string
+          render_id?: string | null
+          srt_url?: string | null
+          thumbnail_url?: string | null
+          vtt_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_exports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_exports_render_id_fkey"
+            columns: ["render_id"]
+            isOneToOne: false
+            referencedRelation: "video_renders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_outreach_links: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          export_id: string
+          id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          export_id: string
+          id?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          export_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_outreach_links_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "video_exports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_projects: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          data_json: Json
+          duration: number
+          format: string
+          id: string
+          language: string
+          name: string
+          status: string
+          template_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          data_json?: Json
+          duration?: number
+          format?: string
+          id?: string
+          language?: string
+          name: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          data_json?: Json
+          duration?: number
+          format?: string
+          id?: string
+          language?: string
+          name?: string
+          status?: string
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_projects_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "video_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_renders: {
+        Row: {
+          created_at: string | null
+          error: string | null
+          id: string
+          progress: number | null
+          project_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          progress?: number | null
+          project_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          progress?: number | null
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_renders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_templates: {
+        Row: {
+          allowed_durations: number[] | null
+          allowed_formats: string[] | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_locked: boolean | null
+          name: string
+          schema_json: Json
+          thumbnail_url: string | null
+          version: number | null
+        }
+        Insert: {
+          allowed_durations?: number[] | null
+          allowed_formats?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_locked?: boolean | null
+          name: string
+          schema_json?: Json
+          thumbnail_url?: string | null
+          version?: number | null
+        }
+        Update: {
+          allowed_durations?: number[] | null
+          allowed_formats?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_locked?: boolean | null
+          name?: string
+          schema_json?: Json
+          thumbnail_url?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       voice_call_sessions: {
         Row: {
           call_sid: string

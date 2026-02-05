@@ -1746,7 +1746,8 @@
     "aiCommandCentre": "Centro de Mando IA",
     "aiOverview": "Vista General",
     "mediaManager": "Gestor de Medios",
-    "aiOutreach": "AI Outreach"
+    "aiOutreach": "AI Outreach",
+    "videoHub": "Centro de Video"
   },
   "ai": {
     "commandCentre": "Centro de Mando IA",
@@ -3338,6 +3339,148 @@
         "generateEmail": "Generar Email",
         "generateEmailDesc": "Crea intro personalizada"
       }
+    }
+  },
+  "videoHub": {
+    "title": "Centro de Video",
+    "subtitle": "Crear y gestionar videos de marketing",
+    "newVideo": "Nuevo Video",
+    "search": "Buscar videos...",
+    "tabs": {
+      "projects": "Proyectos",
+      "create": "Crear Video",
+      "templates": "Plantillas",
+      "exports": "Exportaciones",
+      "settings": "Configuración"
+    },
+    "projects": {
+      "name": "Nombre",
+      "template": "Plantilla",
+      "language": "Idioma",
+      "format": "Formato",
+      "duration": "Duración",
+      "status": "Estado",
+      "lastEdited": "Última Edición",
+      "actions": "Acciones",
+      "open": "Abrir",
+      "duplicate": "Duplicar",
+      "approve": "Aprobar",
+      "archive": "Archivar",
+      "noProjects": "Aún no hay proyectos de video",
+      "createFirst": "Crea tu primer video para empezar"
+    },
+    "create": {
+      "step1": "Elegir Plantilla",
+      "step2": "Formato y Duración",
+      "step3": "Contenido",
+      "step4": "Recursos",
+      "step5": "Vista Previa",
+      "stepOf": "Paso {{current}} de {{total}}",
+      "projectName": "Nombre del Proyecto",
+      "projectNamePlaceholder": "ej., Campaña de Seguridad de Verano",
+      "headline": "Titular",
+      "headlinePlaceholder": "Escribe tu mensaje principal...",
+      "bulletPoints": "Puntos Clave",
+      "bullet": "Punto",
+      "addBullet": "Añadir Punto",
+      "ctaText": "Texto del Botón CTA",
+      "contactLine": "Línea de Contacto",
+      "disclaimer": "Incluir Aviso Legal",
+      "selectLanguage": "Seleccionar Idioma",
+      "render": "Renderizar Video",
+      "saveDraft": "Guardar Borrador",
+      "nameRequired": "Por favor, introduce un nombre de proyecto",
+      "draftSaved": "Borrador guardado correctamente",
+      "renderQueued": "Renderizado de video en cola correctamente",
+      "previewTitle": "Vista Previa del Video",
+      "previewDesc": "Esta es una vista previa. El video real se renderizará cuando hagas clic en Renderizar.",
+      "summary": "Resumen"
+    },
+    "templates": {
+      "calmProblemSolution": "Problema → Solución → CTA",
+      "howSosWorks": "Cómo Funciona SOS",
+      "serviceOverview": "Resumen de Servicios",
+      "deviceFocus": "Enfoque en Dispositivo",
+      "reassuranceTrust": "Tranquilidad / Confianza",
+      "locked": "Plantilla ICE",
+      "description": "Plantillas de video prediseñadas para el marketing de ICE Alarm España",
+      "useTemplate": "Usar Plantilla"
+    },
+    "exports": {
+      "thumbnail": "Miniatura",
+      "dateCreated": "Fecha de Creación",
+      "downloadMp4": "Descargar MP4",
+      "downloadSrt": "Descargar SRT",
+      "downloadVtt": "Descargar VTT",
+      "sendToOutreach": "Enviar a AI Outreach",
+      "noExports": "Aún no hay exportaciones",
+      "noExportsDesc": "Los videos renderizados aparecerán aquí",
+      "available": "exportaciones disponibles",
+      "notAvailable": "Archivo no disponible",
+      "sentToOutreach": "Exportación vinculada a AI Outreach"
+    },
+    "settings": {
+      "brandRules": "Reglas de Marca",
+      "brandRulesDesc": "Estos ajustes están bloqueados para mantener la consistencia de marca de ICE Alarm España",
+      "logo": "Logo",
+      "colors": "Colores",
+      "fontFamily": "Familia de Fuentes",
+      "watermark": "Marca de Agua",
+      "watermarkEnabled": "Mostrar marca de agua en videos",
+      "disclaimers": "Avisos Legales Predeterminados",
+      "disclaimersEn": "Aviso Legal en Inglés",
+      "disclaimersEs": "Aviso Legal en Español",
+      "defaultCtas": "CTAs Predeterminados",
+      "ctaEn": "CTA en Inglés",
+      "ctaEs": "CTA en Español",
+      "videoDefaults": "Valores Predeterminados de Video",
+      "videoDefaultsDesc": "Configurar ajustes predeterminados para nuevos videos",
+      "saved": "Configuración guardada correctamente"
+    },
+    "formats": {
+      "portrait": "Vertical (9:16)",
+      "landscape": "Horizontal (16:9)",
+      "square": "Cuadrado (1:1)"
+    },
+    "durations": {
+      "10s": "10 segundos",
+      "15s": "15 segundos",
+      "30s": "30 segundos",
+      "60s": "60 segundos"
+    },
+    "statuses": {
+      "draft": "Borrador",
+      "approved": "Aprobado",
+      "archived": "Archivado",
+      "queued": "En Cola",
+      "running": "Renderizando",
+      "failed": "Fallido",
+      "done": "Completo"
+    },
+    "assets": {
+      "logoLocked": "El logo está bloqueado para mantener la consistencia de marca",
+      "defaultLogo": "Logo de ICE Alarm España",
+      "backgroundUrl": "URL de Imagen/Video de Fondo",
+      "backgroundHint": "Opcional: Introduce una URL para una imagen o video de fondo",
+      "productIcons": "Iconos de Productos"
+    },
+    "help": {
+      "title": "Guía del Centro de Video",
+      "subtitle": "Aprende a crear videos de marketing efectivos",
+      "projectsTitle": "Proyectos",
+      "projectsDesc": "Ver y gestionar todos tus proyectos de video. Puedes abrir, duplicar, aprobar o archivar proyectos desde aquí.",
+      "createTitle": "Crear Video",
+      "createDesc": "Usa el asistente paso a paso para crear nuevos videos. Elige una plantilla, configura el formato, añade contenido y renderiza.",
+      "templatesTitle": "Plantillas",
+      "templatesDesc": "Explora plantillas ICE prediseñadas para marketing sanitario. Cada plantilla está optimizada para diferentes objetivos.",
+      "exportsTitle": "Exportaciones",
+      "exportsDesc": "Descarga tus videos renderizados en formato MP4. Los subtítulos están disponibles en formatos SRT y VTT para accesibilidad.",
+      "settingsTitle": "Configuración",
+      "settingsDesc": "Configura avisos legales y CTAs predeterminados. Los colores de marca y el logo están bloqueados por consistencia.",
+      "tipsTitle": "Consejos Rápidos",
+      "tip1": "Usa el formato 9:16 para Stories y Reels de Instagram/TikTok",
+      "tip2": "Siempre incluye subtítulos - mejoran la accesibilidad y el engagement",
+      "tip3": "Mantén los videos bajo 30 segundos para mejor rendimiento en redes sociales"
     }
   }
 }

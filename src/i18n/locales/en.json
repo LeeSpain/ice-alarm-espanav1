@@ -1770,7 +1770,8 @@
     "aiCommandCentre": "AI Command Centre",
     "aiOverview": "Overview",
     "mediaManager": "Media Manager",
-    "aiOutreach": "AI Outreach"
+    "aiOutreach": "AI Outreach",
+    "videoHub": "Video Hub"
   },
   "ai": {
     "commandCentre": "AI Command Centre",
@@ -3362,6 +3363,148 @@
         "generateEmail": "Generate Email",
         "generateEmailDesc": "Create personalized intro"
       }
+    }
+  },
+  "videoHub": {
+    "title": "Video Hub",
+    "subtitle": "Create and manage marketing videos",
+    "newVideo": "New Video",
+    "search": "Search videos...",
+    "tabs": {
+      "projects": "Projects",
+      "create": "Create Video",
+      "templates": "Templates",
+      "exports": "Exports",
+      "settings": "Settings"
+    },
+    "projects": {
+      "name": "Name",
+      "template": "Template",
+      "language": "Language",
+      "format": "Format",
+      "duration": "Duration",
+      "status": "Status",
+      "lastEdited": "Last Edited",
+      "actions": "Actions",
+      "open": "Open",
+      "duplicate": "Duplicate",
+      "approve": "Approve",
+      "archive": "Archive",
+      "noProjects": "No video projects yet",
+      "createFirst": "Create your first video to get started"
+    },
+    "create": {
+      "step1": "Choose Template",
+      "step2": "Format & Duration",
+      "step3": "Content",
+      "step4": "Assets",
+      "step5": "Preview",
+      "stepOf": "Step {{current}} of {{total}}",
+      "projectName": "Project Name",
+      "projectNamePlaceholder": "e.g., Summer Safety Campaign",
+      "headline": "Headline",
+      "headlinePlaceholder": "Enter your main message...",
+      "bulletPoints": "Key Points",
+      "bullet": "Point",
+      "addBullet": "Add Point",
+      "ctaText": "CTA Button Text",
+      "contactLine": "Contact Line",
+      "disclaimer": "Include Disclaimer",
+      "selectLanguage": "Select Language",
+      "render": "Render Video",
+      "saveDraft": "Save as Draft",
+      "nameRequired": "Please enter a project name",
+      "draftSaved": "Draft saved successfully",
+      "renderQueued": "Video render queued successfully",
+      "previewTitle": "Video Preview",
+      "previewDesc": "This is a placeholder preview. The actual video will be rendered when you click Render.",
+      "summary": "Summary"
+    },
+    "templates": {
+      "calmProblemSolution": "Calm Problem → Solution → CTA",
+      "howSosWorks": "How SOS Works",
+      "serviceOverview": "Service Overview",
+      "deviceFocus": "Device Focus",
+      "reassuranceTrust": "Reassurance / Trust",
+      "locked": "ICE Template",
+      "description": "Pre-built video templates designed for ICE Alarm España marketing",
+      "useTemplate": "Use Template"
+    },
+    "exports": {
+      "thumbnail": "Thumbnail",
+      "dateCreated": "Date Created",
+      "downloadMp4": "Download MP4",
+      "downloadSrt": "Download SRT",
+      "downloadVtt": "Download VTT",
+      "sendToOutreach": "Send to AI Outreach",
+      "noExports": "No exports yet",
+      "noExportsDesc": "Rendered videos will appear here",
+      "available": "exports available",
+      "notAvailable": "File not available",
+      "sentToOutreach": "Export linked to AI Outreach"
+    },
+    "settings": {
+      "brandRules": "Brand Rules",
+      "brandRulesDesc": "These settings are locked to maintain ICE Alarm España brand consistency",
+      "logo": "Logo",
+      "colors": "Colors",
+      "fontFamily": "Font Family",
+      "watermark": "Watermark",
+      "watermarkEnabled": "Show watermark on videos",
+      "disclaimers": "Default Disclaimers",
+      "disclaimersEn": "English Disclaimer",
+      "disclaimersEs": "Spanish Disclaimer",
+      "defaultCtas": "Default CTAs",
+      "ctaEn": "English CTA",
+      "ctaEs": "Spanish CTA",
+      "videoDefaults": "Video Defaults",
+      "videoDefaultsDesc": "Configure default settings for new videos",
+      "saved": "Settings saved successfully"
+    },
+    "formats": {
+      "portrait": "Portrait (9:16)",
+      "landscape": "Landscape (16:9)",
+      "square": "Square (1:1)"
+    },
+    "durations": {
+      "10s": "10 seconds",
+      "15s": "15 seconds",
+      "30s": "30 seconds",
+      "60s": "60 seconds"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "approved": "Approved",
+      "archived": "Archived",
+      "queued": "Queued",
+      "running": "Rendering",
+      "failed": "Failed",
+      "done": "Complete"
+    },
+    "assets": {
+      "logoLocked": "Logo is locked to maintain brand consistency",
+      "defaultLogo": "ICE Alarm España Logo",
+      "backgroundUrl": "Background Image/Video URL",
+      "backgroundHint": "Optional: Enter a URL for a background image or video",
+      "productIcons": "Product Icons"
+    },
+    "help": {
+      "title": "Video Hub Guide",
+      "subtitle": "Learn how to create effective marketing videos",
+      "projectsTitle": "Projects",
+      "projectsDesc": "View and manage all your video projects. You can open, duplicate, approve, or archive projects from here.",
+      "createTitle": "Create Video",
+      "createDesc": "Use the step-by-step wizard to create new videos. Choose a template, set the format, add content, and render.",
+      "templatesTitle": "Templates",
+      "templatesDesc": "Browse pre-built ICE templates designed for healthcare marketing. Each template is optimized for different goals.",
+      "exportsTitle": "Exports",
+      "exportsDesc": "Download your rendered videos in MP4 format. Captions are available in SRT and VTT formats for accessibility.",
+      "settingsTitle": "Settings",
+      "settingsDesc": "Configure default disclaimers and CTAs. Brand colors and logo are locked for consistency.",
+      "tipsTitle": "Quick Tips",
+      "tip1": "Use the 9:16 format for Instagram/TikTok Stories and Reels",
+      "tip2": "Always include captions - they improve accessibility and engagement",
+      "tip3": "Keep videos under 30 seconds for best social media performance"
     }
   }
 }
