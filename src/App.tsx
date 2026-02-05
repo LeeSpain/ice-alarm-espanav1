@@ -88,6 +88,8 @@ const PartnerMarketingPage = lazy(() => import("./pages/partner/PartnerMarketing
 const PartnerCommissionsPage = lazy(() => import("./pages/partner/PartnerCommissionsPage"));
 const PartnerAgreementPage = lazy(() => import("./pages/partner/PartnerAgreementPage"));
 const PartnerSettingsPage = lazy(() => import("./pages/partner/PartnerSettingsPage"));
+const PartnerMembersPage = lazy(() => import("./pages/partner/PartnerMembersPage"));
+const PartnerAlertsPage = lazy(() => import("./pages/partner/PartnerAlertsPage"));
 
 // Call Centre Pages - Lazy loaded
 const StaffDashboard = lazy(() => import("./pages/call-centre/StaffDashboard"));
@@ -304,6 +306,8 @@ const App = () => {
                   <Route path="commissions" element={<PartnerCommissionsPage />} />
                   <Route path="agreement" element={<PartnerAgreementPage />} />
                   <Route path="settings" element={<PartnerSettingsPage />} />
+                  <Route path="members" element={<PartnerMembersPage />} />
+                  <Route path="alerts" element={<PartnerAlertsPage />} />
                 </Route>
 
                 {/* Call Centre Dashboard Routes - Require Staff Role */}

@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Save, Eye, Building2, User, CreditCard, Languages } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Save, Eye, Building2, User, CreditCard, Languages, Home, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PartnerSettingsPage() {
@@ -29,6 +30,11 @@ export default function PartnerSettingsPage() {
     isAdminViewMode ? partnerIdParam : undefined
   );
 
+  // Determine partner type
+  const partnerType = partner?.partner_type || "referral";
+  const isB2B = partnerType === "care" || partnerType === "residential";
+  const isResidential = partnerType === "residential";
+
   // Profile form data
   const [profileData, setProfileData] = useState({
     contactName: "",
@@ -36,6 +42,21 @@ export default function PartnerSettingsPage() {
     cif: "",
     email: "",
     phone: "",
+  });
+
+  // Organization form data
+  const [orgData, setOrgData] = useState({
+    organizationType: "",
+    organizationRegistration: "",
+    organizationWebsite: "",
+    estimatedMonthlyReferrals: "",
+  });
+
+  // Facility form data (for residential partners)
+  const [facilityData, setFacilityData] = useState({
+    facilityAddress: "",
+    facilityResidentCount: "",
+    alertVisibilityEnabled: false,
   });
 
   // Payout form data
@@ -51,9 +72,20 @@ export default function PartnerSettingsPage() {
       setProfileData({
         contactName: partner.contact_name || "",
         companyName: partner.company_name || "",
-        cif: (partner as any).cif || "",
+        cif: (partner as Record<string, unknown>).cif as string || "",
         email: partner.email || "",
         phone: partner.phone || "",
+      });
+      setOrgData({
+        organizationType: partner.organization_type || "",
+        organizationRegistration: partner.organization_registration || "",
+        organizationWebsite: partner.organization_website || "",
+        estimatedMonthlyReferrals: partner.estimated_monthly_referrals || "",
+      });
+      setFacilityData({
+        facilityAddress: partner.facility_address || "",
+        facilityResidentCount: partner.facility_resident_count?.toString() || "",
+        alertVisibilityEnabled: partner.alert_visibility_enabled || false,
       });
       setPayoutData({
         payoutBeneficiaryName: partner.payout_beneficiary_name || "",
@@ -74,7 +106,7 @@ export default function PartnerSettingsPage() {
           cif: profileData.cif || null,
           email: profileData.email,
           phone: profileData.phone || null,
-        } as any)
+        } as Record<string, unknown>)
         .eq("id", partner!.id);
 
       if (error) throw error;
@@ -86,8 +118,63 @@ export default function PartnerSettingsPage() {
         queryClient.invalidateQueries({ queryKey: ["partner-data", partnerIdParam] });
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update profile: ${error.message}`);
+    },
+  });
+
+  // Update organization mutation
+  const updateOrgMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("partners")
+        .update({
+          organization_type: orgData.organizationType || null,
+          organization_registration: orgData.organizationRegistration || null,
+          organization_website: orgData.organizationWebsite || null,
+          estimated_monthly_referrals: orgData.estimatedMonthlyReferrals || null,
+        })
+        .eq("id", partner!.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Organization details updated!");
+      queryClient.invalidateQueries({ queryKey: ["my-partner-data"] });
+      if (partnerIdParam) {
+        queryClient.invalidateQueries({ queryKey: ["partner-data", partnerIdParam] });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update organization: ${error.message}`);
+    },
+  });
+
+  // Update facility mutation
+  const updateFacilityMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("partners")
+        .update({
+          facility_address: facilityData.facilityAddress || null,
+          facility_resident_count: facilityData.facilityResidentCount 
+            ? parseInt(facilityData.facilityResidentCount) 
+            : null,
+          alert_visibility_enabled: facilityData.alertVisibilityEnabled,
+        })
+        .eq("id", partner!.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Facility settings updated!");
+      queryClient.invalidateQueries({ queryKey: ["my-partner-data"] });
+      if (partnerIdParam) {
+        queryClient.invalidateQueries({ queryKey: ["partner-data", partnerIdParam] });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update facility: ${error.message}`);
     },
   });
 
@@ -112,10 +199,40 @@ export default function PartnerSettingsPage() {
         queryClient.invalidateQueries({ queryKey: ["partner-data", partnerIdParam] });
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update payout settings: ${error.message}`);
     },
   });
+
+  // Get partner type display name
+  const getPartnerTypeDisplay = (type: string) => {
+    switch (type) {
+      case "care": return "Care Partner";
+      case "residential": return "Residential Partner";
+      default: return "Referral Partner";
+    }
+  };
+
+  // Get organization type options
+  const getOrgTypeOptions = () => {
+    if (partnerType === "care") {
+      return [
+        { value: "charity", label: "Charity / Non-profit" },
+        { value: "care_agency", label: "Care Agency" },
+        { value: "home_care", label: "Home Care Provider" },
+        { value: "other", label: "Other" },
+      ];
+    }
+    if (partnerType === "residential") {
+      return [
+        { value: "care_home", label: "Care Home" },
+        { value: "urbanization", label: "Urbanization / Community" },
+        { value: "retirement_community", label: "Retirement Community" },
+        { value: "other", label: "Other" },
+      ];
+    }
+    return [{ value: "individual", label: "Individual" }];
+  };
 
   if (partnerLoading) {
     return (
@@ -141,19 +258,6 @@ export default function PartnerSettingsPage() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Payout settings card skeleton */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-4 w-56" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
       </div>
@@ -197,6 +301,11 @@ export default function PartnerSettingsPage() {
         <CardContent>
           <div className="flex flex-wrap items-center gap-4">
             <div>
+              <Label className="text-muted-foreground text-xs">Partner Type</Label>
+              <p className="font-medium">{getPartnerTypeDisplay(partnerType)}</p>
+            </div>
+            <Separator orientation="vertical" className="h-8" />
+            <div>
               <Label className="text-muted-foreground text-xs">Referral Code</Label>
               <p className="font-mono font-medium">{partner?.referral_code}</p>
             </div>
@@ -226,7 +335,7 @@ export default function PartnerSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Profile Information - Editable */}
+      {/* Profile Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -331,6 +440,207 @@ export default function PartnerSettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Organization Details - Only for B2B partners */}
+      {isB2B && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Organization Details
+            </CardTitle>
+            <CardDescription>
+              Information about your organization
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateOrgMutation.mutate();
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="organizationType">Organization Type</Label>
+                  <Select
+                    value={orgData.organizationType}
+                    onValueChange={(value) =>
+                      setOrgData({ ...orgData, organizationType: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getOrgTypeOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="organizationRegistration">Registration Number</Label>
+                  <Input
+                    id="organizationRegistration"
+                    value={orgData.organizationRegistration}
+                    onChange={(e) =>
+                      setOrgData({ ...orgData, organizationRegistration: e.target.value })
+                    }
+                    placeholder="Charity/Company registration"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="organizationWebsite">Website</Label>
+                  <Input
+                    id="organizationWebsite"
+                    value={orgData.organizationWebsite}
+                    onChange={(e) =>
+                      setOrgData({ ...orgData, organizationWebsite: e.target.value })
+                    }
+                    placeholder="https://example.com"
+                  />
+                </div>
+
+                {partnerType === "care" && (
+                  <div>
+                    <Label htmlFor="estimatedMonthlyReferrals">Est. Monthly Referrals</Label>
+                    <Select
+                      value={orgData.estimatedMonthlyReferrals}
+                      onValueChange={(value) =>
+                        setOrgData({ ...orgData, estimatedMonthlyReferrals: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-5">1-5 per month</SelectItem>
+                        <SelectItem value="5-10">5-10 per month</SelectItem>
+                        <SelectItem value="10-20">10-20 per month</SelectItem>
+                        <SelectItem value="20+">20+ per month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={updateOrgMutation.isPending}
+              >
+                {updateOrgMutation.isPending ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Organization Details
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Facility Information - Only for Residential partners */}
+      {isResidential && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              Facility Information
+            </CardTitle>
+            <CardDescription>
+              Details about your care facility or community
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateFacilityMutation.mutate();
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="facilityAddress">Facility Address</Label>
+                  <Input
+                    id="facilityAddress"
+                    value={facilityData.facilityAddress}
+                    onChange={(e) =>
+                      setFacilityData({ ...facilityData, facilityAddress: e.target.value })
+                    }
+                    placeholder="Full address of your facility"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="facilityResidentCount">Number of Residents</Label>
+                  <Input
+                    id="facilityResidentCount"
+                    type="number"
+                    value={facilityData.facilityResidentCount}
+                    onChange={(e) =>
+                      setFacilityData({ ...facilityData, facilityResidentCount: e.target.value })
+                    }
+                    placeholder="Approximate number"
+                  />
+                </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    <Label className="text-base">Alert Visibility</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications when your residents trigger SOS alerts
+                  </p>
+                </div>
+                <Switch
+                  checked={facilityData.alertVisibilityEnabled}
+                  onCheckedChange={(checked) =>
+                    setFacilityData({ ...facilityData, alertVisibilityEnabled: checked })
+                  }
+                />
+              </div>
+
+              {facilityData.alertVisibilityEnabled && (
+                <div className="rounded-lg bg-muted p-4 text-sm">
+                  <p className="text-muted-foreground">
+                    When enabled, you'll receive email notifications for alerts from your subscribed residents.
+                    You can manage individual subscriptions on the <strong>Members</strong> page.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={updateFacilityMutation.isPending}
+              >
+                {updateFacilityMutation.isPending ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Facility Settings
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payout Settings */}
       <Card>

@@ -17,7 +17,9 @@ export interface PartnerAlertSubscription {
 }
 
 export function usePartnerAlertSubscriptions(partnerId: string | undefined) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
     queryKey: ["partner-alert-subscriptions", partnerId],
     queryFn: async () => {
       if (!partnerId) return [];
@@ -37,6 +39,55 @@ export function usePartnerAlertSubscriptions(partnerId: string | undefined) {
     enabled: !!partnerId,
     staleTime: 2 * 60 * 1000,
   });
+
+  const toggleSubscription = useMutation({
+    mutationFn: async ({
+      partnerId: pId,
+      memberId,
+      subscribe,
+    }: {
+      partnerId: string;
+      memberId: string;
+      subscribe: boolean;
+    }) => {
+      if (subscribe) {
+        // Create subscription
+        const { data, error } = await supabase
+          .from("partner_alert_subscriptions")
+          .insert({
+            partner_id: pId,
+            member_id: memberId,
+            notify_email: true,
+            notify_sms: false,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Delete subscription
+        const { error } = await supabase
+          .from("partner_alert_subscriptions")
+          .delete()
+          .eq("partner_id", pId)
+          .eq("member_id", memberId);
+
+        if (error) throw error;
+        return null;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-alert-subscriptions", partnerId] });
+    },
+  });
+
+  return {
+    subscriptions: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    toggleSubscription,
+  };
 }
 
 export function useCreateAlertSubscription() {

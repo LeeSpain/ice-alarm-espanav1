@@ -36,7 +36,7 @@ export function PartnerMembersTab({ partnerId, partnerType, alertVisibilityEnabl
   const [relationshipType, setRelationshipType] = useState<"resident" | "client" | "beneficiary">("resident");
 
   const { data: partnerMembers, isLoading } = usePartnerMembers(partnerId);
-  const { data: alertSubscriptions } = usePartnerAlertSubscriptions(partnerId);
+  const { subscriptions: alertSubscriptions } = usePartnerAlertSubscriptions(partnerId);
   const addMember = useAddPartnerMember();
   const removeMember = useRemovePartnerMember();
   const createAlertSub = useCreateAlertSubscription();

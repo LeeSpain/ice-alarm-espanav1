@@ -30,7 +30,7 @@ const alertTypeColors: Record<string, string> = {
 };
 
 export function PartnerAlertsTab({ partnerId, partnerType, alertVisibilityEnabled }: PartnerAlertsTabProps) {
-  const { data: notifications, isLoading } = usePartnerAlertNotifications(partnerId);
+  const { notifications, isLoading } = usePartnerAlertNotifications(partnerId);
   const acknowledgeMutation = useAcknowledgeAlert();
 
   const handleAcknowledge = async (notificationId: string) => {

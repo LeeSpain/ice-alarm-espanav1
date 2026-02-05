@@ -14,9 +14,12 @@ import {
   ChevronLeft,
   Menu,
   Megaphone,
-  FileSignature
+  FileSignature,
+  Users,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePartnerData } from "@/hooks/usePartnerData";
 import {
   Tooltip,
   TooltipContent,
@@ -39,13 +42,37 @@ interface MenuItem {
   icon: React.ElementType;
   labelKey: string;
   path: string;
+  showFor?: ("referral" | "care" | "residential")[];
+  requireAlertVisibility?: boolean;
 }
 
-const navItems: MenuItem[] = [
+// Base nav items available to all partner types
+const baseNavItems: MenuItem[] = [
   { labelKey: "sidebar.dashboard", icon: LayoutDashboard, path: "/partner-dashboard" },
   { labelKey: "sidebar.invites", icon: Send, path: "/partner-dashboard/invites" },
   { labelKey: "sidebar.marketing", icon: Megaphone, path: "/partner-dashboard/marketing" },
   { labelKey: "sidebar.commissions", icon: DollarSign, path: "/partner-dashboard/commissions" },
+];
+
+// Items only for care/residential partners
+const b2bNavItems: MenuItem[] = [
+  { 
+    labelKey: "sidebar.members", 
+    icon: Users, 
+    path: "/partner-dashboard/members",
+    showFor: ["care", "residential"]
+  },
+  { 
+    labelKey: "sidebar.alerts", 
+    icon: Bell, 
+    path: "/partner-dashboard/alerts",
+    showFor: ["residential"],
+    requireAlertVisibility: true
+  },
+];
+
+// Items available to all
+const footerNavItems: MenuItem[] = [
   { labelKey: "sidebar.agreement", icon: FileSignature, path: "/partner-dashboard/agreement" },
   { labelKey: "sidebar.settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
@@ -66,7 +93,42 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isStaff, staffRole } = useAuth();
+
+  // Admin view mode detection for fetching partner data
+  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const effectiveIsAdminViewMode = isAdminViewMode || (isAdminRole && !!partnerIdParam);
+
+  // Fetch partner data to determine partner type and alert visibility
+  const { data: partner } = usePartnerData(
+    effectiveIsAdminViewMode ? partnerIdParam ?? undefined : undefined
+  );
+
+  // Build nav items based on partner type
+  const getNavItems = (): MenuItem[] => {
+    const partnerType = partner?.partner_type || "referral";
+    const alertsEnabled = partner?.alert_visibility_enabled || false;
+
+    const items: MenuItem[] = [...baseNavItems];
+
+    // Add B2B items based on partner type
+    for (const item of b2bNavItems) {
+      if (item.showFor && item.showFor.includes(partnerType as "referral" | "care" | "residential")) {
+        // Check alert visibility requirement
+        if (item.requireAlertVisibility && !alertsEnabled) {
+          continue;
+        }
+        items.push(item);
+      }
+    }
+
+    // Add footer items
+    items.push(...footerNavItems);
+
+    return items;
+  };
+
+  const navItems = getNavItems();
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -75,7 +137,7 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
 
   // When in admin view mode, append partnerId to all links
   const getHref = (baseHref: string) => {
-    if (isAdminViewMode && partnerIdParam) {
+    if (effectiveIsAdminViewMode && partnerIdParam) {
       return `${baseHref}?partnerId=${partnerIdParam}`;
     }
     return baseHref;
@@ -147,13 +209,13 @@ export function PartnerSidebar({ isMobile = false, isAdminViewMode = false, part
       </div>
 
       {/* Admin View Mode - Back to Admin */}
-      {isAdminViewMode && (
-        <div className="p-3 border-b border-sidebar-border bg-amber-900/20">
+      {effectiveIsAdminViewMode && (
+        <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/50">
           <Button 
             variant="outline" 
             size="sm" 
             className={cn(
-              "w-full justify-start gap-2 text-amber-300 border-amber-700 hover:bg-amber-900/30 hover:text-amber-200",
+              "w-full justify-start gap-2",
               !isMobileView && collapsed && "justify-center px-2"
             )}
             onClick={() => navigate("/admin/partners")}
