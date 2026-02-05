@@ -12,6 +12,7 @@ export interface VideoExport {
   thumbnail_url: string | null;
   published_at: string | null;
   created_at: string;
+  format: string; // Format variant (9:16, 16:9, 1:1)
   // YouTube fields
   youtube_video_id: string | null;
   youtube_url: string | null;
@@ -93,6 +94,24 @@ export function useVideoExports() {
     return map;
   }, [exports]);
 
+  // Get exports grouped by project and format
+  const exportsByProjectAndFormat = useMemo(() => {
+    if (!exports) return new Map<string, Map<string, VideoExport>>();
+    const projectMap = new Map<string, Map<string, VideoExport>>();
+    
+    for (const exp of exports) {
+      if (!projectMap.has(exp.project_id)) {
+        projectMap.set(exp.project_id, new Map());
+      }
+      const formatMap = projectMap.get(exp.project_id)!;
+      // Only keep latest export per format
+      if (!formatMap.has(exp.format)) {
+        formatMap.set(exp.format, exp);
+      }
+    }
+    return projectMap;
+  }, [exports]);
+
   const sendToOutreachMutation = useMutation({
     mutationFn: async (exportId: string) => {
       // Create a link record in video_outreach_links
@@ -114,6 +133,7 @@ export function useVideoExports() {
     exports,
     isLoading,
     latestExportByProject,
+    exportsByProjectAndFormat,
     sendToOutreach: sendToOutreachMutation.mutateAsync,
     isSending: sendToOutreachMutation.isPending,
   };

@@ -3552,7 +3552,18 @@
       "noExportsDesc": "Los videos renderizados aparecerán aquí",
       "available": "exportaciones disponibles",
       "notAvailable": "Archivo no disponible",
-      "sentToOutreach": "Exportación vinculada a AI Outreach"
+      "sentToOutreach": "Exportación vinculada a AI Outreach",
+      "files": "Archivos",
+      "download": "Descargar",
+      "copyLink": "Copiar Enlace",
+      "linkCopied": "Enlace de {{type}} copiado",
+      "downloading": "Descargando {{type}}...",
+      "thumbnail": "Miniatura"
+    },
+    "variants": {
+      "title": "Variantes",
+      "queued": "Variante {{format}} en cola",
+      "alreadyRendered": "Ya renderizado"
     },
     "gallery": {
       "title": "Galería de Videos",

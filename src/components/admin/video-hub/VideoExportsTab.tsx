@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, FileVideo, FileText, Send, Video, Youtube, ExternalLink, AlertCircle, Play } from "lucide-react";
+import { Download, Video, Youtube, ExternalLink, AlertCircle, Play } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useVideoExports, VideoExport } from "@/hooks/useVideoExports";
 import { useVideoProjects } from "@/hooks/useVideoProjects";
 import { useVideoRenders } from "@/hooks/useVideoRenders";
@@ -23,6 +29,7 @@ import { toast } from "sonner";
 import { LanguageBadge, FormatBadge } from "./VideoBadges";
 import { YouTubePublishDialog } from "./YouTubePublishDialog";
 import { VideoPreviewDialog } from "./VideoPreviewDialog";
+import { ExportArtifactButtons } from "./ExportArtifactButtons";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +47,7 @@ interface VideoExportsTabProps {
 
 export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) {
   const { t } = useTranslation();
-  const { exports, isLoading, sendToOutreach } = useVideoExports();
+  const { exports, isLoading } = useVideoExports();
   const { projects } = useVideoProjects();
   const { latestRenderByProject } = useVideoRenders();
   const { isConnected: youtubeConnected, publish: publishToYouTube, isPublishing } = useYouTubeIntegration();
@@ -103,8 +110,8 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
         return false;
       }
       
-      // Format filter
-      if (filters.format !== "all" && project.format !== filters.format) {
+      // Format filter - check export format, not project format
+      if (filters.format !== "all" && exp.format !== filters.format) {
         return false;
       }
       
@@ -112,24 +119,13 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
     });
   }, [exports, projectMap, searchQuery, filters]);
 
-  const handleDownload = (url: string | null) => {
-    if (!url) {
-      toast.error(t("videoHub.exports.notAvailable"));
+  const handlePublishClick = (exp: VideoExport) => {
+    const project = projectMap.get(exp.project_id);
+    // Only approved projects can be published to YouTube
+    if (project?.status !== "approved") {
+      toast.error(t("videoHub.youtube.mustBeApproved", "Project must be approved before publishing to YouTube"));
       return;
     }
-    window.open(url, "_blank");
-  };
-
-  const handleSendToOutreach = async (exportId: string) => {
-    try {
-      await sendToOutreach(exportId);
-      toast.success(t("videoHub.exports.sentToOutreach"));
-    } catch {
-      toast.error(t("common.error"));
-    }
-  };
-
-  const handlePublishClick = (exp: VideoExport) => {
     setSelectedExport(exp);
     setShowPublishDialog(true);
   };
@@ -213,7 +209,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
   }
 
   return (
-    <>
+    <TooltipProvider>
       {/* YouTube Not Connected Banner */}
       {!youtubeConnected && (
         <Alert className="mb-4">
@@ -249,6 +245,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                 <TableHead>{t("videoHub.exports.dateCreated")}</TableHead>
                 <TableHead>{t("videoHub.projects.render")}</TableHead>
                 <TableHead>YouTube</TableHead>
+                <TableHead>{t("videoHub.exports.files", "Files")}</TableHead>
                 <TableHead className="text-right">{t("videoHub.projects.actions")}</TableHead>
               </TableRow>
             </TableHeader>
@@ -256,6 +253,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
               {filteredExports.map((exp) => {
                 const project = projectMap.get(exp.project_id);
                 const renderStatus = getRenderStatus(exp.project_id);
+                const isApproved = project?.status === "approved";
                 
                 return (
                   <TableRow 
@@ -287,7 +285,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                     </TableCell>
                     <TableCell className="font-medium">{project?.name || "-"}</TableCell>
                     <TableCell>
-                      {project ? <FormatBadge format={project.format} /> : "-"}
+                      <FormatBadge format={exp.format} />
                     </TableCell>
                     <TableCell>
                       {project ? <LanguageBadge language={project.language} /> : "-"}
@@ -307,59 +305,35 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                         {exp.youtube_error && (
-                          <span className="text-xs text-destructive" title={exp.youtube_error}>
-                            {exp.youtube_error.slice(0, 20)}...
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className="text-xs text-destructive">
+                                {exp.youtube_error.slice(0, 15)}...
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">{exp.youtube_error}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1 flex-wrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(exp.mp4_url)}
-                          disabled={!exp.mp4_url}
-                        >
-                          <FileVideo className="mr-1 h-4 w-4" />
-                          {t("videoHub.exports.downloadMp4")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(exp.srt_url)}
-                          disabled={!exp.srt_url}
-                        >
-                          <FileText className="mr-1 h-4 w-4" />
-                          SRT
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(exp.vtt_url)}
-                          disabled={!exp.vtt_url}
-                        >
-                          <FileText className="mr-1 h-4 w-4" />
-                          VTT
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSendToOutreach(exp.id)}
-                        >
-                          <Send className="mr-1 h-4 w-4" />
-                          {t("videoHub.exports.sendToOutreach")}
-                        </Button>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <ExportArtifactButtons export_={exp} compact />
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handlePublishClick(exp)}
-                          disabled={!youtubeConnected || exp.youtube_status === "published" || exp.youtube_status === "uploading"}
+                          disabled={!youtubeConnected || !isApproved || exp.youtube_status === "published" || exp.youtube_status === "uploading"}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Youtube className="mr-1 h-4 w-4" />
@@ -397,6 +371,6 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
         export_={selectedExport}
         projectName={selectedExport ? (projectMap.get(selectedExport.project_id)?.name || "Untitled") : ""}
       />
-    </>
+    </TooltipProvider>
   );
 }
