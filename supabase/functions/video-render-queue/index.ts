@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,7 +111,7 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
     // Update to running status
     await supabase
       .from("video_renders")
-      .update({ status: "running", progress: 5, stage: "initializing" } as Record<string, unknown>)
+      .update({ status: "running", progress: 5, stage: "initializing" })
       .eq("id", renderId);
 
     console.log(`[Render ${renderId}] Started - Stage: initializing`);
@@ -122,7 +122,7 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       
       await supabase
         .from("video_renders")
-        .update({ progress, stage } as Record<string, unknown>)
+        .update({ progress, stage })
         .eq("id", renderId);
       
       console.log(`[Render ${renderId}] Stage: ${stage}, Progress: ${progress}%`);
@@ -131,7 +131,7 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
     // Mark as done
     await supabase
       .from("video_renders")
-      .update({ status: "done", progress: 100, stage: "finalizing" } as Record<string, unknown>)
+      .update({ status: "done", progress: 100, stage: "finalizing" })
       .eq("id", renderId);
 
     // Update project status to "approved"
@@ -150,9 +150,9 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
         srt_url: null,
         vtt_url: null,
         thumbnail_url: null,
-      } as Record<string, unknown>);
+      });
 
-    console.log(`[Render ${renderId}] Completed successfully`);
+    console.log(`Render ${renderId} completed successfully (simulated)`);
   } catch (err: unknown) {
     const error = err as Error;
     console.error(`[Render ${renderId}] Error:`, error);
@@ -163,7 +163,7 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       .update({ 
         status: "failed", 
         error: error.message || "Unknown error during render" 
-      } as Record<string, unknown>)
+      })
       .eq("id", renderId);
 
     // Revert project status to draft on failure
