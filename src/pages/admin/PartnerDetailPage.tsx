@@ -29,8 +29,12 @@ import {
 } from "@/components/ui/tooltip";
 import {
   ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users, Send,
-  DollarSign, Check, XCircle, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, User
+  DollarSign, Check, XCircle, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, User, Building2, Bell
 } from "lucide-react";
+import { PartnerOrganizationTab } from "@/components/admin/partner/PartnerOrganizationTab";
+import { PartnerMembersTab } from "@/components/admin/partner/PartnerMembersTab";
+import { PartnerPricingTab } from "@/components/admin/partner/PartnerPricingTab";
+import { PartnerAlertsTab } from "@/components/admin/partner/PartnerAlertsTab";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { logPartnerActivity, logCommissionActivity } from "@/lib/auditLog";
@@ -57,6 +61,17 @@ interface Partner {
   notes_internal: string | null;
   agreement_signed_at: string | null;
   agreement_version: string | null;
+  // B2B fields
+  partner_type: string;
+  organization_type: string | null;
+  organization_registration: string | null;
+  organization_website: string | null;
+  estimated_monthly_referrals: string | null;
+  facility_address: string | null;
+  facility_resident_count: number | null;
+  alert_visibility_enabled: boolean;
+  billing_model: string;
+  custom_rate_monthly: number | null;
 }
 
 interface PartnerAgreement {
@@ -494,15 +509,63 @@ export default function PartnerDetailPage() {
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList className="flex-wrap">
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="organization">
+            <Building2 className="h-4 w-4 mr-1" />
+            Organization
+          </TabsTrigger>
           <TabsTrigger value="agreement">
             <FileSignature className="h-4 w-4 mr-1" />
             Agreement
           </TabsTrigger>
+          <TabsTrigger value="members">
+            <Users className="h-4 w-4 mr-1" />
+            Members
+          </TabsTrigger>
+          <TabsTrigger value="pricing">
+            <DollarSign className="h-4 w-4 mr-1" />
+            Pricing
+          </TabsTrigger>
           <TabsTrigger value="invites">Invites ({invites?.length || 0})</TabsTrigger>
           <TabsTrigger value="attributions">Referrals ({attributions?.length || 0})</TabsTrigger>
           <TabsTrigger value="commissions">Commissions ({commissions?.length || 0})</TabsTrigger>
+          {partner.partner_type === "residential" && partner.alert_visibility_enabled && (
+            <TabsTrigger value="alerts">
+              <Bell className="h-4 w-4 mr-1" />
+              Alerts
+            </TabsTrigger>
+          )}
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
+
+        {/* Organization Tab */}
+        <TabsContent value="organization">
+          <PartnerOrganizationTab partner={partner} />
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <PartnerMembersTab 
+            partnerId={partner.id} 
+            partnerType={partner.partner_type} 
+            alertVisibilityEnabled={partner.alert_visibility_enabled}
+          />
+        </TabsContent>
+
+        {/* Pricing Tab */}
+        <TabsContent value="pricing">
+          <PartnerPricingTab partnerId={partner.id} partnerType={partner.partner_type} />
+        </TabsContent>
+
+        {/* Alerts Tab */}
+        {partner.partner_type === "residential" && partner.alert_visibility_enabled && (
+          <TabsContent value="alerts">
+            <PartnerAlertsTab 
+              partnerId={partner.id} 
+              partnerType={partner.partner_type}
+              alertVisibilityEnabled={partner.alert_visibility_enabled}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="details" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">

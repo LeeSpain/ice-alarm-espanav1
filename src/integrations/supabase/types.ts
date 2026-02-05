@@ -3249,6 +3249,103 @@ export type Database = {
           },
         ]
       }
+      partner_alert_notifications: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_id: string
+          id: string
+          member_id: string
+          notification_method: string
+          partner_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_id: string
+          id?: string
+          member_id: string
+          notification_method: string
+          partner_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_id?: string
+          id?: string
+          member_id?: string
+          notification_method?: string
+          partner_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_alert_notifications_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_alert_notifications_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_alert_notifications_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_alert_subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          member_id: string
+          notify_email: boolean | null
+          notify_sms: boolean | null
+          partner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          member_id: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          partner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          partner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_alert_subscriptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_alert_subscriptions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_attributions: {
         Row: {
           created_at: string
@@ -3501,6 +3598,54 @@ export type Database = {
           },
         ]
       }
+      partner_members: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          id: string
+          member_id: string
+          notes: string | null
+          partner_id: string
+          relationship_type: string | null
+          removed_at: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          member_id: string
+          notes?: string | null
+          partner_id: string
+          relationship_type?: string | null
+          removed_at?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          id?: string
+          member_id?: string
+          notes?: string | null
+          partner_id?: string
+          relationship_type?: string | null
+          removed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_members_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_members_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_post_links: {
         Row: {
           clicks: number | null
@@ -3600,6 +3745,65 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_pricing_tiers: {
+        Row: {
+          billing_frequency: string
+          commission_amount: number | null
+          created_at: string | null
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          id: string
+          membership_type: string
+          name: string
+          partner_id: string
+          pendant_net_price: number | null
+          registration_fee: number | null
+          registration_fee_discount_percent: number | null
+          subscription_net_price: number
+        }
+        Insert: {
+          billing_frequency: string
+          commission_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          membership_type: string
+          name: string
+          partner_id: string
+          pendant_net_price?: number | null
+          registration_fee?: number | null
+          registration_fee_discount_percent?: number | null
+          subscription_net_price: number
+        }
+        Update: {
+          billing_frequency?: string
+          commission_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          membership_type?: string
+          name?: string
+          partner_id?: string
+          pendant_net_price?: number | null
+          registration_fee?: number | null
+          registration_fee_discount_percent?: number | null
+          subscription_net_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_pricing_tiers_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_verification_tokens: {
         Row: {
           created_at: string
@@ -3639,13 +3843,23 @@ export type Database = {
         Row: {
           agreement_signed_at: string | null
           agreement_version: string | null
+          alert_visibility_enabled: boolean | null
+          billing_model: string | null
           cif: string | null
           company_name: string | null
           contact_name: string
           created_at: string
+          custom_rate_monthly: number | null
           email: string
+          estimated_monthly_referrals: string | null
+          facility_address: string | null
+          facility_resident_count: number | null
           id: string
           notes_internal: string | null
+          organization_registration: string | null
+          organization_type: string | null
+          organization_website: string | null
+          partner_type: string
           payout_beneficiary_name: string | null
           payout_iban: string | null
           payout_method: string
@@ -3658,13 +3872,23 @@ export type Database = {
         Insert: {
           agreement_signed_at?: string | null
           agreement_version?: string | null
+          alert_visibility_enabled?: boolean | null
+          billing_model?: string | null
           cif?: string | null
           company_name?: string | null
           contact_name: string
           created_at?: string
+          custom_rate_monthly?: number | null
           email: string
+          estimated_monthly_referrals?: string | null
+          facility_address?: string | null
+          facility_resident_count?: number | null
           id?: string
           notes_internal?: string | null
+          organization_registration?: string | null
+          organization_type?: string | null
+          organization_website?: string | null
+          partner_type?: string
           payout_beneficiary_name?: string | null
           payout_iban?: string | null
           payout_method?: string
@@ -3677,13 +3901,23 @@ export type Database = {
         Update: {
           agreement_signed_at?: string | null
           agreement_version?: string | null
+          alert_visibility_enabled?: boolean | null
+          billing_model?: string | null
           cif?: string | null
           company_name?: string | null
           contact_name?: string
           created_at?: string
+          custom_rate_monthly?: number | null
           email?: string
+          estimated_monthly_referrals?: string | null
+          facility_address?: string | null
+          facility_resident_count?: number | null
           id?: string
           notes_internal?: string | null
+          organization_registration?: string | null
+          organization_type?: string | null
+          organization_website?: string | null
+          partner_type?: string
           payout_beneficiary_name?: string | null
           payout_iban?: string | null
           payout_method?: string

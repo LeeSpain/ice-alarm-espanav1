@@ -17,6 +17,14 @@ interface PartnerRegistrationRequest {
   payout_beneficiary_name: string;
   payout_iban: string;
   password: string;
+  // B2B fields
+  partner_type?: "referral" | "care" | "residential";
+  organization_type?: string;
+  organization_registration?: string;
+  organization_website?: string;
+  estimated_monthly_referrals?: string;
+  facility_address?: string;
+  facility_resident_count?: number;
 }
 
 function generateReferralCode(): string {
@@ -109,7 +117,7 @@ serve(async (req: Request): Promise<Response> => {
       attempts++;
     }
 
-    // Create partner record
+    // Create partner record with B2B fields
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
       .insert({
@@ -122,7 +130,15 @@ serve(async (req: Request): Promise<Response> => {
         payout_beneficiary_name: data.payout_beneficiary_name,
         payout_iban: data.payout_iban,
         referral_code: referralCode,
-        status: "pending"
+        status: "pending",
+        // B2B fields
+        partner_type: data.partner_type || "referral",
+        organization_type: data.organization_type || "individual",
+        organization_registration: data.organization_registration || null,
+        organization_website: data.organization_website || null,
+        estimated_monthly_referrals: data.estimated_monthly_referrals || null,
+        facility_address: data.facility_address || null,
+        facility_resident_count: data.facility_resident_count || null,
       })
       .select()
       .single();
