@@ -58,9 +58,8 @@ export default function MediaManagerPage() {
   const [complianceWarnings, setComplianceWarnings] = useState<ComplianceWarning[]>([]);
   const [showComplianceDialog, setShowComplianceDialog] = useState(false);
   const [imageStyle, setImageStyle] = useState<ImageStyle>("senior_active");
-  // Partner distribution state
-  const [partnerEnabled, setPartnerEnabled] = useState(false);
-  const [partnerAudience, setPartnerAudience] = useState<"none" | "all" | "selected">("all");
+  // Partner distribution state (derived: partner_enabled = audience !== "none")
+  const [partnerAudience, setPartnerAudience] = useState<"none" | "all" | "selected">("none");
   const [partnerSelectedIds, setPartnerSelectedIds] = useState<string[]>([]);
 
   const { posts, isLoading, createDraft, updateDraft, approvePost, retryPost, publishPost, deletePost, isCreating, isUpdating, isApproving, isRetrying, isPublishing } = useSocialPosts(statusFilter);
@@ -83,9 +82,11 @@ export default function MediaManagerPage() {
     setLanguage(post.language);
     setPostText(post.post_text || "");
     setImageUrl(post.image_url || "");
-    // Partner distribution
-    setPartnerEnabled(post.partner_enabled || false);
-    setPartnerAudience(post.partner_audience || "all");
+    // Partner distribution - derive audience from post data
+    const derivedAudience = post.partner_enabled 
+      ? (post.partner_audience || "all") 
+      : "none";
+    setPartnerAudience(derivedAudience as "none" | "all" | "selected");
     setPartnerSelectedIds(post.partner_selected_partner_ids || []);
   };
 
@@ -98,8 +99,7 @@ export default function MediaManagerPage() {
     setPostText("");
     setImageUrl("");
     // Reset partner distribution
-    setPartnerEnabled(false);
-    setPartnerAudience("all");
+    setPartnerAudience("none");
     setPartnerSelectedIds([]);
   };
 
@@ -112,10 +112,10 @@ export default function MediaManagerPage() {
         language,
         post_text: postText || undefined,
         image_url: imageUrl || undefined,
-        // Partner distribution
-        partner_enabled: partnerEnabled,
-        partner_audience: partnerEnabled ? partnerAudience : "none",
-        partner_selected_partner_ids: partnerEnabled && partnerAudience === "selected" ? partnerSelectedIds : undefined,
+        // Partner distribution - derive enabled from audience
+        partner_enabled: partnerAudience !== "none",
+        partner_audience: partnerAudience,
+        partner_selected_partner_ids: partnerAudience === "selected" ? partnerSelectedIds : undefined,
       };
 
       if (selectedPostId) {
@@ -581,10 +581,8 @@ export default function MediaManagerPage() {
 
             {/* Partner Distribution Section */}
             <PartnerDistributionSection
-              enabled={partnerEnabled}
               audience={partnerAudience}
               selectedPartnerIds={partnerSelectedIds}
-              onEnabledChange={setPartnerEnabled}
               onAudienceChange={setPartnerAudience}
               onSelectedPartnersChange={setPartnerSelectedIds}
               disabled={selectedPost?.status === "published"}
