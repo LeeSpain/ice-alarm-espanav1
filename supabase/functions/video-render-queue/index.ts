@@ -6,15 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Render stages with progress milestones
-const RENDER_STAGES = [
-  { stage: "initializing", progress: 10 },
-  { stage: "generating", progress: 30 },
-  { stage: "processing", progress: 50 },
-  { stage: "compositing", progress: 70 },
-  { stage: "encoding", progress: 90 },
-  { stage: "finalizing", progress: 100 },
-];
+// Environment configuration
+const RENDER_WORKER_URL = Deno.env.get("RENDER_WORKER_URL");
+const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") || "video-hub-secret";
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -36,7 +30,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify project exists
+    // Verify project exists and get current status
     const { data: project, error: projectError } = await supabase
       .from("video_projects")
       .select("id, name, status")
@@ -81,7 +75,78 @@ serve(async (req) => {
       );
     }
 
-    // Start simulated render in background (fire and forget)
+    // If RENDER_WORKER_URL is configured, call the external render worker
+    if (RENDER_WORKER_URL) {
+      try {
+        console.log(`[Queue] Calling render worker at ${RENDER_WORKER_URL}`);
+        
+        const workerResponse = await fetch(`${RENDER_WORKER_URL}/render`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            render_id: render.id,
+            project_id,
+            token: WEBHOOK_SECRET,
+          }),
+        });
+
+        if (!workerResponse.ok) {
+          const errorText = await workerResponse.text();
+          console.error(`[Queue] Worker error: ${workerResponse.status} - ${errorText}`);
+          throw new Error(`Worker returned ${workerResponse.status}`);
+        }
+
+        const workerResult = await workerResponse.json();
+        console.log(`[Queue] Worker accepted job:`, workerResult);
+
+        // Update render with worker job ID if provided
+        if (workerResult.job_id) {
+          await supabase
+            .from("video_renders")
+            .update({ worker_job_id: workerResult.job_id })
+            .eq("id", render.id);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            render_id: render.id,
+            worker_job_id: workerResult.job_id,
+            status: "queued",
+            message: "Render queued successfully. The video will be available in the Exports tab once complete.",
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (workerError: unknown) {
+        const err = workerError as Error;
+        console.error(`[Queue] Failed to call render worker:`, err.message);
+        
+        // Mark render as failed if worker is unreachable
+        await supabase
+          .from("video_renders")
+          .update({ 
+            status: "failed", 
+            error: `Render worker unavailable: ${err.message}` 
+          })
+          .eq("id", render.id);
+
+        await supabase
+          .from("video_projects")
+          .update({ status: "draft" })
+          .eq("id", project_id);
+
+        return new Response(
+          JSON.stringify({ 
+            error: "Render worker unavailable. Please try again later.",
+            details: err.message 
+          }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // FALLBACK: Simulated rendering (for development/demo when no worker configured)
+    console.log(`[Queue] No RENDER_WORKER_URL configured - using simulated render`);
     simulateRenderCompletion(supabaseUrl, supabaseServiceKey, render.id, project_id);
 
     return new Response(
@@ -89,7 +154,8 @@ serve(async (req) => {
         success: true,
         render_id: render.id,
         status: "queued",
-        message: "Render queued successfully. The video will be available in the Exports tab once complete.",
+        message: "Render queued successfully (simulated mode). The video will be available in the Exports tab once complete.",
+        mode: "simulated",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -103,8 +169,23 @@ serve(async (req) => {
   }
 });
 
-// Simulate render completion with stage tracking
-async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string, renderId: string, projectId: string) {
+// Render stages with progress milestones
+const RENDER_STAGES = [
+  { stage: "initializing", progress: 10 },
+  { stage: "generating", progress: 30 },
+  { stage: "processing", progress: 50 },
+  { stage: "compositing", progress: 70 },
+  { stage: "encoding", progress: 90 },
+  { stage: "finalizing", progress: 100 },
+];
+
+// Simulate render completion with stage tracking (fallback for dev/demo)
+async function simulateRenderCompletion(
+  supabaseUrl: string, 
+  supabaseKey: string, 
+  renderId: string, 
+  projectId: string
+) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
   try {
@@ -114,7 +195,7 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       .update({ status: "running", progress: 5, stage: "initializing" })
       .eq("id", renderId);
 
-    console.log(`[Render ${renderId}] Started - Stage: initializing`);
+    console.log(`[Render ${renderId}] Started (simulated) - Stage: initializing`);
 
     // Progress through each stage
     for (const { stage, progress } of RENDER_STAGES) {
@@ -141,9 +222,9 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       .eq("id", projectId);
 
     // Create export record with demo video placeholder
-    // In production, this would be the actual rendered video URL from storage
     const demoVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const demoThumbnail = "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+    const demoVttUrl = null; // No captions in simulated mode
 
     await supabase
       .from("video_exports")
@@ -152,11 +233,11 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
         render_id: renderId,
         mp4_url: demoVideoUrl,
         srt_url: null,
-        vtt_url: null,
+        vtt_url: demoVttUrl,
         thumbnail_url: demoThumbnail,
       });
 
-    console.log(`Render ${renderId} completed successfully (simulated)`);
+    console.log(`[Render ${renderId}] Completed successfully (simulated)`);
   } catch (err: unknown) {
     const error = err as Error;
     console.error(`[Render ${renderId}] Error:`, error);

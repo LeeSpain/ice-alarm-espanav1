@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, FileVideo, FileText, Send, Video, Youtube, ExternalLink, AlertCircle } from "lucide-react";
+import { Download, FileVideo, FileText, Send, Video, Youtube, ExternalLink, AlertCircle, Play } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { LanguageBadge, FormatBadge } from "./VideoBadges";
 import { YouTubePublishDialog } from "./YouTubePublishDialog";
+import { VideoPreviewDialog } from "./VideoPreviewDialog";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
   
   const [selectedExport, setSelectedExport] = useState<VideoExport | null>(null);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
   // Fetch YouTube defaults
   const { data: youtubeDefaults } = useQuery({
@@ -256,19 +258,32 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                 const renderStatus = getRenderStatus(exp.project_id);
                 
                 return (
-                  <TableRow key={exp.id}>
+                  <TableRow 
+                    key={exp.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedExport(exp);
+                      setShowPreviewDialog(true);
+                    }}
+                  >
                     <TableCell>
-                      {exp.thumbnail_url ? (
-                        <img
-                          src={exp.thumbnail_url}
-                          alt="Thumbnail"
-                          className="h-12 w-20 rounded object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-20 items-center justify-center rounded bg-muted">
-                          <Video className="h-5 w-5 text-muted-foreground" />
+                      <div className="relative group">
+                        {exp.thumbnail_url ? (
+                          <img
+                            src={exp.thumbnail_url}
+                            alt="Thumbnail"
+                            className="h-12 w-20 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-20 items-center justify-center rounded bg-muted">
+                            <Video className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        {/* Play overlay on hover */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="h-6 w-6 text-white" />
                         </div>
-                      )}
+                      </div>
                     </TableCell>
                     <TableCell className="font-medium">{project?.name || "-"}</TableCell>
                     <TableCell>
@@ -374,6 +389,14 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
           defaults={youtubeDefaults}
         />
       )}
+
+      {/* Video Preview Dialog */}
+      <VideoPreviewDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        export_={selectedExport}
+        projectName={selectedExport ? (projectMap.get(selectedExport.project_id)?.name || "Untitled") : ""}
+      />
     </>
   );
 }
