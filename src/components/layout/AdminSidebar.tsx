@@ -113,6 +113,7 @@ const menuGroups: MenuGroup[] = [
     icon: MessageSquare,
     labelKey: "sidebar.communications",
     items: [
+      { icon: LayoutDashboard, labelKey: "sidebar.communicationsDashboard", path: "/admin/communications" },
       { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
       { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
       { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },

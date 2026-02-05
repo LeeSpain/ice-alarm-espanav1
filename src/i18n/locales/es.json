@@ -1,4 +1,45 @@
 {
+  "commsDashboard": {
+    "title": "Panel de Comunicaciones",
+    "subtitle": "Centro de todos los canales de comunicación",
+    "quickStats": {
+      "unreadMessages": "Mensajes Sin Leer",
+      "pendingDrafts": "Borradores Pendientes",
+      "videosRendering": "Videos Renderizando",
+      "readyToPublish": "Listos para Publicar"
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "Bandeja de entrada",
+      "button": "Ver Mensajes",
+      "unread": "sin leer",
+      "open": "abiertos"
+    },
+    "videoHub": {
+      "title": "Centro de Video",
+      "description": "Hub de producción de video",
+      "button": "Abrir Video Hub",
+      "drafts": "borradores",
+      "rendering": "renderizando",
+      "completed": "completados"
+    },
+    "mediaManager": {
+      "title": "Gestor de Medios",
+      "description": "Creación de contenido social",
+      "button": "Gestionar Medios",
+      "drafts": "borradores",
+      "approved": "aprobados",
+      "published": "publicados"
+    },
+    "aiOutreach": {
+      "title": "AI Outreach",
+      "description": "Campañas automatizadas",
+      "button": "Ver Outreach",
+      "activeCampaigns": "activas",
+      "leads": "leads",
+      "hotLeads": "calientes"
+    }
+  },
   "mediaManager": {
     "title": "Gestor de Medios",
     "subtitle": "Crear y gestionar publicaciones en redes sociales para Facebook",
@@ -1722,6 +1763,7 @@
     "staffTickets": "Tickets Personal",
     "tasks": "Tareas",
     "communications": "Comunicaciones",
+    "communicationsDashboard": "Panel",
     "messages": "Mensajes",
     "business": "Negocio",
     "financeDashboard": "Panel Finanzas",
