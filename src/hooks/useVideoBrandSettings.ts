@@ -17,6 +17,7 @@ interface VideoBrandSettings {
 }
 
 interface UpdateSettingsData {
+  logo_url?: string | null;
   watermark_enabled?: boolean;
   disclaimers_en?: string;
   disclaimers_es?: string;
