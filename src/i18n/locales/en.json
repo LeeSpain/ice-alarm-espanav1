@@ -3442,7 +3442,26 @@
       "deleteConfirmTitle": "Delete Project?",
       "deleteConfirmDesc": "This action cannot be undone. This will permanently delete the video project and all associated data.",
       "noProjects": "No video projects yet",
-      "createFirst": "Create your first video to get started"
+      "createFirst": "Create your first video to get started",
+      "duplicated": "Project duplicated",
+      "retryRender": "Retry Render",
+      "openExport": "Open Latest Export",
+      "lastExport": "Last Export"
+    },
+    "validation": {
+      "nameRequired": "Project name is required",
+      "templateRequired": "Please select a template",
+      "headlineRequired": "Headline is required",
+      "headlineTooLong": "Headline must be 60 characters or less",
+      "bulletsRequired": "At least 3 bullet points are required",
+      "bulletTooLong": "Must be 80 characters or less",
+      "ctaRequired": "Call-to-action text is required",
+      "languageRequired": "Language must be English or Spanish",
+      "formatNotAllowed": "This format is not allowed by the selected template",
+      "durationNotAllowed": "This duration is not allowed by the selected template",
+      "notAllowed": "Not allowed",
+      "fixErrors": "Please fix the validation errors",
+      "hasErrors": "Please fix validation errors before rendering"
     },
     "create": {
       "step1": "Choose Template",
