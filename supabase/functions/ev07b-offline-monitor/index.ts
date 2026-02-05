@@ -118,16 +118,36 @@ serve(async (req) => {
           if (!existingAlert) {
             // Create new alert - device has been offline for 5+ minutes
             const offlineMinutes = Math.floor(offlineDurationMs / 60000);
-            await supabase.from("alerts").insert({
+            const { data: newAlert } = await supabase.from("alerts").insert({
               device_id: device.id,
               member_id: device.member_id,
               alert_type: "device_offline",
               status: "incoming",
               message: `EV-07B device (IMEI: ${device.imei}) has been offline for ${offlineMinutes} minutes`,
               received_at: now.toISOString(),
-            });
+            }).select("id").single();
+            
             console.log(`Created offline alert for device ${device.imei} (offline ${offlineMinutes} min)`);
             alertsCreatedCount++;
+
+            // Notify partner if subscribed
+            if (newAlert?.id) {
+              try {
+                await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/partner-alert-notify`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
+                  },
+                  body: JSON.stringify({
+                    alert_id: newAlert.id,
+                    member_id: device.member_id
+                  })
+                });
+              } catch (notifyErr) {
+                console.error("Partner notification error:", notifyErr);
+              }
+            }
           }
         }
       }
