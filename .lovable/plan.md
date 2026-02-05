@@ -1,45 +1,75 @@
 
 
-# Fix: Edge Function Stage Updates Not Persisting
+# Enable Logo Upload & Create ICE Alarm España Logo
 
-## Problem Identified
+## Overview
 
-The `stage` column in `video_renders` is staying at `"queued"` throughout the entire render process, even though:
-- `progress` updates correctly (0% → 100%)
-- `status` transitions correctly (`queued` → `running` → `done`)
-
-**Root Cause**: The deployed edge function is running an **older version** that doesn't include the stage tracking updates from the recent enhancement.
-
-### Evidence from Database:
-```
-id: f62c35d3...  progress: 100  stage: "queued"  status: "done"
-id: d4970522...  progress: 100  stage: "queued"  status: "done"
-```
-
-The `stage` should progress through: `queued` → `initializing` → `generating` → `processing` → `compositing` → `encoding` → `finalizing`
+Currently the Brand Rules section shows the logo as locked/read-only. We'll make it editable so you can upload or change the logo, then use AI to generate a professional ICE Alarm España logo.
 
 ---
 
-## Solution
+## What Will Change
 
-Force redeploy the `video-render-queue` edge function to ensure the latest code (with stage updates) is active.
+### 1. Make Logo Editable in Settings
+
+The Settings tab will get a logo upload area where you can:
+- Click to upload a new logo image
+- See a preview of the current logo
+- Remove the logo if needed
+
+### 2. Create ICE Alarm España Logo
+
+Using Lovable AI image generation, we'll create a professional logo featuring:
+- The ICE Alarm España brand name
+- Healthcare/safety theme (red cross, shield, or similar)
+- Clean, modern design suitable for video overlays
+- Saved as JPEG for universal compatibility
+
+### 3. Store Logo in Cloud Storage
+
+The logo will be stored in the `website-images` storage bucket (already exists) and the URL saved to `video_brand_settings.logo_url`.
 
 ---
 
-## Files Changed
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/video-render-queue/index.ts` | No code change needed - just redeploy |
+| `src/components/admin/video-hub/VideoSettingsTab.tsx` | Add logo upload functionality with preview and remove button |
+| `src/hooks/useVideoBrandSettings.ts` | Add `logo_url` to the `UpdateSettingsData` interface |
+| Database | Update `video_brand_settings.logo_url` with the generated logo URL |
 
 ---
 
-## Technical Notes
+## Technical Details
 
-The edge function code is correct. The issue is that the deployment may have timed out or failed silently in a previous attempt. Forcing a redeploy will ensure the latest version with stage tracking is running.
+### Logo Upload Flow
 
-After redeployment, renders will show:
-- Stage updates in real-time through the timeline
-- Progress bar moving in sync with stage transitions
-- Each stage lasting ~2.5 seconds as designed
+```text
+User clicks upload → File picker opens → 
+Image uploaded to storage bucket → 
+URL saved to video_brand_settings.logo_url → 
+Logo displays in Settings and on videos
+```
+
+### AI Logo Generation
+
+Using `google/gemini-2.5-flash-image` model:
+- Prompt: Professional logo for "ICE Alarm España" emergency medical alert service
+- Style: Clean, minimal, healthcare-themed
+- Output: JPEG image uploaded to storage
+
+### Storage Bucket
+
+Using existing `website-images` bucket which already has public access configured.
+
+---
+
+## UI Changes
+
+The Brand Rules card will change from:
+- **Before**: Read-only display with lock icon, just shows placeholder text
+- **After**: Editable with upload button, current logo preview, and remove option
+
+The lock icon and "locked" messaging will be removed from the logo section while keeping colors and fonts read-only (as those are true brand standards).
 
