@@ -56,7 +56,7 @@ export function LanguageBadge({ language }: LanguageBadgeProps) {
 }
 
 interface FormatBadgeProps {
-  format: string;
+  format: string | null | undefined;
 }
 
 export function FormatBadge({ format }: FormatBadgeProps) {
@@ -65,6 +65,7 @@ export function FormatBadge({ format }: FormatBadgeProps) {
     "16:9": "Landscape",
     "1:1": "Square"
   };
+  if (!format) return <Badge variant="outline">-</Badge>;
   return <Badge variant="secondary">{formatLabels[format] || format}</Badge>;
 }
 

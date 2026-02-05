@@ -301,6 +301,9 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                         projectId={project.id}
                         projectStatus={project.status}
                         existingExports={projectExports}
+                        onRenderQueued={() => {
+                          // Refetch will happen automatically via React Query invalidation
+                        }}
                       />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
