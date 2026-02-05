@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useVideoExports, VideoExport } from "@/hooks/useVideoExports";
 import { useVideoProjects } from "@/hooks/useVideoProjects";
+import { useVideoRenders } from "@/hooks/useVideoRenders";
 import { useYouTubeIntegration } from "@/hooks/useYouTubeIntegration";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -25,14 +26,22 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface VideoExportsTabProps {
-  searchQuery: string;
+interface Filters {
+  language: string;
+  format: string;
+  status: string;
 }
 
-export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
+interface VideoExportsTabProps {
+  searchQuery: string;
+  filters: Filters;
+}
+
+export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) {
   const { t } = useTranslation();
   const { exports, isLoading, sendToOutreach } = useVideoExports();
   const { projects } = useVideoProjects();
+  const { latestRenderByProject } = useVideoRenders();
   const { isConnected: youtubeConnected, publish: publishToYouTube, isPublishing } = useYouTubeIntegration();
   
   const [selectedExport, setSelectedExport] = useState<VideoExport | null>(null);
@@ -68,6 +77,12 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
     return new Map(projects.map(p => [p.id, p]));
   }, [projects]);
 
+  // Get render status for a project
+  const getRenderStatus = (projectId: string) => {
+    const render = latestRenderByProject.get(projectId);
+    return render?.status || null;
+  };
+
   // Memoized filtered exports
   const filteredExports = useMemo(() => {
     if (!exports) return [];
@@ -75,9 +90,25 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
     return exports.filter(exp => {
       const project = projectMap.get(exp.project_id);
       if (!project) return false;
-      return project.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Search filter
+      if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // Language filter
+      if (filters.language !== "all" && project.language !== filters.language) {
+        return false;
+      }
+      
+      // Format filter
+      if (filters.format !== "all" && project.format !== filters.format) {
+        return false;
+      }
+      
+      return true;
     });
-  }, [exports, projectMap, searchQuery]);
+  }, [exports, projectMap, searchQuery, filters]);
 
   const handleDownload = (url: string | null) => {
     if (!url) {
@@ -115,6 +146,21 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
       video_export_id: selectedExport.id,
       ...data,
     });
+  };
+
+  const getRenderStatusBadge = (status: string | null) => {
+    switch (status) {
+      case "done":
+        return <Badge className="bg-status-active text-white">{t("videoHub.statuses.done")}</Badge>;
+      case "running":
+        return <Badge className="bg-amber-500 text-white">{t("videoHub.statuses.running")}</Badge>;
+      case "queued":
+        return <Badge variant="secondary">{t("videoHub.statuses.queued")}</Badge>;
+      case "failed":
+        return <Badge variant="destructive">{t("videoHub.statuses.failed")}</Badge>;
+      default:
+        return <Badge variant="outline">-</Badge>;
+    }
   };
 
   const getYouTubeStatusBadge = (status: string | null) => {
@@ -196,9 +242,10 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
               <TableRow>
                 <TableHead className="w-20">{t("videoHub.exports.thumbnail")}</TableHead>
                 <TableHead>{t("videoHub.projects.name")}</TableHead>
-                <TableHead>{t("videoHub.exports.dateCreated")}</TableHead>
                 <TableHead>{t("videoHub.projects.format")}</TableHead>
                 <TableHead>{t("videoHub.projects.language")}</TableHead>
+                <TableHead>{t("videoHub.exports.dateCreated")}</TableHead>
+                <TableHead>{t("videoHub.projects.render")}</TableHead>
                 <TableHead>YouTube</TableHead>
                 <TableHead className="text-right">{t("videoHub.projects.actions")}</TableHead>
               </TableRow>
@@ -206,6 +253,8 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
             <TableBody>
               {filteredExports.map((exp) => {
                 const project = projectMap.get(exp.project_id);
+                const renderStatus = getRenderStatus(exp.project_id);
+                
                 return (
                   <TableRow key={exp.id}>
                     <TableCell>
@@ -222,14 +271,17 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{project?.name || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(exp.created_at), "MMM d, yyyy")}
-                    </TableCell>
                     <TableCell>
                       {project ? <FormatBadge format={project.format} /> : "-"}
                     </TableCell>
                     <TableCell>
                       {project ? <LanguageBadge language={project.language} /> : "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(exp.created_at), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      {getRenderStatusBadge(renderStatus)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

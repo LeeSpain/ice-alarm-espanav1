@@ -3418,7 +3418,26 @@
       "deleteConfirmTitle": "¿Eliminar Proyecto?",
       "deleteConfirmDesc": "Esta acción no se puede deshacer. Esto eliminará permanentemente el proyecto de video y todos los datos asociados.",
       "noProjects": "Aún no hay proyectos de video",
-      "createFirst": "Crea tu primer video para empezar"
+      "createFirst": "Crea tu primer video para empezar",
+      "duplicated": "Proyecto duplicado",
+      "retryRender": "Reintentar Render",
+      "openExport": "Abrir Última Exportación",
+      "lastExport": "Última Exportación"
+    },
+    "validation": {
+      "nameRequired": "El nombre del proyecto es obligatorio",
+      "templateRequired": "Por favor, selecciona una plantilla",
+      "headlineRequired": "El titular es obligatorio",
+      "headlineTooLong": "El titular debe tener 60 caracteres o menos",
+      "bulletsRequired": "Se requieren al menos 3 puntos clave",
+      "bulletTooLong": "Debe tener 80 caracteres o menos",
+      "ctaRequired": "El texto de llamada a la acción es obligatorio",
+      "languageRequired": "El idioma debe ser inglés o español",
+      "formatNotAllowed": "Este formato no está permitido por la plantilla seleccionada",
+      "durationNotAllowed": "Esta duración no está permitida por la plantilla seleccionada",
+      "notAllowed": "No permitido",
+      "fixErrors": "Por favor, corrige los errores de validación",
+      "hasErrors": "Por favor, corrige los errores antes de renderizar"
     },
     "create": {
       "step1": "Elegir Plantilla",

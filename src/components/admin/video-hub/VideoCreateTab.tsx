@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { 
   ChevronLeft, ChevronRight, Wand2, Save, Loader2, Plus, Trash2, 
-  Layout, Sparkles, Zap, FileVideo, Image, Palette
+  Layout, Zap, AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useVideoTemplates } from "@/hooks/useVideoTemplates";
 import { useVideoProjects, VideoProject } from "@/hooks/useVideoProjects";
 import { useVideoBrandSettings } from "@/hooks/useVideoBrandSettings";
@@ -23,6 +22,7 @@ interface VideoCreateTabProps {
   onComplete: () => void;
   editingProject?: VideoProject | null;
   initialTemplateId?: string | null;
+  isQuickCreate?: boolean;
 }
 
 interface ProjectDataJson {
@@ -33,26 +33,35 @@ interface ProjectDataJson {
   includeDisclaimer?: boolean;
   backgroundUrl?: string;
   productIcons?: string[];
-  script?: string;
-  voiceStyle?: string;
-  musicStyle?: string;
-  transitionStyle?: string;
-  overlayStyle?: string;
-  textPosition?: string;
-  colorScheme?: string;
 }
 
-type CreationMode = "template" | "scratch" | "ai" | "quick";
+interface ValidationErrors {
+  name?: string;
+  template_id?: string;
+  headline?: string;
+  bullets?: string[];
+  ctaText?: string;
+  language?: string;
+  format?: string;
+  duration?: string;
+}
 
-// Different step flows per mode
+// Only two creation paths: Template (default) and Quick
+type CreationMode = "template" | "quick";
+
+// Step flows
 const STEPS_BY_MODE: Record<CreationMode, string[]> = {
   template: ["template", "format", "content", "assets", "preview"],
-  scratch: ["basics", "style", "content", "media", "effects", "preview"],
-  ai: ["prompt", "review", "refine", "preview"],
   quick: ["quick-setup", "preview"],
 };
 
-export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }: VideoCreateTabProps) {
+// Validation constants
+const MAX_HEADLINE_LENGTH = 60;
+const MAX_BULLET_LENGTH = 80;
+const MIN_BULLETS = 3;
+const MAX_BULLETS = 6;
+
+export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, isQuickCreate = false }: VideoCreateTabProps) {
   const { t } = useTranslation();
   const { templates, isLoading: templatesLoading } = useVideoTemplates();
   const { createProject, updateProject, isCreating, isUpdating } = useVideoProjects();
@@ -60,14 +69,16 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
 
   const isEditMode = !!editingProject;
 
-  // Mode selection (only shown if not editing)
-  const [creationMode, setCreationMode] = useState<CreationMode | null>(
-    initialTemplateId ? "template" : null
-  );
+  // Mode selection
+  const [creationMode, setCreationMode] = useState<CreationMode | null>(() => {
+    if (isQuickCreate) return "quick";
+    if (initialTemplateId) return "template";
+    return null;
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const [isRendering, setIsRendering] = useState(false);
 
-  // Extended project data with more options
+  // Project data
   const [projectData, setProjectData] = useState({
     name: "",
     template_id: "",
@@ -81,21 +92,21 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     includeDisclaimer: true,
     backgroundUrl: "",
     productIcons: [] as string[],
-    // New fields for custom creation
-    script: "",
-    voiceStyle: "professional",
-    musicStyle: "upbeat",
-    transitionStyle: "fade",
-    overlayStyle: "minimal",
-    textPosition: "center",
-    colorScheme: "brand",
-    aiPrompt: "",
   });
+
+  // Validation errors
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<Set<string>>(new Set());
 
   // Initialize form when editing
   useEffect(() => {
     if (editingProject) {
       const dataJson = editingProject.data_json as ProjectDataJson;
+      const bullets = dataJson?.bullets?.length ? dataJson.bullets : ["", "", ""];
+      // Ensure minimum 3 bullets
+      while (bullets.length < MIN_BULLETS) {
+        bullets.push("");
+      }
       setProjectData({
         name: editingProject.name,
         template_id: editingProject.template_id || "",
@@ -103,29 +114,98 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
         duration: editingProject.duration,
         language: editingProject.language,
         headline: dataJson?.headline || "",
-        bullets: dataJson?.bullets?.length ? dataJson.bullets : ["", "", ""],
+        bullets,
         ctaText: dataJson?.ctaText || "",
         contactLine: dataJson?.contactLine || "",
         includeDisclaimer: dataJson?.includeDisclaimer ?? true,
         backgroundUrl: dataJson?.backgroundUrl || "",
         productIcons: dataJson?.productIcons || [],
-        script: dataJson?.script || "",
-        voiceStyle: dataJson?.voiceStyle || "professional",
-        musicStyle: dataJson?.musicStyle || "upbeat",
-        transitionStyle: dataJson?.transitionStyle || "fade",
-        overlayStyle: dataJson?.overlayStyle || "minimal",
-        textPosition: dataJson?.textPosition || "center",
-        colorScheme: dataJson?.colorScheme || "brand",
-        aiPrompt: "",
       });
-      // Determine mode from existing project
-      setCreationMode(editingProject.template_id ? "template" : "scratch");
+      setCreationMode(editingProject.template_id ? "template" : "quick");
       setCurrentStep(0);
     } else if (initialTemplateId) {
       setProjectData(prev => ({ ...prev, template_id: initialTemplateId }));
       setCreationMode("template");
+    } else if (isQuickCreate) {
+      setCreationMode("quick");
     }
-  }, [editingProject, initialTemplateId]);
+  }, [editingProject, initialTemplateId, isQuickCreate]);
+
+  // Get selected template
+  const selectedTemplate = useMemo(() => {
+    if (!projectData.template_id || !templates) return null;
+    return templates.find(t => t.id === projectData.template_id);
+  }, [projectData.template_id, templates]);
+
+  // Validate project data
+  const validate = useCallback((): ValidationErrors => {
+    const errors: ValidationErrors = {};
+
+    // Name required
+    if (!projectData.name.trim()) {
+      errors.name = t("videoHub.validation.nameRequired", "Project name is required");
+    }
+
+    // Template required for template mode
+    if (creationMode === "template" && !projectData.template_id) {
+      errors.template_id = t("videoHub.validation.templateRequired", "Please select a template");
+    }
+
+    // Headline required (max 60 chars)
+    if (!projectData.headline.trim()) {
+      errors.headline = t("videoHub.validation.headlineRequired", "Headline is required");
+    } else if (projectData.headline.length > MAX_HEADLINE_LENGTH) {
+      errors.headline = t("videoHub.validation.headlineTooLong", `Headline must be ${MAX_HEADLINE_LENGTH} characters or less`);
+    }
+
+    // Bullets: 3-6 required, non-empty, max 80 chars each
+    const filledBullets = projectData.bullets.filter(b => b.trim());
+    if (filledBullets.length < MIN_BULLETS) {
+      errors.bullets = [t("videoHub.validation.bulletsRequired", `At least ${MIN_BULLETS} bullet points are required`)];
+    } else {
+      const bulletErrors: string[] = [];
+      projectData.bullets.forEach((bullet, index) => {
+        if (bullet.trim() && bullet.length > MAX_BULLET_LENGTH) {
+          bulletErrors[index] = t("videoHub.validation.bulletTooLong", `Bullet ${index + 1} must be ${MAX_BULLET_LENGTH} characters or less`);
+        }
+      });
+      if (bulletErrors.some(e => e)) {
+        errors.bullets = bulletErrors;
+      }
+    }
+
+    // CTA required (default from brand settings if empty)
+    if (!projectData.ctaText.trim() && !settings?.default_cta_en && !settings?.default_cta_es) {
+      errors.ctaText = t("videoHub.validation.ctaRequired", "Call-to-action text is required");
+    }
+
+    // Language must be EN or ES only
+    if (!["en", "es"].includes(projectData.language)) {
+      errors.language = t("videoHub.validation.languageRequired", "Language must be English or Spanish");
+    }
+
+    // Format/duration must be allowed by template
+    if (selectedTemplate) {
+      if (!selectedTemplate.allowed_formats?.includes(projectData.format)) {
+        errors.format = t("videoHub.validation.formatNotAllowed", "This format is not allowed by the selected template");
+      }
+      if (!selectedTemplate.allowed_durations?.includes(projectData.duration)) {
+        errors.duration = t("videoHub.validation.durationNotAllowed", "This duration is not allowed by the selected template");
+      }
+    }
+
+    return errors;
+  }, [projectData, creationMode, selectedTemplate, settings, t]);
+
+  // Run validation on data change
+  useEffect(() => {
+    const errors = validate();
+    setValidationErrors(errors);
+  }, [validate]);
+
+  const isValid = useMemo(() => {
+    return Object.keys(validationErrors).length === 0;
+  }, [validationErrors]);
 
   const currentSteps = creationMode ? STEPS_BY_MODE[creationMode] : [];
 
@@ -139,40 +219,39 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     } else if (!isEditMode) {
-      // Go back to mode selection
       setCreationMode(null);
     }
   };
 
   const prepareProjectPayload = useCallback(() => {
+    const effectiveCta = projectData.ctaText.trim() || 
+      (projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en) || 
+      "Call Now";
+
     return {
-      name: projectData.name,
+      name: projectData.name.trim(),
       template_id: creationMode === "template" ? projectData.template_id || null : null,
       format: projectData.format,
       duration: projectData.duration,
       language: projectData.language,
       data_json: {
-        headline: projectData.headline,
+        headline: projectData.headline.trim(),
         bullets: projectData.bullets.filter(b => b.trim()),
-        ctaText: projectData.ctaText,
-        contactLine: projectData.contactLine,
+        ctaText: effectiveCta,
+        contactLine: projectData.contactLine.trim(),
         includeDisclaimer: projectData.includeDisclaimer,
-        backgroundUrl: projectData.backgroundUrl,
+        backgroundUrl: projectData.backgroundUrl.trim(),
         productIcons: projectData.productIcons,
-        script: projectData.script,
-        voiceStyle: projectData.voiceStyle,
-        musicStyle: projectData.musicStyle,
-        transitionStyle: projectData.transitionStyle,
-        overlayStyle: projectData.overlayStyle,
-        textPosition: projectData.textPosition,
-        colorScheme: projectData.colorScheme,
       },
     };
-  }, [projectData, creationMode]);
+  }, [projectData, creationMode, settings]);
 
   const handleSaveDraft = async () => {
-    if (!projectData.name) {
-      toast.error(t("videoHub.create.nameRequired"));
+    // Mark all fields as touched
+    setTouched(new Set(["name", "template_id", "headline", "bullets", "ctaText", "language", "format", "duration"]));
+
+    if (!isValid) {
+      toast.error(t("videoHub.validation.fixErrors", "Please fix the validation errors before saving"));
       return;
     }
 
@@ -201,8 +280,11 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
   };
 
   const handleRender = async () => {
-    if (!projectData.name) {
-      toast.error(t("videoHub.create.nameRequired"));
+    // Mark all fields as touched
+    setTouched(new Set(["name", "template_id", "headline", "bullets", "ctaText", "language", "format", "duration"]));
+
+    if (!isValid) {
+      toast.error(t("videoHub.validation.fixErrors", "Please fix the validation errors before rendering"));
       return;
     }
 
@@ -213,7 +295,6 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
       let projectId: string;
 
       if (isEditMode && editingProject) {
-        // Set status to "rendering" optimistically
         await updateProject({
           id: editingProject.id,
           ...payload,
@@ -221,7 +302,6 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
         });
         projectId = editingProject.id;
       } else {
-        // Create with "rendering" status
         const newProject = await createProject({
           ...payload,
           status: "rendering",
@@ -250,13 +330,13 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
   };
 
   const addBullet = () => {
-    if (projectData.bullets.length < 6) {
+    if (projectData.bullets.length < MAX_BULLETS) {
       setProjectData({ ...projectData, bullets: [...projectData.bullets, ""] });
     }
   };
 
   const removeBullet = (index: number) => {
-    if (projectData.bullets.length > 1) {
+    if (projectData.bullets.length > MIN_BULLETS) {
       const newBullets = projectData.bullets.filter((_, i) => i !== index);
       setProjectData({ ...projectData, bullets: newBullets });
     }
@@ -266,6 +346,11 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     const newBullets = [...projectData.bullets];
     newBullets[index] = value;
     setProjectData({ ...projectData, bullets: newBullets });
+    setTouched(prev => new Set(prev).add("bullets"));
+  };
+
+  const handleFieldBlur = (field: string) => {
+    setTouched(prev => new Set(prev).add(field));
   };
 
   const isSaving = isCreating || isUpdating;
@@ -280,10 +365,10 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
           <p className="text-muted-foreground mt-2">{t("videoHub.create.chooseModeDesc")}</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Template Mode */}
+        <div className="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
+          {/* Template Mode (Primary) */}
           <Card 
-            className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group"
+            className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group border-2"
             onClick={() => setCreationMode("template")}
           >
             <CardHeader>
@@ -297,47 +382,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">{t("videoHub.create.modes.template.badge1")}</Badge>
                 <Badge variant="secondary">{t("videoHub.create.modes.template.badge2")}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Scratch Mode */}
-          <Card 
-            className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group"
-            onClick={() => setCreationMode("scratch")}
-          >
-            <CardHeader>
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary text-secondary-foreground mb-2 group-hover:scale-110 transition-transform">
-                <Palette className="h-7 w-7" />
-              </div>
-              <CardTitle>{t("videoHub.create.modes.scratch.title")}</CardTitle>
-              <CardDescription>{t("videoHub.create.modes.scratch.desc")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{t("videoHub.create.modes.scratch.badge1")}</Badge>
-                <Badge variant="secondary">{t("videoHub.create.modes.scratch.badge2")}</Badge>
-                <Badge variant="secondary">{t("videoHub.create.modes.scratch.badge3")}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AI Mode */}
-          <Card 
-            className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group"
-            onClick={() => setCreationMode("ai")}
-          >
-            <CardHeader>
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-accent-foreground mb-2 group-hover:scale-110 transition-transform">
-                <Sparkles className="h-7 w-7" />
-              </div>
-              <CardTitle>{t("videoHub.create.modes.ai.title")}</CardTitle>
-              <CardDescription>{t("videoHub.create.modes.ai.desc")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{t("videoHub.create.modes.ai.badge1")}</Badge>
-                <Badge variant="secondary">{t("videoHub.create.modes.ai.badge2")}</Badge>
+                <Badge className="bg-primary text-primary-foreground">{t("common.recommended", "Recommended")}</Badge>
               </div>
             </CardContent>
           </Card>
@@ -374,75 +419,55 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     if (creationMode === "template") {
       switch (stepName) {
         case "template":
-          return <TemplateSelectionStep 
-            templates={templates} 
-            templatesLoading={templatesLoading}
-            projectData={projectData}
-            setProjectData={setProjectData}
-            t={t}
-          />;
+          return (
+            <TemplateSelectionStep 
+              templates={templates} 
+              templatesLoading={templatesLoading}
+              projectData={projectData}
+              setProjectData={setProjectData}
+              validationErrors={validationErrors}
+              touched={touched}
+              onBlur={handleFieldBlur}
+              t={t}
+            />
+          );
         case "format":
-          return <FormatDurationStep projectData={projectData} setProjectData={setProjectData} t={t} />;
+          return (
+            <FormatDurationStep 
+              projectData={projectData} 
+              setProjectData={setProjectData} 
+              selectedTemplate={selectedTemplate}
+              validationErrors={validationErrors}
+              t={t}
+            />
+          );
         case "content":
-          return <ContentStep 
-            projectData={projectData} 
-            setProjectData={setProjectData} 
-            settings={settings}
-            addBullet={addBullet}
-            removeBullet={removeBullet}
-            updateBullet={updateBullet}
-            t={t}
-          />;
+          return (
+            <ContentStep 
+              projectData={projectData} 
+              setProjectData={setProjectData} 
+              settings={settings}
+              addBullet={addBullet}
+              removeBullet={removeBullet}
+              updateBullet={updateBullet}
+              validationErrors={validationErrors}
+              touched={touched}
+              onBlur={handleFieldBlur}
+              t={t}
+            />
+          );
         case "assets":
           return <AssetsStep projectData={projectData} setProjectData={setProjectData} settings={settings} t={t} />;
         case "preview":
-          return <PreviewStep projectData={projectData} settings={settings} t={t} />;
-      }
-    }
-
-    // SCRATCH MODE STEPS
-    if (creationMode === "scratch") {
-      switch (stepName) {
-        case "basics":
-          return <ScratchBasicsStep projectData={projectData} setProjectData={setProjectData} t={t} />;
-        case "style":
-          return <ScratchStyleStep projectData={projectData} setProjectData={setProjectData} t={t} />;
-        case "content":
-          return <ScratchContentStep 
-            projectData={projectData} 
-            setProjectData={setProjectData}
-            addBullet={addBullet}
-            removeBullet={removeBullet}
-            updateBullet={updateBullet}
-            t={t}
-          />;
-        case "media":
-          return <ScratchMediaStep projectData={projectData} setProjectData={setProjectData} settings={settings} t={t} />;
-        case "effects":
-          return <ScratchEffectsStep projectData={projectData} setProjectData={setProjectData} t={t} />;
-        case "preview":
-          return <PreviewStep projectData={projectData} settings={settings} t={t} />;
-      }
-    }
-
-    // AI MODE STEPS
-    if (creationMode === "ai") {
-      switch (stepName) {
-        case "prompt":
-          return <AIPromptStep projectData={projectData} setProjectData={setProjectData} t={t} />;
-        case "review":
-          return <AIReviewStep projectData={projectData} setProjectData={setProjectData} t={t} />;
-        case "refine":
-          return <AIRefineStep 
-            projectData={projectData} 
-            setProjectData={setProjectData}
-            addBullet={addBullet}
-            removeBullet={removeBullet}
-            updateBullet={updateBullet}
-            t={t}
-          />;
-        case "preview":
-          return <PreviewStep projectData={projectData} settings={settings} t={t} />;
+          return (
+            <PreviewStep 
+              projectData={projectData} 
+              settings={settings} 
+              validationErrors={validationErrors}
+              isValid={isValid}
+              t={t}
+            />
+          );
       }
     }
 
@@ -450,14 +475,32 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     if (creationMode === "quick") {
       switch (stepName) {
         case "quick-setup":
-          return <QuickSetupStep 
-            projectData={projectData} 
-            setProjectData={setProjectData} 
-            settings={settings}
-            t={t}
-          />;
+          return (
+            <QuickSetupStep 
+              projectData={projectData} 
+              setProjectData={setProjectData} 
+              settings={settings}
+              templates={templates}
+              templatesLoading={templatesLoading}
+              addBullet={addBullet}
+              removeBullet={removeBullet}
+              updateBullet={updateBullet}
+              validationErrors={validationErrors}
+              touched={touched}
+              onBlur={handleFieldBlur}
+              t={t}
+            />
+          );
         case "preview":
-          return <PreviewStep projectData={projectData} settings={settings} t={t} />;
+          return (
+            <PreviewStep 
+              projectData={projectData} 
+              settings={settings} 
+              validationErrors={validationErrors}
+              isValid={isValid}
+              t={t}
+            />
+          );
       }
     }
 
@@ -467,8 +510,6 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
   const getModeIcon = () => {
     switch (creationMode) {
       case "template": return <Layout className="h-5 w-5" />;
-      case "scratch": return <Palette className="h-5 w-5" />;
-      case "ai": return <Sparkles className="h-5 w-5" />;
       case "quick": return <Zap className="h-5 w-5" />;
       default: return <Wand2 className="h-5 w-5" />;
     }
@@ -478,8 +519,6 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
     if (isEditMode) return t("videoHub.create.editProject");
     switch (creationMode) {
       case "template": return t("videoHub.create.modes.template.title");
-      case "scratch": return t("videoHub.create.modes.scratch.title");
-      case "ai": return t("videoHub.create.modes.ai.title");
       case "quick": return t("videoHub.create.modes.quick.title");
       default: return t("videoHub.tabs.create");
     }
@@ -546,7 +585,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
                 )}
                 {isEditMode ? t("videoHub.create.updateProject") : t("videoHub.create.saveDraft")}
               </Button>
-              <Button onClick={handleRender} disabled={isProcessing}>
+              <Button onClick={handleRender} disabled={isProcessing || !isValid}>
                 {isRendering ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -569,20 +608,29 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
 
 // ========== STEP COMPONENTS ==========
 
-// Template Selection Step (Template Mode)
-function TemplateSelectionStep({ templates, templatesLoading, projectData, setProjectData, t }: any) {
+// Template Selection Step
+function TemplateSelectionStep({ templates, templatesLoading, projectData, setProjectData, validationErrors, touched, onBlur, t }: any) {
   return (
     <div className="space-y-4">
       <div className="mb-4">
-        <Label>{t("videoHub.create.projectName")}</Label>
+        <Label>{t("videoHub.create.projectName")} *</Label>
         <Input
           value={projectData.name}
           onChange={(e) => setProjectData({ ...projectData, name: e.target.value })}
+          onBlur={() => onBlur("name")}
           placeholder={t("videoHub.create.projectNamePlaceholder")}
-          className="mt-1"
+          className={`mt-1 ${touched.has("name") && validationErrors.name ? "border-destructive" : ""}`}
         />
+        {touched.has("name") && validationErrors.name && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.name}</p>
+        )}
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+      <Label>{t("videoHub.projects.template")} *</Label>
+      {touched.has("template_id") && validationErrors.template_id && (
+        <p className="text-sm text-destructive mt-1">{validationErrors.template_id}</p>
+      )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-2">
         {templatesLoading ? (
           <p>{t("common.loading")}</p>
         ) : (
@@ -592,7 +640,10 @@ function TemplateSelectionStep({ templates, templatesLoading, projectData, setPr
               className={`cursor-pointer transition-all hover:border-primary ${
                 projectData.template_id === template.id ? "border-2 border-primary" : ""
               }`}
-              onClick={() => setProjectData({ ...projectData, template_id: template.id })}
+              onClick={() => {
+                setProjectData({ ...projectData, template_id: template.id });
+                onBlur("template_id");
+              }}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">{template.name}</CardTitle>
@@ -616,92 +667,152 @@ function TemplateSelectionStep({ templates, templatesLoading, projectData, setPr
 }
 
 // Format & Duration Step
-function FormatDurationStep({ projectData, setProjectData, t }: any) {
+function FormatDurationStep({ projectData, setProjectData, selectedTemplate, validationErrors, t }: any) {
+  const allowedFormats = selectedTemplate?.allowed_formats || ["9:16", "16:9", "1:1"];
+  const allowedDurations = selectedTemplate?.allowed_durations || [10, 15, 30, 60];
+
   return (
     <div className="space-y-8">
       <div>
-        <Label className="text-base font-medium">{t("videoHub.projects.format")}</Label>
+        <Label className="text-base font-medium">{t("videoHub.projects.format")} *</Label>
+        {validationErrors.format && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.format}</p>
+        )}
         <RadioGroup
           value={projectData.format}
           onValueChange={(value) => setProjectData({ ...projectData, format: value })}
           className="mt-3 grid gap-4 md:grid-cols-3"
         >
-          {["9:16", "16:9", "1:1"].map((format) => (
-            <div key={format}>
-              <RadioGroupItem value={format} id={`format-${format}`} className="peer sr-only" />
-              <Label
-                htmlFor={`format-${format}`}
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-              >
-                <span className="text-lg font-medium">
-                  {t(`videoHub.formats.${format === "9:16" ? "portrait" : format === "16:9" ? "landscape" : "square"}`)}
-                </span>
-                <span className="text-sm text-muted-foreground">{format}</span>
-              </Label>
-            </div>
-          ))}
+          {["9:16", "16:9", "1:1"].map((format) => {
+            const isAllowed = allowedFormats.includes(format);
+            return (
+              <div key={format}>
+                <RadioGroupItem 
+                  value={format} 
+                  id={`format-${format}`} 
+                  className="peer sr-only" 
+                  disabled={!isAllowed}
+                />
+                <Label
+                  htmlFor={`format-${format}`}
+                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${
+                    !isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  <span className="text-lg font-medium">
+                    {t(`videoHub.formats.${format === "9:16" ? "portrait" : format === "16:9" ? "landscape" : "square"}`)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{format}</span>
+                  {!isAllowed && (
+                    <span className="text-xs text-destructive mt-1">{t("videoHub.validation.notAllowed", "Not allowed")}</span>
+                  )}
+                </Label>
+              </div>
+            );
+          })}
         </RadioGroup>
       </div>
 
       <div>
-        <Label className="text-base font-medium">{t("videoHub.projects.duration")}</Label>
+        <Label className="text-base font-medium">{t("videoHub.projects.duration")} *</Label>
+        {validationErrors.duration && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.duration}</p>
+        )}
         <RadioGroup
           value={projectData.duration.toString()}
           onValueChange={(value) => setProjectData({ ...projectData, duration: parseInt(value) })}
           className="mt-3 grid gap-4 md:grid-cols-4"
         >
-          {[10, 15, 30, 60].map((duration) => (
-            <div key={duration}>
-              <RadioGroupItem value={duration.toString()} id={`duration-${duration}`} className="peer sr-only" />
-              <Label
-                htmlFor={`duration-${duration}`}
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-              >
-                <span className="text-lg font-medium">{duration}s</span>
-                <span className="text-sm text-muted-foreground">{t(`videoHub.durations.${duration}s`)}</span>
-              </Label>
-            </div>
-          ))}
+          {[10, 15, 30, 60].map((duration) => {
+            const isAllowed = allowedDurations.includes(duration);
+            return (
+              <div key={duration}>
+                <RadioGroupItem 
+                  value={duration.toString()} 
+                  id={`duration-${duration}`} 
+                  className="peer sr-only"
+                  disabled={!isAllowed}
+                />
+                <Label
+                  htmlFor={`duration-${duration}`}
+                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${
+                    !isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  <span className="text-lg font-medium">{duration}s</span>
+                  <span className="text-sm text-muted-foreground">{t(`videoHub.durations.${duration}s`)}</span>
+                  {!isAllowed && (
+                    <span className="text-xs text-destructive mt-1">{t("videoHub.validation.notAllowed", "Not allowed")}</span>
+                  )}
+                </Label>
+              </div>
+            );
+          })}
         </RadioGroup>
       </div>
     </div>
   );
 }
 
-// Content Step (Template Mode)
-function ContentStep({ projectData, setProjectData, settings, addBullet, removeBullet, updateBullet, t }: any) {
+// Content Step
+function ContentStep({ projectData, setProjectData, settings, addBullet, removeBullet, updateBullet, validationErrors, touched, onBlur, t }: any) {
+  const filledBulletCount = projectData.bullets.filter((b: string) => b.trim()).length;
+
   return (
     <div className="space-y-6">
       <div>
-        <Label>{t("videoHub.create.headline")}</Label>
+        <Label>{t("videoHub.create.headline")} * <span className="text-muted-foreground text-xs">({projectData.headline.length}/{MAX_HEADLINE_LENGTH})</span></Label>
         <Input
           value={projectData.headline}
           onChange={(e) => setProjectData({ ...projectData, headline: e.target.value })}
+          onBlur={() => onBlur("headline")}
           placeholder={t("videoHub.create.headlinePlaceholder")}
-          className="mt-1"
+          maxLength={MAX_HEADLINE_LENGTH}
+          className={`mt-1 ${touched.has("headline") && validationErrors.headline ? "border-destructive" : ""}`}
         />
+        {touched.has("headline") && validationErrors.headline && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.headline}</p>
+        )}
       </div>
 
       <div>
         <div className="flex items-center justify-between">
-          <Label>{t("videoHub.create.bulletPoints")}</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= 6}>
+          <Label>
+            {t("videoHub.create.bulletPoints")} * 
+            <span className="text-muted-foreground text-xs ml-2">({filledBulletCount}/{MIN_BULLETS}-{MAX_BULLETS} required)</span>
+          </Label>
+          <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= MAX_BULLETS}>
             <Plus className="mr-1 h-3 w-3" />
             {t("videoHub.create.addBullet")}
           </Button>
         </div>
+        {touched.has("bullets") && validationErrors.bullets?.[0] && typeof validationErrors.bullets[0] === "string" && !validationErrors.bullets[0].includes("Bullet") && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.bullets[0]}</p>
+        )}
         <div className="mt-2 space-y-2">
           {projectData.bullets.map((bullet: string, index: number) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                value={bullet}
-                onChange={(e) => updateBullet(index, e.target.value)}
-                placeholder={`${t("videoHub.create.bullet")} ${index + 1}`}
-              />
-              {projectData.bullets.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeBullet(index)}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
+            <div key={index}>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    value={bullet}
+                    onChange={(e) => updateBullet(index, e.target.value)}
+                    placeholder={`${t("videoHub.create.bullet")} ${index + 1}`}
+                    maxLength={MAX_BULLET_LENGTH}
+                    className={validationErrors.bullets?.[index] ? "border-destructive" : ""}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {bullet.length}/{MAX_BULLET_LENGTH}
+                  </span>
+                </div>
+                {projectData.bullets.length > MIN_BULLETS && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeBullet(index)}>
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                )}
+              </div>
+              {validationErrors.bullets?.[index] && (
+                <p className="text-sm text-destructive mt-1">{validationErrors.bullets[index]}</p>
               )}
             </div>
           ))}
@@ -710,13 +821,22 @@ function ContentStep({ projectData, setProjectData, settings, addBullet, removeB
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label>{t("videoHub.create.ctaText")}</Label>
+          <Label>{t("videoHub.create.ctaText")} *</Label>
           <Input
             value={projectData.ctaText}
             onChange={(e) => setProjectData({ ...projectData, ctaText: e.target.value })}
+            onBlur={() => onBlur("ctaText")}
             placeholder={settings?.default_cta_en || "Call Now"}
-            className="mt-1"
+            className={`mt-1 ${touched.has("ctaText") && validationErrors.ctaText ? "border-destructive" : ""}`}
           />
+          {settings?.default_cta_en && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("videoHub.create.defaultCta", "Default")}: {projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en}
+            </p>
+          )}
+          {touched.has("ctaText") && validationErrors.ctaText && (
+            <p className="text-sm text-destructive mt-1">{validationErrors.ctaText}</p>
+          )}
         </div>
         <div>
           <Label>{t("videoHub.create.contactLine")}</Label>
@@ -738,16 +858,19 @@ function ContentStep({ projectData, setProjectData, settings, addBullet, removeB
       </div>
 
       <div>
-        <Label>{t("videoHub.create.selectLanguage")}</Label>
+        <Label>{t("videoHub.create.selectLanguage")} *</Label>
+        {validationErrors.language && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.language}</p>
+        )}
         <RadioGroup
           value={projectData.language}
           onValueChange={(value) => setProjectData({ ...projectData, language: value })}
           className="mt-2 flex gap-4"
         >
-          {["en", "es", "both"].map((lang) => (
+          {["en", "es"].map((lang) => (
             <div key={lang} className="flex items-center gap-2">
               <RadioGroupItem value={lang} id={`lang-${lang}`} />
-              <Label htmlFor={`lang-${lang}`}>{lang === "both" ? "Both" : lang.toUpperCase()}</Label>
+              <Label htmlFor={`lang-${lang}`}>{lang === "es" ? "Español" : "English"}</Label>
             </div>
           ))}
         </RadioGroup>
@@ -827,10 +950,21 @@ function AssetsStep({ projectData, setProjectData, settings, t }: any) {
   );
 }
 
-// Preview Step (shared)
-function PreviewStep({ projectData, settings, t }: any) {
+// Preview Step
+function PreviewStep({ projectData, settings, validationErrors, isValid, t }: any) {
+  const errorCount = Object.keys(validationErrors).length;
+
   return (
     <div className="space-y-6">
+      {!isValid && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {t("videoHub.validation.hasErrors", `Please fix ${errorCount} validation error(s) before rendering.`)}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>{t("videoHub.create.previewTitle")}</CardTitle>
@@ -855,7 +989,7 @@ function PreviewStep({ projectData, settings, t }: any) {
                 </ul>
               )}
               <p className="mt-4 text-primary font-medium">
-                {projectData.ctaText || settings?.default_cta_en || "Call Now"}
+                {projectData.ctaText || (projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en) || "Call Now"}
               </p>
             </div>
           </div>
@@ -867,6 +1001,10 @@ function PreviewStep({ projectData, settings, t }: any) {
           <h4 className="font-medium mb-2">{t("videoHub.create.summary")}</h4>
           <dl className="space-y-1 text-sm">
             <div className="flex justify-between">
+              <dt className="text-muted-foreground">{t("videoHub.projects.name")}:</dt>
+              <dd className={!projectData.name ? "text-destructive" : ""}>{projectData.name || "—"}</dd>
+            </div>
+            <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("videoHub.projects.format")}:</dt>
               <dd>{projectData.format}</dd>
             </div>
@@ -876,7 +1014,7 @@ function PreviewStep({ projectData, settings, t }: any) {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("videoHub.projects.language")}:</dt>
-              <dd>{projectData.language.toUpperCase()}</dd>
+              <dd>{projectData.language === "es" ? "Español" : "English"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("videoHub.create.disclaimer")}:</dt>
@@ -902,695 +1040,165 @@ function PreviewStep({ projectData, settings, t }: any) {
   );
 }
 
-// ========== SCRATCH MODE STEPS ==========
+// Quick Setup Step (streamlined essentials)
+function QuickSetupStep({ projectData, setProjectData, settings, templates, templatesLoading, addBullet, removeBullet, updateBullet, validationErrors, touched, onBlur, t }: any) {
+  const filledBulletCount = projectData.bullets.filter((b: string) => b.trim()).length;
 
-function ScratchBasicsStep({ projectData, setProjectData, t }: any) {
   return (
     <div className="space-y-6">
-      <div>
-        <Label>{t("videoHub.create.projectName")}</Label>
-        <Input
-          value={projectData.name}
-          onChange={(e) => setProjectData({ ...projectData, name: e.target.value })}
-          placeholder={t("videoHub.create.projectNamePlaceholder")}
-          className="mt-1"
-        />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div>
-          <Label className="text-base font-medium">{t("videoHub.projects.format")}</Label>
-          <RadioGroup
-            value={projectData.format}
-            onValueChange={(value) => setProjectData({ ...projectData, format: value })}
-            className="mt-3 space-y-2"
-          >
-            {[
-              { value: "9:16", label: "Portrait (9:16)", desc: "TikTok, Reels, Stories" },
-              { value: "16:9", label: "Landscape (16:9)", desc: "YouTube, Website" },
-              { value: "1:1", label: "Square (1:1)", desc: "Instagram, Facebook" },
-            ].map((opt) => (
-              <div key={opt.value} className="flex items-center space-x-3">
-                <RadioGroupItem value={opt.value} id={`scratch-format-${opt.value}`} />
-                <Label htmlFor={`scratch-format-${opt.value}`} className="flex-1 cursor-pointer">
-                  <span className="font-medium">{opt.label}</span>
-                  <span className="block text-xs text-muted-foreground">{opt.desc}</span>
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-
-        <div>
-          <Label className="text-base font-medium">{t("videoHub.projects.duration")}</Label>
-          <RadioGroup
-            value={projectData.duration.toString()}
-            onValueChange={(value) => setProjectData({ ...projectData, duration: parseInt(value) })}
-            className="mt-3 space-y-2"
-          >
-            {[
-              { value: "10", label: "10 seconds", desc: "Quick teaser" },
-              { value: "15", label: "15 seconds", desc: "Social ads" },
-              { value: "30", label: "30 seconds", desc: "Standard ad" },
-              { value: "60", label: "60 seconds", desc: "Detailed promo" },
-            ].map((opt) => (
-              <div key={opt.value} className="flex items-center space-x-3">
-                <RadioGroupItem value={opt.value} id={`scratch-duration-${opt.value}`} />
-                <Label htmlFor={`scratch-duration-${opt.value}`} className="flex-1 cursor-pointer">
-                  <span className="font-medium">{opt.label}</span>
-                  <span className="block text-xs text-muted-foreground">{opt.desc}</span>
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-      </div>
-
-      <div>
-        <Label>{t("videoHub.create.selectLanguage")}</Label>
-        <Select
-          value={projectData.language}
-          onValueChange={(value) => setProjectData({ ...projectData, language: value })}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="en">English</SelectItem>
-            <SelectItem value="es">Español</SelectItem>
-            <SelectItem value="both">Both Languages</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
-function ScratchStyleStep({ projectData, setProjectData, t }: any) {
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <div>
-          <Label className="text-base font-medium">{t("videoHub.scratch.colorScheme")}</Label>
-          <RadioGroup
-            value={projectData.colorScheme}
-            onValueChange={(value) => setProjectData({ ...projectData, colorScheme: value })}
-            className="mt-3 grid grid-cols-2 gap-2"
-          >
-            {[
-              { value: "brand", label: "Brand Colors" },
-              { value: "warm", label: "Warm Tones" },
-              { value: "cool", label: "Cool Tones" },
-              { value: "monochrome", label: "Monochrome" },
-            ].map((opt) => (
-              <div key={opt.value}>
-                <RadioGroupItem value={opt.value} id={`color-${opt.value}`} className="peer sr-only" />
-                <Label
-                  htmlFor={`color-${opt.value}`}
-                  className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  {opt.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-
-        <div>
-          <Label className="text-base font-medium">{t("videoHub.scratch.textPosition")}</Label>
-          <RadioGroup
-            value={projectData.textPosition}
-            onValueChange={(value) => setProjectData({ ...projectData, textPosition: value })}
-            className="mt-3 grid grid-cols-2 gap-2"
-          >
-            {[
-              { value: "top", label: "Top" },
-              { value: "center", label: "Center" },
-              { value: "bottom", label: "Bottom" },
-              { value: "split", label: "Split" },
-            ].map((opt) => (
-              <div key={opt.value}>
-                <RadioGroupItem value={opt.value} id={`pos-${opt.value}`} className="peer sr-only" />
-                <Label
-                  htmlFor={`pos-${opt.value}`}
-                  className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  {opt.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-      </div>
-
-      <div>
-        <Label className="text-base font-medium">{t("videoHub.scratch.overlayStyle")}</Label>
-        <RadioGroup
-          value={projectData.overlayStyle}
-          onValueChange={(value) => setProjectData({ ...projectData, overlayStyle: value })}
-          className="mt-3 grid gap-3 md:grid-cols-4"
-        >
-          {[
-            { value: "minimal", label: "Minimal", desc: "Clean, simple text" },
-            { value: "bold", label: "Bold", desc: "Strong typography" },
-            { value: "gradient", label: "Gradient", desc: "Colorful overlays" },
-            { value: "cinematic", label: "Cinematic", desc: "Film-style bars" },
-          ].map((opt) => (
-            <div key={opt.value}>
-              <RadioGroupItem value={opt.value} id={`overlay-${opt.value}`} className="peer sr-only" />
-              <Label
-                htmlFor={`overlay-${opt.value}`}
-                className="flex flex-col items-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer text-center"
-              >
-                <span className="font-medium">{opt.label}</span>
-                <span className="text-xs text-muted-foreground">{opt.desc}</span>
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
-    </div>
-  );
-}
-
-function ScratchContentStep({ projectData, setProjectData, addBullet, removeBullet, updateBullet, t }: any) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <Label>{t("videoHub.create.headline")}</Label>
-        <Input
-          value={projectData.headline}
-          onChange={(e) => setProjectData({ ...projectData, headline: e.target.value })}
-          placeholder={t("videoHub.create.headlinePlaceholder")}
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label>{t("videoHub.scratch.script")}</Label>
-        <Textarea
-          value={projectData.script}
-          onChange={(e) => setProjectData({ ...projectData, script: e.target.value })}
-          placeholder={t("videoHub.scratch.scriptPlaceholder")}
-          className="mt-1 min-h-[120px]"
-        />
-        <p className="mt-1 text-xs text-muted-foreground">{t("videoHub.scratch.scriptHint")}</p>
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between">
-          <Label>{t("videoHub.create.bulletPoints")}</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= 6}>
-            <Plus className="mr-1 h-3 w-3" />
-            {t("videoHub.create.addBullet")}
-          </Button>
-        </div>
-        <div className="mt-2 space-y-2">
-          {projectData.bullets.map((bullet: string, index: number) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                value={bullet}
-                onChange={(e) => updateBullet(index, e.target.value)}
-                placeholder={`${t("videoHub.create.bullet")} ${index + 1}`}
-              />
-              {projectData.bullets.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeBullet(index)}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
+      {/* Project Name & Template */}
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label>{t("videoHub.create.ctaText")}</Label>
-          <Input
-            value={projectData.ctaText}
-            onChange={(e) => setProjectData({ ...projectData, ctaText: e.target.value })}
-            placeholder="Call Now"
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label>{t("videoHub.create.contactLine")}</Label>
-          <Input
-            value={projectData.contactLine}
-            onChange={(e) => setProjectData({ ...projectData, contactLine: e.target.value })}
-            placeholder="+34 900 123 456"
-            className="mt-1"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ScratchMediaStep({ projectData, setProjectData, settings, t }: any) {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Image className="h-4 w-4" />
-            {t("videoHub.settings.logo")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-16 object-contain" />
-          ) : (
-            <div className="flex h-16 items-center justify-center rounded bg-muted">
-              <span className="text-sm text-muted-foreground">{t("videoHub.assets.defaultLogo")}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div>
-        <Label>{t("videoHub.assets.backgroundUrl")}</Label>
-        <Input
-          value={projectData.backgroundUrl}
-          onChange={(e) => setProjectData({ ...projectData, backgroundUrl: e.target.value })}
-          placeholder="https://..."
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label className="text-base">{t("videoHub.assets.productIcons")}</Label>
-        <div className="mt-3 grid gap-3 md:grid-cols-4">
-          {["SOS Pendant", "Dosell", "Vivago", "Fall Detector"].map((product) => {
-            const isSelected = projectData.productIcons.includes(product);
-            return (
-              <Card
-                key={product}
-                className={`cursor-pointer transition-all hover:border-primary ${
-                  isSelected ? "border-2 border-primary bg-primary/5" : ""
-                }`}
-                onClick={() => {
-                  if (isSelected) {
-                    setProjectData({
-                      ...projectData,
-                      productIcons: projectData.productIcons.filter((p: string) => p !== product),
-                    });
-                  } else {
-                    setProjectData({
-                      ...projectData,
-                      productIcons: [...projectData.productIcons, product],
-                    });
-                  }
-                }}
-              >
-                <CardContent className="flex flex-col items-center justify-center p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <FileVideo className="h-5 w-5" />
-                  </div>
-                  <span className="mt-2 text-sm font-medium">{product}</span>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ScratchEffectsStep({ projectData, setProjectData, t }: any) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <Label className="text-base font-medium">{t("videoHub.scratch.transitionStyle")}</Label>
-        <RadioGroup
-          value={projectData.transitionStyle}
-          onValueChange={(value) => setProjectData({ ...projectData, transitionStyle: value })}
-          className="mt-3 grid gap-3 md:grid-cols-4"
-        >
-          {[
-            { value: "fade", label: "Fade" },
-            { value: "slide", label: "Slide" },
-            { value: "zoom", label: "Zoom" },
-            { value: "wipe", label: "Wipe" },
-          ].map((opt) => (
-            <div key={opt.value}>
-              <RadioGroupItem value={opt.value} id={`trans-${opt.value}`} className="peer sr-only" />
-              <Label
-                htmlFor={`trans-${opt.value}`}
-                className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
-              >
-                {opt.label}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
-
-      <div>
-        <Label className="text-base font-medium">{t("videoHub.scratch.musicStyle")}</Label>
-        <Select
-          value={projectData.musicStyle}
-          onValueChange={(value) => setProjectData({ ...projectData, musicStyle: value })}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="upbeat">Upbeat & Energetic</SelectItem>
-            <SelectItem value="calm">Calm & Reassuring</SelectItem>
-            <SelectItem value="corporate">Corporate & Professional</SelectItem>
-            <SelectItem value="emotional">Emotional & Inspiring</SelectItem>
-            <SelectItem value="none">No Music</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label className="text-base font-medium">{t("videoHub.scratch.voiceStyle")}</Label>
-        <Select
-          value={projectData.voiceStyle}
-          onValueChange={(value) => setProjectData({ ...projectData, voiceStyle: value })}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="professional">Professional Male</SelectItem>
-            <SelectItem value="professional-female">Professional Female</SelectItem>
-            <SelectItem value="warm">Warm & Friendly</SelectItem>
-            <SelectItem value="energetic">Energetic</SelectItem>
-            <SelectItem value="none">No Voiceover</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={projectData.includeDisclaimer}
-          onCheckedChange={(checked) => setProjectData({ ...projectData, includeDisclaimer: checked })}
-        />
-        <Label>{t("videoHub.create.disclaimer")}</Label>
-      </div>
-    </div>
-  );
-}
-
-// ========== AI MODE STEPS ==========
-
-function AIPromptStep({ projectData, setProjectData, t }: any) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-foreground mx-auto mb-4">
-          <Sparkles className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-semibold">{t("videoHub.ai.promptTitle")}</h3>
-        <p className="text-muted-foreground mt-1">{t("videoHub.ai.promptDesc")}</p>
-      </div>
-
-      <div>
-        <Label>{t("videoHub.create.projectName")}</Label>
-        <Input
-          value={projectData.name}
-          onChange={(e) => setProjectData({ ...projectData, name: e.target.value })}
-          placeholder={t("videoHub.create.projectNamePlaceholder")}
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label>{t("videoHub.ai.describe")}</Label>
-        <Textarea
-          value={projectData.aiPrompt}
-          onChange={(e) => setProjectData({ ...projectData, aiPrompt: e.target.value })}
-          placeholder={t("videoHub.ai.describePlaceholder")}
-          className="mt-1 min-h-[150px]"
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label>{t("videoHub.projects.format")}</Label>
-          <Select
-            value={projectData.format}
-            onValueChange={(value) => setProjectData({ ...projectData, format: value })}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-              <SelectItem value="9:16">Portrait (9:16)</SelectItem>
-              <SelectItem value="1:1">Square (1:1)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>{t("videoHub.projects.duration")}</Label>
-          <Select
-            value={projectData.duration.toString()}
-            onValueChange={(value) => setProjectData({ ...projectData, duration: parseInt(value) })}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 seconds</SelectItem>
-              <SelectItem value="15">15 seconds</SelectItem>
-              <SelectItem value="30">30 seconds</SelectItem>
-              <SelectItem value="60">60 seconds</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AIReviewStep({ projectData, setProjectData, t }: any) {
-  // In a real implementation, this would call an AI API to generate content
-  // For now, we'll show a placeholder
-  return (
-    <div className="space-y-6">
-      <Card className="border-accent bg-accent/5">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent-foreground" />
-            {t("videoHub.ai.generated")}
-          </CardTitle>
-          <CardDescription>{t("videoHub.ai.generatedDesc")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-xs text-muted-foreground">{t("videoHub.create.headline")}</Label>
-            <p className="font-medium">{projectData.headline || "Your safety is our priority"}</p>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">{t("videoHub.create.bulletPoints")}</Label>
-            <ul className="list-disc list-inside text-sm">
-              <li>24/7 Emergency Response</li>
-              <li>GPS Location Tracking</li>
-              <li>Fall Detection Technology</li>
-            </ul>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">{t("videoHub.create.ctaText")}</Label>
-            <p className="text-primary font-medium">Call Now for Peace of Mind</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1">
-          <Sparkles className="mr-2 h-4 w-4" />
-          {t("videoHub.ai.regenerate")}
-        </Button>
-        <Button 
-          className="flex-1"
-          onClick={() => {
-            setProjectData({
-              ...projectData,
-              headline: "Your safety is our priority",
-              bullets: ["24/7 Emergency Response", "GPS Location Tracking", "Fall Detection Technology"],
-              ctaText: "Call Now for Peace of Mind",
-            });
-          }}
-        >
-          {t("videoHub.ai.useThis")}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function AIRefineStep({ projectData, setProjectData, addBullet, removeBullet, updateBullet, t }: any) {
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">{t("videoHub.ai.refineDesc")}</p>
-
-      <div>
-        <Label>{t("videoHub.create.headline")}</Label>
-        <Input
-          value={projectData.headline}
-          onChange={(e) => setProjectData({ ...projectData, headline: e.target.value })}
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between">
-          <Label>{t("videoHub.create.bulletPoints")}</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= 6}>
-            <Plus className="mr-1 h-3 w-3" />
-            {t("videoHub.create.addBullet")}
-          </Button>
-        </div>
-        <div className="mt-2 space-y-2">
-          {projectData.bullets.map((bullet: string, index: number) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                value={bullet}
-                onChange={(e) => updateBullet(index, e.target.value)}
-                placeholder={`${t("videoHub.create.bullet")} ${index + 1}`}
-              />
-              {projectData.bullets.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeBullet(index)}>
-                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <Label>{t("videoHub.create.ctaText")}</Label>
-        <Input
-          value={projectData.ctaText}
-          onChange={(e) => setProjectData({ ...projectData, ctaText: e.target.value })}
-          className="mt-1"
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={projectData.includeDisclaimer}
-          onCheckedChange={(checked) => setProjectData({ ...projectData, includeDisclaimer: checked })}
-        />
-        <Label>{t("videoHub.create.disclaimer")}</Label>
-      </div>
-    </div>
-  );
-}
-
-// ========== QUICK MODE STEP ==========
-
-function QuickSetupStep({ projectData, setProjectData, settings, t }: any) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-          <Zap className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-semibold">{t("videoHub.quick.title")}</h3>
-        <p className="text-muted-foreground mt-1">{t("videoHub.quick.desc")}</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label>{t("videoHub.create.projectName")}</Label>
+          <Label>{t("videoHub.create.projectName")} *</Label>
           <Input
             value={projectData.name}
             onChange={(e) => setProjectData({ ...projectData, name: e.target.value })}
+            onBlur={() => onBlur("name")}
             placeholder={t("videoHub.create.projectNamePlaceholder")}
-            className="mt-1"
+            className={`mt-1 ${touched.has("name") && validationErrors.name ? "border-destructive" : ""}`}
           />
+          {touched.has("name") && validationErrors.name && (
+            <p className="text-sm text-destructive mt-1">{validationErrors.name}</p>
+          )}
         </div>
         <div>
-          <Label>{t("videoHub.create.headline")}</Label>
-          <Input
-            value={projectData.headline}
-            onChange={(e) => setProjectData({ ...projectData, headline: e.target.value })}
-            placeholder={t("videoHub.create.headlinePlaceholder")}
-            className="mt-1"
-          />
+          <Label>{t("videoHub.projects.template")}</Label>
+          <select
+            value={projectData.template_id}
+            onChange={(e) => setProjectData({ ...projectData, template_id: e.target.value })}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">{t("videoHub.create.selectTemplate", "Select template (optional)")}</option>
+            {templates?.map((template: any) => (
+              <option key={template.id} value={template.id}>{template.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
+      {/* Format, Duration, Language */}
       <div className="grid gap-4 md:grid-cols-3">
         <div>
-          <Label>{t("videoHub.projects.format")}</Label>
-          <Select
+          <Label>{t("videoHub.projects.format")} *</Label>
+          <select
             value={projectData.format}
-            onValueChange={(value) => setProjectData({ ...projectData, format: value })}
+            onChange={(e) => setProjectData({ ...projectData, format: e.target.value })}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="16:9">Landscape</SelectItem>
-              <SelectItem value="9:16">Portrait</SelectItem>
-              <SelectItem value="1:1">Square</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="16:9">{t("videoHub.formats.landscape")} (16:9)</option>
+            <option value="9:16">{t("videoHub.formats.portrait")} (9:16)</option>
+            <option value="1:1">{t("videoHub.formats.square")} (1:1)</option>
+          </select>
         </div>
         <div>
-          <Label>{t("videoHub.projects.duration")}</Label>
-          <Select
-            value={projectData.duration.toString()}
-            onValueChange={(value) => setProjectData({ ...projectData, duration: parseInt(value) })}
+          <Label>{t("videoHub.projects.duration")} *</Label>
+          <select
+            value={projectData.duration}
+            onChange={(e) => setProjectData({ ...projectData, duration: parseInt(e.target.value) })}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10s</SelectItem>
-              <SelectItem value="15">15s</SelectItem>
-              <SelectItem value="30">30s</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value={10}>10s</option>
+            <option value={15}>15s</option>
+            <option value={30}>30s</option>
+            <option value={60}>60s</option>
+          </select>
         </div>
         <div>
-          <Label>{t("videoHub.projects.language")}</Label>
-          <Select
+          <Label>{t("videoHub.projects.language")} *</Label>
+          <select
             value={projectData.language}
-            onValueChange={(value) => setProjectData({ ...projectData, language: value })}
+            onChange={(e) => setProjectData({ ...projectData, language: e.target.value })}
+            className={`mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${validationErrors.language ? "border-destructive" : ""}`}
           >
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="es">Español</SelectItem>
-              <SelectItem value="both">Both</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+          {validationErrors.language && (
+            <p className="text-sm text-destructive mt-1">{validationErrors.language}</p>
+          )}
         </div>
       </div>
 
+      {/* Headline */}
       <div>
-        <Label>{t("videoHub.create.ctaText")}</Label>
+        <Label>{t("videoHub.create.headline")} * <span className="text-muted-foreground text-xs">({projectData.headline.length}/{MAX_HEADLINE_LENGTH})</span></Label>
+        <Input
+          value={projectData.headline}
+          onChange={(e) => setProjectData({ ...projectData, headline: e.target.value })}
+          onBlur={() => onBlur("headline")}
+          placeholder={t("videoHub.create.headlinePlaceholder")}
+          maxLength={MAX_HEADLINE_LENGTH}
+          className={`mt-1 ${touched.has("headline") && validationErrors.headline ? "border-destructive" : ""}`}
+        />
+        {touched.has("headline") && validationErrors.headline && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.headline}</p>
+        )}
+      </div>
+
+      {/* Bullets */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label>
+            {t("videoHub.create.bulletPoints")} * 
+            <span className="text-muted-foreground text-xs ml-2">({filledBulletCount}/{MIN_BULLETS}-{MAX_BULLETS})</span>
+          </Label>
+          <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= MAX_BULLETS}>
+            <Plus className="mr-1 h-3 w-3" />
+            {t("videoHub.create.addBullet")}
+          </Button>
+        </div>
+        {touched.has("bullets") && validationErrors.bullets?.[0] && typeof validationErrors.bullets[0] === "string" && !validationErrors.bullets[0].includes("Bullet") && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.bullets[0]}</p>
+        )}
+        <div className="mt-2 space-y-2">
+          {projectData.bullets.map((bullet: string, index: number) => (
+            <div key={index}>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    value={bullet}
+                    onChange={(e) => updateBullet(index, e.target.value)}
+                    placeholder={`${t("videoHub.create.bullet")} ${index + 1}`}
+                    maxLength={MAX_BULLET_LENGTH}
+                    className={validationErrors.bullets?.[index] ? "border-destructive" : ""}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {bullet.length}/{MAX_BULLET_LENGTH}
+                  </span>
+                </div>
+                {projectData.bullets.length > MIN_BULLETS && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeBullet(index)}>
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                )}
+              </div>
+              {validationErrors.bullets?.[index] && (
+                <p className="text-sm text-destructive mt-1">{validationErrors.bullets[index]}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div>
+        <Label>{t("videoHub.create.ctaText")} *</Label>
         <Input
           value={projectData.ctaText}
           onChange={(e) => setProjectData({ ...projectData, ctaText: e.target.value })}
+          onBlur={() => onBlur("ctaText")}
           placeholder={settings?.default_cta_en || "Call Now"}
-          className="mt-1"
+          className={`mt-1 ${touched.has("ctaText") && validationErrors.ctaText ? "border-destructive" : ""}`}
         />
-      </div>
-
-      <Card className="bg-muted/50">
-        <CardContent className="pt-4">
-          <p className="text-sm text-muted-foreground">
-            {t("videoHub.quick.defaults")}
+        {settings?.default_cta_en && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {t("videoHub.create.defaultCta", "Default")}: {projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en}
           </p>
-          <ul className="mt-2 text-sm space-y-1">
-            <li>✓ {t("videoHub.quick.brandLogo")}</li>
-            <li>✓ {t("videoHub.quick.brandColors")}</li>
-            <li>✓ {t("videoHub.quick.autoMusic")}</li>
-          </ul>
-        </CardContent>
-      </Card>
+        )}
+        {touched.has("ctaText") && validationErrors.ctaText && (
+          <p className="text-sm text-destructive mt-1">{validationErrors.ctaText}</p>
+        )}
+      </div>
     </div>
   );
 }

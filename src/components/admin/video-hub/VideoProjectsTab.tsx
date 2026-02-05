@@ -1,9 +1,8 @@
 import { useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { FolderOpen, MoreHorizontal, Copy, CheckCircle, Archive, ExternalLink, Video, Trash2, RefreshCw } from "lucide-react";
+import { FolderOpen, MoreHorizontal, Copy, CheckCircle, Archive, ExternalLink, Video, Trash2, RefreshCw, Download } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -32,6 +31,7 @@ import {
 import { useVideoProjects, VideoProject } from "@/hooks/useVideoProjects";
 import { useVideoTemplates } from "@/hooks/useVideoTemplates";
 import { useVideoRenders } from "@/hooks/useVideoRenders";
+import { useVideoExports } from "@/hooks/useVideoExports";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -39,22 +39,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
 import { VideoRenderDetailDialog } from "./VideoRenderDetailDialog";
 
+interface Filters {
+  language: string;
+  format: string;
+  status: string;
+}
+
 interface VideoProjectsTabProps {
   searchQuery: string;
+  filters: Filters;
   onCreateNew: () => void;
   onEditProject: (project: VideoProject) => void;
 }
 
-export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: VideoProjectsTabProps) {
+export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProject }: VideoProjectsTabProps) {
   const { t } = useTranslation();
   const { projects, isLoading, duplicateProject, updateProjectStatus, deleteProject, isDeleting } = useVideoProjects();
   const { templates } = useVideoTemplates();
   const { latestRenderByProject } = useVideoRenders();
-  
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [formatFilter, setFormatFilter] = useState<string>("all");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
+  const { exports } = useVideoExports();
   
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -64,6 +67,12 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
   // Render detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<VideoProject | null>(null);
+
+  // Get latest export for a project
+  const getLatestExport = useCallback((projectId: string) => {
+    if (!exports) return null;
+    return exports.find(e => e.project_id === projectId);
+  }, [exports]);
 
   // Auto-render on approve
   const handleApproveAndRender = useCallback(async (projectId: string) => {
@@ -97,8 +106,8 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
     }
   }, [updateProjectStatus, latestRenderByProject, t]);
 
-  // Re-render action
-  const handleRerender = useCallback(async (projectId: string) => {
+  // Retry render action (for failed renders)
+  const handleRetryRender = useCallback(async (projectId: string) => {
     try {
       setIsRendering(projectId);
       const { error } = await supabase.functions.invoke('video-render-queue', {
@@ -112,12 +121,33 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
         toast.success(t("videoHub.create.renderQueued"));
       }
     } catch (error) {
-      console.error("Rerender error:", error);
+      console.error("Retry render error:", error);
       toast.error(t("common.error"));
     } finally {
       setIsRendering(null);
     }
   }, [t]);
+
+  // Handle duplicate
+  const handleDuplicate = useCallback(async (projectId: string) => {
+    try {
+      await duplicateProject(projectId);
+      toast.success(t("videoHub.projects.duplicated", "Project duplicated"));
+    } catch (error) {
+      console.error("Duplicate error:", error);
+      toast.error(t("common.error"));
+    }
+  }, [duplicateProject, t]);
+
+  // Open latest export
+  const handleOpenLatestExport = useCallback((projectId: string) => {
+    const latestExport = getLatestExport(projectId);
+    if (latestExport?.mp4_url) {
+      window.open(latestExport.mp4_url, "_blank");
+    } else {
+      toast.error(t("videoHub.exports.notAvailable", "No export available"));
+    }
+  }, [getLatestExport, t]);
 
   // Memoized template lookup map
   const templateMap = useMemo(() => {
@@ -139,21 +169,21 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
       if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      // Status filter
-      if (statusFilter !== "all" && project.status !== statusFilter) {
+      // Status filter (from global filters)
+      if (filters.status !== "all" && project.status !== filters.status) {
         return false;
       }
-      // Format filter
-      if (formatFilter !== "all" && project.format !== formatFilter) {
+      // Format filter (from global filters)
+      if (filters.format !== "all" && project.format !== filters.format) {
         return false;
       }
-      // Language filter
-      if (languageFilter !== "all" && project.language !== languageFilter) {
+      // Language filter (from global filters)
+      if (filters.language !== "all" && project.language !== filters.language) {
         return false;
       }
       return true;
     });
-  }, [projects, searchQuery, statusFilter, formatFilter, languageFilter]);
+  }, [projects, searchQuery, filters]);
 
   const handleDeleteClick = (projectId: string) => {
     setProjectToDelete(projectId);
@@ -223,45 +253,6 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                 {filteredProjects.length} {t("videoHub.projects.name").toLowerCase()}
               </CardDescription>
             </div>
-            
-            {/* Filters */}
-            <div className="flex flex-wrap gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder={t("videoHub.projects.status")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("common.all")}</SelectItem>
-                  <SelectItem value="draft">{t("videoHub.statuses.draft")}</SelectItem>
-                  <SelectItem value="approved">{t("videoHub.statuses.approved")}</SelectItem>
-                  <SelectItem value="archived">{t("videoHub.statuses.archived")}</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={formatFilter} onValueChange={setFormatFilter}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder={t("videoHub.projects.format")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("common.all")}</SelectItem>
-                  <SelectItem value="9:16">{t("videoHub.formats.portrait")}</SelectItem>
-                  <SelectItem value="16:9">{t("videoHub.formats.landscape")}</SelectItem>
-                  <SelectItem value="1:1">{t("videoHub.formats.square")}</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={languageFilter} onValueChange={setLanguageFilter}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder={t("videoHub.projects.language")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("common.all")}</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="both">Both</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -276,83 +267,120 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                 <TableHead>{t("videoHub.projects.status")}</TableHead>
                 <TableHead>{t("videoHub.projects.render")}</TableHead>
                 <TableHead>{t("videoHub.projects.lastEdited")}</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead>{t("videoHub.projects.lastExport", "Last Export")}</TableHead>
+                <TableHead className="w-12">{t("videoHub.projects.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProjects.map((project) => (
-                <TableRow 
-                  key={project.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => {
-                    setSelectedProject(project);
-                    setDetailDialogOpen(true);
-                  }}
-                >
-                  <TableCell className="font-medium">{project.name}</TableCell>
-                  <TableCell>{getTemplateName(project.template_id)}</TableCell>
-                  <TableCell><LanguageBadge language={project.language} /></TableCell>
-                  <TableCell><FormatBadge format={project.format} /></TableCell>
-                  <TableCell>{project.duration}s</TableCell>
-                  <TableCell><StatusBadge status={project.status} /></TableCell>
-                  <TableCell>
-                    <RenderProgressBadge render={latestRenderByProject.get(project.id)} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(project.updated_at), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditProject(project)}>
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          {t("videoHub.projects.open")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => duplicateProject(project.id)}>
-                          <Copy className="mr-2 h-4 w-4" />
-                          {t("videoHub.projects.duplicate")}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {project.status === "draft" && (
+              {filteredProjects.map((project) => {
+                const latestRender = latestRenderByProject.get(project.id);
+                const latestExport = getLatestExport(project.id);
+                const renderFailed = latestRender?.status === "failed";
+                
+                return (
+                  <TableRow 
+                    key={project.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setDetailDialogOpen(true);
+                    }}
+                  >
+                    <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell>{getTemplateName(project.template_id)}</TableCell>
+                    <TableCell><LanguageBadge language={project.language} /></TableCell>
+                    <TableCell><FormatBadge format={project.format} /></TableCell>
+                    <TableCell>{project.duration}s</TableCell>
+                    <TableCell><StatusBadge status={project.status} /></TableCell>
+                    <TableCell>
+                      <RenderProgressBadge render={latestRender} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(project.updated_at), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {latestExport ? format(new Date(latestExport.created_at), "MMM d") : "-"}
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onEditProject(project)}>
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            {t("videoHub.projects.open")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(project.id)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            {t("videoHub.projects.duplicate")}
+                          </DropdownMenuItem>
+                          
+                          {/* Open Latest Export */}
+                          {latestExport && (
+                            <DropdownMenuItem onClick={() => handleOpenLatestExport(project.id)}>
+                              <Download className="mr-2 h-4 w-4" />
+                              {t("videoHub.projects.openExport", "Open Latest Export")}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          <DropdownMenuSeparator />
+                          
+                          {project.status === "draft" && (
+                            <DropdownMenuItem 
+                              onClick={() => handleApproveAndRender(project.id)}
+                              disabled={isRendering === project.id}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              {t("videoHub.projects.approve")}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {/* Retry Render (for failed) */}
+                          {renderFailed && (
+                            <DropdownMenuItem 
+                              onClick={() => handleRetryRender(project.id)}
+                              disabled={isRendering === project.id}
+                              className="text-amber-600"
+                            >
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              {t("videoHub.projects.retryRender", "Retry Render")}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {/* Re-render (for non-failed) */}
+                          {!renderFailed && (
+                            <DropdownMenuItem 
+                              onClick={() => handleRetryRender(project.id)}
+                              disabled={isRendering === project.id}
+                            >
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              {t("videoHub.projects.rerender")}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {project.status !== "archived" && (
+                            <DropdownMenuItem onClick={() => updateProjectStatus(project.id, "archived")}>
+                              <Archive className="mr-2 h-4 w-4" />
+                              {t("videoHub.projects.archive")}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => handleApproveAndRender(project.id)}
-                            disabled={isRendering === project.id}
+                            onClick={() => handleDeleteClick(project.id)}
+                            className="text-destructive focus:text-destructive"
                           >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            {t("videoHub.projects.approve")}
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t("videoHub.projects.delete")}
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => handleRerender(project.id)}
-                          disabled={isRendering === project.id}
-                        >
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          {t("videoHub.projects.rerender")}
-                        </DropdownMenuItem>
-                        {project.status !== "archived" && (
-                          <DropdownMenuItem onClick={() => updateProjectStatus(project.id, "archived")}>
-                            <Archive className="mr-2 h-4 w-4" />
-                            {t("videoHub.projects.archive")}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteClick(project.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t("videoHub.projects.delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -387,10 +415,10 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
         project={selectedProject}
         render={selectedProject ? latestRenderByProject.get(selectedProject.id) : null}
         onRerender={(projectId) => {
-          handleRerender(projectId);
+          handleRetryRender(projectId);
         }}
         onViewExport={(projectId) => {
-          // Navigate to exports tab - this could be enhanced
+          handleOpenLatestExport(projectId);
           setDetailDialogOpen(false);
         }}
         isRerendering={isRendering === selectedProject?.id}
