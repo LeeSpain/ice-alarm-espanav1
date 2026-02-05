@@ -3408,7 +3408,67 @@
       "renderQueued": "Renderizado de video en cola correctamente",
       "previewTitle": "Vista Previa del Video",
       "previewDesc": "Esta es una vista previa. El video real se renderizará cuando hagas clic en Renderizar.",
-      "summary": "Resumen"
+      "summary": "Resumen",
+      "chooseMode": "¿Cómo quieres crear tu video?",
+      "chooseModeDesc": "Selecciona el método de creación que mejor se adapte a tus necesidades",
+      "changeMode": "Cambiar Modo",
+      "modes": {
+        "template": {
+          "title": "Desde Plantilla",
+          "desc": "Elige una plantilla prediseñada y personaliza el contenido",
+          "badge1": "Rápido",
+          "badge2": "Guiado"
+        },
+        "scratch": {
+          "title": "Desde Cero",
+          "desc": "Control creativo total sobre cada aspecto de tu video",
+          "badge1": "Flexible",
+          "badge2": "Estilos Personalizados",
+          "badge3": "Avanzado"
+        },
+        "ai": {
+          "title": "Asistido por IA",
+          "desc": "Describe tu video y deja que la IA genere el contenido",
+          "badge1": "Inteligente",
+          "badge2": "Ahorra Tiempo"
+        },
+        "quick": {
+          "title": "Promo Rápida",
+          "desc": "Crea un video promocional en menos de un minuto",
+          "badge1": "Simple",
+          "badge2": "60 Segundos"
+        }
+      }
+    },
+    "scratch": {
+      "colorScheme": "Esquema de Colores",
+      "textPosition": "Posición del Texto",
+      "overlayStyle": "Estilo de Superposición",
+      "transitionStyle": "Estilo de Transición",
+      "musicStyle": "Estilo de Música",
+      "voiceStyle": "Estilo de Voz",
+      "script": "Guión del Video",
+      "scriptPlaceholder": "Escribe la narración o texto que aparecerá en tu video...",
+      "scriptHint": "Esto se usará para la voz en off o texto en pantalla"
+    },
+    "ai": {
+      "promptTitle": "Describe Tu Video",
+      "promptDesc": "Dinos qué quieres y generaremos el contenido",
+      "describe": "¿De qué debería tratar este video?",
+      "describePlaceholder": "Ejemplo: Crear un video de 15 segundos promocionando nuestro colgante de emergencia para clientes mayores. Enfócate en seguridad, monitoreo 24/7 y tranquilidad para las familias...",
+      "generated": "Contenido Generado por IA",
+      "generatedDesc": "Revisa el contenido y acepta o regenera",
+      "regenerate": "Regenerar",
+      "useThis": "Usar Este Contenido",
+      "refineDesc": "Ajusta el contenido generado por IA antes de la vista previa"
+    },
+    "quick": {
+      "title": "Video Promo Rápido",
+      "desc": "Solo lo esencial - nosotros nos encargamos del resto",
+      "defaults": "Usando tus valores de marca:",
+      "brandLogo": "Tu logo de marca",
+      "brandColors": "Tus colores de marca",
+      "autoMusic": "Música de fondo seleccionada automáticamente"
     },
     "templates": {
       "calmProblemSolution": "Problema → Solución → CTA",

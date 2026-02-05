@@ -3432,7 +3432,67 @@
       "renderQueued": "Video render queued successfully",
       "previewTitle": "Video Preview",
       "previewDesc": "This is a placeholder preview. The actual video will be rendered when you click Render.",
-      "summary": "Summary"
+      "summary": "Summary",
+      "chooseMode": "How would you like to create your video?",
+      "chooseModeDesc": "Select the creation method that best fits your needs",
+      "changeMode": "Change Mode",
+      "modes": {
+        "template": {
+          "title": "Start from Template",
+          "desc": "Choose a pre-built template and customize the content",
+          "badge1": "Fast",
+          "badge2": "Guided"
+        },
+        "scratch": {
+          "title": "Build from Scratch",
+          "desc": "Full creative control over every aspect of your video",
+          "badge1": "Flexible",
+          "badge2": "Custom Styles",
+          "badge3": "Advanced"
+        },
+        "ai": {
+          "title": "AI-Assisted",
+          "desc": "Describe your video and let AI generate the content",
+          "badge1": "Smart",
+          "badge2": "Time-Saving"
+        },
+        "quick": {
+          "title": "Quick Promo",
+          "desc": "Create a promotional video in under a minute",
+          "badge1": "Simple",
+          "badge2": "60 Seconds"
+        }
+      }
+    },
+    "scratch": {
+      "colorScheme": "Color Scheme",
+      "textPosition": "Text Position",
+      "overlayStyle": "Overlay Style",
+      "transitionStyle": "Transition Style",
+      "musicStyle": "Music Style",
+      "voiceStyle": "Voice Style",
+      "script": "Video Script",
+      "scriptPlaceholder": "Write the narration or text that will appear in your video...",
+      "scriptHint": "This will be used for voiceover or on-screen text"
+    },
+    "ai": {
+      "promptTitle": "Describe Your Video",
+      "promptDesc": "Tell us what you want and we'll generate the content",
+      "describe": "What should this video be about?",
+      "describePlaceholder": "Example: Create a 15-second video promoting our emergency pendant for elderly customers. Focus on safety, 24/7 monitoring, and peace of mind for families...",
+      "generated": "AI-Generated Content",
+      "generatedDesc": "Review the content below and accept or regenerate",
+      "regenerate": "Regenerate",
+      "useThis": "Use This Content",
+      "refineDesc": "Fine-tune the AI-generated content before previewing"
+    },
+    "quick": {
+      "title": "Quick Promo Video",
+      "desc": "Just the essentials - we'll handle the rest",
+      "defaults": "Using your brand defaults:",
+      "brandLogo": "Your brand logo",
+      "brandColors": "Your brand colors",
+      "autoMusic": "Auto-selected background music"
     },
     "templates": {
       "calmProblemSolution": "Calm Problem → Solution → CTA",
