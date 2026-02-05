@@ -1,138 +1,108 @@
 
+# Video Hub Comprehensive Review & Fix Plan
 
-# Add Communications Dashboard
+## Issues Found
 
-## Overview
+### 1. **Missing Database Column: `worker_job_id` in `video_renders`**
+- **Issue**: The `useVideoRenders.ts` hook references `worker_job_id` in the `VideoRender` interface, but this column doesn't exist in the database schema.
+- **Impact**: The hook interface is misaligned with the database, and the render worker queue function tries to update a non-existent column.
+- **Fix**: Add the `worker_job_id` column to `video_renders` table via migration.
 
-Create a new dashboard page as the entry point for the Communications section that provides an overview of all four communication channels: Messages, Video Hub, Media Manager, and AI Outreach.
+### 2. **Missing Storage Bucket: `video-hub-captions`**
+- **Issue**: The render worker and Stage 2 documentation reference a `video-hub-captions` bucket for VTT/SRT files, but only `video-hub-exports` and `video-hub-thumbnails` buckets were created.
+- **Impact**: Caption file uploads would fail in a real render scenario.
+- **Fix**: Create the `video-hub-captions` public storage bucket.
+
+### 3. **Webhook Function Missing Format Support**
+- **Issue**: The `video-render-webhook` function doesn't accept or save the `format` field when creating export records. Variant exports (9:16, 16:9, 1:1) need this to be stored correctly.
+- **Impact**: All exports would have null format, breaking the variant tracking.
+- **Fix**: Update webhook to accept and insert `format` in the `video_exports` table.
+
+### 4. **FormatBadge Not Handling Null Format**
+- **Issue**: `FormatBadge` in `VideoExportsTab` receives export format which could be `null` for older records. The badge doesn't handle null gracefully.
+- **Impact**: Could display "null" or crash in edge cases.
+- **Fix**: Add null/undefined fallback handling to `FormatBadge`.
+
+### 5. **Missing Translation Keys**
+Several translation keys are referenced but may be incomplete or missing:
+- `videoHub.renderDetail.stages.*` (queued, initializing, generating, processing, compositing, encoding, finalizing)
+- `videoHub.templates.useTemplate`
+- `videoHub.templates.description`
+- `videoHub.templates.locked`
+- `videoHub.gallery.*` (multiple keys)
+- `videoHub.durations.*` (10s, 15s, 30s, 60s)
+- `videoHub.assets.*` (logoLocked, defaultLogo, backgroundUrl, backgroundHint, productIcons, noIcons)
+- `common.yes`, `common.no`, `common.on`, `common.off`
+
+**Fix**: Add missing translation keys to en.json and es.json.
+
+### 6. **Gallery Tab Not Included in VideoHubPage**
+- **Issue**: `VideoGalleryTab.tsx` exists but is not rendered in any tab of `VideoHubPage.tsx`. The page has: Projects, Create, Templates, Exports, Settings - no Gallery.
+- **Impact**: Gallery component is orphaned/unused code.
+- **Fix**: Either remove the unused component or add a Gallery tab. Based on STAGE 1 requirements (Projects/Create/Templates/Exports/Settings), Gallery appears to be redundant with Exports. Recommend removing it to reduce maintenance burden.
+
+### 7. **RenderVariantButtons onRenderQueued Callback Not Connected**
+- **Issue**: `RenderVariantButtons` has an optional `onRenderQueued` prop but it's never passed from `VideoProjectsTab`.
+- **Impact**: Projects table doesn't refresh after variant render is queued.
+- **Fix**: Connect the callback to trigger a refetch.
+
+### 8. **useVideoBrandSettings Query Error Handling**
+- **Issue**: The hook uses `.single()` which throws if no brand settings record exists.
+- **Impact**: New installations without seeded brand settings would crash.
+- **Fix**: Use `.maybeSingle()` instead, or ensure migration seeds a default record.
+
+### 9. **CORS Headers Missing Extended Headers**
+- **Issue**: Edge functions have basic CORS headers but are missing some headers needed for Supabase client (e.g., `x-supabase-client-platform`).
+- **Impact**: Minor - may cause warnings but shouldn't break functionality.
+- **Fix**: Update CORS headers to include full Supabase header list.
 
 ---
 
-## What Will Change
+## Files to Modify
 
-### 1. New Communications Dashboard Page
-
-A dedicated dashboard at `/admin/communications` that displays:
-- **Messages Overview**: Unread count, open conversations, recent activity
-- **Video Hub Overview**: Projects in progress, renders queued, recent completions
-- **Media Manager Overview**: Drafts awaiting approval, scheduled posts, recent publications
-- **AI Outreach Overview**: Active campaigns, leads in pipeline, engagement metrics
-
-Each section will be a clickable card that navigates to the respective sub-page.
-
-### 2. Sidebar Navigation Update
-
-The Communications group in the sidebar will have a new "Dashboard" item at the top:
-- Dashboard (new) → `/admin/communications`
-- Messages → `/admin/messages`
-- Media Manager → `/admin/media-manager`
-- AI Outreach → `/admin/ai-outreach`
-- Video Hub → `/admin/video-hub`
-
-### 3. Translations
-
-New translation keys for the dashboard title and overview cards.
+| File | Changes |
+|------|---------|
+| `supabase/migrations/new.sql` | Add `worker_job_id` column to `video_renders` |
+| `supabase/functions/video-render-webhook/index.ts` | Accept and insert `format` field |
+| `src/components/admin/video-hub/VideoBadges.tsx` | Handle null format in FormatBadge |
+| `src/components/admin/video-hub/VideoProjectsTab.tsx` | Pass `onRenderQueued` callback |
+| `src/hooks/useVideoBrandSettings.ts` | Change `.single()` to `.maybeSingle()` |
+| `src/i18n/locales/en.json` | Add missing translation keys |
+| `src/i18n/locales/es.json` | Add missing Spanish translation keys |
+| Delete `src/components/admin/video-hub/VideoGalleryTab.tsx` | Remove unused component |
+| `supabase/functions/video-render-queue/index.ts` | Extend CORS headers |
 
 ---
 
-## Files to Change
+## Database Migration
 
-| File | Change |
-|------|--------|
-| `src/pages/admin/CommunicationsDashboardPage.tsx` | **New** - Dashboard page with overview cards for all 4 sub-sections |
-| `src/components/layout/AdminSidebar.tsx` | Add "Dashboard" item at top of Communications group |
-| `src/App.tsx` | Add route for `/admin/communications` |
-| `src/i18n/locales/en.json` | Add translation keys for dashboard |
-| `src/i18n/locales/es.json` | Add Spanish translation keys |
+```sql
+-- Add missing worker_job_id column
+ALTER TABLE video_renders 
+ADD COLUMN IF NOT EXISTS worker_job_id text;
 
----
-
-## Dashboard Layout
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  Communications Dashboard                                            │
-│  Central hub for all communication channels                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
-│  │ 📊 Quick Stats  │  │ 📊 Quick Stats  │  │ 📊 Quick Stats  │     │
-│  │ Unread: 5       │  │ Drafts: 3       │  │ Rendering: 2    │     │
-│  │ Open: 12        │  │ Approved: 8     │  │ Completed: 15   │     │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘     │
-│                                                                     │
-│  ┌───────────────────────────┐  ┌───────────────────────────┐      │
-│  │ 💬 Messages               │  │ 📹 Video Hub              │      │
-│  │                           │  │                           │      │
-│  │ Member & staff inbox      │  │ Video production hub      │      │
-│  │ 5 unread · 12 open        │  │ 3 projects · 2 rendering  │      │
-│  │                           │  │                           │      │
-│  │ [View Messages →]         │  │ [Open Video Hub →]        │      │
-│  └───────────────────────────┘  └───────────────────────────┘      │
-│                                                                     │
-│  ┌───────────────────────────┐  ┌───────────────────────────┐      │
-│  │ 📰 Media Manager          │  │ 📣 AI Outreach            │      │
-│  │                           │  │                           │      │
-│  │ Social content creation   │  │ Automated lead campaigns  │      │
-│  │ 3 drafts · 8 approved     │  │ 2 active · 45 leads       │      │
-│  │                           │  │                           │      │
-│  │ [Manage Media →]          │  │ [View Outreach →]         │      │
-│  └───────────────────────────┘  └───────────────────────────┘      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+-- Create captions storage bucket (if not exists, handled by storage API)
 ```
 
 ---
 
-## Technical Details
+## Priority Order
 
-### Data Sources
-
-The dashboard will fetch real-time metrics from:
-- **Messages**: `conversations` table (count by status, unread messages)
-- **Video Hub**: `video_projects` + `video_renders` tables (projects by status, active renders)
-- **Media Manager**: `social_posts` table (count by status)
-- **AI Outreach**: `crm_contacts` + `outreach_campaigns` tables (leads, active campaigns)
-
-### Component Structure
-
-```text
-CommunicationsDashboardPage
-├── Header (title + description)
-├── QuickStatsRow (3 summary cards)
-└── OverviewGrid (4 section cards)
-    ├── MessagesCard
-    ├── VideoHubCard  
-    ├── MediaManagerCard
-    └── AIOutreachCard
-```
-
-Each card will use existing hooks where available or simple queries for counts.
+1. **High**: Database column + webhook format fix (breaks core functionality)
+2. **High**: useVideoBrandSettings error handling (could crash page)
+3. **Medium**: Missing translations (UI shows raw keys)
+4. **Medium**: FormatBadge null handling (edge case crashes)
+5. **Low**: Remove unused Gallery component (cleanup)
+6. **Low**: CORS header updates (minor warnings)
 
 ---
 
-## Sidebar Update
+## Summary
 
-In `AdminSidebar.tsx`, the Communications group items array will change from:
+The Video Hub implementation is functionally complete but has 9 issues ranging from missing database columns to orphaned components. The most critical fixes are:
+1. Adding the `worker_job_id` column
+2. Fixing the webhook to include format
+3. Fixing the brand settings query to not crash on empty database
+4. Adding missing translation keys
 
-```typescript
-items: [
-  { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
-  { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
-  { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
-  { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }
-]
-```
-
-To:
-
-```typescript
-items: [
-  { icon: LayoutDashboard, labelKey: "sidebar.communicationsDashboard", path: "/admin/communications" },
-  { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
-  { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
-  { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
-  { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }
-]
-```
-
+After these fixes, the Video Hub will be production-ready.
