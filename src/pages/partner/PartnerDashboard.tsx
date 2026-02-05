@@ -4,6 +4,8 @@ import { usePartnerStats } from "@/hooks/usePartnerStats";
 import { StatsCards } from "@/components/partner/StatsCards";
 import { ReferralPipeline } from "@/components/partner/ReferralPipeline";
 import { ShareContentSection } from "@/components/partner/ShareContentSection";
+import { CareDashboard } from "@/components/partner/CareDashboard";
+import { ResidentialDashboard } from "@/components/partner/ResidentialDashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +33,7 @@ const MOCK_PARTNER = {
   referral_code: "DEMO2024",
   company_name: "Demo Company Ltd",
   email: "demo@partner.com",
+  partner_type: "referral" as const,
 };
 
 const MOCK_STATS = {
@@ -116,6 +119,63 @@ export default function PartnerDashboard() {
     );
   }
 
+  // Determine partner type for dashboard rendering
+  const partnerType = displayPartner?.partner_type || "referral";
+
+  // Render Care Dashboard
+  if (partnerType === "care" && !isTemplatePreview && partner) {
+    return (
+      <div className="space-y-6">
+        {/* Admin viewing specific partner banner */}
+        {isAdminRole && partnerIdParam && (
+          <div className="flex items-center gap-4 p-4 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/admin/partners")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("admin.preview.backToPartners")}
+            </Button>
+            <span className="text-sm text-amber-800 dark:text-amber-200">
+              {t("admin.preview.viewingAsAdmin")} <strong>{partner.contact_name}</strong>{t("admin.preview.dashboard")}
+            </span>
+          </div>
+        )}
+        <CareDashboard partnerId={partner.id} partner={partner} />
+      </div>
+    );
+  }
+
+  // Render Residential Dashboard
+  if (partnerType === "residential" && !isTemplatePreview && partner) {
+    return (
+      <div className="space-y-6">
+        {/* Admin viewing specific partner banner */}
+        {isAdminRole && partnerIdParam && (
+          <div className="flex items-center gap-4 p-4 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/admin/partners")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("admin.preview.backToPartners")}
+            </Button>
+            <span className="text-sm text-amber-800 dark:text-amber-200">
+              {t("admin.preview.viewingAsAdmin")} <strong>{partner.contact_name}</strong>{t("admin.preview.dashboard")}
+            </span>
+          </div>
+        )}
+        <ResidentialDashboard 
+          partnerId={partner.id} 
+          alertVisibilityEnabled={partner.alert_visibility_enabled || false}
+        />
+      </div>
+    );
+  }
+
+  // Default: Referral Partner Dashboard
   return (
     <div className="space-y-6">
       {/* Template Preview Banner */}

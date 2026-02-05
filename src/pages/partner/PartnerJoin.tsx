@@ -60,24 +60,24 @@ type Step = "info" | "type" | "contact" | "organization" | "payout" | "account" 
 const partnerTypeOptions = [
   {
     type: "referral" as PartnerType,
-    title: "Referral Partner",
-    description: "Recommend ICE Alarm to friends, family, or clients and earn €50 per signup",
     icon: Users,
-    features: ["Personal referral link", "Earn €50 per referral", "Track your commissions"],
+    title: "Individual Referrer",
+    tagline: "I want to refer friends & family",
+    description: "Earn €50 commission per signup",
   },
   {
     type: "care" as PartnerType,
-    title: "Care Partner",
-    description: "Healthcare agencies, charities, or care organizations referring clients",
     icon: Heart,
-    features: ["Organization branding", "Bulk referral tracking", "Volume-based commissions"],
+    title: "Charity / Care Agency",
+    tagline: "We support elderly clients and want to refer them to ICE Alarm in volume",
+    description: "Volume tracking & organization branding",
   },
   {
     type: "residential" as PartnerType,
-    title: "Residential Partner",
-    description: "Care homes, urbanizations, or retirement communities with residents",
     icon: Home,
-    features: ["Resident management", "Alert visibility", "Custom pricing available"],
+    title: "Care Home / Residential Community",
+    tagline: "We manage a facility and want to protect our residents with ICE Alarm",
+    description: "Resident management, alert visibility, custom pricing",
   },
 ];
 
@@ -317,7 +317,7 @@ export default function PartnerJoin() {
     );
   }
 
-  // Partner Type Selection
+  // Partner Type Selection - Updated to match spec
   if (step === "type") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col">
@@ -326,68 +326,79 @@ export default function PartnerJoin() {
         </header>
 
         <main className="flex-1 flex items-center justify-center px-4 pb-16">
-          <div className="max-w-3xl w-full space-y-6">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Choose Your Partner Type
-              </h1>
-              <p className="text-muted-foreground">
-                Select the option that best describes how you'll work with ICE Alarm
-              </p>
-            </div>
-
-            <Form {...form}>
-              <div className="grid gap-4 md:grid-cols-3">
-                {partnerTypeOptions.map((option) => {
-                  const isSelected = form.watch("partner_type") === option.type;
-                  return (
-                    <Card
-                      key={option.type}
-                      className={cn(
-                        "cursor-pointer transition-all hover:border-primary/50",
-                        isSelected && "border-primary ring-2 ring-primary/20"
-                      )}
-                      onClick={() => form.setValue("partner_type", option.type)}
-                    >
-                      <CardHeader>
+          <Card className="max-w-2xl w-full">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl">ICE Alarm Partner Program</CardTitle>
+              <CardDescription className="text-lg mt-2">
+                What best describes you?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <Form {...form}>
+                <div className="space-y-3">
+                  {partnerTypeOptions.map((option) => {
+                    const isSelected = form.watch("partner_type") === option.type;
+                    const Icon = option.icon;
+                    return (
+                      <div
+                        key={option.type}
+                        onClick={() => form.setValue("partner_type", option.type)}
+                        className={cn(
+                          "flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all",
+                          "hover:border-primary/50 hover:bg-accent/50",
+                          isSelected 
+                            ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
+                            : "border-border"
+                        )}
+                      >
                         <div className={cn(
-                          "rounded-full p-3 w-fit",
+                          "rounded-full p-3 shrink-0",
                           isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
                         )}>
-                          <option.icon className="h-6 w-6" />
+                          <Icon className="h-6 w-6" />
                         </div>
-                        <CardTitle className="text-lg">{option.title}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {option.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="text-sm space-y-1">
-                          {option.features.map((feature) => (
-                            <li key={feature} className="flex items-center gap-2">
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                        <div className="flex-1 space-y-1">
+                          <h3 className="font-semibold text-lg">{option.title}</h3>
+                          <p className="text-muted-foreground text-sm">{option.tagline}</p>
+                          <p className="text-xs text-primary font-medium">{option.description}</p>
+                        </div>
+                        <div className={cn(
+                          "h-5 w-5 rounded-full border-2 shrink-0 mt-1",
+                          isSelected 
+                            ? "border-primary bg-primary" 
+                            : "border-muted-foreground/30"
+                        )}>
+                          {isSelected && (
+                            <div className="h-full w-full flex items-center justify-center">
+                              <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep("info")}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <Button onClick={goToNextStep}>
-                  Continue
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </Form>
-          </div>
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setStep("info")}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button onClick={goToNextStep}>
+                    Continue
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </Form>
+
+              <p className="text-center text-sm text-muted-foreground pt-4">
+                Already a partner?{" "}
+                <a href="/partner/login" className="text-primary hover:underline font-medium">
+                  Sign in
+                </a>
+              </p>
+            </CardContent>
+          </Card>
         </main>
       </div>
     );
