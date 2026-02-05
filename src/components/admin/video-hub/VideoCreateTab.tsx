@@ -954,13 +954,33 @@ function AssetsStep({ projectData, setProjectData, settings, t }: any) {
 function PreviewStep({ projectData, settings, validationErrors, isValid, t }: any) {
   const errorCount = Object.keys(validationErrors).length;
 
+  // Map field names to human-readable labels
+  const fieldLabels: Record<string, string> = {
+    name: t("videoHub.projects.name"),
+    template_id: t("videoHub.create.template"),
+    headline: t("videoHub.create.headline"),
+    bullets: t("videoHub.create.bulletPoints"),
+    ctaText: t("videoHub.create.ctaText"),
+    language: t("videoHub.projects.language"),
+    format: t("videoHub.projects.format"),
+    duration: t("videoHub.projects.duration"),
+  };
+
   return (
     <div className="space-y-6">
       {!isValid && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {t("videoHub.validation.hasErrors", `Please fix ${errorCount} validation error(s) before rendering.`)}
+          <AlertDescription className="space-y-2">
+            <p className="font-medium">{t("videoHub.validation.hasErrors", `Please fix ${errorCount} validation error(s) before rendering:`)}</p>
+            <ul className="list-disc list-inside text-sm space-y-1">
+              {Object.entries(validationErrors).map(([field, error]) => (
+                <li key={field}>
+                  <span className="font-medium">{fieldLabels[field] || field}:</span>{" "}
+                  {Array.isArray(error) ? error.filter(Boolean).join(", ") : String(error)}
+                </li>
+              ))}
+            </ul>
           </AlertDescription>
         </Alert>
       )}
