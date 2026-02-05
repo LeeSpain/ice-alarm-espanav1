@@ -1,4 +1,45 @@
 {
+  "commsDashboard": {
+    "title": "Communications Dashboard",
+    "subtitle": "Central hub for all communication channels",
+    "quickStats": {
+      "unreadMessages": "Unread Messages",
+      "pendingDrafts": "Pending Drafts",
+      "videosRendering": "Videos Rendering",
+      "readyToPublish": "Ready to Publish"
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Member & staff inbox",
+      "button": "View Messages",
+      "unread": "unread",
+      "open": "open"
+    },
+    "videoHub": {
+      "title": "Video Hub",
+      "description": "Video production hub",
+      "button": "Open Video Hub",
+      "drafts": "drafts",
+      "rendering": "rendering",
+      "completed": "completed"
+    },
+    "mediaManager": {
+      "title": "Media Manager",
+      "description": "Social content creation",
+      "button": "Manage Media",
+      "drafts": "drafts",
+      "approved": "approved",
+      "published": "published"
+    },
+    "aiOutreach": {
+      "title": "AI Outreach",
+      "description": "Automated lead campaigns",
+      "button": "View Outreach",
+      "activeCampaigns": "active",
+      "leads": "leads",
+      "hotLeads": "hot"
+    }
+  },
   "mediaManager": {
     "title": "Media Manager",
     "subtitle": "Create and manage social media posts for Facebook",
@@ -1746,6 +1787,7 @@
     "staffTickets": "Staff Tickets",
     "tasks": "Tasks",
     "communications": "Communications",
+    "communicationsDashboard": "Dashboard",
     "messages": "Messages",
     "business": "Business",
     "financeDashboard": "Finance Dashboard",

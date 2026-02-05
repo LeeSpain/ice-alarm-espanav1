@@ -78,6 +78,7 @@ const MediaManagerPage = lazy(() => import("./pages/admin/MediaManagerPage"));
 const AIOutreachPage = lazy(() => import("./pages/admin/AIOutreachPage"));
 const PartnerPricingSettingsPage = lazy(() => import("./pages/admin/PartnerPricingSettingsPage"));
 const VideoHubPage = lazy(() => import("./pages/admin/VideoHubPage"));
+const CommunicationsDashboardPage = lazy(() => import("./pages/admin/CommunicationsDashboardPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -286,6 +287,7 @@ const App = () => {
                   <Route path="media-manager" element={<MediaManagerPage />} />
                   <Route path="ai-outreach" element={<AIOutreachPage />} />
                   <Route path="video-hub" element={<VideoHubPage />} />
+                  <Route path="communications" element={<CommunicationsDashboardPage />} />
                   <Route path="partner-pricing" element={<PartnerPricingSettingsPage />} />
                 </Route>
 
