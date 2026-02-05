@@ -1,251 +1,275 @@
 
-# Video Hub Complete Review & Improvement Plan
+# Video Hub Complete Improvement Plan
 
-## Issues Found
+## Summary of Findings
 
-### 🔴 Critical Issue: Edge Function Not Working
+### Current State
+- **Edge function is working**: Successfully tested - renders complete and exports are created
+- **1 project exists**: "ICE Personal Safety Pendant" (approved status)
+- **1 render complete**: Status "done", progress 100%
+- **1 export exists**: Placeholder URLs (null) since this is simulated
 
-The `video-render-queue` edge function is **missing from `supabase/config.toml`**. This means:
-- JWT verification is enabled by default
-- Calls from the frontend are being rejected (401 Unauthorized)
-- The project saves to database but render never queues
-- No logs appear because the function never executes
-
-**Evidence:**
-- Database shows 1 project created (`e1a40ff5-18e1-4b2a-8a3f-9c4bb09969e6`) with status "draft"
-- Database shows 0 render records (should have at least 1 if render was triggered)
-- Edge function logs show "No logs found" - function never ran
-
-### 🟡 Missing: Render Progress Visibility
-
-The Projects tab doesn't show:
-- Which projects have active renders
-- Render progress (0-100%)
-- Render status badges (Queued/Running/Failed/Done)
-
-Users can't see the creation process because there's no visual feedback.
-
-### 🟡 Code Issues
-
-1. **Duplicate render record creation**: 
-   - Edge function creates render record
-   - `handleRender` also calls `queueRender` which creates another record
-   - This will cause duplicate entries when fixed
-
-2. **No realtime updates**: 
-   - Users need to manually refresh to see render progress
-   - No subscription to `video_renders` table changes
-
-3. **Edge function simulation runs too fast**:
-   - 1 second between progress updates
-   - Total ~5 seconds to complete
-   - Too fast for users to observe the process
+### Key Issue: Visibility Gap
+When a user creates a project and just clicks "Save as Draft" or "Approve" without clicking "Render Video", no render is queued. The user needs to explicitly trigger rendering to see the video in Exports.
 
 ---
 
-## Implementation Plan
+## New Feature: Video Gallery Tab
 
-### Phase 1: Fix Edge Function (Critical)
+### Why an Album/Gallery?
+The Exports tab shows downloadable files but lacks a visual, browsable gallery experience. Users want to:
+- Quickly preview completed videos
+- See thumbnails at a glance
+- Filter by status (published/rendered/pending)
+- Share videos directly
 
-**1.1 Add to config.toml**
-```toml
-[functions.video-render-queue]
-verify_jwt = false
+### Implementation Plan
+
+**Add new tab: "Gallery"** between Exports and Settings
+
+| Tab | Purpose |
+|-----|---------|
+| Projects | Work-in-progress, drafts, all projects |
+| Create Video | Wizard to create new videos |
+| Templates | Browse templates |
+| **Gallery** (NEW) | Visual album of completed/published videos |
+| Exports | Download files, captions, send to outreach |
+| Settings | Brand configuration |
+
+### Gallery Tab Features
+
+1. **Grid View**: Large thumbnail cards (16:9/9:16/1:1 aspect ratios)
+2. **Filter by Status**: All / Published / Ready / Pending
+3. **Quick Actions**: Play preview, Copy link, Share, Download
+4. **Video Details Modal**: Full preview with metadata
+5. **Publish Status**: Badge showing if sent to AI Outreach
+
+### Database Changes
+
+Add `published_at` column to `video_exports` to track when a video was marked as "published":
+
+```sql
+ALTER TABLE video_exports ADD COLUMN published_at TIMESTAMPTZ;
 ```
 
-**1.2 Remove duplicate render record creation**
+---
 
-In `VideoCreateTab.tsx`, remove the local `queueRender` call since the edge function already creates the render record:
+## Performance & UX Improvements
 
+### 1. Auto-render on Approve
+
+When user clicks "Approve" on a project, automatically queue a render if one doesn't exist:
+
+**File:** `VideoProjectsTab.tsx`
 ```typescript
-// REMOVE this line from handleRender:
-await queueRender(projectId);
-```
-
-**1.3 Slow down simulation for visibility**
-
-In the edge function, increase delays so users can see progress:
-- 2-3 seconds between progress updates
-- Total ~15 seconds to complete
-
-### Phase 2: Add Render Progress to Projects Tab
-
-**2.1 Fetch render status per project**
-
-Create a new hook or modify `useVideoRenders` to get the latest render per project:
-```typescript
-// Fetch latest render for each project
-const { data: latestRenders } = useQuery({
-  queryKey: ["video-renders-latest"],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from("video_renders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    // Group by project_id, keep only latest
-    return groupByProjectId(data);
+const handleApprove = async (projectId: string) => {
+  // Update status to approved
+  await updateProjectStatus(projectId, "approved");
+  
+  // Check if render exists
+  const existingRender = latestRenderByProject.get(projectId);
+  if (!existingRender) {
+    // Auto-queue render
+    await supabase.functions.invoke('video-render-queue', {
+      body: { project_id: projectId }
+    });
+    toast.success(t("videoHub.projects.approvedAndQueued"));
   }
-});
+};
 ```
 
-**2.2 Add Render Status Column to Projects Table**
+### 2. Better Render Status Visibility
 
-New column showing:
-- Progress bar (0-100%)
-- Status badge (Queued/Running 45%/Complete/Failed)
-- Only visible when a render exists for that project
+Add a prominent status banner in the Projects tab when renders are in progress:
 
-**2.3 Add Realtime Subscription**
+```tsx
+{activeRenders.length > 0 && (
+  <Alert className="mb-4">
+    <Loader2 className="h-4 w-4 animate-spin" />
+    <AlertTitle>{activeRenders.length} video(s) rendering...</AlertTitle>
+    <AlertDescription>Check back in a few moments</AlertDescription>
+  </Alert>
+)}
+```
 
-Subscribe to `video_renders` changes for live updates:
+### 3. Realtime Updates for Exports Tab
+
+Add realtime subscription to `video_exports` table so new exports appear immediately:
+
+**File:** `useVideoExports.ts`
 ```typescript
 useEffect(() => {
   const channel = supabase
-    .channel('video-renders')
+    .channel('video-exports-changes')
     .on('postgres_changes', 
-      { event: '*', schema: 'public', table: 'video_renders' },
-      () => queryClient.invalidateQueries({ queryKey: ['video-renders'] })
+      { event: 'INSERT', schema: 'public', table: 'video_exports' },
+      () => queryClient.invalidateQueries({ queryKey: ['video-exports'] })
     )
     .subscribe();
-  return () => { supabase.removeChannel(channel); };
+  return () => supabase.removeChannel(channel);
 }, []);
 ```
 
-### Phase 3: Additional Improvements
+### 4. Add "Re-render" Action
 
-**3.1 Performance: Memoize RenderBadge component**
+In Projects dropdown, add ability to re-render a video:
+
 ```typescript
-const RenderBadge = React.memo(({ render }) => { ... });
+<DropdownMenuItem onClick={() => handleRerender(project.id)}>
+  <RefreshCw className="mr-2 h-4 w-4" />
+  {t("videoHub.projects.rerender")}
+</DropdownMenuItem>
 ```
 
-**3.2 Better error messages**
+### 5. Quick Render from Exports
 
-Show specific error when edge function fails:
-```typescript
-if (response.error) {
-  console.error("Render queue error:", response.error);
-  toast.error(response.error.message || t("videoHub.create.renderFailed"));
-  return;
-}
+Show "Render Missing" button for exports without mp4_url:
+
+```tsx
+{!exp.mp4_url && (
+  <Button variant="outline" size="sm" onClick={() => handleRerender(exp.project_id)}>
+    <RefreshCw className="mr-1 h-4 w-4" />
+    Re-render
+  </Button>
+)}
 ```
-
-**3.3 Add "Render Status" column to table**
-
-| Name | Template | Language | Format | Duration | Status | Render | Last Edited |
-|------|----------|----------|--------|----------|--------|--------|-------------|
-| ICE Safety | Calm Problem | EN | 16:9 | 15s | Draft | ⏳ 45% | Feb 5, 2026 |
-
-**3.4 Add refresh button for renders**
-
-Button to manually refresh render status if realtime fails.
 
 ---
 
 ## File Changes Summary
 
-| File | Change |
-|------|--------|
-| `supabase/config.toml` | Add `[functions.video-render-queue]` with `verify_jwt = false` |
-| `supabase/functions/video-render-queue/index.ts` | Increase delay between progress updates (2-3s) |
-| `src/components/admin/video-hub/VideoCreateTab.tsx` | Remove duplicate `queueRender` call |
-| `src/components/admin/video-hub/VideoProjectsTab.tsx` | Add render status column, add realtime subscription |
-| `src/hooks/useVideoRenders.ts` | Add realtime subscription, add method to get latest render per project |
-| `src/components/admin/video-hub/VideoBadges.tsx` | Add `RenderProgressBadge` component |
+| File | Changes |
+|------|---------|
+| `VideoHubPage.tsx` | Add "Gallery" tab (new 6th tab) |
+| `VideoGalleryTab.tsx` (NEW) | Grid view of completed videos with previews |
+| `VideoProjectsTab.tsx` | Add auto-render on approve, re-render action |
+| `VideoExportsTab.tsx` | Add realtime subscription, re-render for missing files |
+| `useVideoExports.ts` | Add realtime subscription for new exports |
+| `useVideoRenders.ts` | Already has realtime - just verify it's working |
+| `en.json` / `es.json` | Add gallery translations |
 
----
+### Database Migration
 
-## Technical Implementation Details
+```sql
+-- Add published_at column for tracking when videos are "published"
+ALTER TABLE video_exports ADD COLUMN published_at TIMESTAMPTZ;
 
-### Render Progress Badge Component
-
-```typescript
-interface RenderProgressBadgeProps {
-  render: VideoRender | null;
-}
-
-export function RenderProgressBadge({ render }: RenderProgressBadgeProps) {
-  if (!render) return <span className="text-muted-foreground text-sm">-</span>;
-  
-  const { t } = useTranslation();
-  
-  if (render.status === "queued") {
-    return <Badge variant="secondary">⏳ {t("videoHub.statuses.queued")}</Badge>;
-  }
-  
-  if (render.status === "running") {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-amber-500 transition-all duration-500"
-            style={{ width: `${render.progress}%` }}
-          />
-        </div>
-        <span className="text-xs text-muted-foreground">{render.progress}%</span>
-      </div>
-    );
-  }
-  
-  if (render.status === "done") {
-    return <Badge className="bg-status-active text-white">✓ {t("videoHub.statuses.done")}</Badge>;
-  }
-  
-  if (render.status === "failed") {
-    return <Badge variant="destructive">✗ {t("videoHub.statuses.failed")}</Badge>;
-  }
-  
-  return null;
-}
-```
-
-### Realtime Subscription in useVideoRenders
-
-```typescript
-export function useVideoRenders(projectId?: string) {
-  const queryClient = useQueryClient();
-
-  // Realtime subscription for live updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('video-renders-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'video_renders' },
-        (payload) => {
-          console.log('Video render update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['video-renders'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  // ... rest of hook
-}
+-- Enable realtime for video_exports table
+ALTER PUBLICATION supabase_realtime ADD TABLE public.video_exports;
 ```
 
 ---
 
-## Expected Outcome After Fix
+## VideoGalleryTab Component Structure
 
-1. User clicks "Render Video" → Edge function receives request
-2. Render record created with status "queued"
-3. Projects tab shows "⏳ Queued" badge
-4. Simulation runs, progress updates every 2-3 seconds
-5. Projects tab shows progress bar: "▓▓▓░░ 45%"
-6. After ~15 seconds, status becomes "✓ Done"
-7. Export record appears in Exports tab
-8. User can download (placeholder URLs for now)
+```typescript
+// New file: VideoGalleryTab.tsx
+interface VideoGalleryTabProps {
+  searchQuery: string;
+}
+
+export function VideoGalleryTab({ searchQuery }: VideoGalleryTabProps) {
+  // Filter: all | published | ready | pending
+  const [filter, setFilter] = useState("all");
+  
+  // Grid of video cards
+  // Each card shows:
+  // - Thumbnail (or placeholder with video icon)
+  // - Project name
+  // - Format badge (9:16, 16:9, 1:1)
+  // - Language badge (EN/ES)
+  // - Status: Published ✓ / Ready to Publish / Rendering...
+  // - Actions: Preview, Download, Share, Publish
+}
+```
+
+### Gallery Card Design
+
+```text
+┌────────────────────────────────────┐
+│                                    │
+│         [VIDEO THUMBNAIL]          │
+│         or placeholder             │
+│                                    │
+├────────────────────────────────────┤
+│ ICE Safety Pendant                 │
+│ ┌──────┐ ┌────┐ ┌──────────┐      │
+│ │ 16:9 │ │ EN │ │ ✓ Ready  │      │
+│ └──────┘ └────┘ └──────────┘      │
+│                                    │
+│ [▶ Preview]  [↓ Download]  [Share] │
+└────────────────────────────────────┘
+```
 
 ---
 
-## Summary
+## Translation Keys to Add
 
-The main issue is the **missing config.toml entry** causing the edge function to reject all requests. Once fixed, we need to:
-1. Remove duplicate render record creation
-2. Add visual progress indicators to Projects tab
-3. Add realtime subscriptions for live updates
-4. Slow down the simulation so users can observe the process
+```json
+{
+  "videoHub": {
+    "tabs": {
+      "gallery": "Gallery"
+    },
+    "gallery": {
+      "title": "Video Gallery",
+      "subtitle": "Browse and share your completed videos",
+      "noVideos": "No completed videos yet",
+      "noVideosDesc": "Render a project to see it here",
+      "filter": {
+        "all": "All Videos",
+        "published": "Published",
+        "ready": "Ready to Publish",
+        "pending": "Rendering"
+      },
+      "preview": "Preview",
+      "share": "Share",
+      "publish": "Mark as Published",
+      "unpublish": "Unpublish",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link copied to clipboard"
+    },
+    "projects": {
+      "rerender": "Re-render Video",
+      "approvedAndQueued": "Project approved and render queued"
+    }
+  }
+}
+```
+
+---
+
+## Expected User Flow After Changes
+
+1. **Create Video** → Wizard → Save Draft
+2. **Projects Tab** → See draft with "Render: -" column
+3. **Approve Project** → Auto-queues render → Shows progress bar
+4. **Render Completes** → Export created → Appears in Gallery
+5. **Gallery Tab** → See thumbnail grid → Preview/Download/Share
+6. **Mark as Published** → Video shows "✓ Published" badge
+7. **Exports Tab** → Download MP4/SRT/VTT, Send to AI Outreach
+
+---
+
+## Technical Improvements
+
+### Memoization Audit
+
+- `VideoGalleryTab`: Memoize filtered videos
+- `RenderProgressBadge`: Already memoized with React.memo
+- `projectMap` in Exports: Already using useMemo
+
+### Edge Function Improvements
+
+Consider adding a webhook callback when render completes to push notification to user (future enhancement).
+
+---
+
+## Priority Order
+
+1. **High**: Add Gallery tab with visual grid
+2. **High**: Auto-render on approve
+3. **Medium**: Add realtime to exports
+4. **Medium**: Add re-render action
+5. **Low**: Add published_at tracking
+
