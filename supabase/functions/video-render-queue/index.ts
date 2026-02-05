@@ -96,9 +96,9 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
       .update({ status: "running", progress: 10 } as Record<string, unknown>)
       .eq("id", renderId);
 
-    // Simulate progress updates
+    // Simulate progress updates (slower for visibility)
     for (let progress = 20; progress <= 90; progress += 20) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       await supabase
         .from("video_renders")
         .update({ progress } as Record<string, unknown>)

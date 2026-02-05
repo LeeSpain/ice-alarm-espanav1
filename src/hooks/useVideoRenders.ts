@@ -1,7 +1,8 @@
+import { useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface VideoRender {
+export interface VideoRender {
   id: string;
   project_id: string;
   status: string;
@@ -13,6 +14,25 @@ interface VideoRender {
 
 export function useVideoRenders(projectId?: string) {
   const queryClient = useQueryClient();
+
+  // Realtime subscription for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('video-renders-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'video_renders' },
+        (payload) => {
+          console.log('Video render update:', payload);
+          queryClient.invalidateQueries({ queryKey: ['video-renders'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: renders, isLoading } = useQuery({
     queryKey: ["video-renders", projectId],
@@ -32,6 +52,19 @@ export function useVideoRenders(projectId?: string) {
     },
     enabled: true,
   });
+
+  // Memoized map of latest render per project
+  const latestRenderByProject = useMemo(() => {
+    if (!renders) return new Map<string, VideoRender>();
+    const map = new Map<string, VideoRender>();
+    // Since renders are ordered by created_at desc, first one for each project is latest
+    for (const render of renders) {
+      if (!map.has(render.project_id)) {
+        map.set(render.project_id, render);
+      }
+    }
+    return map;
+  }, [renders]);
 
   const queueRenderMutation = useMutation({
     mutationFn: async (projectId: string) => {
@@ -53,6 +86,7 @@ export function useVideoRenders(projectId?: string) {
   return {
     renders,
     isLoading,
+    latestRenderByProject,
     queueRender: queueRenderMutation.mutateAsync,
     isQueuing: queueRenderMutation.isPending,
   };

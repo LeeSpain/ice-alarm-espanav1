@@ -31,10 +31,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useVideoProjects, VideoProject } from "@/hooks/useVideoProjects";
 import { useVideoTemplates } from "@/hooks/useVideoTemplates";
+import { useVideoRenders } from "@/hooks/useVideoRenders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { StatusBadge, LanguageBadge, FormatBadge } from "./VideoBadges";
+import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
 
 interface VideoProjectsTabProps {
   searchQuery: string;
@@ -46,6 +47,7 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
   const { t } = useTranslation();
   const { projects, isLoading, duplicateProject, updateProjectStatus, deleteProject, isDeleting } = useVideoProjects();
   const { templates } = useVideoTemplates();
+  const { latestRenderByProject } = useVideoRenders();
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -211,6 +213,7 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                 <TableHead>{t("videoHub.projects.format")}</TableHead>
                 <TableHead>{t("videoHub.projects.duration")}</TableHead>
                 <TableHead>{t("videoHub.projects.status")}</TableHead>
+                <TableHead>{t("videoHub.projects.render")}</TableHead>
                 <TableHead>{t("videoHub.projects.lastEdited")}</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -224,6 +227,9 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                   <TableCell><FormatBadge format={project.format} /></TableCell>
                   <TableCell>{project.duration}s</TableCell>
                   <TableCell><StatusBadge status={project.status} /></TableCell>
+                  <TableCell>
+                    <RenderProgressBadge render={latestRenderByProject.get(project.id)} />
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(project.updated_at), "MMM d, yyyy")}
                   </TableCell>
