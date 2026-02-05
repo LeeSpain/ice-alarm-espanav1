@@ -3577,6 +3577,7 @@
       "noExportsDesc": "Rendered videos will appear here",
       "available": "exports available",
       "notAvailable": "File not available",
+      "videoNotAvailable": "Video not available",
       "sentToOutreach": "Export linked to AI Outreach",
       "files": "Files",
       "download": "Download",
