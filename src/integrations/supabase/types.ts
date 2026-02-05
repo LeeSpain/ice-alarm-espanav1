@@ -4802,6 +4802,7 @@ export type Database = {
           id: string
           progress: number | null
           project_id: string
+          stage: string | null
           status: string
           updated_at: string | null
         }
@@ -4811,6 +4812,7 @@ export type Database = {
           id?: string
           progress?: number | null
           project_id: string
+          stage?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -4820,6 +4822,7 @@ export type Database = {
           id?: string
           progress?: number | null
           project_id?: string
+          stage?: string | null
           status?: string
           updated_at?: string | null
         }
