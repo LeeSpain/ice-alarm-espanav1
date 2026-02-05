@@ -213,16 +213,18 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
       let projectId: string;
 
       if (isEditMode && editingProject) {
+        // Set status to "rendering" optimistically
         await updateProject({
           id: editingProject.id,
           ...payload,
-          status: "draft",
+          status: "rendering",
         });
         projectId = editingProject.id;
       } else {
+        // Create with "rendering" status
         const newProject = await createProject({
           ...payload,
-          status: "draft",
+          status: "rendering",
         });
         projectId = newProject.id;
       }

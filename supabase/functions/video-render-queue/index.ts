@@ -6,6 +6,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Render stages with progress milestones
+const RENDER_STAGES = [
+  { stage: "initializing", progress: 10 },
+  { stage: "generating", progress: 30 },
+  { stage: "processing", progress: 50 },
+  { stage: "compositing", progress: 70 },
+  { stage: "encoding", progress: 90 },
+  { stage: "finalizing", progress: 100 },
+];
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -29,7 +39,7 @@ serve(async (req) => {
     // Verify project exists
     const { data: project, error: projectError } = await supabase
       .from("video_projects")
-      .select("id, name")
+      .select("id, name, status")
       .eq("id", project_id)
       .single();
 
@@ -40,6 +50,12 @@ serve(async (req) => {
       );
     }
 
+    // Update project status to "rendering"
+    await supabase
+      .from("video_projects")
+      .update({ status: "rendering" })
+      .eq("id", project_id);
+
     // Create a render record with queued status
     const { data: render, error: renderError } = await supabase
       .from("video_renders")
@@ -47,22 +63,24 @@ serve(async (req) => {
         project_id,
         status: "queued",
         progress: 0,
+        stage: "queued",
       })
       .select()
       .single();
 
     if (renderError) {
       console.error("Error creating render:", renderError);
+      // Revert project status on failure
+      await supabase
+        .from("video_projects")
+        .update({ status: project.status })
+        .eq("id", project_id);
       return new Response(
         JSON.stringify({ error: "Failed to queue render" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // In production, this would trigger an external worker service (Remotion, FFmpeg, etc.)
-    // For now, we simulate the render process - in a real implementation,
-    // you'd call an external API or queue system here
-    
     // Start simulated render in background (fire and forget)
     simulateRenderCompletion(supabaseUrl, supabaseServiceKey, render.id, project_id);
 
@@ -85,7 +103,7 @@ serve(async (req) => {
   }
 });
 
-// Simulate render completion (stub for demonstration)
+// Simulate render completion with stage tracking
 async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string, renderId: string, projectId: string) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
@@ -93,23 +111,34 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
     // Update to running status
     await supabase
       .from("video_renders")
-      .update({ status: "running", progress: 10 } as Record<string, unknown>)
+      .update({ status: "running", progress: 5, stage: "initializing" } as Record<string, unknown>)
       .eq("id", renderId);
 
-    // Simulate progress updates (slower for visibility)
-    for (let progress = 20; progress <= 90; progress += 20) {
-      await new Promise(resolve => setTimeout(resolve, 3000));
+    console.log(`[Render ${renderId}] Started - Stage: initializing`);
+
+    // Progress through each stage
+    for (const { stage, progress } of RENDER_STAGES) {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
       await supabase
         .from("video_renders")
-        .update({ progress } as Record<string, unknown>)
+        .update({ progress, stage } as Record<string, unknown>)
         .eq("id", renderId);
+      
+      console.log(`[Render ${renderId}] Stage: ${stage}, Progress: ${progress}%`);
     }
 
     // Mark as done
     await supabase
       .from("video_renders")
-      .update({ status: "done", progress: 100 } as Record<string, unknown>)
+      .update({ status: "done", progress: 100, stage: "finalizing" } as Record<string, unknown>)
       .eq("id", renderId);
+
+    // Update project status to "approved"
+    await supabase
+      .from("video_projects")
+      .update({ status: "approved" })
+      .eq("id", projectId);
 
     // Create a placeholder export record
     await supabase
@@ -123,10 +152,10 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
         thumbnail_url: null,
       } as Record<string, unknown>);
 
-    console.log(`Render ${renderId} completed successfully (simulated)`);
+    console.log(`[Render ${renderId}] Completed successfully`);
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("Error in simulated render:", error);
+    console.error(`[Render ${renderId}] Error:`, error);
     
     // Mark as failed
     await supabase
@@ -136,5 +165,11 @@ async function simulateRenderCompletion(supabaseUrl: string, supabaseKey: string
         error: error.message || "Unknown error during render" 
       } as Record<string, unknown>)
       .eq("id", renderId);
+
+    // Revert project status to draft on failure
+    await supabase
+      .from("video_projects")
+      .update({ status: "draft" })
+      .eq("id", projectId);
   }
 }
