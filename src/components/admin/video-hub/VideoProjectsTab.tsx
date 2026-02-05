@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { FolderOpen, MoreHorizontal, Copy, CheckCircle, Archive, ExternalLink, Video, Trash2 } from "lucide-react";
+import { FolderOpen, MoreHorizontal, Copy, CheckCircle, Archive, ExternalLink, Video, Trash2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,6 +35,7 @@ import { useVideoRenders } from "@/hooks/useVideoRenders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
 
 interface VideoProjectsTabProps {
@@ -57,6 +58,61 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [isRendering, setIsRendering] = useState<string | null>(null);
+
+  // Auto-render on approve
+  const handleApproveAndRender = useCallback(async (projectId: string) => {
+    try {
+      // Update status to approved
+      await updateProjectStatus(projectId, "approved");
+      
+      // Check if render exists
+      const existingRender = latestRenderByProject.get(projectId);
+      if (!existingRender) {
+        setIsRendering(projectId);
+        // Auto-queue render
+        const { error } = await supabase.functions.invoke('video-render-queue', {
+          body: { project_id: projectId }
+        });
+        
+        if (error) {
+          console.error("Render queue error:", error);
+          toast.error(t("common.error"));
+        } else {
+          toast.success(t("videoHub.projects.approvedAndQueued"));
+        }
+        setIsRendering(null);
+      } else {
+        toast.success(t("videoHub.projects.approved"));
+      }
+    } catch (error) {
+      console.error("Approve error:", error);
+      toast.error(t("common.error"));
+      setIsRendering(null);
+    }
+  }, [updateProjectStatus, latestRenderByProject, t]);
+
+  // Re-render action
+  const handleRerender = useCallback(async (projectId: string) => {
+    try {
+      setIsRendering(projectId);
+      const { error } = await supabase.functions.invoke('video-render-queue', {
+        body: { project_id: projectId }
+      });
+      
+      if (error) {
+        console.error("Render queue error:", error);
+        toast.error(t("common.error"));
+      } else {
+        toast.success(t("videoHub.create.renderQueued"));
+      }
+    } catch (error) {
+      console.error("Rerender error:", error);
+      toast.error(t("common.error"));
+    } finally {
+      setIsRendering(null);
+    }
+  }, [t]);
 
   // Memoized template lookup map
   const templateMap = useMemo(() => {
@@ -251,11 +307,21 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {project.status === "draft" && (
-                          <DropdownMenuItem onClick={() => updateProjectStatus(project.id, "approved")}>
+                          <DropdownMenuItem 
+                            onClick={() => handleApproveAndRender(project.id)}
+                            disabled={isRendering === project.id}
+                          >
                             <CheckCircle className="mr-2 h-4 w-4" />
                             {t("videoHub.projects.approve")}
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem 
+                          onClick={() => handleRerender(project.id)}
+                          disabled={isRendering === project.id}
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          {t("videoHub.projects.rerender")}
+                        </DropdownMenuItem>
                         {project.status !== "archived" && (
                           <DropdownMenuItem onClick={() => updateProjectStatus(project.id, "archived")}>
                             <Archive className="mr-2 h-4 w-4" />

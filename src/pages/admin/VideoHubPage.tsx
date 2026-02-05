@@ -1,12 +1,13 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Video, Plus, Search, HelpCircle, FolderOpen, Wand2, Layout, Download, Settings } from "lucide-react";
+import { Video, Plus, Search, HelpCircle, FolderOpen, Wand2, Layout, Download, Settings, Grid3X3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VideoProjectsTab } from "@/components/admin/video-hub/VideoProjectsTab";
 import { VideoCreateTab } from "@/components/admin/video-hub/VideoCreateTab";
 import { VideoTemplatesTab } from "@/components/admin/video-hub/VideoTemplatesTab";
+import { VideoGalleryTab } from "@/components/admin/video-hub/VideoGalleryTab";
 import { VideoExportsTab } from "@/components/admin/video-hub/VideoExportsTab";
 import { VideoSettingsTab } from "@/components/admin/video-hub/VideoSettingsTab";
 import { VideoHelpDialog } from "@/components/admin/video-hub/VideoHelpDialog";
@@ -93,6 +94,10 @@ export default function VideoHubPage() {
             <Layout className="h-4 w-4" />
             {t("videoHub.tabs.templates")}
           </TabsTrigger>
+          <TabsTrigger value="gallery" className="gap-2">
+            <Grid3X3 className="h-4 w-4" />
+            {t("videoHub.tabs.gallery")}
+          </TabsTrigger>
           <TabsTrigger value="exports" className="gap-2">
             <Download className="h-4 w-4" />
             {t("videoHub.tabs.exports")}
@@ -121,6 +126,10 @@ export default function VideoHubPage() {
 
         <TabsContent value="templates">
           <VideoTemplatesTab onSelectTemplate={handleSelectTemplate} />
+        </TabsContent>
+
+        <TabsContent value="gallery">
+          <VideoGalleryTab searchQuery={searchQuery} />
         </TabsContent>
 
         <TabsContent value="exports">

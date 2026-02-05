@@ -4599,6 +4599,7 @@ export type Database = {
           id: string
           mp4_url: string | null
           project_id: string
+          published_at: string | null
           render_id: string | null
           srt_url: string | null
           thumbnail_url: string | null
@@ -4609,6 +4610,7 @@ export type Database = {
           id?: string
           mp4_url?: string | null
           project_id: string
+          published_at?: string | null
           render_id?: string | null
           srt_url?: string | null
           thumbnail_url?: string | null
@@ -4619,6 +4621,7 @@ export type Database = {
           id?: string
           mp4_url?: string | null
           project_id?: string
+          published_at?: string | null
           render_id?: string | null
           srt_url?: string | null
           thumbnail_url?: string | null

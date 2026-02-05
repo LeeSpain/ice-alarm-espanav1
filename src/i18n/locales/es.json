@@ -3350,6 +3350,7 @@
       "projects": "Proyectos",
       "create": "Crear Video",
       "templates": "Plantillas",
+      "gallery": "Galería",
       "exports": "Exportaciones",
       "settings": "Configuración"
     },
@@ -3366,6 +3367,9 @@
       "open": "Abrir",
       "duplicate": "Duplicar",
       "approve": "Aprobar",
+      "approved": "Proyecto aprobado",
+      "approvedAndQueued": "Proyecto aprobado y render en cola",
+      "rerender": "Re-renderizar Video",
       "archive": "Archivar",
       "delete": "Eliminar",
       "deleted": "Proyecto eliminado correctamente",
@@ -3428,6 +3432,26 @@
       "available": "exportaciones disponibles",
       "notAvailable": "Archivo no disponible",
       "sentToOutreach": "Exportación vinculada a AI Outreach"
+    },
+    "gallery": {
+      "title": "Galería de Videos",
+      "subtitle": "Explora y comparte tus videos completados",
+      "noVideos": "Aún no hay videos completados",
+      "noVideosDesc": "Renderiza un proyecto para verlo aquí",
+      "filter": {
+        "all": "Todos los Videos",
+        "published": "Publicados",
+        "ready": "Listos para Publicar",
+        "pending": "Renderizando"
+      },
+      "preview": "Vista Previa",
+      "share": "Compartir",
+      "publish": "Marcar como Publicado",
+      "unpublish": "Despublicar",
+      "copyLink": "Copiar Enlace",
+      "linkCopied": "Enlace copiado al portapapeles",
+      "published": "Video marcado como publicado",
+      "unpublished": "Video despublicado"
     },
     "settings": {
       "brandRules": "Reglas de Marca",

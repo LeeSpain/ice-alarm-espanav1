@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,11 +10,30 @@ interface VideoExport {
   srt_url: string | null;
   vtt_url: string | null;
   thumbnail_url: string | null;
+  published_at: string | null;
   created_at: string;
 }
 
 export function useVideoExports() {
   const queryClient = useQueryClient();
+
+  // Realtime subscription for new exports
+  useEffect(() => {
+    const channel = supabase
+      .channel('video-exports-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'video_exports' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['video-exports'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: exports, isLoading } = useQuery({
     queryKey: ["video-exports"],
