@@ -1,33 +1,37 @@
 
 
-# Enable Logo Upload & Create ICE Alarm España Logo
+# Add Communications Dashboard
 
 ## Overview
 
-Currently the Brand Rules section shows the logo as locked/read-only. We'll make it editable so you can upload or change the logo, then use AI to generate a professional ICE Alarm España logo.
+Create a new dashboard page as the entry point for the Communications section that provides an overview of all four communication channels: Messages, Video Hub, Media Manager, and AI Outreach.
 
 ---
 
 ## What Will Change
 
-### 1. Make Logo Editable in Settings
+### 1. New Communications Dashboard Page
 
-The Settings tab will get a logo upload area where you can:
-- Click to upload a new logo image
-- See a preview of the current logo
-- Remove the logo if needed
+A dedicated dashboard at `/admin/communications` that displays:
+- **Messages Overview**: Unread count, open conversations, recent activity
+- **Video Hub Overview**: Projects in progress, renders queued, recent completions
+- **Media Manager Overview**: Drafts awaiting approval, scheduled posts, recent publications
+- **AI Outreach Overview**: Active campaigns, leads in pipeline, engagement metrics
 
-### 2. Create ICE Alarm España Logo
+Each section will be a clickable card that navigates to the respective sub-page.
 
-Using Lovable AI image generation, we'll create a professional logo featuring:
-- The ICE Alarm España brand name
-- Healthcare/safety theme (red cross, shield, or similar)
-- Clean, modern design suitable for video overlays
-- Saved as JPEG for universal compatibility
+### 2. Sidebar Navigation Update
 
-### 3. Store Logo in Cloud Storage
+The Communications group in the sidebar will have a new "Dashboard" item at the top:
+- Dashboard (new) → `/admin/communications`
+- Messages → `/admin/messages`
+- Media Manager → `/admin/media-manager`
+- AI Outreach → `/admin/ai-outreach`
+- Video Hub → `/admin/video-hub`
 
-The logo will be stored in the `website-images` storage bucket (already exists) and the URL saved to `video_brand_settings.logo_url`.
+### 3. Translations
+
+New translation keys for the dashboard title and overview cards.
 
 ---
 
@@ -35,41 +39,100 @@ The logo will be stored in the `website-images` storage bucket (already exists) 
 
 | File | Change |
 |------|--------|
-| `src/components/admin/video-hub/VideoSettingsTab.tsx` | Add logo upload functionality with preview and remove button |
-| `src/hooks/useVideoBrandSettings.ts` | Add `logo_url` to the `UpdateSettingsData` interface |
-| Database | Update `video_brand_settings.logo_url` with the generated logo URL |
+| `src/pages/admin/CommunicationsDashboardPage.tsx` | **New** - Dashboard page with overview cards for all 4 sub-sections |
+| `src/components/layout/AdminSidebar.tsx` | Add "Dashboard" item at top of Communications group |
+| `src/App.tsx` | Add route for `/admin/communications` |
+| `src/i18n/locales/en.json` | Add translation keys for dashboard |
+| `src/i18n/locales/es.json` | Add Spanish translation keys |
+
+---
+
+## Dashboard Layout
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│  Communications Dashboard                                            │
+│  Central hub for all communication channels                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
+│  │ 📊 Quick Stats  │  │ 📊 Quick Stats  │  │ 📊 Quick Stats  │     │
+│  │ Unread: 5       │  │ Drafts: 3       │  │ Rendering: 2    │     │
+│  │ Open: 12        │  │ Approved: 8     │  │ Completed: 15   │     │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘     │
+│                                                                     │
+│  ┌───────────────────────────┐  ┌───────────────────────────┐      │
+│  │ 💬 Messages               │  │ 📹 Video Hub              │      │
+│  │                           │  │                           │      │
+│  │ Member & staff inbox      │  │ Video production hub      │      │
+│  │ 5 unread · 12 open        │  │ 3 projects · 2 rendering  │      │
+│  │                           │  │                           │      │
+│  │ [View Messages →]         │  │ [Open Video Hub →]        │      │
+│  └───────────────────────────┘  └───────────────────────────┘      │
+│                                                                     │
+│  ┌───────────────────────────┐  ┌───────────────────────────┐      │
+│  │ 📰 Media Manager          │  │ 📣 AI Outreach            │      │
+│  │                           │  │                           │      │
+│  │ Social content creation   │  │ Automated lead campaigns  │      │
+│  │ 3 drafts · 8 approved     │  │ 2 active · 45 leads       │      │
+│  │                           │  │                           │      │
+│  │ [Manage Media →]          │  │ [View Outreach →]         │      │
+│  └───────────────────────────┘  └───────────────────────────┘      │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Technical Details
 
-### Logo Upload Flow
+### Data Sources
+
+The dashboard will fetch real-time metrics from:
+- **Messages**: `conversations` table (count by status, unread messages)
+- **Video Hub**: `video_projects` + `video_renders` tables (projects by status, active renders)
+- **Media Manager**: `social_posts` table (count by status)
+- **AI Outreach**: `crm_contacts` + `outreach_campaigns` tables (leads, active campaigns)
+
+### Component Structure
 
 ```text
-User clicks upload → File picker opens → 
-Image uploaded to storage bucket → 
-URL saved to video_brand_settings.logo_url → 
-Logo displays in Settings and on videos
+CommunicationsDashboardPage
+├── Header (title + description)
+├── QuickStatsRow (3 summary cards)
+└── OverviewGrid (4 section cards)
+    ├── MessagesCard
+    ├── VideoHubCard  
+    ├── MediaManagerCard
+    └── AIOutreachCard
 ```
 
-### AI Logo Generation
-
-Using `google/gemini-2.5-flash-image` model:
-- Prompt: Professional logo for "ICE Alarm España" emergency medical alert service
-- Style: Clean, minimal, healthcare-themed
-- Output: JPEG image uploaded to storage
-
-### Storage Bucket
-
-Using existing `website-images` bucket which already has public access configured.
+Each card will use existing hooks where available or simple queries for counts.
 
 ---
 
-## UI Changes
+## Sidebar Update
 
-The Brand Rules card will change from:
-- **Before**: Read-only display with lock icon, just shows placeholder text
-- **After**: Editable with upload button, current logo preview, and remove option
+In `AdminSidebar.tsx`, the Communications group items array will change from:
 
-The lock icon and "locked" messaging will be removed from the logo section while keeping colors and fonts read-only (as those are true brand standards).
+```typescript
+items: [
+  { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
+  { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
+  { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
+  { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }
+]
+```
+
+To:
+
+```typescript
+items: [
+  { icon: LayoutDashboard, labelKey: "sidebar.communicationsDashboard", path: "/admin/communications" },
+  { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
+  { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
+  { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
+  { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }
+]
+```
 
