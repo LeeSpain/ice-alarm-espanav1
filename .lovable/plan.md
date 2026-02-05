@@ -1,192 +1,123 @@
 
-# Complete Gmail SMTP Consolidation Plan
+
+# Partner Distribution Upgrade Plan
 
 ## Current State
 
-After the previous changes, your system is configured for Resend (`provider: resend`), but you need **Gmail SMTP for ALL emails** since you don't have DNS access to verify a domain on Resend.
+The Partner Distribution section in Media Manager allows admins to:
+- Toggle partner distribution on/off with a switch
+- Select "All active partners" or "Selected partners only"
+- Multi-select specific partners when "selected" is chosen
 
-**Database status**: `provider: resend` → needs to change to `provider: gmail`
+## What Needs Improvement
 
----
+Based on your request, the current flow is confusing because:
+1. There's a main toggle switch PLUS audience radio buttons - redundant controls
+2. Once enabled, you can only pick "all" or "selected" - no way to pick "none" 
+3. The selection feels like two-step process instead of one clear choice
 
-## Overview
+## Proposed Solution: Simplified Single-Choice UI
 
-This plan will consolidate ALL email sending to use Gmail SMTP through a single approach:
-- Switch database provider to Gmail
-- Update all 7 edge functions that currently call Resend API directly to use Gmail SMTP instead
+Replace the current toggle + collapsible pattern with a **single, clear radio group** that offers all options in one place:
 
----
-
-## Phase 1: Update Database Settings
-
-**Change `email_settings` table**:
-- `provider`: `resend` → `gmail`
-- `from_email`: `onboarding@resend.dev` → `icealarmespana@gmail.com`
-
-This ensures `send-email` and `send-test-email` functions use Gmail SMTP.
-
----
-
-## Phase 2: Add Gmail SMTP to All Direct-Calling Functions
-
-These 7 functions currently call Resend API directly. Each needs to be updated to use Gmail SMTP instead:
-
-### Functions to Update
-
-| # | Function | Current Method | Change Required |
-|---|----------|----------------|-----------------|
-| 1 | `partner-register/index.ts` | Resend fetch API | Add Gmail SMTP |
-| 2 | `partner-admin-create/index.ts` | Resend SDK | Add Gmail SMTP |
-| 3 | `submit-registration/index.ts` | Resend SDK | Add Gmail SMTP |
-| 4 | `stripe-webhook/index.ts` | Resend SDK | Add Gmail SMTP |
-| 5 | `staff-register/index.ts` | Resend SDK | Add Gmail SMTP |
-| 6 | `send-member-update-request/index.ts` | Resend SDK | Add Gmail SMTP |
-| 7 | `partner-send-invite/index.ts` | Resend fetch API | Add Gmail SMTP |
-
-### Implementation Approach
-
-For each function:
-
-1. **Import the SMTP client** at the top:
-```typescript
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+```
+Partner Distribution
+┌─────────────────────────────────────────────────────┐
+│  ○  No partner sharing (post is not distributed)    │
+│  ○  All active partners (23 partners)               │
+│  ○  Selected partners only                          │
+│     └─ [Partner selection list appears when chosen] │
+└─────────────────────────────────────────────────────┘
 ```
 
-2. **Add a Gmail SMTP send helper** (consistent across all functions):
+## Implementation Details
+
+### 1. Update `PartnerDistributionSection.tsx`
+
+**Remove:**
+- The main on/off Switch toggle
+- The Collapsible wrapper (no longer needed)
+
+**Change:**
+- RadioGroup with 3 options: "none", "all", "selected"
+- Partner checkboxes appear inline when "selected" is chosen
+- Clean, single-level UI
+
+**Updated Props:**
 ```typescript
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
-
-  try {
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: "icealarmespana@gmail.com",
-          password: appPassword,
-        },
-      },
-    });
-
-    await client.send({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    await client.close();
-    return { success: true };
-  } catch (error: any) {
-    console.error("Gmail SMTP error:", error);
-    return { success: false, error: error.message };
-  }
+interface PartnerDistributionSectionProps {
+  audience: "none" | "all" | "selected";
+  selectedPartnerIds: string[];
+  onAudienceChange: (audience: "none" | "all" | "selected") => void;
+  onSelectedPartnersChange: (ids: string[]) => void;
+  disabled?: boolean;
 }
+// Remove: enabled, onEnabledChange (no longer needed)
 ```
 
-3. **Replace Resend calls** with `sendViaGmailSMTP()` calls
+### 2. Update `MediaManagerPage.tsx`
 
----
+**Remove:**
+- `partnerEnabled` state (no longer needed)
+- `setPartnerEnabled` calls
 
-## Phase 3: Specific File Changes
+**Change:**
+- Derive `partner_enabled` from audience when saving:
+  - `partner_enabled: partnerAudience !== "none"`
+- Update `handleClearForm` to reset `partnerAudience` to "none"
+- Update `handleSelectPost` to set audience correctly
 
-### 1. `partner-register/index.ts` (Lines 237-259)
-- Remove Resend fetch call
-- Add Gmail SMTP helper
-- Call `sendViaGmailSMTP()` for verification email
+### 3. Add "Select All / Deselect All" Buttons
 
-### 2. `partner-admin-create/index.ts` (Lines 392-403)
-- Remove Resend SDK import
-- Add SMTP client import
-- Add Gmail SMTP helper
-- Replace `resend.emails.send()` with Gmail call
+When "Selected partners only" is chosen, add quick action buttons:
+- **Select All** - checks all partners
+- **Deselect All** - unchecks all partners
+- Shows count: "3 of 23 selected"
 
-### 3. `submit-registration/index.ts` (Lines 851-879)
-- Remove Resend SDK call
-- Add Gmail SMTP helper
-- Replace with Gmail send
+### 4. Update Translation Keys
 
-### 4. `stripe-webhook/index.ts` (Lines 390-403)
-- Remove Resend SDK import
-- Add SMTP client import
-- Add Gmail SMTP helper
-- Replace with Gmail send
+Add new translation strings for:
+- `noPartnerSharing` - "No partner sharing"
+- `noPartnerSharingDesc` - "This post will not be distributed to partners"
+- `selectAll` - "Select All"
+- `deselectAll` - "Deselect All"
+- `selectedCount` - "{{count}} of {{total}} selected"
 
-### 5. `staff-register/index.ts` (Lines 231-238)
-- Remove Resend SDK import
-- Add SMTP client import
-- Add Gmail SMTP helper
-- Replace `resend.emails.send()` with Gmail call
+## File Changes Summary
 
-### 6. `send-member-update-request/index.ts` (Lines 170-180)
-- Remove Resend SDK import
-- Add SMTP client import
-- Add Gmail SMTP helper
-- Replace with Gmail call
+| File | Change |
+|------|--------|
+| `src/components/admin/media/PartnerDistributionSection.tsx` | Simplify to single RadioGroup with 3 options, add select all/deselect all |
+| `src/pages/admin/MediaManagerPage.tsx` | Remove `partnerEnabled` state, derive from audience |
+| `src/i18n/locales/en.json` | Add new translation keys |
+| `src/i18n/locales/es.json` | Add Spanish translations |
 
-### 7. `partner-send-invite/index.ts` (Lines 142-169)
-- Remove Resend fetch call
-- Add Gmail SMTP helper
-- Replace with Gmail call
+## Visual Mockup
 
----
+**Before (confusing):**
+```
+Partner Distribution [Toggle Switch]
+  └── Configure partner access
+      └── [Collapsible content with radio buttons]
+```
 
-## Technical Requirements
+**After (clear):**
+```
+Partner Distribution
+├── ○ No partner sharing
+├── ○ All active partners (23)
+└── ○ Selected partners only
+    ├── [Select All] [Deselect All] (3 of 23)
+    └── ☑ John Smith (REF001)
+        ☑ Jane Doe (REF002)
+        ☐ Bob Wilson (REF003)
+        ...
+```
 
-### Prerequisite: Valid Gmail App Password
+## Technical Notes
 
-The `GMAIL_APP_PASSWORD` secret must contain a valid 16-character App Password from Google.
+- The database schema already supports this - `partner_audience` column can be "none", "all", or "selected"
+- No database changes required
+- The `partner_enabled` boolean is derived: `true` if audience is "all" or "selected", `false` if "none"
+- The `usePartnerPostLinks.ts` hook already handles both "all" and "selected" audiences correctly
 
-**To verify/regenerate**:
-1. Log in to `icealarmespana@gmail.com`
-2. Go to https://myaccount.google.com/security
-3. Ensure 2-Step Verification is ON
-4. Go to App passwords → Generate new → Copy the 16-character code
-5. Update the secret if needed
-
-### Gmail SMTP Configuration
-- **Host**: smtp.gmail.com
-- **Port**: 465 (implicit TLS)
-- **Username**: icealarmespana@gmail.com
-- **Password**: `GMAIL_APP_PASSWORD` secret
-- **From**: ICE Alarm España `<icealarmespana@gmail.com>`
-
----
-
-## Summary of Changes
-
-| Component | Before | After |
-|-----------|--------|-------|
-| Database `provider` | `resend` | `gmail` |
-| Database `from_email` | `onboarding@resend.dev` | `icealarmespana@gmail.com` |
-| 7 Edge Functions | Resend API calls | Gmail SMTP calls |
-| Email sender | Various (`@resend.dev`, `@icealarm.es`) | `icealarmespana@gmail.com` |
-
----
-
-## Testing Checklist
-
-After implementation:
-- [ ] Send test email from Admin → Settings → Email
-- [ ] Create a test partner (admin-created) → Check for welcome email
-- [ ] Register as partner → Check for verification email
-- [ ] Complete member signup → Check for confirmation email
-- [ ] All emails should arrive from `icealarmespana@gmail.com`
-
----
-
-## Notes
-
-- All emails will show as coming from `icealarmespana@gmail.com`
-- Gmail SMTP has a limit of ~500 emails/day for free accounts
-- Emails may land in spam for external recipients if Gmail account has low sender reputation
-- When DNS access is available, you can switch to Resend with a verified domain for better deliverability
