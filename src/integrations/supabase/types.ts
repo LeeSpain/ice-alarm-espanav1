@@ -4412,6 +4412,63 @@ export type Database = {
           },
         ]
       }
+      system_integrations: {
+        Row: {
+          access_token_encrypted: string | null
+          channel_id: string | null
+          channel_name: string | null
+          connected_at: string | null
+          connected_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          integration_type: string
+          last_used_at: string | null
+          metadata: Json | null
+          provider: string
+          refresh_token_encrypted: string | null
+          scopes: string[] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          channel_id?: string | null
+          channel_name?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          integration_type: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          provider: string
+          refresh_token_encrypted?: string | null
+          scopes?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          channel_id?: string | null
+          channel_name?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          integration_type?: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          provider?: string
+          refresh_token_encrypted?: string | null
+          scopes?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           created_at: string | null
@@ -4604,6 +4661,11 @@ export type Database = {
           srt_url: string | null
           thumbnail_url: string | null
           vtt_url: string | null
+          youtube_error: string | null
+          youtube_published_at: string | null
+          youtube_status: string | null
+          youtube_url: string | null
+          youtube_video_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -4615,6 +4677,11 @@ export type Database = {
           srt_url?: string | null
           thumbnail_url?: string | null
           vtt_url?: string | null
+          youtube_error?: string | null
+          youtube_published_at?: string | null
+          youtube_status?: string | null
+          youtube_url?: string | null
+          youtube_video_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -4626,6 +4693,11 @@ export type Database = {
           srt_url?: string | null
           thumbnail_url?: string | null
           vtt_url?: string | null
+          youtube_error?: string | null
+          youtube_published_at?: string | null
+          youtube_status?: string | null
+          youtube_url?: string | null
+          youtube_video_id?: string | null
         }
         Relationships: [
           {
