@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface VideoExport {
+export interface VideoExport {
   id: string;
   project_id: string;
   render_id: string | null;
@@ -12,6 +12,12 @@ interface VideoExport {
   thumbnail_url: string | null;
   published_at: string | null;
   created_at: string;
+  // YouTube fields
+  youtube_video_id: string | null;
+  youtube_url: string | null;
+  youtube_status: string | null;
+  youtube_error: string | null;
+  youtube_published_at: string | null;
 }
 
 export function useVideoExports() {
