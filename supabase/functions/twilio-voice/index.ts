@@ -267,12 +267,31 @@ serve(async (req) => {
 
         // Create an alert for tracking (if member found)
         if (member) {
-          await supabase.from("alerts").insert({
+          const { data: newAlert } = await supabase.from("alerts").insert({
             member_id: member.id,
             alert_type: "sos_button",
             status: "incoming",
             message: `Voice call from ${from}`
-          });
+          }).select("id").single();
+
+          // Notify partner if subscribed
+          if (newAlert?.id) {
+            try {
+              await fetch(`${baseUrl}/functions/v1/partner-alert-notify`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
+                },
+                body: JSON.stringify({
+                  alert_id: newAlert.id,
+                  member_id: member.id
+                })
+              });
+            } catch (notifyErr) {
+              console.error("Partner notification error:", notifyErr);
+            }
+          }
         }
 
         // Get configurable greetings with fallbacks
