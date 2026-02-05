@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Settings, Type, Lock, Loader2 } from "lucide-react";
+import { Settings, Type, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useVideoBrandSettings } from "@/hooks/useVideoBrandSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogoUploadSection } from "./LogoUploadSection";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
@@ -17,6 +18,7 @@ export function VideoSettingsTab() {
   const { settings, isLoading, updateSettings, isUpdating } = useVideoBrandSettings();
   
   const [formData, setFormData] = useState({
+    logo_url: null as string | null,
     watermark_enabled: true,
     disclaimers_en: "",
     disclaimers_es: "",
@@ -27,6 +29,7 @@ export function VideoSettingsTab() {
   useEffect(() => {
     if (settings) {
       setFormData({
+        logo_url: settings.logo_url,
         watermark_enabled: settings.watermark_enabled ?? true,
         disclaimers_en: settings.disclaimers_en || "",
         disclaimers_es: settings.disclaimers_es || "",
@@ -35,6 +38,13 @@ export function VideoSettingsTab() {
       });
     }
   }, [settings]);
+
+  const handleLogoChange = async (url: string | null) => {
+    setFormData(prev => ({ ...prev, logo_url: url }));
+    // Save logo change immediately
+    await updateSettings({ logo_url: url });
+    toast.success(url ? "Logo updated" : "Logo removed");
+  };
 
   const handleSave = async () => {
     await updateSettings(formData);
@@ -63,28 +73,23 @@ export function VideoSettingsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Brand Rules (Read-only) */}
+      {/* Brand Settings */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
+            <Settings className="h-5 w-5" />
             {t("videoHub.settings.brandRules")}
           </CardTitle>
           <CardDescription>{t("videoHub.settings.brandRulesDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Logo */}
-            <div>
-              <Label className="text-muted-foreground">{t("videoHub.settings.logo")}</Label>
-              <div className="mt-2 flex h-20 items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
-                {settings?.logo_url ? (
-                  <img src={settings.logo_url} alt="Logo" className="h-12 object-contain" />
-                ) : (
-                  <span className="text-sm text-muted-foreground">ICE Alarm España</span>
-                )}
-              </div>
-            </div>
+            {/* Logo - Editable */}
+            <LogoUploadSection
+              currentLogoUrl={formData.logo_url}
+              onLogoChange={handleLogoChange}
+              isUpdating={isUpdating}
+            />
 
             {/* Colors */}
             <div>
