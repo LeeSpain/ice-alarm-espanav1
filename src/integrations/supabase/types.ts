@@ -4607,6 +4607,7 @@ export type Database = {
       }
       video_brand_settings: {
         Row: {
+          captions_enabled_default: boolean | null
           created_at: string | null
           default_cta_en: string | null
           default_cta_es: string | null
@@ -4615,12 +4616,23 @@ export type Database = {
           font_family: string | null
           id: string
           logo_url: string | null
+          phone_en: string | null
+          phone_es: string | null
           primary_color: string | null
+          safe_margins_enabled: boolean | null
           secondary_color: string | null
+          transition_style: string | null
           updated_at: string | null
           watermark_enabled: boolean | null
+          web_url_en: string | null
+          web_url_es: string | null
+          whatsapp_en: string | null
+          whatsapp_es: string | null
+          youtube_footer_en: string | null
+          youtube_footer_es: string | null
         }
         Insert: {
+          captions_enabled_default?: boolean | null
           created_at?: string | null
           default_cta_en?: string | null
           default_cta_es?: string | null
@@ -4629,12 +4641,23 @@ export type Database = {
           font_family?: string | null
           id?: string
           logo_url?: string | null
+          phone_en?: string | null
+          phone_es?: string | null
           primary_color?: string | null
+          safe_margins_enabled?: boolean | null
           secondary_color?: string | null
+          transition_style?: string | null
           updated_at?: string | null
           watermark_enabled?: boolean | null
+          web_url_en?: string | null
+          web_url_es?: string | null
+          whatsapp_en?: string | null
+          whatsapp_es?: string | null
+          youtube_footer_en?: string | null
+          youtube_footer_es?: string | null
         }
         Update: {
+          captions_enabled_default?: boolean | null
           created_at?: string | null
           default_cta_en?: string | null
           default_cta_es?: string | null
@@ -4643,10 +4666,20 @@ export type Database = {
           font_family?: string | null
           id?: string
           logo_url?: string | null
+          phone_en?: string | null
+          phone_es?: string | null
           primary_color?: string | null
+          safe_margins_enabled?: boolean | null
           secondary_color?: string | null
+          transition_style?: string | null
           updated_at?: string | null
           watermark_enabled?: boolean | null
+          web_url_en?: string | null
+          web_url_es?: string | null
+          whatsapp_en?: string | null
+          whatsapp_es?: string | null
+          youtube_footer_en?: string | null
+          youtube_footer_es?: string | null
         }
         Relationships: []
       }
