@@ -119,13 +119,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
     
-    // Check if caller is an existing member by phone
+    // Check if caller is an existing member by phone using separate queries (avoid SQL injection)
     const normalizedPhone = cleanPhone.replace("+", "");
-    const { data: existingMember } = await supabase
+    let existingMember = null;
+    
+    const { data: memberByExact } = await supabase
       .from("members")
       .select("id, first_name")
-      .or(`phone.eq.${cleanPhone},phone.eq.${normalizedPhone}`)
+      .eq("phone", cleanPhone)
       .maybeSingle();
+    
+    if (memberByExact) {
+      existingMember = memberByExact;
+    } else {
+      const { data: memberByNormalized } = await supabase
+        .from("members")
+        .select("id, first_name")
+        .eq("phone", normalizedPhone)
+        .maybeSingle();
+      existingMember = memberByNormalized;
+    }
     
     let leadId: string | null = null;
     

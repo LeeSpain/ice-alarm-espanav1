@@ -51,12 +51,36 @@ serve(async (req) => {
 
       console.log("Incoming SMS from:", from, "Body:", body);
 
-      // Find member by phone
-      const { data: member } = await supabase
+      // Sanitize phone to only digits and +
+      const phoneClean = from.replace(/[^0-9+]/g, "");
+      const phoneWithoutPlus = phoneClean.replace("+", "");
+
+      // Validate phone format (E.164)
+      if (!/^\+?[1-9]\d{1,14}$/.test(phoneClean)) {
+        console.warn(`Invalid phone format from Twilio: ${from}`);
+        return new Response(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`, {
+          headers: { ...corsHeaders, "Content-Type": "application/xml" },
+        });
+      }
+
+      // Find member by phone using separate queries to avoid SQL injection
+      let member = null;
+      const { data: memberByExact } = await supabase
         .from("members")
         .select("id, first_name, last_name")
-        .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
-        .single();
+        .eq("phone", phoneClean)
+        .maybeSingle();
+      
+      if (memberByExact) {
+        member = memberByExact;
+      } else {
+        const { data: memberByNormalized } = await supabase
+          .from("members")
+          .select("id, first_name, last_name")
+          .eq("phone", phoneWithoutPlus)
+          .maybeSingle();
+        member = memberByNormalized;
+      }
 
       // Log the incoming message
       if (member) {
