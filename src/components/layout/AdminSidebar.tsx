@@ -22,10 +22,11 @@ import {
   DollarSign,
   PieChart,
   Activity,
-  Package,
+  
   Brain,
   Share2,
   Megaphone,
+  Video,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -114,7 +115,8 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
       { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
-      { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" }
+      { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
+      { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }
     ]
   },
   {
