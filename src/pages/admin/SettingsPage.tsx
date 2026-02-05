@@ -11,18 +11,14 @@ import { Slider } from "@/components/ui/slider";
 import {
   Building2,
   CreditCard,
-  Phone,
-  Mail,
   Check,
   Eye,
   EyeOff,
   Save,
   Loader2,
   AlertCircle,
-  Map,
   Percent,
   Tag,
-  Facebook,
   FlaskConical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,9 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
 import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
-import { EmailSettingsTab } from "@/components/admin/settings/EmailSettingsTab";
-import { EmailTemplatesTab } from "@/components/admin/settings/EmailTemplatesTab";
-import { VoiceSettingsSection } from "@/components/admin/settings/VoiceSettingsSection";
+import { CommunicationsTab } from "@/components/admin/settings/CommunicationsTab";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -368,6 +362,45 @@ export default function SettingsPage() {
 
     setRecentlySavedSection("facebook");
     saveMutation.mutate(updates);
+  };
+
+  const handleSaveWhatsApp = () => {
+    if (!twilioKeys.whatsapp_number.trim()) {
+      toast({ title: "No changes to save", description: "Enter a WhatsApp number to save." });
+      return;
+    }
+    saveMutation.mutate({ [KEY.TWILIO_WA]: twilioKeys.whatsapp_number.trim() });
+  };
+
+  const handleTestTwilio = async () => {
+    // Warn if there are unsaved secret inputs
+    if (twilioAuthTokenInput.trim()) {
+      toast({
+        title: "Unsaved changes",
+        description: "Please save your changes before testing the connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTwilioTestStatus("testing");
+    setTwilioTestMessage("");
+    try {
+      const response = await supabase.functions.invoke("test-twilio");
+      if (response.error) throw response.error;
+
+      const data = response.data;
+      if (data.success) {
+        setTwilioTestStatus("success");
+        setTwilioTestMessage(data.message || "Connection verified - Twilio is working");
+      } else {
+        setTwilioTestStatus("error");
+        setTwilioTestMessage(data.error || "Connection test failed");
+      }
+    } catch (error: any) {
+      setTwilioTestStatus("error");
+      setTwilioTestMessage(error?.message || "Failed to test connection");
+    }
   };
 
   const getIntegrationStatus = (keys: string[]) => {
@@ -809,369 +842,38 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Communications Tab (Twilio + Maps + Facebook) */}
-        <TabsContent value="communications" className="space-y-6">
-          {/* Twilio */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5" />
-                Twilio Configuration
-                {getIntegrationStatus([KEY.TWILIO_SID, KEY.TWILIO_TOKEN]) ? (
-                  <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-                    <Check className="mr-1 h-3 w-3" />
-                    Configured
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 ml-2">
-                    <AlertCircle className="mr-1 h-3 w-3" />
-                    Not Configured
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Voice calls, SMS, and WhatsApp messaging. Get credentials from the{" "}
-                <a
-                  href="https://console.twilio.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Twilio Console
-                </a>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Account SID</Label>
-                  <Input
-                    value={twilioKeys.account_sid}
-                    onChange={(e) => setTwilioKeys((prev) => ({ ...prev, account_sid: e.target.value }))}
-                    placeholder="AC..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Found in Twilio Console dashboard
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Auth Token</Label>
-                  {twilioAuthTokenStored && !twilioAuthTokenInput && (
-                    <p className="text-xs text-alert-resolved flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Stored (hidden)
-                    </p>
-                  )}
-                  {!twilioAuthTokenStored && !twilioAuthTokenInput && (
-                    <p className="text-xs text-muted-foreground">Not set</p>
-                  )}
-                  <div className="relative">
-                    <Input
-                      type={showTwilioToken ? "text" : "password"}
-                      value={twilioAuthTokenInput}
-                      onChange={(e) => setTwilioAuthTokenInput(e.target.value)}
-                      placeholder={twilioAuthTokenStored ? "Paste new token to replace" : "Enter auth token"}
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 z-10"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setShowTwilioToken((prev) => !prev)}
-                    >
-                      {showTwilioToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Click "Show" next to Auth Token in Twilio Console
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Phone Number (Voice/SMS)</Label>
-                  <Input
-                    value={twilioKeys.phone_number}
-                    onChange={(e) => setTwilioKeys((prev) => ({ ...prev, phone_number: e.target.value }))}
-                    placeholder="+34..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>WhatsApp Number</Label>
-                  <Input
-                    value={twilioKeys.whatsapp_number}
-                    onChange={(e) => setTwilioKeys((prev) => ({ ...prev, whatsapp_number: e.target.value }))}
-                    placeholder="+34..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Button onClick={handleSaveTwilio} disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  Save Twilio Configuration
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={async () => {
-                    // Warn if there are unsaved secret inputs
-                    if (twilioAuthTokenInput.trim()) {
-                      toast({
-                        title: "Unsaved changes",
-                        description: "Please save your changes before testing the connection.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    
-                    setTwilioTestStatus("testing");
-                    setTwilioTestMessage("");
-                    try {
-                      const response = await supabase.functions.invoke("test-twilio");
-                      if (response.error) throw response.error;
-                      
-                      const data = response.data;
-                      if (data.success) {
-                        setTwilioTestStatus("success");
-                        setTwilioTestMessage(data.message || "Connection verified - Twilio is working");
-                      } else {
-                        setTwilioTestStatus("error");
-                        setTwilioTestMessage(data.error || "Connection test failed");
-                      }
-                    } catch (error: any) {
-                      setTwilioTestStatus("error");
-                      setTwilioTestMessage(error?.message || "Failed to test connection");
-                    }
-                  }}
-                  disabled={twilioTestStatus === "testing"}
-                >
-                  {twilioTestStatus === "testing" ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <FlaskConical className="h-4 w-4 mr-2" />
-                  )}
-                  Test Connection
-                </Button>
-              </div>
-              
-              {twilioTestStatus !== "idle" && twilioTestStatus !== "testing" && (
-                <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${
-                  twilioTestStatus === "success" 
-                    ? "bg-alert-resolved/10 text-alert-resolved" 
-                    : "bg-destructive/10 text-destructive"
-                }`}>
-                  {twilioTestStatus === "success" ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4" />
-                  )}
-                  <span className="text-sm">{twilioTestMessage}</span>
-                </div>
-              )}
-
-              <Separator className="my-6" />
-
-              <div className="rounded-lg bg-muted p-4 space-y-3">
-                <h4 className="font-medium">Webhook URLs</h4>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Voice (incoming calls):</p>
-                    <code className="block p-2 bg-background rounded border text-xs break-all">
-                      {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twilio-voice?action=incoming`}
-                    </code>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">SMS (incoming):</p>
-                    <code className="block p-2 bg-background rounded border text-xs break-all">
-                      {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twilio-sms?action=incoming`}
-                    </code>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">WhatsApp (incoming):</p>
-                    <code className="block p-2 bg-background rounded border text-xs break-all">
-                      {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twilio-whatsapp?action=incoming`}
-                    </code>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Google Maps */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5" />
-                Google Maps Configuration
-                {getIntegrationStatus([KEY.GOOGLE_MAPS]) ? (
-                  <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-                    <Check className="mr-1 h-3 w-3" />
-                    Configured
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-muted text-muted-foreground ml-2">
-                    Optional
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>Optional: Enhanced map features. Basic maps work without an API key.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Google Maps API Key</Label>
-                <Input value={googleMapsKey} onChange={(e) => setGoogleMapsKey(e.target.value)} placeholder="AIza..." />
-                <p className="text-xs text-muted-foreground">
-                  Get your key from the{" "}
-                  <a
-                    href="https://console.cloud.google.com/google/maps-apis"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Google Cloud Console
-                  </a>
-                </p>
-              </div>
-
-              <Button onClick={handleSaveGoogleMaps} disabled={saveMutation.isPending || !googleMapsKey.trim()}>
-                {saveMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Google Maps Key
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Facebook / Meta */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Facebook className="h-5 w-5" />
-                Facebook Page Configuration
-                {getIntegrationStatus([KEY.FB_PAGE_ID, KEY.FB_PAGE_TOKEN]) ? (
-                  <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
-                    <Check className="mr-1 h-3 w-3" />
-                    Configured
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 ml-2">
-                    <AlertCircle className="mr-1 h-3 w-3" />
-                    Not Configured
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Connect your Facebook Page to publish social media posts. Get credentials from the{" "}
-                <a
-                  href="https://developers.facebook.com/tools/explorer/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Meta Graph API Explorer
-                </a>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Page ID</Label>
-                  <Input
-                    value={facebookPageId}
-                    onChange={(e) => setFacebookPageId(e.target.value)}
-                    placeholder="123456789012345"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use the numeric Page ID from <code>/me/accounts</code>. Example from your explorer:{" "}
-                    <strong>107949497473966</strong>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Page Access Token</Label>
-                  {facebookTokenStored && !facebookTokenInput && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span>Token saved (hidden for security). Paste a new token below to replace it.</span>
-                    </div>
-                  )}
-                  <div className="relative">
-                    <Input
-                      type={showFacebookToken ? "text" : "password"}
-                      value={facebookTokenInput}
-                      onChange={(e) => setFacebookTokenInput(e.target.value)}
-                      placeholder={facebookTokenStored ? "Paste new token to replace..." : "EAA..."}
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 z-10"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setShowFacebookToken((prev) => !prev)}
-                    >
-                      {showFacebookToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Use a <strong>Page Access Token</strong> (from <code>/me/accounts</code>) with{" "}
-                    <code>pages_manage_posts</code>.
-                  </p>
-                </div>
-              </div>
-
-              <Button onClick={handleSaveFacebook} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Facebook Configuration
-              </Button>
-
-              <div className="rounded-lg bg-muted p-4 space-y-2">
-                <h4 className="font-medium text-sm">Required Permissions</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>
-                    • <code>pages_manage_posts</code> - Publish and manage posts
-                  </li>
-                  <li>
-                    • <code>pages_read_engagement</code> - Read post metrics
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Voice Settings Section */}
-          <VoiceSettingsSection />
-
-          {/* Email Settings Section */}
-          <Separator className="my-6" />
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Configuration
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Configure your outbound email provider (Resend or Gmail) and manage templates for all platform emails.
-            </p>
-          </div>
-          <EmailSettingsTab />
-
-          {/* Email Templates Section */}
-          <Separator className="my-6" />
-          <EmailTemplatesTab />
+        {/* Communications Tab */}
+        <TabsContent value="communications">
+          <CommunicationsTab
+            twilioKeys={twilioKeys}
+            setTwilioKeys={setTwilioKeys}
+            twilioAuthTokenInput={twilioAuthTokenInput}
+            setTwilioAuthTokenInput={setTwilioAuthTokenInput}
+            twilioAuthTokenStored={twilioAuthTokenStored}
+            showTwilioToken={showTwilioToken}
+            setShowTwilioToken={setShowTwilioToken}
+            twilioTestStatus={twilioTestStatus}
+            twilioTestMessage={twilioTestMessage}
+            handleSaveTwilio={handleSaveTwilio}
+            handleTestTwilio={handleTestTwilio}
+            facebookPageId={facebookPageId}
+            setFacebookPageId={setFacebookPageId}
+            facebookTokenInput={facebookTokenInput}
+            setFacebookTokenInput={setFacebookTokenInput}
+            facebookTokenStored={facebookTokenStored}
+            showFacebookToken={showFacebookToken}
+            setShowFacebookToken={setShowFacebookToken}
+            handleSaveFacebook={handleSaveFacebook}
+            googleMapsKey={googleMapsKey}
+            setGoogleMapsKey={setGoogleMapsKey}
+            handleSaveGoogleMaps={handleSaveGoogleMaps}
+            handleSaveWhatsApp={handleSaveWhatsApp}
+            isSaving={saveMutation.isPending}
+            twilioConfigured={getIntegrationStatus([KEY.TWILIO_SID, KEY.TWILIO_TOKEN])}
+            whatsappConfigured={!!settingsMap[KEY.TWILIO_WA]}
+            facebookConfigured={getIntegrationStatus([KEY.FB_PAGE_ID, KEY.FB_PAGE_TOKEN])}
+            mapsConfigured={!!settingsMap[KEY.GOOGLE_MAPS]}
+          />
         </TabsContent>
 
         {/* Images Tab */}
