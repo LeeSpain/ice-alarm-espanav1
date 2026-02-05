@@ -1,8 +1,8 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Download, FileVideo, FileText, Send, Video } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -16,6 +16,7 @@ import { useVideoProjects } from "@/hooks/useVideoProjects";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { LanguageBadge, FormatBadge } from "./VideoBadges";
 
 interface VideoExportsTabProps {
   searchQuery: string;
@@ -26,11 +27,24 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
   const { exports, isLoading, sendToOutreach } = useVideoExports();
   const { projects } = useVideoProjects();
 
-  const getProjectDetails = (projectId: string) => {
-    return projects?.find(p => p.id === projectId);
-  };
+  // Memoized project lookup map for O(1) access
+  const projectMap = useMemo(() => {
+    if (!projects) return new Map();
+    return new Map(projects.map(p => [p.id, p]));
+  }, [projects]);
 
-  const handleDownload = (url: string | null, _type: string) => {
+  // Memoized filtered exports
+  const filteredExports = useMemo(() => {
+    if (!exports) return [];
+    
+    return exports.filter(exp => {
+      const project = projectMap.get(exp.project_id);
+      if (!project) return false;
+      return project.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [exports, projectMap, searchQuery]);
+
+  const handleDownload = (url: string | null) => {
     if (!url) {
       toast.error(t("videoHub.exports.notAvailable"));
       return;
@@ -39,8 +53,12 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
   };
 
   const handleSendToOutreach = async (exportId: string) => {
-    await sendToOutreach(exportId);
-    toast.success(t("videoHub.exports.sentToOutreach"));
+    try {
+      await sendToOutreach(exportId);
+      toast.success(t("videoHub.exports.sentToOutreach"));
+    } catch (error) {
+      toast.error(t("common.error"));
+    }
   };
 
   if (isLoading) {
@@ -75,11 +93,6 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
     );
   }
 
-  const filteredExports = exports.filter(exp => {
-    const project = getProjectDetails(exp.project_id);
-    return project?.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
   return (
     <Card>
       <CardHeader>
@@ -105,7 +118,7 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
           </TableHeader>
           <TableBody>
             {filteredExports.map((exp) => {
-              const project = getProjectDetails(exp.project_id);
+              const project = projectMap.get(exp.project_id);
               return (
                 <TableRow key={exp.id}>
                   <TableCell>
@@ -126,19 +139,17 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
                     {format(new Date(exp.created_at), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{project?.format || "-"}</Badge>
+                    {project ? <FormatBadge format={project.format} /> : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="uppercase">
-                      {project?.language || "-"}
-                    </Badge>
+                    {project ? <LanguageBadge language={project.language} /> : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDownload(exp.mp4_url, "MP4")}
+                        onClick={() => handleDownload(exp.mp4_url)}
                         disabled={!exp.mp4_url}
                       >
                         <FileVideo className="mr-1 h-4 w-4" />
@@ -147,7 +158,7 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDownload(exp.srt_url, "SRT")}
+                        onClick={() => handleDownload(exp.srt_url)}
                         disabled={!exp.srt_url}
                       >
                         <FileText className="mr-1 h-4 w-4" />
@@ -156,7 +167,7 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDownload(exp.vtt_url, "VTT")}
+                        onClick={() => handleDownload(exp.vtt_url)}
                         disabled={!exp.vtt_url}
                       >
                         <FileText className="mr-1 h-4 w-4" />

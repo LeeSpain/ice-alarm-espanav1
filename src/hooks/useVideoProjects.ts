@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
-interface VideoProject {
+export interface VideoProject {
   id: string;
   name: string;
   template_id: string | null;
@@ -24,6 +24,10 @@ interface CreateProjectData {
   language: string;
   status: string;
   data_json: Json;
+}
+
+interface UpdateProjectData extends Partial<CreateProjectData> {
+  id: string;
 }
 
 export function useVideoProjects() {
@@ -51,7 +55,7 @@ export function useVideoProjects() {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as VideoProject;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["video-projects"] });
@@ -59,16 +63,30 @@ export function useVideoProjects() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; status?: string; name?: string }) => {
+    mutationFn: async ({ id, ...updates }: UpdateProjectData) => {
       const { data, error } = await supabase
         .from("video_projects")
-        .update(updates)
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as VideoProject;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["video-projects"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const { error } = await supabase
+        .from("video_projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["video-projects"] });
@@ -79,7 +97,7 @@ export function useVideoProjects() {
     const project = projects?.find(p => p.id === projectId);
     if (!project) return;
 
-    await createMutation.mutateAsync({
+    return await createMutation.mutateAsync({
       name: `${project.name} (Copy)`,
       template_id: project.template_id,
       format: project.format,
@@ -100,6 +118,9 @@ export function useVideoProjects() {
     createProject: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
     updateProject: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    deleteProject: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
     duplicateProject,
     updateProjectStatus,
   };

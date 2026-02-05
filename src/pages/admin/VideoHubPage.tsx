@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Video, Plus, Search, HelpCircle, FolderOpen, Wand2, Layout, Download, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,16 +10,39 @@ import { VideoTemplatesTab } from "@/components/admin/video-hub/VideoTemplatesTa
 import { VideoExportsTab } from "@/components/admin/video-hub/VideoExportsTab";
 import { VideoSettingsTab } from "@/components/admin/video-hub/VideoSettingsTab";
 import { VideoHelpDialog } from "@/components/admin/video-hub/VideoHelpDialog";
+import type { VideoProject } from "@/hooks/useVideoProjects";
 
 export default function VideoHubPage() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("projects");
   const [searchQuery, setSearchQuery] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<VideoProject | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  const handleNewVideo = () => {
+  const handleNewVideo = useCallback(() => {
+    setEditingProject(null);
+    setSelectedTemplateId(null);
     setActiveTab("create");
-  };
+  }, []);
+
+  const handleEditProject = useCallback((project: VideoProject) => {
+    setEditingProject(project);
+    setSelectedTemplateId(null);
+    setActiveTab("create");
+  }, []);
+
+  const handleSelectTemplate = useCallback((templateId: string) => {
+    setEditingProject(null);
+    setSelectedTemplateId(templateId);
+    setActiveTab("create");
+  }, []);
+
+  const handleCreateComplete = useCallback(() => {
+    setEditingProject(null);
+    setSelectedTemplateId(null);
+    setActiveTab("projects");
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -83,16 +106,21 @@ export default function VideoHubPage() {
         <TabsContent value="projects">
           <VideoProjectsTab 
             searchQuery={searchQuery} 
-            onCreateNew={() => setActiveTab("create")}
+            onCreateNew={handleNewVideo}
+            onEditProject={handleEditProject}
           />
         </TabsContent>
 
         <TabsContent value="create">
-          <VideoCreateTab onComplete={() => setActiveTab("projects")} />
+          <VideoCreateTab 
+            onComplete={handleCreateComplete}
+            editingProject={editingProject}
+            initialTemplateId={selectedTemplateId}
+          />
         </TabsContent>
 
         <TabsContent value="templates">
-          <VideoTemplatesTab onSelectTemplate={() => setActiveTab("create")} />
+          <VideoTemplatesTab onSelectTemplate={handleSelectTemplate} />
         </TabsContent>
 
         <TabsContent value="exports">
