@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, UserPlus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Save, UserPlus, Building2, MapPin, Bell, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
 const partnerFormSchema = z.object({
@@ -22,6 +23,17 @@ const partnerFormSchema = z.object({
   payout_beneficiary_name: z.string().optional(),
   payout_iban: z.string().optional(),
   notes_internal: z.string().optional(),
+  // B2B fields
+  partner_type: z.enum(["referral", "care", "residential"]),
+  organization_type: z.string().optional(),
+  organization_registration: z.string().optional(),
+  organization_website: z.string().optional(),
+  estimated_monthly_referrals: z.string().optional(),
+  facility_address: z.string().optional(),
+  facility_resident_count: z.number().optional(),
+  alert_visibility_enabled: z.boolean(),
+  billing_model: z.enum(["commission", "per_resident", "custom"]),
+  custom_rate_monthly: z.number().optional(),
 });
 
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
@@ -41,8 +53,23 @@ export default function AddPartnerPage() {
       payout_beneficiary_name: "",
       payout_iban: "",
       notes_internal: "",
+      partner_type: "referral",
+      organization_type: "individual",
+      organization_registration: "",
+      organization_website: "",
+      estimated_monthly_referrals: "",
+      facility_address: "",
+      facility_resident_count: undefined,
+      alert_visibility_enabled: false,
+      billing_model: "commission",
+      custom_rate_monthly: undefined,
     },
   });
+
+  const partnerType = form.watch("partner_type");
+  const billingModel = form.watch("billing_model");
+  const isCareOrResidential = partnerType === "care" || partnerType === "residential";
+  const isResidential = partnerType === "residential";
 
   const onSubmit = async (data: PartnerFormValues) => {
     setIsSubmitting(true);
@@ -64,6 +91,17 @@ export default function AddPartnerPage() {
           payout_beneficiary_name: data.payout_beneficiary_name || null,
           payout_iban: data.payout_iban || null,
           notes_internal: data.notes_internal || null,
+          // B2B fields
+          partner_type: data.partner_type,
+          organization_type: data.organization_type || "individual",
+          organization_registration: data.organization_registration || null,
+          organization_website: data.organization_website || null,
+          estimated_monthly_referrals: data.estimated_monthly_referrals || null,
+          facility_address: data.facility_address || null,
+          facility_resident_count: data.facility_resident_count || null,
+          alert_visibility_enabled: data.alert_visibility_enabled,
+          billing_model: data.billing_model,
+          custom_rate_monthly: data.custom_rate_monthly || null,
         },
       });
 
@@ -108,6 +146,39 @@ export default function AddPartnerPage() {
 
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid gap-6 md:grid-cols-2">
+          {/* Partner Type Selection */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Partner Type
+              </CardTitle>
+              <CardDescription>
+                Select the type of partner to enable appropriate features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Partner Type *</Label>
+                <Select
+                  value={form.watch("partner_type")}
+                  onValueChange={(value: "referral" | "care" | "residential") =>
+                    form.setValue("partner_type", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="referral">Referral Partner (Individual Affiliate)</SelectItem>
+                    <SelectItem value="care">Care Partner (Agency / Charity)</SelectItem>
+                    <SelectItem value="residential">Residential Partner (Care Home / Urbanization)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Contact Information */}
           <Card>
             <CardHeader>
@@ -225,6 +296,185 @@ export default function AddPartnerPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Organization Details - Only for Care/Residential */}
+          {isCareOrResidential && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Organization Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Organization Type</Label>
+                  <Select
+                    value={form.watch("organization_type") || "individual"}
+                    onValueChange={(value) => form.setValue("organization_type", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="charity">Charity / Non-Profit</SelectItem>
+                      <SelectItem value="care_agency">Care Agency</SelectItem>
+                      <SelectItem value="home_care">Home Care Provider</SelectItem>
+                      <SelectItem value="care_home">Care Home</SelectItem>
+                      <SelectItem value="urbanization">Urbanization / Community</SelectItem>
+                      <SelectItem value="retirement_community">Retirement Community</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="organization_registration">Registration Number</Label>
+                  <Input
+                    id="organization_registration"
+                    {...form.register("organization_registration")}
+                    placeholder="Charity/Company registration"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="organization_website">Website</Label>
+                  <Input
+                    id="organization_website"
+                    {...form.register("organization_website")}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                {partnerType === "care" && (
+                  <div className="space-y-2">
+                    <Label>Estimated Monthly Referrals</Label>
+                    <Select
+                      value={form.watch("estimated_monthly_referrals") || ""}
+                      onValueChange={(value) => form.setValue("estimated_monthly_referrals", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-5">1-5 per month</SelectItem>
+                        <SelectItem value="5-10">5-10 per month</SelectItem>
+                        <SelectItem value="10-20">10-20 per month</SelectItem>
+                        <SelectItem value="20+">20+ per month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Facility Information - Only for Residential */}
+          {isResidential && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Facility Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="facility_address">Facility Address</Label>
+                  <Input
+                    id="facility_address"
+                    {...form.register("facility_address")}
+                    placeholder="Full address of the facility"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="facility_resident_count">Number of Residents</Label>
+                  <Input
+                    id="facility_resident_count"
+                    type="number"
+                    {...form.register("facility_resident_count", { valueAsNumber: true })}
+                    placeholder="Total resident count"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Alert Visibility - Only for Residential */}
+          {isResidential && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Alert Visibility
+                </CardTitle>
+                <CardDescription>
+                  Allow this partner to receive notifications when their residents trigger alerts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Enable Alert Notifications</p>
+                    <p className="text-sm text-muted-foreground">
+                      Partner will receive email/SMS when subscribed members have alerts
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.watch("alert_visibility_enabled")}
+                    onCheckedChange={(v) => form.setValue("alert_visibility_enabled", v)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Billing Model - Only for Residential */}
+          {isResidential && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Billing Model
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Billing Model</Label>
+                  <Select
+                    value={form.watch("billing_model")}
+                    onValueChange={(value: "commission" | "per_resident" | "custom") =>
+                      form.setValue("billing_model", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="commission">Commission-based</SelectItem>
+                      <SelectItem value="per_resident">Per Resident</SelectItem>
+                      <SelectItem value="custom">Custom Rate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {billingModel === "custom" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_rate_monthly">Custom Monthly Rate (€)</Label>
+                    <Input
+                      id="custom_rate_monthly"
+                      type="number"
+                      step="0.01"
+                      {...form.register("custom_rate_monthly", { valueAsNumber: true })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Actions */}

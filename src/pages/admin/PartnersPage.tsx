@@ -27,6 +27,7 @@ interface Partner {
   email: string;
   phone: string | null;
   preferred_language: string;
+  partner_type: string;
 }
 
 interface PartnerStats {
@@ -52,6 +53,7 @@ export default function PartnersPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<PartnerStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
@@ -107,7 +109,7 @@ export default function PartnersPage() {
 
   // Fetch partners with pagination
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-partners", statusFilter, page],
+    queryKey: ["admin-partners", statusFilter, typeFilter, page],
     queryFn: async () => {
       let query = supabase
         .from("partners")
@@ -117,6 +119,10 @@ export default function PartnersPage() {
 
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
+      }
+      
+      if (typeFilter !== "all") {
+        query = query.eq("partner_type", typeFilter);
       }
 
       const { data: partners, count, error } = await query;
@@ -300,6 +306,17 @@ export default function PartnersPage() {
                 <SelectItem value="suspended">Suspended</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="referral">Referral</SelectItem>
+                <SelectItem value="care">Care</SelectItem>
+                <SelectItem value="residential">Residential</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Date Range" />
@@ -337,6 +354,7 @@ export default function PartnersPage() {
               <TableHeader>
                 <TableRow>
                    <TableHead>Partner</TableHead>
+                   <TableHead>Type</TableHead>
                    <TableHead>Code</TableHead>
                    <TableHead>Status</TableHead>
                    <TableHead className="text-center">Invites</TableHead>
@@ -366,6 +384,18 @@ export default function PartnersPage() {
                             <div className="text-xs text-muted-foreground">{partner.company_name}</div>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline"
+                          className={
+                            partner.partner_type === "care" ? "border-blue-500 text-blue-600" :
+                            partner.partner_type === "residential" ? "border-purple-500 text-purple-600" :
+                            "border-muted-foreground"
+                          }
+                        >
+                          {partner.partner_type?.charAt(0).toUpperCase() + partner.partner_type?.slice(1) || "Referral"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <code className="rounded bg-muted px-2 py-1 text-xs">

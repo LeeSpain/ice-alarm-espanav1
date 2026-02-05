@@ -17,6 +17,17 @@ interface PartnerCreateRequest {
   payout_iban?: string;
   notes_internal?: string;
   cif_nif?: string;
+  // B2B fields
+  partner_type?: "referral" | "care" | "residential";
+  organization_type?: string;
+  organization_registration?: string;
+  organization_website?: string;
+  estimated_monthly_referrals?: string;
+  facility_address?: string;
+  facility_resident_count?: number;
+  alert_visibility_enabled?: boolean;
+  billing_model?: "commission" | "per_resident" | "custom";
+  custom_rate_monthly?: number;
 }
 
 // Generate a secure temporary password
@@ -309,7 +320,7 @@ serve(async (req) => {
       );
     }
 
-    // Create partner record
+    // Create partner record with B2B fields
     const { data: partnerData, error: partnerError } = await supabaseAdmin
       .from("partners")
       .insert({
@@ -325,6 +336,17 @@ serve(async (req) => {
         referral_code: referralCode,
         status: "active",
         payout_method: "bank_transfer",
+        // B2B fields
+        partner_type: body.partner_type || "referral",
+        organization_type: body.organization_type || "individual",
+        organization_registration: body.organization_registration || null,
+        organization_website: body.organization_website || null,
+        estimated_monthly_referrals: body.estimated_monthly_referrals || null,
+        facility_address: body.facility_address || null,
+        facility_resident_count: body.facility_resident_count || null,
+        alert_visibility_enabled: body.alert_visibility_enabled || false,
+        billing_model: body.billing_model || "commission",
+        custom_rate_monthly: body.custom_rate_monthly || null,
       })
       .select()
       .single();
