@@ -1,5 +1,46 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// Gmail SMTP helper function
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Gmail SMTP error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,11 +63,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -104,9 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
     const baseUrl = Deno.env.get("SITE_URL") || "https://shelter-span.lovable.app";
     const updateLink = `${baseUrl}/member-update?token=${token}`;
 
-    // Send bilingual email via Resend
-    const { Resend } = await import("https://esm.sh/resend@2.0.0");
-    const resend = new Resend(resendApiKey);
+    // Send bilingual email via Gmail SMTP
     const isSpanish = preferredLanguage === "es";
 
     const emailSubject = isSpanish 
@@ -169,14 +203,13 @@ const handler = async (req: Request): Promise<Response> => {
 </body>
 </html>`;
 
-    const emailResult = await resend.emails.send({
-      from: "ICE Alarm España <onboarding@resend.dev>",
-      to: [recipientEmail],
-      subject: emailSubject,
-      html: emailHtml,
-    });
+    const emailResult = await sendViaGmailSMTP(recipientEmail, emailSubject, emailHtml);
 
-    console.log("Email sent successfully:", emailResult);
+    if (!emailResult.success) {
+      throw new Error(`Email sending failed: ${emailResult.error}`);
+    }
+
+    console.log("Email sent successfully to:", recipientEmail);
 
     // Log activity
     await supabaseClient.from("activity_logs").insert({

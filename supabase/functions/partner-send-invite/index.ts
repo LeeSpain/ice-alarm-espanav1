@@ -1,5 +1,46 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
+// Gmail SMTP helper function
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Gmail SMTP error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,12 +138,7 @@ serve(async (req) => {
     let success = false;
 
     if (channel === "email") {
-      // Send via Resend
-      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      if (!RESEND_API_KEY) {
-        throw new Error("Email service not configured");
-      }
-
+      // Send via Gmail SMTP
       const subject = language === "es" 
         ? "Invitación a ICE Alarm España" 
         : "Invitation to ICE Alarm Spain";
@@ -139,38 +175,27 @@ serve(async (req) => {
         `;
       }
 
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: "ICE Alarm Partners <onboarding@resend.dev>",
-          to: [recipient],
-          subject: subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #333;">${language === "es" ? "Invitación a ICE Alarm" : "ICE Alarm Invitation"}</h2>
-              <div style="white-space: pre-wrap; line-height: 1.6; color: #555;">
-                ${message.replace(/\n/g, "<br>")}
-              </div>
-              ${qrCodeHtml}
-              ${presentationsHtml}
-              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-              <p style="font-size: 12px; color: #999;">
-                ${language === "es" 
-                  ? "Este correo fue enviado por un socio de ICE Alarm España." 
-                  : "This email was sent by an ICE Alarm Spain partner."}
-              </p>
-            </div>
-          `,
-        }),
-      });
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">${language === "es" ? "Invitación a ICE Alarm" : "ICE Alarm Invitation"}</h2>
+          <div style="white-space: pre-wrap; line-height: 1.6; color: #555;">
+            ${message.replace(/\n/g, "<br>")}
+          </div>
+          ${qrCodeHtml}
+          ${presentationsHtml}
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="font-size: 12px; color: #999;">
+            ${language === "es" 
+              ? "Este correo fue enviado por un socio de ICE Alarm España." 
+              : "This email was sent by an ICE Alarm Spain partner."}
+          </p>
+        </div>
+      `;
 
-      if (!emailRes.ok) {
-        const error = await emailRes.text();
-        throw new Error(`Email sending failed: ${error}`);
+      const emailResult = await sendViaGmailSMTP(recipient, subject, emailHtml);
+
+      if (!emailResult.success) {
+        throw new Error(`Email sending failed: ${emailResult.error}`);
       }
 
       success = true;
