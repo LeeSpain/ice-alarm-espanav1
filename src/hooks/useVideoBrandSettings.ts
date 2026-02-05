@@ -61,10 +61,10 @@ export function useVideoBrandSettings() {
         .from("video_brand_settings")
         .select("*")
         .limit(1)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid crash when no settings exist
 
       if (error) throw error;
-      return data as VideoBrandSettings;
+      return data as VideoBrandSettings | null;
     },
   });
 

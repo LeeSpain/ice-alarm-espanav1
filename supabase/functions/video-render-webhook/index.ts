@@ -41,6 +41,7 @@ serve(async (req) => {
       thumbnail_url,
       vtt_url,
       srt_url,
+      format, // Format variant for exports
     } = body;
 
     console.log(`[Webhook] Event: ${event}, Render: ${render_id}, Status: ${status}`);
@@ -80,7 +81,7 @@ serve(async (req) => {
             .eq("id", project_id);
         }
 
-        // Create export record
+        // Create export record with format variant
         if (mp4_url) {
           const { error: exportError } = await supabase
             .from("video_exports")
@@ -91,6 +92,7 @@ serve(async (req) => {
               thumbnail_url: thumbnail_url || null,
               vtt_url: vtt_url || null,
               srt_url: srt_url || null,
+              format: format || null, // Store format variant
             });
 
           if (exportError) {
