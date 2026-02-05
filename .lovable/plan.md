@@ -1,572 +1,256 @@
 
+# Video Hub Complete Review & Improvement Plan
 
-# Video Hub Implementation Plan
+## Current Implementation Status: ✅ Solid Foundation
 
-## Overview
-
-This plan adds a new "Video Hub" feature under the Communications section of the admin dashboard. Video Hub will be a dedicated area for creating, managing, and exporting short-form videos for ICE Alarm Espana marketing - separate from Media Manager.
-
-The implementation follows a staged approach across 6 phases, with full bilingual support (EN/ES) from day one.
-
----
-
-## Stage 1: Navigation + Routes
-
-### 1.1 Update Admin Sidebar
-
-**File:** `src/components/layout/AdminSidebar.tsx`
-
-Add Video Hub as the 4th item in the Communications group (index 4 in menuGroups array):
-
-```typescript
-{
-  id: "communications",
-  icon: MessageSquare,
-  labelKey: "sidebar.communications",
-  items: [
-    { icon: MessageSquare, labelKey: "sidebar.messages", path: "/admin/messages" },
-    { icon: Share2, labelKey: "sidebar.mediaManager", path: "/admin/media-manager" },
-    { icon: Megaphone, labelKey: "sidebar.aiOutreach", path: "/admin/ai-outreach" },
-    { icon: Video, labelKey: "sidebar.videoHub", path: "/admin/video-hub" }  // NEW
-  ]
-}
-```
-
-- Import `Video` icon from lucide-react
-
-### 1.2 Add Route
-
-**File:** `src/App.tsx`
-
-Add lazy import and route:
-```typescript
-const VideoHubPage = lazy(() => import("./pages/admin/VideoHubPage"));
-
-// Inside admin routes (after ai-outreach)
-<Route path="video-hub" element={<VideoHubPage />} />
-```
-
-### 1.3 Add Translation Keys
-
-**Files:** `src/i18n/locales/en.json` and `src/i18n/locales/es.json`
-
-Add to sidebar section:
-```json
-// en.json
-"videoHub": "Video Hub"
-
-// es.json  
-"videoHub": "Centro de Video"
-```
+After reviewing all Video Hub files, the implementation is well-structured with:
+- Clean component architecture
+- Proper hooks for data management
+- Full bilingual support (EN/ES)
+- Proper database schema with RLS
+- Edge function for render queue
 
 ---
 
-## Stage 2: Video Hub Page UI Skeleton
+## Issues Found & Improvements
 
-### 2.1 Create Main Page Component
+### 1. Performance Optimizations
 
-**File:** `src/pages/admin/VideoHubPage.tsx`
+**A. Memoization Missing in Components**
+- `VideoProjectsTab`: `filteredProjects`, `getTemplateName`, badge functions recalculate on every render
+- `VideoExportsTab`: `getProjectDetails` called multiple times per row
+- `VideoCreateTab`: Large component with no memoization
 
-Structure:
-- Header with Video icon, title, "New Video" button, search input, filters
-- Tabs component with 5 tabs: Projects, Create Video, Templates, Exports, Settings
-- Each tab renders a dedicated component
+**B. Unnecessary Re-fetching**
+- `VideoExportsTab` fetches both exports AND projects - should use a joined query or cache
+- Templates fetched separately in multiple components
 
-```typescript
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Video, Plus, Search, HelpCircle, FolderOpen, Wand2, Layout, Download, Settings } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { VideoProjectsTab } from "@/components/admin/video-hub/VideoProjectsTab";
-import { VideoCreateTab } from "@/components/admin/video-hub/VideoCreateTab";
-import { VideoTemplatesTab } from "@/components/admin/video-hub/VideoTemplatesTab";
-import { VideoExportsTab } from "@/components/admin/video-hub/VideoExportsTab";
-import { VideoSettingsTab } from "@/components/admin/video-hub/VideoSettingsTab";
-```
+### 2. UX Improvements
 
-### 2.2 Create Tab Components
+**A. Create Video Wizard Issues**
+- No step validation before proceeding (can skip without filling required fields)
+- No way to edit an existing project (only create new)
+- "Render Video" button doesn't actually call the render edge function (just saves as draft)
+- No progress indicator for ongoing renders in the Projects tab
 
-**Directory:** `src/components/admin/video-hub/`
+**B. Missing Features**
+- No delete functionality for projects
+- No bulk actions (select multiple, bulk archive)
+- Search doesn't filter by status/format/language
+- No pagination for large datasets
+- Projects tab "Open" action does nothing (no edit mode)
 
-Create the following components:
+**C. Template Selection UX**
+- When clicking "Use Template" in Templates tab, doesn't pass the selected template ID to Create tab
 
-| Component | Purpose |
-|-----------|---------|
-| `VideoProjectsTab.tsx` | Table/grid of video projects with Name, Template, Language, Format, Duration, Status, Last edited, Actions |
-| `VideoCreateTab.tsx` | 5-step wizard: Template → Format → Content → Assets → Preview |
-| `VideoTemplatesTab.tsx` | Display locked ICE templates with variants |
-| `VideoExportsTab.tsx` | List of generated exports with download buttons |
-| `VideoSettingsTab.tsx` | Brand settings (logo, colors, disclaimers) |
+### 3. Code Quality Issues
 
-### 2.3 Projects Tab Details
+**A. Duplicate Code**
+- `handleSaveDraft` and `handleRender` in `VideoCreateTab` are nearly identical
+- Badge rendering logic duplicated across components
 
-Display columns:
-- Name
-- Template (from video_templates)
-- Language (EN/ES badge)
-- Format (9:16 / 16:9 / 1:1)
-- Duration (10s / 15s / 30s / 60s)
-- Status (Draft / Approved / Archived)
-- Last Edited (date)
-- Actions: Open, Duplicate, Approve, Archive
+**B. Missing Error Handling**
+- No try-catch around mutations in Create tab
+- No error states displayed to users
+- Edge function errors not surfaced properly
 
-### 2.4 Create Video Wizard Steps
+**C. Unused Imports/Variables**
+- `VideoCreateTab`: `Textarea` import removed but component still functional
+- `VideoExportsTab`: `_type` parameter unused in handleDownload
 
-**Step 1 - Choose Template:**
-- Card grid showing available templates
-- Each card shows template name, description, preview thumbnail
+### 4. Missing Integrations
 
-**Step 2 - Format & Duration:**
-- Radio group: 9:16 (Portrait/Stories), 16:9 (Landscape), 1:1 (Square)
-- Duration selector: 10s, 15s, 30s, 60s
-
-**Step 3 - Content Form:**
-- Headline input
-- 3-6 bullet points (dynamic add/remove)
-- CTA button text
-- Contact line (phone/WhatsApp/web)
-- Disclaimer toggle (ICE-approved blocks)
-- Language selector: English / Espanol
-
-**Step 4 - Asset Picker:**
-- Logo display (locked, read-only)
-- Background image/video upload (optional)
-- Product icon selector (SOS/Dosell/Vivago/etc.)
-
-**Step 5 - Preview & Render:**
-- Preview placeholder area
-- "Render Video" button (wired in Stage 4)
-- Save as Draft button
-
-### 2.5 Templates Tab
-
-Display initial ICE templates:
-1. Calm Problem → Solution → CTA (15s)
-2. How SOS Works (30s)
-3. Service Overview (45–60s)
-4. Device Focus (15–30s)
-5. Reassurance / Trust (20–30s)
-
-Each template shows:
-- Name and description
-- Supported formats and durations
-- Spanish/English availability badge
-
-### 2.6 Exports Tab
-
-Table columns:
-- Thumbnail (image)
-- Title
-- Date created
-- Format
-- Language
-- Actions: Download MP4, Download Captions (SRT/VTT), "Send to AI Outreach"
-
-### 2.7 Settings Tab
-
-Brand configuration (ICE only):
-- Logo URL display (locked)
-- Brand colors display (locked)
-- Watermark toggle
-- Default disclaimers for EN and ES (editable textareas)
-- Default CTAs for EN and ES (editable inputs)
-
-### 2.8 UI Style: Healthcare Trust
-
-- Clean, calm layout with generous spacing
-- Readable typography (larger fonts, high contrast)
-- Accessibility-first (proper focus states, ARIA labels)
-- Captions-first mentality in all video previews
-- Avoid flashy animations - use subtle transitions
+- Render button doesn't call the `video-render-queue` edge function
+- No realtime subscription for render progress updates
+- "Send to AI Outreach" creates a link but AI Outreach page doesn't read it
 
 ---
 
-## Stage 3: Database + Storage
+## Implementation Plan
 
-### 3.1 Create Tables (Migration)
+### Phase 1: Performance Fixes (Quick Wins)
 
-**Table: `video_projects`**
-```sql
-CREATE TABLE video_projects (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  template_id UUID REFERENCES video_templates(id),
-  language TEXT NOT NULL CHECK (language IN ('en', 'es', 'both')),
-  format TEXT NOT NULL CHECK (format IN ('9:16', '16:9', '1:1')),
-  duration INTEGER NOT NULL, -- seconds
-  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'archived')),
-  data_json JSONB NOT NULL DEFAULT '{}', -- stores headline, bullets, cta, etc.
-  created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+**1.1 Add useMemo to VideoProjectsTab**
+- Memoize `filteredProjects` based on `projects` and `searchQuery`
+- Memoize badge rendering functions
 
--- Enable RLS
-ALTER TABLE video_projects ENABLE ROW LEVEL SECURITY;
+**1.2 Optimize VideoExportsTab**
+- Use `useMemo` for project lookup map
+- Avoid recalculating project details on each render
 
--- Policy: Staff can CRUD all projects
-CREATE POLICY "Staff can manage video projects" ON video_projects
-  FOR ALL USING (public.is_staff(auth.uid()));
-```
+**1.3 Add React.memo to tab components**
+- Wrap tab components to prevent unnecessary re-renders when switching tabs
 
-**Table: `video_templates`**
-```sql
-CREATE TABLE video_templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  description TEXT,
-  version INTEGER DEFAULT 1,
-  schema_json JSONB NOT NULL DEFAULT '{}', -- defines form fields, structure
-  allowed_formats TEXT[] DEFAULT ARRAY['9:16', '16:9', '1:1'],
-  allowed_durations INTEGER[] DEFAULT ARRAY[15, 30, 60],
-  thumbnail_url TEXT,
-  is_locked BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+### Phase 2: Fix Critical Functionality
 
--- Enable RLS
-ALTER TABLE video_templates ENABLE ROW LEVEL SECURITY;
+**2.1 Wire up Render Button**
+- Modify `handleRender` to:
+  1. Create the project first
+  2. Call the `video-render-queue` edge function with the project ID
+  3. Show proper loading/success/error states
 
--- Policy: Staff can read templates
-CREATE POLICY "Staff can read video templates" ON video_templates
-  FOR SELECT USING (public.is_staff(auth.uid()));
-```
+**2.2 Add Render Status to Projects Tab**
+- Fetch latest render status per project
+- Show render progress badge (Queued/Rendering 45%/Complete)
+- Add refresh button or realtime subscription
 
-**Table: `video_renders`**
-```sql
-CREATE TABLE video_renders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES video_projects(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'failed', 'done')),
-  progress INTEGER DEFAULT 0, -- 0-100
-  error TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+**2.3 Fix Template → Create Flow**
+- Pass template ID when clicking "Use Template"
+- Pre-fill the Create tab with the selected template
 
--- Enable RLS
-ALTER TABLE video_renders ENABLE ROW LEVEL SECURITY;
+### Phase 3: UX Enhancements
 
--- Policy: Staff can manage renders
-CREATE POLICY "Staff can manage video renders" ON video_renders
-  FOR ALL USING (public.is_staff(auth.uid()));
-```
+**3.1 Add Project Edit Mode**
+- Make "Open" action load project data into Create tab
+- Add "Edit" mode vs "Create" mode differentiation
+- Show "Update Project" button in edit mode
 
-**Table: `video_exports`**
-```sql
-CREATE TABLE video_exports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES video_projects(id) ON DELETE CASCADE,
-  render_id UUID REFERENCES video_renders(id),
-  mp4_url TEXT,
-  srt_url TEXT,
-  vtt_url TEXT,
-  thumbnail_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+**3.2 Add Step Validation**
+- Step 1: Require project name (show warning)
+- Step 2-4: No strict requirements
+- Step 5: Validate before render
 
--- Enable RLS
-ALTER TABLE video_exports ENABLE ROW LEVEL SECURITY;
+**3.3 Add Delete Project**
+- Add delete option in dropdown menu
+- Confirmation dialog before deletion
+- Add hook method for deletion
 
--- Policy: Staff can manage exports
-CREATE POLICY "Staff can manage video exports" ON video_exports
-  FOR ALL USING (public.is_staff(auth.uid()));
-```
+**3.4 Add Filters**
+- Status filter (All/Draft/Approved/Archived)
+- Format filter (All/Portrait/Landscape/Square)
+- Language filter (All/EN/ES/Both)
 
-**Table: `video_brand_settings`**
-```sql
-CREATE TABLE video_brand_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  logo_url TEXT,
-  primary_color TEXT DEFAULT '#B91C1C',
-  secondary_color TEXT DEFAULT '#1E3A8A',
-  font_family TEXT DEFAULT 'Inter',
-  watermark_enabled BOOLEAN DEFAULT true,
-  disclaimers_en TEXT DEFAULT 'ICE Alarm España is a monitoring service...',
-  disclaimers_es TEXT DEFAULT 'ICE Alarm España es un servicio de monitoreo...',
-  default_cta_en TEXT DEFAULT 'Call Now',
-  default_cta_es TEXT DEFAULT 'Llama Ahora',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+### Phase 4: Code Cleanup
 
--- Enable RLS
-ALTER TABLE video_brand_settings ENABLE ROW LEVEL SECURITY;
+**4.1 Extract Shared Badge Component**
+- Create `VideoBadges.tsx` with:
+  - `StatusBadge`
+  - `LanguageBadge`
+  - `FormatBadge`
+- Reuse across Projects and Exports tabs
 
--- Policy: Staff can read/update settings
-CREATE POLICY "Staff can manage video brand settings" ON video_brand_settings
-  FOR ALL USING (public.is_staff(auth.uid()));
+**4.2 Consolidate Save/Render Logic**
+- Create shared `prepareProjectPayload()` function
+- Single mutation with status parameter
 
--- Insert singleton row
-INSERT INTO video_brand_settings (id) VALUES (gen_random_uuid());
-```
+**4.3 Add Proper Error Handling**
+- Wrap mutations in try-catch
+- Show error toasts with message
+- Add error states in hooks
 
-### 3.2 Seed Templates
+### Phase 5: Realtime & Advanced Features
 
-```sql
-INSERT INTO video_templates (name, description, allowed_durations, schema_json) VALUES
-('Calm Problem → Solution → CTA', 'A calm, reassuring template that presents a problem and offers ICE Alarm as the solution', ARRAY[15], '{"sections": ["problem", "solution", "cta"]}'),
-('How SOS Works', 'Step-by-step walkthrough of the SOS pendant functionality', ARRAY[30], '{"sections": ["intro", "step1", "step2", "step3", "cta"]}'),
-('Service Overview', 'Comprehensive overview of all ICE Alarm services', ARRAY[45, 60], '{"sections": ["intro", "services", "benefits", "cta"]}'),
-('Device Focus', 'Highlight specific device features and capabilities', ARRAY[15, 30], '{"sections": ["device", "features", "cta"]}'),
-('Reassurance / Trust', 'Build trust with testimonials and reassurance messaging', ARRAY[20, 30], '{"sections": ["intro", "trust", "reassurance", "cta"]}');
-```
+**5.1 Realtime Render Progress**
+- Subscribe to `video_renders` table changes
+- Auto-update progress in Projects tab
+- Auto-refresh Exports when render completes
 
-### 3.3 Create Storage Bucket
-
-Create a new public bucket: `video-hub-exports`
-
-This keeps Video Hub assets completely separate from Media Manager storage.
+**5.2 Add Pagination**
+- Add pagination to Projects table (10/25/50 per page)
+- Add pagination to Exports table
 
 ---
 
-## Stage 4: Rendering Integration (Stub)
+## Detailed File Changes
 
-### 4.1 Create Render Queue Edge Function
-
-**File:** `supabase/functions/video-render-queue/index.ts`
-
-```typescript
-// Queue a render job
-// Input: { project_id: string }
-// Output: { render_id: string, status: "queued" }
-
-// Creates a record in video_renders with status = "queued"
-// In production, this would trigger an external worker service
-// For now, simulates completion after a short delay
-```
-
-### 4.2 Create Hook for Video Projects
-
-**File:** `src/hooks/useVideoProjects.ts`
-
-```typescript
-// CRUD operations for video_projects
-// - fetchProjects (with filters)
-// - createProject
-// - updateProject
-// - duplicateProject
-// - archiveProject
-// - approveProject
-```
-
-### 4.3 Create Hook for Video Renders
-
-**File:** `src/hooks/useVideoRenders.ts`
-
-```typescript
-// - queueRender(projectId)
-// - getRenderStatus(renderId)
-// - subscribeToRenderUpdates (realtime)
-```
-
-### 4.4 UI Status Updates
-
-- Projects tab shows render status badge when render is in progress
-- Progress bar shows 0-100% completion
-- Exports tab auto-refreshes when render completes
-
----
-
-## Stage 5: Optional Link to AI Outreach
-
-### 5.1 Add "Send to AI Outreach" Button
-
-In `VideoExportsTab.tsx`, add button for each export:
-- Creates a reference record linking the export to AI Outreach campaigns
-- Does NOT move or delete the original file
-- Shows success toast: "Export linked to AI Outreach"
-
-### 5.2 Create Link Table (Optional)
-
-```sql
-CREATE TABLE video_outreach_links (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  export_id UUID NOT NULL REFERENCES video_exports(id),
-  campaign_id UUID, -- optional link to outreach campaign
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
----
-
-## Stage 6: Polish & QA
-
-### 6.1 Bilingual Completeness
-
-All new translation keys added to both `en.json` and `es.json`:
-- `videoHub.*` namespace for all Video Hub strings
-- Form labels, button texts, status badges, error messages
-- Help dialog content
-
-### 6.2 Healthcare Trust Visual Consistency
-
-- Use existing color palette (red-700 primary, blue-900 secondary)
-- Generous padding and spacing
-- Large, readable fonts
-- Clear visual hierarchy
-- Subtle hover/focus states
-
-### 6.3 Permissions
-
-- Video Hub visible only to staff (admin/super_admin)
-- Uses existing `is_staff()` RLS function
-- ProtectedRoute wrapper already in place via AdminLayout
-
-### 6.4 No Regressions
-
-- Media Manager code untouched
-- Separate tables, hooks, components
-- No shared state or side effects
-
----
-
-## File Summary
-
-### New Files to Create
-
-| File | Purpose |
+| File | Changes |
 |------|---------|
-| `src/pages/admin/VideoHubPage.tsx` | Main Video Hub page |
-| `src/components/admin/video-hub/VideoProjectsTab.tsx` | Projects listing |
-| `src/components/admin/video-hub/VideoCreateTab.tsx` | Create video wizard |
-| `src/components/admin/video-hub/VideoTemplatesTab.tsx` | Templates gallery |
-| `src/components/admin/video-hub/VideoExportsTab.tsx` | Exports list |
-| `src/components/admin/video-hub/VideoSettingsTab.tsx` | Brand settings |
-| `src/components/admin/video-hub/VideoHelpDialog.tsx` | Help/guide dialog |
-| `src/hooks/useVideoProjects.ts` | Projects CRUD hook |
-| `src/hooks/useVideoTemplates.ts` | Templates read hook |
-| `src/hooks/useVideoRenders.ts` | Render queue hook |
-| `src/hooks/useVideoExports.ts` | Exports CRUD hook |
-| `src/hooks/useVideoBrandSettings.ts` | Brand settings hook |
-| `supabase/functions/video-render-queue/index.ts` | Render queue function |
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/layout/AdminSidebar.tsx` | Add Video Hub menu item |
-| `src/App.tsx` | Add Video Hub route |
-| `src/i18n/locales/en.json` | Add videoHub translations |
-| `src/i18n/locales/es.json` | Add videoHub translations |
-
-### Database Migrations
-
-1. Create `video_templates` table + seed data
-2. Create `video_projects` table with RLS
-3. Create `video_renders` table with RLS
-4. Create `video_exports` table with RLS
-5. Create `video_brand_settings` table with RLS + singleton row
-6. Create `video_outreach_links` table (optional)
-7. Create storage bucket `video-hub-exports`
+| `VideoProjectsTab.tsx` | Add useMemo, add delete action, add filters, add render status, wire up "Open" action |
+| `VideoCreateTab.tsx` | Add edit mode, wire up render function, add validation, consolidate save logic |
+| `VideoTemplatesTab.tsx` | Pass template ID on "Use Template" click |
+| `VideoExportsTab.tsx` | Add useMemo for project lookup, remove unused variable |
+| `VideoHubPage.tsx` | Add filter states, pass edit project handler, add selected template state |
+| `useVideoProjects.ts` | Add deleteProject mutation |
+| `useVideoRenders.ts` | Add realtime subscription for progress updates |
+| `VideoBadges.tsx` (new) | Shared badge components |
 
 ---
 
-## Translation Keys Preview
+## Priority Order
 
-```json
-{
-  "videoHub": {
-    "title": "Video Hub",
-    "subtitle": "Create and manage marketing videos",
-    "newVideo": "New Video",
-    "search": "Search videos...",
-    "tabs": {
-      "projects": "Projects",
-      "create": "Create Video",
-      "templates": "Templates",
-      "exports": "Exports",
-      "settings": "Settings"
-    },
-    "projects": {
-      "name": "Name",
-      "template": "Template",
-      "language": "Language",
-      "format": "Format",
-      "duration": "Duration",
-      "status": "Status",
-      "lastEdited": "Last Edited",
-      "actions": "Actions",
-      "open": "Open",
-      "duplicate": "Duplicate",
-      "approve": "Approve",
-      "archive": "Archive",
-      "noProjects": "No video projects yet",
-      "createFirst": "Create your first video"
-    },
-    "create": {
-      "step1": "Choose Template",
-      "step2": "Format & Duration",
-      "step3": "Content",
-      "step4": "Assets",
-      "step5": "Preview",
-      "headline": "Headline",
-      "bulletPoints": "Bullet Points",
-      "addBullet": "Add Bullet",
-      "ctaText": "CTA Button Text",
-      "contactLine": "Contact Line",
-      "disclaimer": "Include Disclaimer",
-      "selectLanguage": "Select Language",
-      "render": "Render Video",
-      "saveDraft": "Save as Draft"
-    },
-    "templates": {
-      "calmProblemSolution": "Calm Problem → Solution → CTA",
-      "howSosWorks": "How SOS Works",
-      "serviceOverview": "Service Overview",
-      "deviceFocus": "Device Focus",
-      "reassuranceTrust": "Reassurance / Trust",
-      "locked": "ICE Template"
-    },
-    "exports": {
-      "thumbnail": "Thumbnail",
-      "dateCreated": "Date Created",
-      "downloadMp4": "Download MP4",
-      "downloadSrt": "Download SRT",
-      "downloadVtt": "Download VTT",
-      "sendToOutreach": "Send to AI Outreach",
-      "noExports": "No exports yet"
-    },
-    "settings": {
-      "brandRules": "Brand Rules",
-      "logo": "Logo",
-      "colors": "Colors",
-      "watermark": "Watermark",
-      "watermarkEnabled": "Show watermark on videos",
-      "disclaimers": "Default Disclaimers",
-      "disclaimersEn": "English Disclaimer",
-      "disclaimersEs": "Spanish Disclaimer",
-      "defaultCtas": "Default CTAs",
-      "ctaEn": "English CTA",
-      "ctaEs": "Spanish CTA"
-    },
-    "formats": {
-      "portrait": "Portrait (9:16)",
-      "landscape": "Landscape (16:9)",
-      "square": "Square (1:1)"
-    },
-    "durations": {
-      "10s": "10 seconds",
-      "15s": "15 seconds",
-      "30s": "30 seconds",
-      "60s": "60 seconds"
-    },
-    "statuses": {
-      "draft": "Draft",
-      "approved": "Approved",
-      "archived": "Archived",
-      "queued": "Queued",
-      "running": "Rendering",
-      "failed": "Failed",
-      "done": "Complete"
-    },
-    "help": {
-      "title": "Video Hub Guide",
-      "howToUse": "How to Use"
-    }
+1. **Critical**: Wire up render button to edge function (currently non-functional)
+2. **High**: Add edit project functionality (Open action does nothing)
+3. **High**: Add render status display in Projects tab
+4. **Medium**: Performance optimizations (memoization)
+5. **Medium**: Add filters and delete functionality
+6. **Low**: Realtime updates, pagination
+
+---
+
+## Technical Details
+
+### Render Button Fix
+```typescript
+const handleRender = async () => {
+  if (!projectData.name) {
+    toast.error(t("videoHub.create.nameRequired"));
+    return;
   }
+
+  try {
+    // 1. Create/update the project
+    const project = await createProject({...});
+    
+    // 2. Call render edge function
+    const response = await supabase.functions.invoke('video-render-queue', {
+      body: { project_id: project.id }
+    });
+    
+    if (response.error) throw response.error;
+    
+    toast.success(t("videoHub.create.renderQueued"));
+    onComplete();
+  } catch (error) {
+    toast.error(error.message || t("common.error"));
+  }
+};
+```
+
+### Project Edit Mode
+```typescript
+// In VideoHubPage
+const [editingProject, setEditingProject] = useState<VideoProject | null>(null);
+
+// Pass to VideoCreateTab
+<VideoCreateTab 
+  editingProject={editingProject}
+  onComplete={() => {
+    setEditingProject(null);
+    setActiveTab("projects");
+  }} 
+/>
+
+// Pass handler to ProjectsTab
+<VideoProjectsTab 
+  onEdit={(project) => {
+    setEditingProject(project);
+    setActiveTab("create");
+  }}
+/>
+```
+
+### Shared Badge Component
+```typescript
+// src/components/admin/video-hub/VideoBadges.tsx
+export function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const variants = {
+    draft: "secondary",
+    approved: "bg-status-active text-white",
+    archived: "outline"
+  };
+  return <Badge variant={variants[status]}>{t(`videoHub.statuses.${status}`)}</Badge>;
 }
 ```
 
+---
+
+## Summary
+
+The Video Hub implementation has a solid foundation but needs:
+1. **Functional fixes**: Render button, edit mode, template selection flow
+2. **Performance**: Memoization and query optimization
+3. **UX**: Filters, delete, validation, status indicators
+4. **Code quality**: Shared components, error handling, cleanup
+
+This plan addresses all issues while maintaining the existing architecture and bilingual support.
