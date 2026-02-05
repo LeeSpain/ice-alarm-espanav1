@@ -1,39 +1,28 @@
 
 
-# Fix: Video Projects Status Check Constraint
+# Fix: Edge Function Stage Updates Not Persisting
 
 ## Problem Identified
 
-The database has a check constraint on the `video_projects` table that only allows these status values:
-- `draft`
-- `approved`
-- `archived`
+The `stage` column in `video_renders` is staying at `"queued"` throughout the entire render process, even though:
+- `progress` updates correctly (0% → 100%)
+- `status` transitions correctly (`queued` → `running` → `done`)
 
-However, the recent Video Hub enhancement added `"rendering"` as a status value in the code:
-- `VideoCreateTab.tsx` sets `status: "rendering"` when queuing a render
-- `video-render-queue` edge function also sets `status: "rendering"`
+**Root Cause**: The deployed edge function is running an **older version** that doesn't include the stage tracking updates from the recent enhancement.
 
-This causes the error:
+### Evidence from Database:
 ```
-new row for relation "video_projects" violates check constraint "video_projects_status_check"
+id: f62c35d3...  progress: 100  stage: "queued"  status: "done"
+id: d4970522...  progress: 100  stage: "queued"  status: "done"
 ```
+
+The `stage` should progress through: `queued` → `initializing` → `generating` → `processing` → `compositing` → `encoding` → `finalizing`
 
 ---
 
 ## Solution
 
-Add `"rendering"` to the allowed status values in the check constraint.
-
-### Database Migration
-
-```sql
--- Drop the existing constraint
-ALTER TABLE video_projects DROP CONSTRAINT video_projects_status_check;
-
--- Add updated constraint with "rendering" status
-ALTER TABLE video_projects ADD CONSTRAINT video_projects_status_check 
-  CHECK (status = ANY (ARRAY['draft', 'rendering', 'approved', 'archived']));
-```
+Force redeploy the `video-render-queue` edge function to ensure the latest code (with stage updates) is active.
 
 ---
 
@@ -41,25 +30,16 @@ ALTER TABLE video_projects ADD CONSTRAINT video_projects_status_check
 
 | File | Change |
 |------|--------|
-| Database migration | Add `"rendering"` to `video_projects_status_check` constraint |
-
----
-
-## Status Flow After Fix
-
-```text
-Create Project → status: "draft"
-Click Render → status: "rendering" ✅ (now allowed)
-Render Complete → status: "approved"
-Render Failed → status: "draft"
-Archive → status: "archived"
-```
+| `supabase/functions/video-render-queue/index.ts` | No code change needed - just redeploy |
 
 ---
 
 ## Technical Notes
 
-- This is a simple constraint update, no data migration needed
-- The `VideoBadges.tsx` already has the "rendering" status badge implemented
-- The edge function and frontend code are already correct - only the database constraint is missing the new status
+The edge function code is correct. The issue is that the deployment may have timed out or failed silently in a previous attempt. Forcing a redeploy will ensure the latest version with stage tracking is running.
+
+After redeployment, renders will show:
+- Stage updates in real-time through the timeline
+- Progress bar moving in sync with stage transitions
+- Each stage lasting ~2.5 seconds as designed
 
