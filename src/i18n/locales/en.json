@@ -3384,6 +3384,7 @@
       "format": "Format",
       "duration": "Duration",
       "status": "Status",
+      "render": "Render",
       "lastEdited": "Last Edited",
       "actions": "Actions",
       "open": "Open",

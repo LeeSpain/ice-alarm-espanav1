@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.twilio-call-me]
 verify_jwt = false
+
+[functions.video-render-queue]
+verify_jwt = false

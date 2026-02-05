@@ -1,5 +1,8 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import type { VideoRender } from "@/hooks/useVideoRenders";
 
 interface StatusBadgeProps {
   status: string;
@@ -62,3 +65,38 @@ export function FormatBadge({ format }: FormatBadgeProps) {
   };
   return <Badge variant="secondary">{formatLabels[format] || format}</Badge>;
 }
+
+interface RenderProgressBadgeProps {
+  render: VideoRender | null | undefined;
+}
+
+export const RenderProgressBadge = React.memo(function RenderProgressBadge({ render }: RenderProgressBadgeProps) {
+  const { t } = useTranslation();
+  
+  if (!render) {
+    return <span className="text-muted-foreground text-sm">-</span>;
+  }
+  
+  if (render.status === "queued") {
+    return <Badge variant="secondary">⏳ {t("videoHub.statuses.queued")}</Badge>;
+  }
+  
+  if (render.status === "running") {
+    return (
+      <div className="flex items-center gap-2 min-w-[100px]">
+        <Progress value={render.progress} className="h-2 w-16" />
+        <span className="text-xs text-muted-foreground">{render.progress}%</span>
+      </div>
+    );
+  }
+  
+  if (render.status === "done") {
+    return <Badge className="bg-status-active text-white">✓ {t("videoHub.statuses.done")}</Badge>;
+  }
+  
+  if (render.status === "failed") {
+    return <Badge variant="destructive">✗ {t("videoHub.statuses.failed")}</Badge>;
+  }
+  
+  return null;
+});

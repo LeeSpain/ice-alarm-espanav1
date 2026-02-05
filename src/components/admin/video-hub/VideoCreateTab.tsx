@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useVideoTemplates } from "@/hooks/useVideoTemplates";
 import { useVideoProjects, VideoProject } from "@/hooks/useVideoProjects";
 import { useVideoBrandSettings } from "@/hooks/useVideoBrandSettings";
-import { useVideoRenders } from "@/hooks/useVideoRenders";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -38,7 +38,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
   const { templates, isLoading: templatesLoading } = useVideoTemplates();
   const { createProject, updateProject, isCreating, isUpdating } = useVideoProjects();
   const { settings } = useVideoBrandSettings();
-  const { queueRender, isQueuing } = useVideoRenders();
+  
 
   const isEditMode = !!editingProject;
 
@@ -172,15 +172,17 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
         projectId = newProject.id;
       }
       
-      // Queue the render via edge function
-      const { error } = await supabase.functions.invoke('video-render-queue', {
+      // Queue the render via edge function (which creates the render record)
+      const { data, error } = await supabase.functions.invoke('video-render-queue', {
         body: { project_id: projectId }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Render queue error:", error);
+        throw new Error(error.message || t("videoHub.create.renderFailed"));
+      }
       
-      // Also create local render record for tracking
-      await queueRender(projectId);
+      console.log("Render queued:", data);
       
       toast.success(t("videoHub.create.renderQueued"));
       onComplete();
@@ -212,7 +214,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
   };
 
   const isSaving = isCreating || isUpdating;
-  const isProcessing = isSaving || isRendering || isQueuing;
+  const isProcessing = isSaving || isRendering;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -618,7 +620,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId }
                 {isEditMode ? t("videoHub.create.updateProject") : t("videoHub.create.saveDraft")}
               </Button>
               <Button onClick={handleRender} disabled={isProcessing}>
-                {isRendering || isQueuing ? (
+                {isRendering ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Wand2 className="mr-2 h-4 w-4" />
