@@ -37,6 +37,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
+import { VideoRenderDetailDialog } from "./VideoRenderDetailDialog";
 
 interface VideoProjectsTabProps {
   searchQuery: string;
@@ -59,6 +60,10 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState<string | null>(null);
+  
+  // Render detail dialog
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<VideoProject | null>(null);
 
   // Auto-render on approve
   const handleApproveAndRender = useCallback(async (projectId: string) => {
@@ -276,7 +281,14 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
             </TableHeader>
             <TableBody>
               {filteredProjects.map((project) => (
-                <TableRow key={project.id}>
+                <TableRow 
+                  key={project.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => {
+                    setSelectedProject(project);
+                    setDetailDialogOpen(true);
+                  }}
+                >
                   <TableCell className="font-medium">{project.name}</TableCell>
                   <TableCell>{getTemplateName(project.template_id)}</TableCell>
                   <TableCell><LanguageBadge language={project.language} /></TableCell>
@@ -289,7 +301,7 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
                   <TableCell className="text-muted-foreground">
                     {format(new Date(project.updated_at), "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -367,6 +379,22 @@ export function VideoProjectsTab({ searchQuery, onCreateNew, onEditProject }: Vi
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Render Detail Dialog */}
+      <VideoRenderDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        project={selectedProject}
+        render={selectedProject ? latestRenderByProject.get(selectedProject.id) : null}
+        onRerender={(projectId) => {
+          handleRerender(projectId);
+        }}
+        onViewExport={(projectId) => {
+          // Navigate to exports tab - this could be enhanced
+          setDetailDialogOpen(false);
+        }}
+        isRerendering={isRendering === selectedProject?.id}
+      />
     </>
   );
 }

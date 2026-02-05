@@ -3544,12 +3544,32 @@
     },
     "statuses": {
       "draft": "Borrador",
+      "rendering": "Renderizando",
       "approved": "Aprobado",
       "archived": "Archivado",
       "queued": "En Cola",
       "running": "Renderizando",
       "failed": "Fallido",
       "done": "Completo"
+    },
+    "renderDetail": {
+      "title": "Progreso de Renderizado",
+      "subtitle": "Monitorea el proceso de creación de video",
+      "stages": {
+        "queued": "En cola",
+        "initializing": "Inicializando",
+        "generating": "Generando escenas",
+        "processing": "Procesando audio",
+        "compositing": "Componiendo video",
+        "encoding": "Codificando salida",
+        "finalizing": "Creando exportación"
+      },
+      "timeline": "Línea de tiempo",
+      "pending": "Pendiente",
+      "completed": "Completado",
+      "current": "En progreso",
+      "rerender": "Re-renderizar",
+      "viewExport": "Ver Exportación"
     },
     "assets": {
       "logoLocked": "El logo está bloqueado para mantener la consistencia de marca",

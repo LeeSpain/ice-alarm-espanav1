@@ -14,6 +14,8 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   switch (status) {
     case "draft":
       return <Badge variant="secondary">{t("videoHub.statuses.draft")}</Badge>;
+    case "rendering":
+      return <Badge className="bg-amber-500 text-white animate-pulse">{t("videoHub.statuses.rendering")}</Badge>;
     case "approved":
       return <Badge className="bg-status-active text-status-active-foreground">{t("videoHub.statuses.approved")}</Badge>;
     case "archived":

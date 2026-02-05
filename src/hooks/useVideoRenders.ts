@@ -7,6 +7,7 @@ export interface VideoRender {
   project_id: string;
   status: string;
   progress: number;
+  stage: string | null;
   error: string | null;
   created_at: string;
   updated_at: string;
