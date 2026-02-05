@@ -1,0 +1,137 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+};
+
+const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") || "video-hub-secret";
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Validate webhook secret
+    const providedSecret = req.headers.get("x-webhook-secret");
+    if (providedSecret !== WEBHOOK_SECRET) {
+      return new Response(
+        JSON.stringify({ error: "Invalid webhook secret" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const body = await req.json();
+    const { 
+      render_id, 
+      project_id, 
+      event, 
+      status, 
+      progress, 
+      stage, 
+      error,
+      mp4_url,
+      thumbnail_url,
+      vtt_url,
+      srt_url,
+    } = body;
+
+    console.log(`[Webhook] Event: ${event}, Render: ${render_id}, Status: ${status}`);
+
+    if (!render_id) {
+      return new Response(
+        JSON.stringify({ error: "render_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    switch (event) {
+      case "progress":
+        // Update render progress
+        await supabase
+          .from("video_renders")
+          .update({ 
+            status: status || "running", 
+            progress: progress || 0, 
+            stage: stage || null 
+          })
+          .eq("id", render_id);
+        break;
+
+      case "completed":
+        // Mark render as done
+        await supabase
+          .from("video_renders")
+          .update({ status: "done", progress: 100, stage: "finalizing" })
+          .eq("id", render_id);
+
+        // Update project status to approved
+        if (project_id) {
+          await supabase
+            .from("video_projects")
+            .update({ status: "approved" })
+            .eq("id", project_id);
+        }
+
+        // Create export record
+        if (mp4_url) {
+          const { error: exportError } = await supabase
+            .from("video_exports")
+            .insert({
+              project_id,
+              render_id,
+              mp4_url,
+              thumbnail_url: thumbnail_url || null,
+              vtt_url: vtt_url || null,
+              srt_url: srt_url || null,
+            });
+
+          if (exportError) {
+            console.error("[Webhook] Export insert error:", exportError);
+          }
+        }
+        break;
+
+      case "failed":
+        // Mark render as failed
+        await supabase
+          .from("video_renders")
+          .update({ 
+            status: "failed", 
+            error: error || "Unknown render error" 
+          })
+          .eq("id", render_id);
+
+        // Revert project status to draft
+        if (project_id) {
+          await supabase
+            .from("video_projects")
+            .update({ status: "draft" })
+            .eq("id", project_id);
+        }
+        break;
+
+      default:
+        console.log(`[Webhook] Unknown event: ${event}`);
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, event, render_id }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("[Webhook] Error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message || "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
