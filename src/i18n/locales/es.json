@@ -180,6 +180,33 @@
       "success": "Publicación despublicada correctamente",
       "error": "Error al despublicar"
     },
+    "partnerDistribution": {
+      "title": "Distribución a Socios",
+      "configure": "Configurar acceso de socios",
+      "allPartners": "Todos los Socios",
+      "selected": "seleccionados",
+      "none": "Ninguno",
+      "infoText": "Cuando está habilitado, después de publicar esta publicación estará disponible para que los socios la compartan con sus enlaces rastreados. Los socios ganan comisión por conversiones.",
+      "audienceLabel": "¿Quién puede compartir este contenido?",
+      "allActivePartners": "Todos los socios activos",
+      "partners": "socios",
+      "selectedPartners": "Solo socios seleccionados",
+      "selectPartners": "Elegir socios",
+      "noActivePartners": "No se encontraron socios activos",
+      "trackingNote": "Cada socio recibe un enlace único rastreado para atribución",
+      "noPartnerSharing": "Sin distribución a socios",
+      "noPartnerSharingDesc": "Esta publicación no será distribuida a socios",
+      "selectAll": "Seleccionar Todos",
+      "deselectAll": "Deseleccionar Todos",
+      "selectedCount": "{{count}} de {{total}} seleccionados",
+      "status": {
+        "enabled": "Compartir con Socios Habilitado",
+        "disabled": "Compartir con Socios Deshabilitado"
+      },
+      "viewLinks": "Ver Enlaces de Socios",
+      "disableSharing": "Deshabilitar Compartir con Socios",
+      "enableSharing": "Habilitar Compartir con Socios"
+    },
     "help": {
       "title": "Guía del Gestor de Medios",
       "description": "Aprenda a crear, gestionar y publicar contenido en redes sociales",

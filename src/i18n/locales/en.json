@@ -194,6 +194,11 @@
       "selectPartners": "Choose partners",
       "noActivePartners": "No active partners found",
       "trackingNote": "Each partner receives a unique tracked link for attribution",
+      "noPartnerSharing": "No partner sharing",
+      "noPartnerSharingDesc": "This post will not be distributed to partners",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "selectedCount": "{{count}} of {{total}} selected",
       "status": {
         "enabled": "Partner Sharing Enabled",
         "disabled": "Partner Sharing Disabled"
