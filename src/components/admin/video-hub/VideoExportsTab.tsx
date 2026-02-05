@@ -1,8 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, FileVideo, FileText, Send, Video } from "lucide-react";
+import { Download, FileVideo, FileText, Send, Video, Youtube, ExternalLink, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -11,12 +13,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useVideoExports } from "@/hooks/useVideoExports";
+import { useVideoExports, VideoExport } from "@/hooks/useVideoExports";
 import { useVideoProjects } from "@/hooks/useVideoProjects";
+import { useYouTubeIntegration } from "@/hooks/useYouTubeIntegration";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { LanguageBadge, FormatBadge } from "./VideoBadges";
+import { YouTubePublishDialog } from "./YouTubePublishDialog";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoExportsTabProps {
   searchQuery: string;
@@ -26,6 +33,34 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
   const { t } = useTranslation();
   const { exports, isLoading, sendToOutreach } = useVideoExports();
   const { projects } = useVideoProjects();
+  const { isConnected: youtubeConnected, publish: publishToYouTube, isPublishing } = useYouTubeIntegration();
+  
+  const [selectedExport, setSelectedExport] = useState<VideoExport | null>(null);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+
+  // Fetch YouTube defaults
+  const { data: youtubeDefaults } = useQuery({
+    queryKey: ["youtube-default-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("key, value")
+        .in("key", [
+          "settings_youtube_default_visibility",
+          "settings_youtube_default_tags",
+          "settings_youtube_default_description_footer",
+        ]);
+      if (error) throw error;
+      
+      const map: Record<string, string> = {};
+      data?.forEach((s) => {
+        const key = s.key.replace("settings_youtube_default_", "");
+        map[key] = s.value;
+      });
+      return map;
+    },
+    enabled: youtubeConnected,
+  });
 
   // Memoized project lookup map for O(1) access
   const projectMap = useMemo(() => {
@@ -56,8 +91,44 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
     try {
       await sendToOutreach(exportId);
       toast.success(t("videoHub.exports.sentToOutreach"));
-    } catch (error) {
+    } catch {
       toast.error(t("common.error"));
+    }
+  };
+
+  const handlePublishClick = (exp: VideoExport) => {
+    setSelectedExport(exp);
+    setShowPublishDialog(true);
+  };
+
+  const handlePublish = async (data: {
+    title: string;
+    description: string;
+    visibility: "public" | "unlisted" | "private";
+    tags?: string;
+    playlist_id?: string;
+    made_for_kids: boolean;
+  }) => {
+    if (!selectedExport) return;
+    
+    await publishToYouTube({
+      video_export_id: selectedExport.id,
+      ...data,
+    });
+  };
+
+  const getYouTubeStatusBadge = (status: string | null) => {
+    switch (status) {
+      case "published":
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Published</Badge>;
+      case "uploading":
+        return <Badge variant="secondary">Uploading...</Badge>;
+      case "queued":
+        return <Badge variant="outline">Queued</Badge>;
+      case "failed":
+        return <Badge variant="destructive">Failed</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -94,101 +165,163 @@ export function VideoExportsTab({ searchQuery }: VideoExportsTabProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Download className="h-5 w-5" />
-          {t("videoHub.tabs.exports")}
-        </CardTitle>
-        <CardDescription>
-          {filteredExports.length} {t("videoHub.exports.available")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">{t("videoHub.exports.thumbnail")}</TableHead>
-              <TableHead>{t("videoHub.projects.name")}</TableHead>
-              <TableHead>{t("videoHub.exports.dateCreated")}</TableHead>
-              <TableHead>{t("videoHub.projects.format")}</TableHead>
-              <TableHead>{t("videoHub.projects.language")}</TableHead>
-              <TableHead className="text-right">{t("videoHub.projects.actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredExports.map((exp) => {
-              const project = projectMap.get(exp.project_id);
-              return (
-                <TableRow key={exp.id}>
-                  <TableCell>
-                    {exp.thumbnail_url ? (
-                      <img
-                        src={exp.thumbnail_url}
-                        alt="Thumbnail"
-                        className="h-12 w-20 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-20 items-center justify-center rounded bg-muted">
-                        <Video className="h-5 w-5 text-muted-foreground" />
+    <>
+      {/* YouTube Not Connected Banner */}
+      {!youtubeConnected && (
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("videoHub.youtube.notConnected", "YouTube Not Connected")}</AlertTitle>
+          <AlertDescription>
+            {t("videoHub.youtube.notConnectedDesc", "Connect your YouTube channel to publish videos directly.")}{" "}
+            <Link to="/admin/settings#communications/social" className="text-primary underline hover:no-underline">
+              {t("videoHub.youtube.connectInSettings", "Connect in Admin Settings")}
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            {t("videoHub.tabs.exports")}
+          </CardTitle>
+          <CardDescription>
+            {filteredExports.length} {t("videoHub.exports.available")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-20">{t("videoHub.exports.thumbnail")}</TableHead>
+                <TableHead>{t("videoHub.projects.name")}</TableHead>
+                <TableHead>{t("videoHub.exports.dateCreated")}</TableHead>
+                <TableHead>{t("videoHub.projects.format")}</TableHead>
+                <TableHead>{t("videoHub.projects.language")}</TableHead>
+                <TableHead>YouTube</TableHead>
+                <TableHead className="text-right">{t("videoHub.projects.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredExports.map((exp) => {
+                const project = projectMap.get(exp.project_id);
+                return (
+                  <TableRow key={exp.id}>
+                    <TableCell>
+                      {exp.thumbnail_url ? (
+                        <img
+                          src={exp.thumbnail_url}
+                          alt="Thumbnail"
+                          className="h-12 w-20 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-20 items-center justify-center rounded bg-muted">
+                          <Video className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{project?.name || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(exp.created_at), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      {project ? <FormatBadge format={project.format} /> : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {project ? <LanguageBadge language={project.language} /> : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getYouTubeStatusBadge(exp.youtube_status)}
+                        {exp.youtube_url && (
+                          <a
+                            href={exp.youtube_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                        {exp.youtube_error && (
+                          <span className="text-xs text-destructive" title={exp.youtube_error}>
+                            {exp.youtube_error.slice(0, 20)}...
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{project?.name || "-"}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(exp.created_at), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {project ? <FormatBadge format={project.format} /> : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {project ? <LanguageBadge language={project.language} /> : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(exp.mp4_url)}
-                        disabled={!exp.mp4_url}
-                      >
-                        <FileVideo className="mr-1 h-4 w-4" />
-                        {t("videoHub.exports.downloadMp4")}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(exp.srt_url)}
-                        disabled={!exp.srt_url}
-                      >
-                        <FileText className="mr-1 h-4 w-4" />
-                        SRT
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(exp.vtt_url)}
-                        disabled={!exp.vtt_url}
-                      >
-                        <FileText className="mr-1 h-4 w-4" />
-                        VTT
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSendToOutreach(exp.id)}
-                      >
-                        <Send className="mr-1 h-4 w-4" />
-                        {t("videoHub.exports.sendToOutreach")}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-1 flex-wrap">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(exp.mp4_url)}
+                          disabled={!exp.mp4_url}
+                        >
+                          <FileVideo className="mr-1 h-4 w-4" />
+                          {t("videoHub.exports.downloadMp4")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(exp.srt_url)}
+                          disabled={!exp.srt_url}
+                        >
+                          <FileText className="mr-1 h-4 w-4" />
+                          SRT
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(exp.vtt_url)}
+                          disabled={!exp.vtt_url}
+                        >
+                          <FileText className="mr-1 h-4 w-4" />
+                          VTT
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendToOutreach(exp.id)}
+                        >
+                          <Send className="mr-1 h-4 w-4" />
+                          {t("videoHub.exports.sendToOutreach")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePublishClick(exp)}
+                          disabled={!youtubeConnected || exp.youtube_status === "published" || exp.youtube_status === "uploading"}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Youtube className="mr-1 h-4 w-4" />
+                          {exp.youtube_status === "published" 
+                            ? t("videoHub.youtube.published", "Published")
+                            : t("videoHub.youtube.publishButton", "Publish")
+                          }
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* YouTube Publish Dialog */}
+      {selectedExport && (
+        <YouTubePublishDialog
+          open={showPublishDialog}
+          onOpenChange={setShowPublishDialog}
+          projectName={projectMap.get(selectedExport.project_id)?.name || "Untitled"}
+          onPublish={handlePublish}
+          isPublishing={isPublishing}
+          defaults={youtubeDefaults}
+        />
+      )}
+    </>
   );
 }

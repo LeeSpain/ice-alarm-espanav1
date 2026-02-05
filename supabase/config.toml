@@ -107,3 +107,18 @@ verify_jwt = false
 
 [functions.video-render-queue]
 verify_jwt = false
+
+[functions.youtube-oauth-start]
+verify_jwt = false
+
+[functions.youtube-oauth-callback]
+verify_jwt = false
+
+[functions.youtube-integration-status]
+verify_jwt = false
+
+[functions.youtube-disconnect]
+verify_jwt = false
+
+[functions.youtube-publish]
+verify_jwt = false
