@@ -1,177 +1,192 @@
 
+# Complete Gmail SMTP Consolidation Plan
 
-# Complete Email System Consolidation Plan
+## Current State
 
-## Current Problem Summary
+After the previous changes, your system is configured for Resend (`provider: resend`), but you need **Gmail SMTP for ALL emails** since you don't have DNS access to verify a domain on Resend.
 
-You confirmed that:
-1. Test emails appear in **Gmail Sent folder** (icealarmespana@gmail.com) ✅
-2. Test emails are **NOT arriving** at recipient addresses ❌
-
-This indicates the **Gmail SMTP connection works**, but there's a **deliverability issue** - Gmail is silently dropping or delaying emails.
+**Database status**: `provider: resend` → needs to change to `provider: gmail`
 
 ---
 
-## Root Cause Analysis
+## Overview
 
-### Issue 1: Gmail Deliverability Problems
-Gmail SMTP has strict anti-spam policies. When sending from a Gmail account to external addresses, emails can be:
-- Delayed (greylist)
-- Sent to spam
-- Silently rejected if account has low reputation
-
-**Evidence**: The email log shows `status: sent` with `provider_message_id: null` - this means the SMTP handshake completed but Gmail didn't provide a tracking ID.
-
-### Issue 2: Inconsistent Email Architecture
-Your platform has **7 different functions** sending emails via **2 different methods**:
-
-| Function | Method | From Address | Working? |
-|----------|--------|--------------|----------|
-| `send-email` | Gmail SMTP | icealarmespana@gmail.com | ❓ Delivery issues |
-| `send-test-email` | Gmail SMTP | icealarmespana@gmail.com | ❓ Delivery issues |
-| `partner-register` | Resend API | onboarding@resend.dev | ⚠️ Test domain only |
-| `partner-admin-create` | Resend API | welcome@icealarm.es | ❌ Domain not verified |
-| `submit-registration` | Resend API | welcome@icealarm.es | ❌ Domain not verified |
-| `stripe-webhook` | Resend API | welcome@icealarm.es | ❌ Domain not verified |
-| `staff-register` | Resend API | noreply@icealarm.es | ❌ Domain not verified |
-| `send-member-update-request` | Resend API | noreply@icealarm.es | ❌ Domain not verified |
-| `partner-send-invite` | Resend API | partners@icealarm.es | ❌ Domain not verified |
-
-**Result**: Only `send-email` and `send-test-email` even attempt to send. All others fail silently because `icealarm.es` is not verified on Resend.
+This plan will consolidate ALL email sending to use Gmail SMTP through a single approach:
+- Switch database provider to Gmail
+- Update all 7 edge functions that currently call Resend API directly to use Gmail SMTP instead
 
 ---
 
-## Solution: Use Resend Test Domain for ALL Emails (Temporary)
+## Phase 1: Update Database Settings
 
-Since you can't verify your domain right now, we'll use Resend's test domain (`onboarding@resend.dev`) which works immediately.
+**Change `email_settings` table**:
+- `provider`: `resend` → `gmail`
+- `from_email`: `onboarding@resend.dev` → `icealarmespana@gmail.com`
 
-**Important Limitation**: With the test domain, emails can ONLY be sent to the email address that registered your Resend account.
+This ensures `send-email` and `send-test-email` functions use Gmail SMTP.
 
 ---
 
-## Implementation Plan
+## Phase 2: Add Gmail SMTP to All Direct-Calling Functions
 
-### Phase 1: Switch to Resend as Primary Provider
+These 7 functions currently call Resend API directly. Each needs to be updated to use Gmail SMTP instead:
 
-**File: Database `email_settings` table**
-- Change `provider` from `gmail` to `resend`
-- Change `from_email` to `onboarding@resend.dev`
+### Functions to Update
 
-This will make `send-email` and `send-test-email` use Resend instead of Gmail.
+| # | Function | Current Method | Change Required |
+|---|----------|----------------|-----------------|
+| 1 | `partner-register/index.ts` | Resend fetch API | Add Gmail SMTP |
+| 2 | `partner-admin-create/index.ts` | Resend SDK | Add Gmail SMTP |
+| 3 | `submit-registration/index.ts` | Resend SDK | Add Gmail SMTP |
+| 4 | `stripe-webhook/index.ts` | Resend SDK | Add Gmail SMTP |
+| 5 | `staff-register/index.ts` | Resend SDK | Add Gmail SMTP |
+| 6 | `send-member-update-request/index.ts` | Resend SDK | Add Gmail SMTP |
+| 7 | `partner-send-invite/index.ts` | Resend fetch API | Add Gmail SMTP |
 
-### Phase 2: Update All Direct Resend Calls
+### Implementation Approach
 
-Update all edge functions that call Resend directly to use the test domain:
+For each function:
 
-**1. partner-register/index.ts** (Line 244)
+1. **Import the SMTP client** at the top:
 ```typescript
-// Already using onboarding@resend.dev ✓ - No change needed
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 ```
 
-**2. partner-admin-create/index.ts** (Line 395)
+2. **Add a Gmail SMTP send helper** (consistent across all functions):
 ```typescript
-// Change from: "ICE Alarm <welcome@icealarm.es>"
-// To: "ICE Alarm <onboarding@resend.dev>"
+async function sendViaGmailSMTP(
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; error?: string }> {
+  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  if (!appPassword) {
+    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
+  }
+
+  try {
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: {
+          username: "icealarmespana@gmail.com",
+          password: appPassword,
+        },
+      },
+    });
+
+    await client.send({
+      from: "ICE Alarm España <icealarmespana@gmail.com>",
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    await client.close();
+    return { success: true };
+  } catch (error: any) {
+    console.error("Gmail SMTP error:", error);
+    return { success: false, error: error.message };
+  }
+}
 ```
 
-**3. submit-registration/index.ts** (Line 863)
-```typescript
-// Change from: "ICE Alarm <welcome@icealarm.es>"
-// To: "ICE Alarm <onboarding@resend.dev>"
-```
+3. **Replace Resend calls** with `sendViaGmailSMTP()` calls
 
-**4. stripe-webhook/index.ts** (Line 391)
-```typescript
-// Change from: "ICE Alarm <welcome@icealarm.es>"
-// To: "ICE Alarm <onboarding@resend.dev>"
-```
+---
 
-**5. staff-register/index.ts** (Line 232)
-```typescript
-// Change from: "ICE Alarm <noreply@icealarm.es>"
-// To: "ICE Alarm <onboarding@resend.dev>"
-```
+## Phase 3: Specific File Changes
 
-**6. send-member-update-request/index.ts** (Line 173)
-```typescript
-// Change from: "ICE Alarm España <noreply@icealarm.es>"
-// To: "ICE Alarm España <onboarding@resend.dev>"
-```
+### 1. `partner-register/index.ts` (Lines 237-259)
+- Remove Resend fetch call
+- Add Gmail SMTP helper
+- Call `sendViaGmailSMTP()` for verification email
 
-**7. partner-send-invite/index.ts** (Line ~107)
-```typescript
-// Change from: "ICE Alarm Partners <partners@icealarm.es>"
-// To: "ICE Alarm Partners <onboarding@resend.dev>"
-```
+### 2. `partner-admin-create/index.ts` (Lines 392-403)
+- Remove Resend SDK import
+- Add SMTP client import
+- Add Gmail SMTP helper
+- Replace `resend.emails.send()` with Gmail call
 
-**8. send-test-email/index.ts** (Line 102)
-```typescript
-// Change fallback from: "noreply@icealarm.es"
-// To: "onboarding@resend.dev"
-```
+### 3. `submit-registration/index.ts` (Lines 851-879)
+- Remove Resend SDK call
+- Add Gmail SMTP helper
+- Replace with Gmail send
 
-**9. send-email/index.ts** (Line 114)
-```typescript
-// Change fallback from: "noreply@icealarm.es"
-// To: "onboarding@resend.dev"
-```
+### 4. `stripe-webhook/index.ts` (Lines 390-403)
+- Remove Resend SDK import
+- Add SMTP client import
+- Add Gmail SMTP helper
+- Replace with Gmail send
 
-### Phase 3: Test All Email Flows
+### 5. `staff-register/index.ts` (Lines 231-238)
+- Remove Resend SDK import
+- Add SMTP client import
+- Add Gmail SMTP helper
+- Replace `resend.emails.send()` with Gmail call
 
-After deployment, test each flow:
-1. Send test email from Admin Settings → Should arrive
-2. Create a partner via admin → Welcome email should arrive
-3. Test partner registration flow → Verification email should arrive
-4. Test member registration → Confirmation email should arrive
+### 6. `send-member-update-request/index.ts` (Lines 170-180)
+- Remove Resend SDK import
+- Add SMTP client import
+- Add Gmail SMTP helper
+- Replace with Gmail call
+
+### 7. `partner-send-invite/index.ts` (Lines 142-169)
+- Remove Resend fetch call
+- Add Gmail SMTP helper
+- Replace with Gmail call
+
+---
+
+## Technical Requirements
+
+### Prerequisite: Valid Gmail App Password
+
+The `GMAIL_APP_PASSWORD` secret must contain a valid 16-character App Password from Google.
+
+**To verify/regenerate**:
+1. Log in to `icealarmespana@gmail.com`
+2. Go to https://myaccount.google.com/security
+3. Ensure 2-Step Verification is ON
+4. Go to App passwords → Generate new → Copy the 16-character code
+5. Update the secret if needed
+
+### Gmail SMTP Configuration
+- **Host**: smtp.gmail.com
+- **Port**: 465 (implicit TLS)
+- **Username**: icealarmespana@gmail.com
+- **Password**: `GMAIL_APP_PASSWORD` secret
+- **From**: ICE Alarm España `<icealarmespana@gmail.com>`
 
 ---
 
 ## Summary of Changes
 
-| File | Line | Change |
-|------|------|--------|
-| `email_settings` (DB) | - | provider: gmail → resend, from_email: onboarding@resend.dev |
-| `partner-admin-create/index.ts` | 395 | welcome@icealarm.es → onboarding@resend.dev |
-| `submit-registration/index.ts` | 863 | welcome@icealarm.es → onboarding@resend.dev |
-| `stripe-webhook/index.ts` | 391 | welcome@icealarm.es → onboarding@resend.dev |
-| `staff-register/index.ts` | 232 | noreply@icealarm.es → onboarding@resend.dev |
-| `send-member-update-request/index.ts` | 173 | noreply@icealarm.es → onboarding@resend.dev |
-| `partner-send-invite/index.ts` | 107 | partners@icealarm.es → onboarding@resend.dev |
-| `send-test-email/index.ts` | 102 | noreply@icealarm.es → onboarding@resend.dev |
-| `send-email/index.ts` | 114 | noreply@icealarm.es → onboarding@resend.dev |
+| Component | Before | After |
+|-----------|--------|-------|
+| Database `provider` | `resend` | `gmail` |
+| Database `from_email` | `onboarding@resend.dev` | `icealarmespana@gmail.com` |
+| 7 Edge Functions | Resend API calls | Gmail SMTP calls |
+| Email sender | Various (`@resend.dev`, `@icealarm.es`) | `icealarmespana@gmail.com` |
 
 ---
 
-## Future Production Setup
+## Testing Checklist
 
-When you have DNS access, to enable sending to ANY recipient:
-
-1. Go to https://resend.com/domains
-2. Add `icealarm.es`
-3. Add the required DNS records (SPF, DKIM, DMARC)
-4. Wait for verification
-5. Update all from addresses back to `@icealarm.es`
-
-This will give you professional emails that land in inboxes reliably.
+After implementation:
+- [ ] Send test email from Admin → Settings → Email
+- [ ] Create a test partner (admin-created) → Check for welcome email
+- [ ] Register as partner → Check for verification email
+- [ ] Complete member signup → Check for confirmation email
+- [ ] All emails should arrive from `icealarmespana@gmail.com`
 
 ---
 
-## Technical Details
+## Notes
 
-### Why Gmail SMTP Isn't Working for External Recipients
-
-Gmail has strict policies:
-1. **SPF/DKIM**: Gmail-originated emails may fail SPF checks when received by strict mail servers
-2. **Reputation**: Fresh accounts have low sender reputation
-3. **Volume limits**: Gmail limits external sends to ~500/day for free accounts
-4. **Spam filtering**: Other providers may mark Gmail SMTP as suspicious
-
-### Why Resend is Better
-
-Resend provides:
-- Dedicated IP reputation
-- Proper DKIM signing
-- Delivery tracking and webhooks
-- Higher send limits
-- Professional sender identity
-
+- All emails will show as coming from `icealarmespana@gmail.com`
+- Gmail SMTP has a limit of ~500 emails/day for free accounts
+- Emails may land in spam for external recipients if Gmail account has low sender reputation
+- When DNS access is available, you can switch to Resend with a verified domain for better deliverability
