@@ -4686,6 +4686,7 @@ export type Database = {
       video_exports: {
         Row: {
           created_at: string | null
+          format: string | null
           id: string
           mp4_url: string | null
           project_id: string
@@ -4702,6 +4703,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          format?: string | null
           id?: string
           mp4_url?: string | null
           project_id: string
@@ -4718,6 +4720,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          format?: string | null
           id?: string
           mp4_url?: string | null
           project_id?: string

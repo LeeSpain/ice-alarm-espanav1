@@ -3576,7 +3576,18 @@
       "noExportsDesc": "Rendered videos will appear here",
       "available": "exports available",
       "notAvailable": "File not available",
-      "sentToOutreach": "Export linked to AI Outreach"
+      "sentToOutreach": "Export linked to AI Outreach",
+      "files": "Files",
+      "download": "Download",
+      "copyLink": "Copy Link",
+      "linkCopied": "{{type}} link copied",
+      "downloading": "Downloading {{type}}...",
+      "thumbnail": "Thumbnail"
+    },
+    "variants": {
+      "title": "Render Variants",
+      "queued": "{{format}} variant queued",
+      "alreadyRendered": "Already rendered"
     },
     "gallery": {
       "title": "Video Gallery",

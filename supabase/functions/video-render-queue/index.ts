@@ -21,7 +21,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { project_id } = await req.json();
+    const { project_id, format_override } = await req.json();
 
     if (!project_id) {
       return new Response(
@@ -30,10 +30,10 @@ serve(async (req) => {
       );
     }
 
-    // Verify project exists and get current status
+    // Verify project exists and get data
     const { data: project, error: projectError } = await supabase
       .from("video_projects")
-      .select("id, name, status")
+      .select("id, name, status, format")
       .eq("id", project_id)
       .single();
 
@@ -44,13 +44,18 @@ serve(async (req) => {
       );
     }
 
-    // Update project status to "rendering"
-    await supabase
-      .from("video_projects")
-      .update({ status: "rendering" })
-      .eq("id", project_id);
+    // Determine format: use override if provided, otherwise use project default
+    const renderFormat = format_override || project.format;
 
-    // Create a render record with queued status
+    // Update project status to "rendering" (only if not already rendering)
+    if (project.status !== "rendering") {
+      await supabase
+        .from("video_projects")
+        .update({ status: "rendering" })
+        .eq("id", project_id);
+    }
+
+    // Create a render record with queued status (include format)
     const { data: render, error: renderError } = await supabase
       .from("video_renders")
       .insert({
@@ -86,6 +91,7 @@ serve(async (req) => {
           body: JSON.stringify({
             render_id: render.id,
             project_id,
+            format: renderFormat, // Pass the format to render
             token: WEBHOOK_SECRET,
           }),
         });
@@ -111,6 +117,7 @@ serve(async (req) => {
           JSON.stringify({
             success: true,
             render_id: render.id,
+            format: renderFormat,
             worker_job_id: workerResult.job_id,
             status: "queued",
             message: "Render queued successfully. The video will be available in the Exports tab once complete.",
@@ -146,13 +153,14 @@ serve(async (req) => {
     }
 
     // FALLBACK: Simulated rendering (for development/demo when no worker configured)
-    console.log(`[Queue] No RENDER_WORKER_URL configured - using simulated render`);
-    simulateRenderCompletion(supabaseUrl, supabaseServiceKey, render.id, project_id);
+    console.log(`[Queue] No RENDER_WORKER_URL configured - using simulated render for format: ${renderFormat}`);
+    simulateRenderCompletion(supabaseUrl, supabaseServiceKey, render.id, project_id, renderFormat);
 
     return new Response(
       JSON.stringify({
         success: true,
         render_id: render.id,
+        format: renderFormat,
         status: "queued",
         message: "Render queued successfully (simulated mode). The video will be available in the Exports tab once complete.",
         mode: "simulated",
@@ -184,7 +192,8 @@ async function simulateRenderCompletion(
   supabaseUrl: string, 
   supabaseKey: string, 
   renderId: string, 
-  projectId: string
+  projectId: string,
+  format: string
 ) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   
@@ -195,7 +204,7 @@ async function simulateRenderCompletion(
       .update({ status: "running", progress: 5, stage: "initializing" })
       .eq("id", renderId);
 
-    console.log(`[Render ${renderId}] Started (simulated) - Stage: initializing`);
+    console.log(`[Render ${renderId}] Started (simulated) - Stage: initializing, Format: ${format}`);
 
     // Progress through each stage
     for (const { stage, progress } of RENDER_STAGES) {
@@ -221,7 +230,7 @@ async function simulateRenderCompletion(
       .update({ status: "approved" })
       .eq("id", projectId);
 
-    // Create export record with demo video placeholder
+    // Create export record with demo video placeholder (include format)
     const demoVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
     const demoThumbnail = "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
     const demoVttUrl = null; // No captions in simulated mode
@@ -235,9 +244,10 @@ async function simulateRenderCompletion(
         srt_url: null,
         vtt_url: demoVttUrl,
         thumbnail_url: demoThumbnail,
+        format: format, // Store the format variant
       });
 
-    console.log(`[Render ${renderId}] Completed successfully (simulated)`);
+    console.log(`[Render ${renderId}] Completed successfully (simulated) - Format: ${format}`);
   } catch (err: unknown) {
     const error = err as Error;
     console.error(`[Render ${renderId}] Error:`, error);

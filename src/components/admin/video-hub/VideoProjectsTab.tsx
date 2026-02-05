@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
 import { VideoRenderDetailDialog } from "./VideoRenderDetailDialog";
+import { RenderVariantButtons } from "./RenderVariantButtons";
 
 interface Filters {
   language: string;
@@ -57,7 +58,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
   const { projects, isLoading, duplicateProject, updateProjectStatus, deleteProject, isDeleting } = useVideoProjects();
   const { templates } = useVideoTemplates();
   const { latestRenderByProject } = useVideoRenders();
-  const { exports } = useVideoExports();
+  const { exports, exportsByProjectAndFormat } = useVideoExports();
   
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -266,16 +267,16 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                 <TableHead>{t("videoHub.projects.duration")}</TableHead>
                 <TableHead>{t("videoHub.projects.status")}</TableHead>
                 <TableHead>{t("videoHub.projects.render")}</TableHead>
+                <TableHead>{t("videoHub.variants.title", "Variants")}</TableHead>
                 <TableHead>{t("videoHub.projects.lastEdited")}</TableHead>
-                <TableHead>{t("videoHub.projects.lastExport", "Last Export")}</TableHead>
                 <TableHead className="w-12">{t("videoHub.projects.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProjects.map((project) => {
                 const latestRender = latestRenderByProject.get(project.id);
-                const latestExport = getLatestExport(project.id);
                 const renderFailed = latestRender?.status === "failed";
+                const projectExports = exportsByProjectAndFormat.get(project.id);
                 
                 return (
                   <TableRow 
@@ -295,11 +296,15 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                     <TableCell>
                       <RenderProgressBadge render={latestRender} />
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(project.updated_at), "MMM d, yyyy")}
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <RenderVariantButtons 
+                        projectId={project.id}
+                        projectStatus={project.status}
+                        existingExports={projectExports}
+                      />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {latestExport ? format(new Date(latestExport.created_at), "MMM d") : "-"}
+                      {format(new Date(project.updated_at), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
@@ -319,7 +324,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                           </DropdownMenuItem>
                           
                           {/* Open Latest Export */}
-                          {latestExport && (
+                          {projectExports && projectExports.size > 0 && (
                             <DropdownMenuItem onClick={() => handleOpenLatestExport(project.id)}>
                               <Download className="mr-2 h-4 w-4" />
                               {t("videoHub.projects.openExport", "Open Latest Export")}
