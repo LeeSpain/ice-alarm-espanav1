@@ -1,31 +1,31 @@
 
 
-# Fix twilio-voice Deployment -- Missing Import Fix
+# Fix Phone Calls -- Deploy twilio-voice + Fix twilio-call-me
 
-## Problem
+## Root Cause
 
-The `twilio-voice` function is NOT deployed because line 1 still uses the old Deno `serve` import that causes a bundle timeout:
+Two issues are preventing calls from connecting:
 
-```
-Line 1:  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";  // BROKEN
-Line 11: serve(async (req) => {  // uses old serve
-```
+1. **`twilio-voice` is NOT deployed** (returns 404). The code was fixed in the last edit but the deployment either failed silently or was skipped. It needs to be explicitly deployed.
 
-The previous fix only updated the `createClient` import on line 2 but missed this one. No logs exist because the function never deployed.
+2. **`twilio-call-me` still uses the broken old import** on line 1:
+   ```
+   import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+   ```
+   This is the same legacy pattern that broke all the Facebook functions. It managed to deploy but is unreliable.
 
-## Fix (2 line changes, same file)
+## Fix
 
-**File: `supabase/functions/twilio-voice/index.ts`**
+### Step 1: Fix twilio-call-me (line 1 + line ~56)
+- Remove the old `serve` import on line 1
+- Change `serve(async (req) => {` to `Deno.serve(async (req) => {`
 
-1. **Delete line 1** -- remove `import { serve } from "https://deno.land/std@0.168.0/http/server.ts";`
-2. **Line 11** -- change `serve(async (req) => {` to `Deno.serve(async (req) => {`
-
-Then deploy the function.
+### Step 2: Deploy both functions
+- Deploy `twilio-voice` and `twilio-call-me` together
 
 ## What This Restores
-
 - Incoming calls answered by Isabel (AI voice assistant)
+- "Call and Speak" callback from the website
 - Speech recognition and AI conversation
-- "Call and Speak" callback connections
 - Member identification and personalized greetings
 
