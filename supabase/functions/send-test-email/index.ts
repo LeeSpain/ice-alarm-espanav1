@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { Resend } from "npm:resend@2.0.0";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,22 +36,20 @@ async function sendTestViaGmailSMTP(
     // IMPORTANT: In this runtime, STARTTLS on 587 has proven unreliable.
     // Force implicit TLS over 465 for Gmail SMTP.
     const port = 465;
-    const client = new SMTPClient({
-      connection: {
-        hostname: settings.gmail_smtp_host || "smtp.gmail.com",
-        port: port,
-        tls: true,
-        auth: {
-          username: settings.gmail_smtp_user,
-          password: appPassword,
-        },
+    const transporter = nodemailer.createTransport({
+      host: settings.gmail_smtp_host || "smtp.gmail.com",
+      port: port,
+      secure: true,
+      auth: {
+        user: settings.gmail_smtp_user,
+        pass: appPassword,
       },
     });
 
     const fromName = settings.from_name || "ICE Alarm España";
     const fromEmail = settings.from_email || settings.gmail_smtp_user;
 
-    await client.send({
+    await transporter.sendMail({
       from: `${fromName} <${fromEmail}>`,
       to: toEmail,
       subject: "Test Email - ICE Alarm Email System",
@@ -61,8 +59,6 @@ async function sendTestViaGmailSMTP(
         "X-ICE-Type": "test",
       },
     });
-
-    await client.close();
 
     return { success: true };
   } catch (error: any) {

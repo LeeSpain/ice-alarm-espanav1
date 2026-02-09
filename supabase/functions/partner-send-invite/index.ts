@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 // Gmail SMTP helper function
 async function sendViaGmailSMTP(
@@ -14,26 +14,23 @@ async function sendViaGmailSMTP(
   }
 
   try {
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: {
-          username: "icealarmespana@gmail.com",
-          password: appPassword,
-        },
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "icealarmespana@gmail.com",
+        pass: appPassword,
       },
     });
 
-    await client.send({
+    await transporter.sendMail({
       from: "ICE Alarm España <icealarmespana@gmail.com>",
       to: to,
       subject: subject,
       html: html,
     });
 
-    await client.close();
     return { success: true };
   } catch (error: unknown) {
     console.error("Gmail SMTP error:", error);
