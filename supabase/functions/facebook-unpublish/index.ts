@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,31 +129,39 @@ Deno.serve(async (req) => {
     let blogRemoved = false;
     let blogsDeletedCount = 0;
 
-    // Build OR condition for deletion
-    const orConditions: string[] = [];
-    orConditions.push(`social_post_id.eq.${post_id}`);
-    if (post.facebook_post_id) {
-      orConditions.push(`facebook_post_id.eq.${post.facebook_post_id}`);
-    }
-
-    const { data: matchingBlogs, error: blogFetchError } = await supabase
+    // Safe queries - no string interpolation
+    const { data: blogsBySocial } = await supabase
       .from("blog_posts")
       .select("id")
-      .or(orConditions.join(","));
+      .eq("social_post_id", post_id);
 
-    if (matchingBlogs && matchingBlogs.length > 0 && !blogFetchError) {
-      const blogIds = matchingBlogs.map(b => b.id);
+    let blogsByFb: { id: string }[] = [];
+    if (post.facebook_post_id) {
+      const { data } = await supabase
+        .from("blog_posts")
+        .select("id")
+        .eq("facebook_post_id", post.facebook_post_id);
+      blogsByFb = data || [];
+    }
+
+    // Merge unique IDs
+    const allBlogIds = [...new Set([
+      ...(blogsBySocial || []).map(b => b.id),
+      ...blogsByFb.map(b => b.id),
+    ])];
+
+    if (allBlogIds.length > 0) {
       const { error: blogDeleteError } = await supabase
         .from("blog_posts")
         .delete()
-        .in("id", blogIds);
+        .in("id", allBlogIds);
 
       if (blogDeleteError) {
         console.error("[facebook-unpublish] Failed to delete blog posts:", blogDeleteError);
       } else {
         blogRemoved = true;
-        blogsDeletedCount = blogIds.length;
-        console.log(`[facebook-unpublish] Deleted ${blogsDeletedCount} blog post(s): ${blogIds.join(", ")}`);
+        blogsDeletedCount = allBlogIds.length;
+        console.log(`[facebook-unpublish] Deleted ${blogsDeletedCount} blog post(s): ${allBlogIds.join(", ")}`);
       }
     } else {
       console.log("[facebook-unpublish] No linked blog posts found");
