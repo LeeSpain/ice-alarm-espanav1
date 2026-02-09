@@ -1,44 +1,57 @@
 
 
-# Restore Phone Calls -- Complete Fix
+# Fix twilio-voice Deployment -- Split Large Function
 
-## Issues Found
+## Root Cause
 
-### Issue 1: `twilio-voice` function not deployed (404)
-The code is correct and uses `Deno.serve()`, but the function is returning 404. It was never successfully deployed despite multiple attempts. The function needs to be deployed again -- this time we will verify it works by calling it directly after deployment.
+The `twilio-voice` function is **1015 lines** in a single file. Despite correct code, it has **never successfully deployed** across multiple attempts. Every call returns 404.
 
-### Issue 2: Twilio Trial Account Limitation
-The `twilio-call-me` logs reveal Twilio error **21219**:
-```
-"The number +34000000000 is unverified. Trial accounts may only make calls to verified numbers."
-```
-This is a **Twilio account restriction**, not a code bug. Trial Twilio accounts can ONLY call phone numbers that have been manually verified in the Twilio Console.
+Your Twilio account is active, has credit, and test-twilio confirms connectivity. The problem is purely that this function won't deploy.
 
-## Plan
+## Diagnosis
 
-### Step 1: Deploy `twilio-voice`
-- Force deploy the `twilio-voice` function (the code is already correct)
-- Immediately test it by calling the function directly to confirm it's live and responding with valid TwiML
+Large edge functions can silently fail during deployment due to:
+- Compilation timeouts on cold start
+- Memory pressure during bundling
+- The deployment system timing out before the function registers
 
-### Step 2: Verify `twilio-call-me` is live
-- Test `twilio-call-me` endpoint to confirm it responds correctly
+Other functions (test-twilio, twilio-call-me, twilio-sms) all deploy fine -- they are all under 200 lines.
 
-### Step 3: Twilio Account Action (requires YOU, not code)
-To make calls to any phone number, you must do ONE of these:
-- **Option A**: Upgrade your Twilio account from Trial to a paid account at twilio.com/console
-- **Option B**: If staying on Trial, add your personal phone number as a "Verified Caller ID" in Twilio Console > Phone Numbers > Verified Caller IDs
+## Plan: Simplify and Redeploy
 
-No code changes are needed -- this is purely a deployment and Twilio account configuration issue.
+### Step 1: Trim the function to essentials
+
+The function handles 7 different actions in one file. We will **remove non-critical code paths** to reduce the file size significantly while keeping all call-handling functionality:
+
+- **Keep**: `incoming`, `transcription`, `timeout`, `status`, `wait` actions (these handle the voice call flow with Isabel)
+- **Simplify**: The `status` handler (lines 693-907) contains ~200 lines of CRM note generation and AI summary code. Move the heavy AI summary generation into a separate lightweight function or simplify to basic logging.
+- **Remove**: The outbound call section (lines 930-1004) can be extracted into a separate `twilio-outbound` function -- this is only used by admin staff making manual calls, not for inbound calling
+
+Target: Reduce from 1015 lines to approximately 600-700 lines.
+
+### Step 2: Deploy and immediately test
+
+- Deploy the trimmed `twilio-voice`
+- Call the endpoint directly to verify it responds with valid TwiML
+- If successful, call the actual phone number to confirm Isabel answers
+
+### Step 3: Create `twilio-outbound` (optional, if needed)
+
+If outbound staff calls are needed later, the extracted code goes into its own function.
+
+## What This Restores
+
+- Calling the number (+18143833159) connects to Isabel
+- Isabel greets callers by name (if known)
+- Speech recognition and AI conversation
+- Multi-turn conversation with memory
+- Escalation to human operators
+- Call logging and CRM notes (simplified)
 
 ## Technical Details
 
-- `twilio-voice/index.ts`: 1014 lines, already uses `Deno.serve()` and `npm:@supabase/supabase-js@2` -- code is correct
-- `twilio-call-me/index.ts`: Already fixed in last edit, uses `Deno.serve()` -- code is correct
-- Both functions have `verify_jwt = false` in `config.toml` -- correct for Twilio webhooks
+Files to modify:
+- `supabase/functions/twilio-voice/index.ts` -- reduce from 1015 to ~650 lines by extracting outbound call logic and simplifying the CRM summary in the status handler
+- `supabase/config.toml` -- no changes needed (already configured)
 
-## What This Restores
-- Incoming calls answered by Isabel (AI voice assistant)
-- "Call and Speak" callback from the website
-- Speech recognition and AI conversation
-- Member identification and personalized greetings
-
+No new dependencies. No database changes.
