@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -208,12 +208,23 @@ serve(async (req) => {
         
         console.log("Incoming call from:", from, "CallSid:", callSid, "ConversationId:", conversationIdParam, "CallerName:", callerName || "(none)");
 
-        // Try to find existing member by phone
-        const { data: member } = await supabase
+        // Try to find existing member by phone (separate queries to avoid SQL injection)
+        let member = null;
+        const { data: memberByExact } = await supabase
           .from("members")
           .select("id, first_name, last_name, preferred_language")
-          .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
+          .eq("phone", from)
           .maybeSingle();
+        if (memberByExact) {
+          member = memberByExact;
+        } else {
+          const { data: memberByNormalized } = await supabase
+            .from("members")
+            .select("id, first_name, last_name, preferred_language")
+            .eq("phone", from.replace("+", ""))
+            .maybeSingle();
+          member = memberByNormalized;
+        }
 
         // Determine language from param or member preference (default Spanish for Spain)
         const langParam = url.searchParams.get("lang");
