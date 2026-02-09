@@ -1,27 +1,40 @@
 
 
-# Fix Phone Calls -- Deploy twilio-voice + Fix twilio-call-me
+# Restore Phone Calls -- Complete Fix
 
-## Root Cause
+## Issues Found
 
-Two issues are preventing calls from connecting:
+### Issue 1: `twilio-voice` function not deployed (404)
+The code is correct and uses `Deno.serve()`, but the function is returning 404. It was never successfully deployed despite multiple attempts. The function needs to be deployed again -- this time we will verify it works by calling it directly after deployment.
 
-1. **`twilio-voice` is NOT deployed** (returns 404). The code was fixed in the last edit but the deployment either failed silently or was skipped. It needs to be explicitly deployed.
+### Issue 2: Twilio Trial Account Limitation
+The `twilio-call-me` logs reveal Twilio error **21219**:
+```
+"The number +34000000000 is unverified. Trial accounts may only make calls to verified numbers."
+```
+This is a **Twilio account restriction**, not a code bug. Trial Twilio accounts can ONLY call phone numbers that have been manually verified in the Twilio Console.
 
-2. **`twilio-call-me` still uses the broken old import** on line 1:
-   ```
-   import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-   ```
-   This is the same legacy pattern that broke all the Facebook functions. It managed to deploy but is unreliable.
+## Plan
 
-## Fix
+### Step 1: Deploy `twilio-voice`
+- Force deploy the `twilio-voice` function (the code is already correct)
+- Immediately test it by calling the function directly to confirm it's live and responding with valid TwiML
 
-### Step 1: Fix twilio-call-me (line 1 + line ~56)
-- Remove the old `serve` import on line 1
-- Change `serve(async (req) => {` to `Deno.serve(async (req) => {`
+### Step 2: Verify `twilio-call-me` is live
+- Test `twilio-call-me` endpoint to confirm it responds correctly
 
-### Step 2: Deploy both functions
-- Deploy `twilio-voice` and `twilio-call-me` together
+### Step 3: Twilio Account Action (requires YOU, not code)
+To make calls to any phone number, you must do ONE of these:
+- **Option A**: Upgrade your Twilio account from Trial to a paid account at twilio.com/console
+- **Option B**: If staying on Trial, add your personal phone number as a "Verified Caller ID" in Twilio Console > Phone Numbers > Verified Caller IDs
+
+No code changes are needed -- this is purely a deployment and Twilio account configuration issue.
+
+## Technical Details
+
+- `twilio-voice/index.ts`: 1014 lines, already uses `Deno.serve()` and `npm:@supabase/supabase-js@2` -- code is correct
+- `twilio-call-me/index.ts`: Already fixed in last edit, uses `Deno.serve()` -- code is correct
+- Both functions have `verify_jwt = false` in `config.toml` -- correct for Twilio webhooks
 
 ## What This Restores
 - Incoming calls answered by Isabel (AI voice assistant)
