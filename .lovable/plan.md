@@ -2,44 +2,27 @@
 
 # Fix Facebook Connection - Deploy Missing Edge Function
 
-## Problem
+## What's Wrong
 
-The Facebook Page ID and Access Token are both correctly saved in the database and working (posts have been published successfully in the past). However, the `facebook-metrics` edge function is **not deployed**, which causes:
+The Facebook "Test Connection" button fails because the backend function that handles it was never deployed. Additionally, the function uses an outdated import style (`esm.sh`) that causes deployment timeouts.
 
-- The "Test Connection" button in Media Manager to fail silently (returns 404)
-- All metrics refresh operations to fail
-- The connection status to remain "unknown" instead of showing "Connected"
+## Fix (2 changes, 1 file)
 
-The Settings page shows "Configured" correctly since it checks database values directly.
+**File: `supabase/functions/facebook-metrics/index.ts`**
 
-## Root Cause
+1. Change line 1 from `esm.sh` to `npm:` import to prevent bundle timeout:
+   - Before: `import { createClient } from "https://esm.sh/@supabase/supabase-js@2";`
+   - After: `import { createClient } from "npm:@supabase/supabase-js@2";`
 
-The `facebook-metrics` function code exists at `supabase/functions/facebook-metrics/index.ts` and is registered in `supabase/config.toml`, but it was never deployed (or was lost during a previous deployment cycle).
+2. Deploy the function.
 
-## Fix
+## What This Restores
 
-**Deploy the `facebook-metrics` edge function.** No code changes are needed -- just deployment.
+- "Test Connection" button will work in Media Manager
+- Per-post and bulk metrics refresh (reactions, comments, shares, impressions)
+- Connection status badge showing "Connected"
 
-This single action will restore:
-- "Test Connection" functionality in Media Manager
-- Per-post and bulk metrics refresh
-- Connection status badge (should show green "Connected")
-- Facebook engagement analytics (reactions, comments, shares, impressions)
+## No Other Changes Needed
 
-## Verification Steps
-
-After deployment:
-1. Navigate to Admin > Media Manager > Published posts
-2. Click "Test Connection" -- should show green "Connected" badge
-3. Click "Refresh All" -- should fetch live engagement data from Facebook
-
-## Technical Note
-
-All edge functions in the chain are consistent in their key usage (`settings_facebook_page_id` and `settings_facebook_page_access_token`):
-- `facebook-publish` -- reads correctly
-- `facebook-unpublish` -- reads correctly
-- `facebook-metrics` -- reads correctly (just needs deploying)
-- `save-api-keys` -- writes correctly with `settings_` prefix
-
-No code changes required.
+All database keys, other Facebook functions (`facebook-publish`, `facebook-unpublish`), and frontend code are already correctly configured.
 
