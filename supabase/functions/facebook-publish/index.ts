@@ -204,62 +204,69 @@ Deno.serve(async (req) => {
     let blogSlug: string | null = null;
 
     try {
-      // Generate title and slug
-      const title = extractTitle(postText);
-      let slug = generateSlug(title);
-
-      // Check for duplicate slug
-      const { data: existingSlug } = await adminClient
+      // Check if a blog post already exists for this social post (re-publish case)
+      const { data: existingBlog } = await adminClient
         .from("blog_posts")
-        .select("slug")
-        .eq("slug", slug)
+        .select("id, slug")
+        .eq("social_post_id", post_id)
         .maybeSingle();
 
-      if (existingSlug) {
-        slug = `${slug}-${Date.now()}`;
-      }
-
-      // Generate AI intro
-      console.log("Generating AI intro...");
-      const aiIntro = await generateAIIntro(postText, language);
-      console.log("AI intro generated:", aiIntro ? "success" : "skipped/failed");
-
-      // Compose content with AI intro
-      const ctaLine = language === "es"
-        ? `\n\nConoce más sobre los servicios de ICE Alarm en ${SITE_URL}`
-        : `\n\nLearn more about ICE Alarm services at ${SITE_URL}`;
-
-      let composedContent: string;
-      if (aiIntro) {
-        composedContent = `${aiIntro}\n\n---\n\n${postText}${ctaLine}`;
+      if (existingBlog) {
+        // Reuse existing blog post
+        blogPostId = existingBlog.id;
+        blogSlug = existingBlog.slug;
+        console.log("Reusing existing blog post:", blogPostId);
       } else {
-        composedContent = `${postText}${ctaLine}`;
-      }
+        // Generate title and slug
+        const title = extractTitle(postText);
+        let slug = generateSlug(title);
 
-      const excerpt = generateExcerpt(postText);
+        const { data: existingSlug } = await adminClient
+          .from("blog_posts")
+          .select("slug")
+          .eq("slug", slug)
+          .maybeSingle();
 
-      // Create blog post
-      const { data: blogPost, error: blogError } = await adminClient.from("blog_posts").insert({
-        title,
-        slug,
-        content: composedContent,
-        excerpt,
-        ai_intro: aiIntro,
-        language,
-        published: true,
-        published_at: new Date().toISOString(),
-        social_post_id: post_id,
-        image_url: post.image_url,
-        seo_title: title,
-        seo_description: excerpt,
-      }).select("id, slug").single();
+        if (existingSlug) {
+          slug = `${slug}-${Date.now()}`;
+        }
 
-      if (blogError) {
-        console.error("Error creating blog post:", blogError);
-      } else {
-        blogPostId = blogPost?.id;
-        blogSlug = blogPost?.slug;
-        console.log("Blog post created successfully:", blogPostId);
+        console.log("Generating AI intro...");
+        const aiIntro = await generateAIIntro(postText, language);
+        console.log("AI intro generated:", aiIntro ? "success" : "skipped/failed");
+
+        const ctaLine = language === "es"
+          ? `\n\nConoce más sobre los servicios de ICE Alarm en ${SITE_URL}`
+          : `\n\nLearn more about ICE Alarm services at ${SITE_URL}`;
+
+        const composedContent = aiIntro
+          ? `${aiIntro}\n\n---\n\n${postText}${ctaLine}`
+          : `${postText}${ctaLine}`;
+
+        const excerpt = generateExcerpt(postText);
+
+        const { data: blogPost, error: blogError } = await adminClient.from("blog_posts").insert({
+          title,
+          slug,
+          content: composedContent,
+          excerpt,
+          ai_intro: aiIntro,
+          language,
+          published: true,
+          published_at: new Date().toISOString(),
+          social_post_id: post_id,
+          image_url: post.image_url,
+          seo_title: title,
+          seo_description: excerpt,
+        }).select("id, slug").single();
+
+        if (blogError) {
+          console.error("Error creating blog post:", blogError);
+        } else {
+          blogPostId = blogPost?.id;
+          blogSlug = blogPost?.slug;
+          console.log("Blog post created successfully:", blogPostId);
+        }
       }
     } catch (blogCreationError) {
       console.error("Blog post creation failed:", blogCreationError);
