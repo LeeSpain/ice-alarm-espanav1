@@ -1,41 +1,84 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const VERSION = "v1.0.0";
+const VERSION = "v2.0.0";
 const FN = "voice-handler";
 
+const FALLBACK_TWIML =
+  `<?xml version="1.0" encoding="UTF-8"?>` +
+  `<Response>` +
+  `<Say language="es-ES" voice="Polly.Lucia">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>` +
+  `<Say language="en-GB" voice="Polly.Amy">Thank you for calling ICE Alarm. An operator will assist you shortly.</Say>` +
+  `<Hangup/>` +
+  `</Response>`;
+
+const XML_HEADERS: HeadersInit = {
+  "Content-Type": "application/xml; charset=utf-8",
+  "Cache-Control": "no-store",
+  "Access-Control-Allow-Origin": "*",
+};
+
+const JSON_HEADERS: HeadersInit = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store",
+  "Access-Control-Allow-Origin": "*",
+};
+
 function esc(t: string): string {
-  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return t
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function twiml(body: string): Response {
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`,
+    { status: 200, headers: XML_HEADERS },
+  );
+}
+
+function safeFallback(): Response {
+  return new Response(FALLBACK_TWIML, { status: 200, headers: XML_HEADERS });
 }
 
 Deno.serve(async (req) => {
-  // CORS
+  // ── CORS ──
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
       },
     });
   }
 
-  // Healthcheck
+  // ── Healthcheck ──
   if (req.method === "GET") {
-    return new Response(`OK ${VERSION}`, { status: 200, headers: { "Content-Type": "text/plain" } });
+    return new Response(`OK ${VERSION}`, {
+      status: 200,
+      headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
+    });
   }
 
-  const xh = { "Content-Type": "application/xml; charset=utf-8", "Access-Control-Allow-Origin": "*" };
-  const jh = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
-
-  const url = new URL(req.url);
-  const action = url.searchParams.get("action") || "incoming";
-
+  // ── POST handler — everything wrapped in try/catch ──
   try {
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "incoming";
+
+    console.log(
+      `[${FN} ${VERSION}] ${req.method} action=${action} url=${req.url}`,
+    );
+
     const sb = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
     const baseUrl = Deno.env.get("SUPABASE_URL")!;
 
+    // Load voice settings once
     const { data: settings } = await sb
       .from("system_settings")
       .select("key, value")
@@ -52,7 +95,9 @@ Deno.serve(async (req) => {
       ]);
 
     const cfg: Record<string, string> = {};
-    settings?.forEach((s) => { cfg[s.key] = s.value; });
+    settings?.forEach((s) => {
+      cfg[s.key] = s.value;
+    });
 
     const getSetting = (key: string, fallback: string): string => {
       const v = cfg[key];
@@ -61,47 +106,85 @@ Deno.serve(async (req) => {
 
     // ─── WAIT ──────────────────────────────────────────
     if (action === "wait") {
-      return new Response(
-        `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+      return twiml(
         `<Say language="es-ES" voice="Polly.Lucia">${esc(getSetting("voice_hold_es", "Por favor espere."))}</Say>` +
-        `<Say language="en-GB" voice="Polly.Amy">${esc(getSetting("voice_hold_en", "Please hold."))}</Say>` +
-        `<Pause length="10"/></Response>`,
-        { headers: xh },
+          `<Say language="en-GB" voice="Polly.Amy">${esc(getSetting("voice_hold_en", "Please hold."))}</Say>` +
+          `<Pause length="10"/>`,
       );
     }
+
+    // Parse form data for all remaining actions
+    let fd: FormData;
+    try {
+      fd = await req.formData();
+    } catch {
+      console.error(`[${FN} ${VERSION}] Failed to parse formData`);
+      return safeFallback();
+    }
+
+    const callSid = (fd.get("CallSid") as string) || "";
+    const from = (fd.get("From") as string) || "";
+    const to = (fd.get("To") as string) || "";
+
+    console.log(
+      `[${FN} ${VERSION}] CallSid=${callSid} From=${from} To=${to} Action=${action}`,
+    );
 
     // ─── INCOMING ──────────────────────────────────────
     if (action === "incoming") {
       try {
-        const fd = await req.formData();
-        const from = fd.get("From") as string;
-        const to = fd.get("To") as string;
-        const callSid = fd.get("CallSid") as string;
-        const direction = fd.get("Direction") as string;
+        const direction = (fd.get("Direction") as string) || "";
         const callerNameParam = url.searchParams.get("caller_name");
-        const callerName = callerNameParam ? decodeURIComponent(callerNameParam).replace(/[<>&"']/g, "").trim() : "";
+        const callerName = callerNameParam
+          ? decodeURIComponent(callerNameParam)
+              .replace(/[<>&"']/g, "")
+              .trim()
+          : "";
         const conversationParam = url.searchParams.get("conversation_id");
         const leadParam = url.searchParams.get("lead_id");
 
-        console.log(`[${FN} ${VERSION}] Incoming call: ${from} ${callSid} ${callerName || "anonymous"}`);
+        console.log(
+          `[${FN} ${VERSION}] Incoming call: ${from} ${callSid} ${callerName || "anonymous"}`,
+        );
 
+        // Look up member
         let member: any = null;
-        const { data: m1 } = await sb.from("members").select("id, first_name, last_name, preferred_language").eq("phone", from).maybeSingle();
+        const { data: m1 } = await sb
+          .from("members")
+          .select("id, first_name, last_name, preferred_language")
+          .eq("phone", from)
+          .maybeSingle();
         if (m1) {
           member = m1;
         } else {
-          const { data: m2 } = await sb.from("members").select("id, first_name, last_name, preferred_language").eq("phone", from.replace("+", "")).maybeSingle();
+          const { data: m2 } = await sb
+            .from("members")
+            .select("id, first_name, last_name, preferred_language")
+            .eq("phone", from.replace("+", ""))
+            .maybeSingle();
           member = m2;
         }
 
-        const lang = url.searchParams.get("lang") || member?.preferred_language || "es";
+        const lang =
+          url.searchParams.get("lang") ||
+          member?.preferred_language ||
+          "es";
         const twimlLang = lang === "es" ? "es-ES" : "en-GB";
 
+        // Conversation tracking
         let convId = conversationParam || null;
         if (convId) {
-          const { data: existing } = await sb.from("conversations").select("id").eq("id", convId).maybeSingle();
+          const { data: existing } = await sb
+            .from("conversations")
+            .select("id")
+            .eq("id", convId)
+            .maybeSingle();
           if (existing) {
-            const upd: any = { source: "mixed", last_channel: "voice", last_message_at: new Date().toISOString() };
+            const upd: any = {
+              source: "mixed",
+              last_channel: "voice",
+              last_message_at: new Date().toISOString(),
+            };
             if (leadParam) upd.lead_id = leadParam;
             await sb.from("conversations").update(upd).eq("id", convId);
           } else {
@@ -118,39 +201,70 @@ Deno.serve(async (req) => {
             last_message_at: new Date().toISOString(),
           };
           if (leadParam) ins.lead_id = leadParam;
-          const { data: newConv } = await sb.from("conversations").insert(ins).select("id").single();
+          const { data: newConv } = await sb
+            .from("conversations")
+            .insert(ins)
+            .select("id")
+            .single();
           convId = newConv?.id || null;
         }
 
+        // Voice call session
         try {
           await sb.from("voice_call_sessions").insert({
-            call_sid: callSid, caller_phone: from, member_id: member?.id || null,
-            language: twimlLang, status: "active", messages: [], conversation_id: convId,
+            call_sid: callSid,
+            caller_phone: from,
+            member_id: member?.id || null,
+            language: twimlLang,
+            status: "active",
+            messages: [],
+            conversation_id: convId,
           });
         } catch {
           await sb.from("voice_call_sessions").insert({
-            call_sid: callSid, caller_phone: from, member_id: member?.id || null,
-            language: twimlLang, status: "active", messages: [],
+            call_sid: callSid,
+            caller_phone: from,
+            member_id: member?.id || null,
+            language: twimlLang,
+            status: "active",
+            messages: [],
           });
         }
 
+        // Conversation call record
         if (convId) {
           try {
             await sb.from("conversation_calls").insert({
-              conversation_id: convId, call_sid: callSid,
-              direction: direction?.includes("outbound") ? "outbound" : "inbound",
-              from_number: from, to_number: to,
-              started_at: new Date().toISOString(), status: "initiated",
+              conversation_id: convId,
+              call_sid: callSid,
+              direction: direction?.includes("outbound")
+                ? "outbound"
+                : "inbound",
+              from_number: from,
+              to_number: to,
+              started_at: new Date().toISOString(),
+              status: "initiated",
             });
           } catch {}
         }
 
         if (convId && member?.id) {
-          await sb.from("conversations").update({ member_id: member.id }).eq("id", convId).is("member_id", null);
+          await sb
+            .from("conversations")
+            .update({ member_id: member.id })
+            .eq("id", convId)
+            .is("member_id", null);
         }
 
-        const recEs = getSetting("voice_recording_notice_es", "Esta llamada puede ser grabada.");
-        const recEn = getSetting("voice_recording_notice_en", "This call may be recorded.");
+        // Build greeting
+        const recEs = getSetting(
+          "voice_recording_notice_es",
+          "Esta llamada puede ser grabada.",
+        );
+        const recEn = getSetting(
+          "voice_recording_notice_en",
+          "This call may be recorded.",
+        );
         const name = member?.first_name || callerName || "";
 
         const greetEs = name
@@ -161,10 +275,13 @@ Deno.serve(async (req) => {
           ? `Hello ${name}, welcome to ICE Alarm. I'm Isabel. ${recEn} How can I help?`
           : `${getSetting("voice_greeting_en", "Thank you for calling ICE Alarm. I'm Isabel.")} ${recEn} How can I help?`;
 
+        // Log greeting as conversation message
         if (convId) {
           try {
             await sb.from("conversation_messages").insert({
-              conversation_id: convId, channel: "voice", role: "assistant",
+              conversation_id: convId,
+              channel: "voice",
+              role: "assistant",
               content: lang === "es" ? greetEs : greetEn,
               meta: { callSid, type: "greeting" },
             });
@@ -175,77 +292,90 @@ Deno.serve(async (req) => {
           ? `${baseUrl}/functions/v1/${FN}?action=transcription&conversation_id=${encodeURIComponent(convId)}`
           : `${baseUrl}/functions/v1/${FN}?action=transcription`;
 
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+        return twiml(
           `<Say language="es-ES" voice="Polly.Lucia">${esc(greetEs)}</Say>` +
-          `<Pause length="1"/>` +
-          `<Say language="en-GB" voice="Polly.Amy">${esc(greetEn)}</Say>` +
-          `<Gather input="speech" action="${txUrl}" language="${twimlLang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>` +
-          `</Response>`,
-          { headers: xh },
+            `<Pause length="1"/>` +
+            `<Say language="en-GB" voice="Polly.Amy">${esc(greetEn)}</Say>` +
+            `<Gather input="speech" action="${txUrl}" language="${twimlLang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>`,
         );
       } catch (e) {
         console.error(`[${FN} ${VERSION}] Incoming error:`, e);
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+        return twiml(
           `<Say language="es-ES" voice="Polly.Lucia">Gracias por llamar. Un operador le atenderá.</Say>` +
-          `<Enqueue waitUrl="${baseUrl}/functions/v1/${FN}?action=wait">ice-alarm-queue</Enqueue>` +
-          `</Response>`,
-          { headers: xh },
+            `<Enqueue waitUrl="${baseUrl}/functions/v1/${FN}?action=wait">ice-alarm-queue</Enqueue>`,
         );
       }
     }
 
     // ─── TRANSCRIPTION ─────────────────────────────────
     if (action === "transcription") {
-      const fd = await req.formData();
       const speech = (fd.get("SpeechResult") as string) || "";
-      const callSid = fd.get("CallSid") as string;
       const confidence = fd.get("Confidence") as string;
       const convParam = url.searchParams.get("conversation_id");
 
-      console.log(`[${FN} ${VERSION}] Speech: ${speech} Confidence: ${confidence}`);
+      console.log(
+        `[${FN} ${VERSION}] Speech: ${speech} Confidence: ${confidence}`,
+      );
 
       if (!speech.trim()) {
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
-          `<Redirect method="POST">${baseUrl}/functions/v1/${FN}?action=timeout&amp;callSid=${encodeURIComponent(callSid)}</Redirect>` +
-          `</Response>`,
-          { headers: xh },
+        return twiml(
+          `<Redirect method="POST">${baseUrl}/functions/v1/${FN}?action=timeout&amp;callSid=${encodeURIComponent(callSid)}</Redirect>`,
         );
       }
 
-      const { data: session } = await sb.from("voice_call_sessions").select("*").eq("call_sid", callSid).single();
+      const { data: session } = await sb
+        .from("voice_call_sessions")
+        .select("*")
+        .eq("call_sid", callSid)
+        .single();
       if (!session) {
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response><Say language="es-ES" voice="Polly.Lucia">Error técnico.</Say><Hangup/></Response>`,
-          { headers: xh },
+        return twiml(
+          `<Say language="es-ES" voice="Polly.Lucia">Error técnico.</Say><Hangup/>`,
         );
       }
 
-      const messages = (session.messages as Array<{ role: string; content: string }>) || [];
+      const messages =
+        (session.messages as Array<{ role: string; content: string }>) || [];
       messages.push({ role: "user", content: speech });
       const convId = convParam || session.conversation_id;
 
       if (convId) {
         try {
           await sb.from("conversation_messages").insert({
-            conversation_id: convId, channel: "voice", role: "user",
+            conversation_id: convId,
+            channel: "voice",
+            role: "user",
             content: speech,
-            meta: { callSid, confidence: confidence ? parseFloat(confidence) : null },
+            meta: {
+              callSid,
+              confidence: confidence ? parseFloat(confidence) : null,
+            },
           });
         } catch {}
       }
 
       let lang = session.language;
       if (messages.length === 1) {
-        lang = /\b(hola|gracias|buenos|buenas|sí|quiero|necesito|por favor|ayuda)\b/i.test(speech) ? "es-ES" : "en-GB";
-        await sb.from("voice_call_sessions").update({ language: lang }).eq("call_sid", callSid);
+        lang =
+          /\b(hola|gracias|buenos|buenas|sí|quiero|necesito|por favor|ayuda)\b/i.test(
+            speech,
+          )
+            ? "es-ES"
+            : "en-GB";
+        await sb
+          .from("voice_call_sessions")
+          .update({ language: lang })
+          .eq("call_sid", callSid);
       }
 
-      await sb.from("voice_call_sessions").update({
-        messages, timeout_count: 0, updated_at: new Date().toISOString(),
-      }).eq("call_sid", callSid);
+      await sb
+        .from("voice_call_sessions")
+        .update({
+          messages,
+          timeout_count: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("call_sid", callSid);
 
       const aiRes = await fetch(`${baseUrl}/functions/v1/ai-run`, {
         method: "POST",
@@ -256,9 +386,13 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           agentKey: "customer_service_expert",
           context: {
-            source: "voice_call", isVoiceCall: true, callDirection: "inbound",
-            callerPhone: session.caller_phone, memberId: session.member_id,
-            conversationHistory: messages.slice(0, -1), currentMessage: speech,
+            source: "voice_call",
+            isVoiceCall: true,
+            callDirection: "inbound",
+            callerPhone: session.caller_phone,
+            memberId: session.member_id,
+            conversationHistory: messages.slice(0, -1),
+            currentMessage: speech,
             userLanguage: lang.startsWith("es") ? "es" : "en",
           },
         }),
@@ -268,14 +402,14 @@ Deno.serve(async (req) => {
       const voice = lang.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
 
       if (!aiRes.ok) {
-        console.error(`[${FN} ${VERSION}] AI error:`, await aiRes.text());
+        console.error(
+          `[${FN} ${VERSION}] AI error:`,
+          await aiRes.text(),
+        );
         const gatherUrl = `${baseUrl}/functions/v1/${FN}?action=transcription${convId ? "&conversation_id=" + encodeURIComponent(convId) : ""}`;
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+        return twiml(
           `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "Dificultades técnicas. ¿Puede repetir?" : "Technical issue. Could you repeat?"}</Say>` +
-          `<Gather input="speech" action="${gatherUrl}" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>` +
-          `</Response>`,
-          { headers: xh },
+            `<Gather input="speech" action="${gatherUrl}" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>`,
         );
       }
 
@@ -283,117 +417,183 @@ Deno.serve(async (req) => {
       let reply = aiData.output?.response || "";
       console.log(`[${FN} ${VERSION}] AI reply: ${reply}`);
 
+      // Handle escalation
       const escMatch = reply.match(/\[ESCALATE:\s*(.+?)\]/i);
       if (escMatch) {
         reply = reply.replace(/\[ESCALATE:\s*.+?\]/i, "").trim();
-        await sb.from("voice_call_sessions").update({
-          status: "escalated", escalated_at: new Date().toISOString(), escalation_reason: escMatch[1],
-        }).eq("call_sid", callSid);
+        await sb
+          .from("voice_call_sessions")
+          .update({
+            status: "escalated",
+            escalated_at: new Date().toISOString(),
+            escalation_reason: escMatch[1],
+          })
+          .eq("call_sid", callSid);
         messages.push({ role: "assistant", content: reply });
-        await sb.from("voice_call_sessions").update({ messages }).eq("call_sid", callSid);
+        await sb
+          .from("voice_call_sessions")
+          .update({ messages })
+          .eq("call_sid", callSid);
 
-        const { data: phoneCfg } = await sb.from("system_settings").select("key, value").in("key", ["settings_call_centre_phone", "settings_emergency_phone"]);
+        const { data: phoneCfg } = await sb
+          .from("system_settings")
+          .select("key, value")
+          .in("key", [
+            "settings_call_centre_phone",
+            "settings_emergency_phone",
+          ]);
         const phones: Record<string, string> = {};
-        phoneCfg?.forEach((s) => { phones[s.key] = s.value; });
-        const escPhone = phones.settings_call_centre_phone || phones.settings_emergency_phone || cfg.settings_twilio_phone_number;
+        phoneCfg?.forEach((s) => {
+          phones[s.key] = s.value;
+        });
+        const escPhone =
+          phones.settings_call_centre_phone ||
+          phones.settings_emergency_phone ||
+          cfg.settings_twilio_phone_number;
 
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
-          (reply ? `<Say language="${ln}" voice="${voice}">${esc(reply)}</Say>` : "") +
-          `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "Conectándole con un especialista." : "Connecting you to a specialist."}</Say>` +
-          `<Dial timeout="30" callerId="${cfg.settings_twilio_phone_number}">${escPhone}</Dial>` +
-          `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "Operadores ocupados. Intente luego." : "Operators busy. Try later."}</Say>` +
-          `<Hangup/></Response>`,
-          { headers: xh },
+        return twiml(
+          (reply
+            ? `<Say language="${ln}" voice="${voice}">${esc(reply)}</Say>`
+            : "") +
+            `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "Conectándole con un especialista." : "Connecting you to a specialist."}</Say>` +
+            `<Dial timeout="30" callerId="${cfg.settings_twilio_phone_number}">${escPhone}</Dial>` +
+            `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "Operadores ocupados. Intente luego." : "Operators busy. Try later."}</Say>` +
+            `<Hangup/>`,
         );
       }
 
       messages.push({ role: "assistant", content: reply });
-      await sb.from("voice_call_sessions").update({ messages }).eq("call_sid", callSid);
+      await sb
+        .from("voice_call_sessions")
+        .update({ messages })
+        .eq("call_sid", callSid);
 
       if (convId) {
         try {
           await sb.from("conversation_messages").insert({
-            conversation_id: convId, channel: "voice", role: "assistant",
-            content: reply, meta: { callSid },
+            conversation_id: convId,
+            channel: "voice",
+            role: "assistant",
+            content: reply,
+            meta: { callSid },
           });
         } catch {}
       }
 
       const nextUrl = `${baseUrl}/functions/v1/${FN}?action=transcription${convId ? "&conversation_id=" + encodeURIComponent(convId) : ""}`;
-      return new Response(
-        `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+      return twiml(
         `<Say language="${ln}" voice="${voice}">${esc(reply)}</Say>` +
-        `<Gather input="speech" action="${nextUrl}" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>` +
-        `</Response>`,
-        { headers: xh },
+          `<Gather input="speech" action="${nextUrl}" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>`,
       );
     }
 
     // ─── TIMEOUT ───────────────────────────────────────
     if (action === "timeout") {
-      let callSid = url.searchParams.get("callSid") || "";
-      try { const fd = await req.formData(); callSid = (fd.get("CallSid") as string) || callSid; } catch {}
+      let cSid = url.searchParams.get("callSid") || "";
+      try {
+        cSid = (fd.get("CallSid") as string) || cSid;
+      } catch {}
 
-      const { data: session } = await sb.from("voice_call_sessions").select("*").eq("call_sid", callSid).single();
+      const { data: session } = await sb
+        .from("voice_call_sessions")
+        .select("*")
+        .eq("call_sid", cSid)
+        .single();
       const tc = (session?.timeout_count || 0) + 1;
       const lang = session?.language || "es-ES";
       const ln = lang.startsWith("es") ? "es-ES" : "en-GB";
       const voice = lang.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
 
-      if (session) await sb.from("voice_call_sessions").update({ timeout_count: tc, updated_at: new Date().toISOString() }).eq("call_sid", callSid);
+      if (session) {
+        await sb
+          .from("voice_call_sessions")
+          .update({
+            timeout_count: tc,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("call_sid", cSid);
+      }
 
       if (tc >= 3) {
-        if (session) await sb.from("voice_call_sessions").update({ status: "timeout_ended" }).eq("call_sid", callSid);
-        return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+        if (session) {
+          await sb
+            .from("voice_call_sessions")
+            .update({ status: "timeout_ended" })
+            .eq("call_sid", cSid);
+        }
+        return twiml(
           `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "No le escucho. Llame de nuevo. Adiós." : "Can't hear you. Please call back. Goodbye."}</Say>` +
-          `<Hangup/></Response>`,
-          { headers: xh },
+            `<Hangup/>`,
         );
       }
 
-      return new Response(
-        `<?xml version="1.0" encoding="UTF-8"?><Response>` +
+      return twiml(
         `<Say language="${ln}" voice="${voice}">${lang.startsWith("es") ? "No le escuché. ¿Puede repetir?" : "Didn't catch that. Could you repeat?"}</Say>` +
-        `<Gather input="speech" action="${baseUrl}/functions/v1/${FN}?action=transcription" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>` +
-        `</Response>`,
-        { headers: xh },
+          `<Gather input="speech" action="${baseUrl}/functions/v1/${FN}?action=transcription" language="${lang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>`,
       );
     }
 
     // ─── STATUS ────────────────────────────────────────
     if (action === "status") {
-      const fd = await req.formData();
-      const callSid = fd.get("CallSid") as string;
-      const callStatus = fd.get("CallStatus") as string;
-      const duration = fd.get("CallDuration") as string;
-      const recordingUrl = fd.get("RecordingUrl") as string;
-      const from = fd.get("From") as string | null;
+      const callStatus = (fd.get("CallStatus") as string) || "";
+      const duration = (fd.get("CallDuration") as string) || "";
+      const recordingUrl = (fd.get("RecordingUrl") as string) || "";
       const convParam = url.searchParams.get("conversation_id");
       const leadParam = url.searchParams.get("lead_id");
 
-      console.log(`[${FN} ${VERSION}] Status: ${callSid} ${callStatus} ${duration}`);
+      console.log(
+        `[${FN} ${VERSION}] Status: ${callSid} ${callStatus} ${duration}`,
+      );
 
-      if (["completed", "busy", "failed", "no-answer"].includes(callStatus)) {
-        await sb.from("voice_call_sessions").update({ status: callStatus, updated_at: new Date().toISOString() }).eq("call_sid", callSid);
+      if (
+        ["completed", "busy", "failed", "no-answer"].includes(callStatus)
+      ) {
+        await sb
+          .from("voice_call_sessions")
+          .update({
+            status: callStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("call_sid", callSid);
       }
 
-      await sb.from("conversation_calls").update({ ended_at: new Date().toISOString(), recording_url: recordingUrl || null, status: callStatus }).eq("call_sid", callSid);
-      await sb.from("alert_communications").update({ duration_seconds: duration ? parseInt(duration) : null, recording_url: recordingUrl || null, notes: `Call ${callStatus}` }).eq("twilio_sid", callSid);
+      await sb
+        .from("conversation_calls")
+        .update({
+          ended_at: new Date().toISOString(),
+          recording_url: recordingUrl || null,
+          status: callStatus,
+        })
+        .eq("call_sid", callSid);
+      await sb
+        .from("alert_communications")
+        .update({
+          duration_seconds: duration ? parseInt(duration) : null,
+          recording_url: recordingUrl || null,
+          notes: `Call ${callStatus}`,
+        })
+        .eq("twilio_sid", callSid);
 
       if (callStatus === "completed") {
         try {
           let convId = convParam;
           if (!convId) {
-            const { data: cc } = await sb.from("conversation_calls").select("conversation_id").eq("call_sid", callSid).maybeSingle();
+            const { data: cc } = await sb
+              .from("conversation_calls")
+              .select("conversation_id")
+              .eq("call_sid", callSid)
+              .maybeSingle();
             convId = cc?.conversation_id;
           }
 
           let memberId: string | null = null;
           if (from) {
             const nf = from.replace("+", "");
-            const { data: mb } = await sb.from("members").select("id").or(`phone.eq.${from},phone.eq.${nf}`).maybeSingle();
+            const { data: mb } = await sb
+              .from("members")
+              .select("id")
+              .or(`phone.eq.${from},phone.eq.${nf}`)
+              .maybeSingle();
             if (mb) memberId = mb.id;
           }
 
@@ -402,39 +602,70 @@ Deno.serve(async (req) => {
           if (recordingUrl) note += `\n🎙️ ${recordingUrl}`;
 
           if (memberId) {
-            await sb.from("member_notes").insert({ member_id: memberId, content: note, note_type: "support", is_pinned: false });
+            await sb.from("member_notes").insert({
+              member_id: memberId,
+              content: note,
+              note_type: "support",
+              is_pinned: false,
+            });
           }
 
           if (convId) {
-            await sb.from("conversations").update({ status: "closed", last_message_at: new Date().toISOString() }).eq("id", convId);
+            await sb
+              .from("conversations")
+              .update({
+                status: "closed",
+                last_message_at: new Date().toISOString(),
+              })
+              .eq("id", convId);
           }
 
-          const leadId = leadParam || (convId ? (await sb.from("conversations").select("lead_id").eq("id", convId).maybeSingle()).data?.lead_id : null);
+          const leadId =
+            leadParam ||
+            (convId
+              ? (
+                  await sb
+                    .from("conversations")
+                    .select("lead_id")
+                    .eq("id", convId)
+                    .maybeSingle()
+                ).data?.lead_id
+              : null);
           if (!memberId && leadId) {
-            await sb.from("leads").update({ status: "contacted", notes: `Call completed - ${dur}s` }).eq("id", leadId);
+            await sb
+              .from("leads")
+              .update({
+                status: "contacted",
+                notes: `Call completed - ${dur}s`,
+              })
+              .eq("id", leadId);
           }
         } catch (e) {
           console.error(`[${FN} ${VERSION}] Note error:`, e);
         }
       }
 
-      return new Response(JSON.stringify({ received: true }), { headers: jh });
+      return new Response(JSON.stringify({ received: true }), {
+        headers: JSON_HEADERS,
+      });
     }
 
     // ─── RECORDING ─────────────────────────────────────
     if (action === "recording") {
-      const fd = await req.formData();
-      await sb.from("alert_communications").update({ recording_url: fd.get("RecordingUrl") as string }).eq("twilio_sid", fd.get("CallSid") as string);
-      return new Response(JSON.stringify({ received: true }), { headers: jh });
+      await sb
+        .from("alert_communications")
+        .update({ recording_url: fd.get("RecordingUrl") as string })
+        .eq("twilio_sid", callSid);
+      return new Response(JSON.stringify({ received: true }), {
+        headers: JSON_HEADERS,
+      });
     }
 
-    return new Response(JSON.stringify({ error: "Unknown action", action, _version: VERSION }), { status: 400, headers: jh });
-
+    // ─── UNKNOWN ACTION ────────────────────────────────
+    console.warn(`[${FN} ${VERSION}] Unknown action: ${action}`);
+    return safeFallback();
   } catch (e) {
-    console.error(`[${FN} ${VERSION}] Handler error:`, e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", _version: VERSION }),
-      { status: 500, headers: jh },
-    );
+    console.error(`[${FN} ${VERSION}] FATAL ERROR:`, e);
+    return safeFallback();
   }
 });
