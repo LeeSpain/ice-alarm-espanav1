@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.twilio-voice]
 verify_jwt = false
 
+[functions.voice-handler]
+verify_jwt = false
+
 [functions.twilio-sms]
 verify_jwt = false
 
