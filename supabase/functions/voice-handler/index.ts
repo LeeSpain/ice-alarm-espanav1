@@ -1,13 +1,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const VERSION = "v2.0.0";
+const VERSION = "v2.1.0";
 const FN = "voice-handler";
 
 const FALLBACK_TWIML =
   `<?xml version="1.0" encoding="UTF-8"?>` +
   `<Response>` +
-  `<Say language="es-ES" voice="Polly.Lucia">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>` +
-  `<Say language="en-GB" voice="Polly.Amy">Thank you for calling ICE Alarm. An operator will assist you shortly.</Say>` +
+  `<Say voice="alice" language="es-ES">Gracias por llamar a ICE Alarm. Un operador le atenderá en breve.</Say>` +
+  `<Say voice="alice" language="en-GB">Thank you for calling ICE Alarm. An operator will assist you shortly.</Say>` +
   `<Hangup/>` +
   `</Response>`;
 
@@ -44,27 +44,24 @@ function safeFallback(): Response {
 }
 
 Deno.serve(async (req) => {
-  // ── CORS ──
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "authorization, x-client-info, apikey, content-type",
-      },
-    });
-  }
-
-  // ── Healthcheck ──
-  if (req.method === "GET") {
-    return new Response(`OK ${VERSION}`, {
-      status: 200,
-      headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
-    });
-  }
-
-  // ── POST handler — everything wrapped in try/catch ──
   try {
+    // ── CORS ──
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers":
+            "authorization, x-client-info, apikey, content-type",
+        },
+      });
+    }
+
+    // ── GET — return TwiML greeting (not plain text) ──
+    if (req.method === "GET") {
+      console.log(`[${FN} ${VERSION}] GET healthcheck — returning TwiML`);
+      return safeFallback();
+    }
+
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "incoming";
 
@@ -107,8 +104,8 @@ Deno.serve(async (req) => {
     // ─── WAIT ──────────────────────────────────────────
     if (action === "wait") {
       return twiml(
-        `<Say language="es-ES" voice="Polly.Lucia">${esc(getSetting("voice_hold_es", "Por favor espere."))}</Say>` +
-          `<Say language="en-GB" voice="Polly.Amy">${esc(getSetting("voice_hold_en", "Please hold."))}</Say>` +
+      `<Say language="es-ES" voice="alice">${esc(getSetting("voice_hold_es", "Por favor espere."))}</Say>` +
+          `<Say language="en-GB" voice="alice">${esc(getSetting("voice_hold_en", "Please hold."))}</Say>` +
           `<Pause length="10"/>`,
       );
     }
@@ -293,15 +290,15 @@ Deno.serve(async (req) => {
           : `${baseUrl}/functions/v1/${FN}?action=transcription`;
 
         return twiml(
-          `<Say language="es-ES" voice="Polly.Lucia">${esc(greetEs)}</Say>` +
+          `<Say language="es-ES" voice="alice">${esc(greetEs)}</Say>` +
             `<Pause length="1"/>` +
-            `<Say language="en-GB" voice="Polly.Amy">${esc(greetEn)}</Say>` +
+            `<Say language="en-GB" voice="alice">${esc(greetEn)}</Say>` +
             `<Gather input="speech" action="${txUrl}" language="${twimlLang}" speechTimeout="auto" timeout="10" actionOnEmptyResult="true"></Gather>`,
         );
       } catch (e) {
         console.error(`[${FN} ${VERSION}] Incoming error:`, e);
         return twiml(
-          `<Say language="es-ES" voice="Polly.Lucia">Gracias por llamar. Un operador le atenderá.</Say>` +
+          `<Say language="es-ES" voice="alice">Gracias por llamar. Un operador le atenderá.</Say>` +
             `<Enqueue waitUrl="${baseUrl}/functions/v1/${FN}?action=wait">ice-alarm-queue</Enqueue>`,
         );
       }
@@ -330,7 +327,7 @@ Deno.serve(async (req) => {
         .single();
       if (!session) {
         return twiml(
-          `<Say language="es-ES" voice="Polly.Lucia">Error técnico.</Say><Hangup/>`,
+          `<Say language="es-ES" voice="alice">Error técnico.</Say><Hangup/>`,
         );
       }
 
@@ -399,7 +396,7 @@ Deno.serve(async (req) => {
       });
 
       const ln = lang.startsWith("es") ? "es-ES" : "en-GB";
-      const voice = lang.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+      const voice = "alice";
 
       if (!aiRes.ok) {
         console.error(
@@ -502,7 +499,7 @@ Deno.serve(async (req) => {
       const tc = (session?.timeout_count || 0) + 1;
       const lang = session?.language || "es-ES";
       const ln = lang.startsWith("es") ? "es-ES" : "en-GB";
-      const voice = lang.startsWith("es") ? "Polly.Lucia" : "Polly.Amy";
+      const voice = "alice";
 
       if (session) {
         await sb
