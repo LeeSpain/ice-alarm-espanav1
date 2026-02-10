@@ -1948,7 +1948,9 @@
       "province": "Provincia",
       "selectProvince": "Seleccione provincia",
       "postalCode": "Código postal",
-      "country": "País"
+      "country": "País",
+      "separateAddresses": "Los miembros viven en direcciones diferentes",
+      "separateAddressesDesc": "Active esto si usted y su pareja tienen direcciones diferentes"
     },
     "medical": {
       "title": "Información médica",
@@ -2076,7 +2078,9 @@
       "allCardsAccepted": "Todas las tarjetas aceptadas",
       "paymentError": "Error de pago",
       "paymentSuccess": "¡Pago exitoso!",
-      "paymentSuccessDesc": "Su registro está completo. Haga clic en \"Continuar\" para ver su confirmación."
+      "paymentSuccessDesc": "Su registro está completo. Haga clic en \"Continuar\" para ver su confirmación.",
+      "success": "¡Pago exitoso! Bienvenido a ICE Alarm.",
+      "cancelled": "El pago fue cancelado. Puede intentarlo de nuevo cuando desee."
     },
     "confirmation": {
       "title": "¡Bienvenido a ICE Alarm España!",
@@ -2100,6 +2104,27 @@
       "questionsTitle": "¿Preguntas? Nuestro equipo de soporte está aquí para ayudar.",
       "callUsAt": "Llámenos al",
       "orEmail": "o escriba a"
+    },
+    "validation": {
+      "enterFullName": "Por favor introduzca su nombre completo",
+      "enterEmail": "Por favor introduzca su correo electrónico",
+      "enterPhone": "Por favor introduzca su número de teléfono",
+      "enterDob": "Por favor introduzca su fecha de nacimiento",
+      "enterPartnerFullName": "Por favor introduzca el nombre completo de su pareja",
+      "enterPartnerEmail": "Por favor introduzca el email de su pareja",
+      "enterPartnerPhone": "Por favor introduzca el teléfono de su pareja",
+      "enterPartnerDob": "Por favor introduzca la fecha de nacimiento de su pareja",
+      "enterStreetAddress": "Por favor introduzca su dirección",
+      "enterCity": "Por favor introduzca su ciudad",
+      "selectProvince": "Por favor seleccione su provincia",
+      "enterPostalCode": "Por favor introduzca su código postal",
+      "enterPartnerStreet": "Por favor introduzca la dirección de su pareja",
+      "enterPartnerCity": "Por favor introduzca la ciudad de su pareja",
+      "selectPartnerProvince": "Por favor seleccione la provincia de su pareja",
+      "enterPartnerPostal": "Por favor introduzca el código postal de su pareja",
+      "addEmergencyContact": "Por favor añada al menos un contacto de emergencia",
+      "acceptTerms": "Por favor acepte los Términos de Servicio",
+      "acceptPrivacy": "Por favor consienta compartir información médica con servicios de emergencia"
     }
   },
   "chat": {
@@ -2713,33 +2738,6 @@
     "quickActions": {
       "title": "Acciones Rápidas",
       "callEmergency": "Llamar Servicios de Emergencia (112)"
-    }
-  },
-  "joinWizard": {
-    "validation": {
-      "enterFullName": "Por favor introduzca su nombre completo",
-      "enterEmail": "Por favor introduzca su correo electrónico",
-      "enterPhone": "Por favor introduzca su número de teléfono",
-      "enterDob": "Por favor introduzca su fecha de nacimiento",
-      "enterPartnerFullName": "Por favor introduzca el nombre completo de su pareja",
-      "enterPartnerEmail": "Por favor introduzca el email de su pareja",
-      "enterPartnerPhone": "Por favor introduzca el teléfono de su pareja",
-      "enterPartnerDob": "Por favor introduzca la fecha de nacimiento de su pareja",
-      "enterStreetAddress": "Por favor introduzca su dirección",
-      "enterCity": "Por favor introduzca su ciudad",
-      "selectProvince": "Por favor seleccione su provincia",
-      "enterPostalCode": "Por favor introduzca su código postal",
-      "enterPartnerStreet": "Por favor introduzca la dirección de su pareja",
-      "enterPartnerCity": "Por favor introduzca la ciudad de su pareja",
-      "selectPartnerProvince": "Por favor seleccione la provincia de su pareja",
-      "enterPartnerPostal": "Por favor introduzca el código postal de su pareja",
-      "addEmergencyContact": "Por favor añada al menos un contacto de emergencia",
-      "acceptTerms": "Por favor acepte los Términos de Servicio",
-      "acceptPrivacy": "Por favor consienta compartir información médica con servicios de emergencia"
-    },
-    "payment": {
-      "success": "¡Pago exitoso! Bienvenido a ICE Alarm.",
-      "cancelled": "El pago fue cancelado. Puede intentarlo de nuevo cuando desee."
     }
   },
   "partner": {

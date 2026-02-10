@@ -1972,7 +1972,9 @@
       "province": "Province",
       "selectProvince": "Select province",
       "postalCode": "Postal Code",
-      "country": "Country"
+      "country": "Country",
+      "separateAddresses": "Members live at different addresses",
+      "separateAddressesDesc": "Enable this if you and your partner have separate home addresses"
     },
     "medical": {
       "title": "Medical Information",
@@ -2100,7 +2102,9 @@
       "allCardsAccepted": "All Cards Accepted",
       "paymentError": "Payment Error",
       "paymentSuccess": "Payment Successful!",
-      "paymentSuccessDesc": "Your registration is complete. Click \"Continue\" to view your confirmation."
+      "paymentSuccessDesc": "Your registration is complete. Click \"Continue\" to view your confirmation.",
+      "success": "Payment successful! Welcome to ICE Alarm.",
+      "cancelled": "Payment was cancelled. You can try again when ready."
     },
     "confirmation": {
       "title": "Welcome to ICE Alarm España!",
@@ -2124,6 +2128,27 @@
       "questionsTitle": "Questions? Our support team is here to help.",
       "callUsAt": "Call us at",
       "orEmail": "or email"
+    },
+    "validation": {
+      "enterFullName": "Please enter your full name",
+      "enterEmail": "Please enter your email address",
+      "enterPhone": "Please enter your phone number",
+      "enterDob": "Please enter your date of birth",
+      "enterPartnerFullName": "Please enter your partner's full name",
+      "enterPartnerEmail": "Please enter your partner's email address",
+      "enterPartnerPhone": "Please enter your partner's phone number",
+      "enterPartnerDob": "Please enter your partner's date of birth",
+      "enterStreetAddress": "Please enter your street address",
+      "enterCity": "Please enter your city",
+      "selectProvince": "Please select your province",
+      "enterPostalCode": "Please enter your postal code",
+      "enterPartnerStreet": "Please enter your partner's street address",
+      "enterPartnerCity": "Please enter your partner's city",
+      "selectPartnerProvince": "Please select your partner's province",
+      "enterPartnerPostal": "Please enter your partner's postal code",
+      "addEmergencyContact": "Please add at least one emergency contact",
+      "acceptTerms": "Please accept the Terms of Service",
+      "acceptPrivacy": "Please consent to share medical information with emergency services"
     }
   },
   "chat": {
@@ -2737,33 +2762,6 @@
     "quickActions": {
       "title": "Quick Actions",
       "callEmergency": "Call Emergency Services (112)"
-    }
-  },
-  "joinWizard": {
-    "validation": {
-      "enterFullName": "Please enter your full name",
-      "enterEmail": "Please enter your email address",
-      "enterPhone": "Please enter your phone number",
-      "enterDob": "Please enter your date of birth",
-      "enterPartnerFullName": "Please enter your partner's full name",
-      "enterPartnerEmail": "Please enter your partner's email address",
-      "enterPartnerPhone": "Please enter your partner's phone number",
-      "enterPartnerDob": "Please enter your partner's date of birth",
-      "enterStreetAddress": "Please enter your street address",
-      "enterCity": "Please enter your city",
-      "selectProvince": "Please select your province",
-      "enterPostalCode": "Please enter your postal code",
-      "enterPartnerStreet": "Please enter your partner's street address",
-      "enterPartnerCity": "Please enter your partner's city",
-      "selectPartnerProvince": "Please select your partner's province",
-      "enterPartnerPostal": "Please enter your partner's postal code",
-      "addEmergencyContact": "Please add at least one emergency contact",
-      "acceptTerms": "Please accept the Terms of Service",
-      "acceptPrivacy": "Please consent to share medical information with emergency services"
-    },
-    "payment": {
-      "success": "Payment successful! Welcome to ICE Alarm.",
-      "cancelled": "Payment was cancelled. You can try again when ready."
     }
   },
   "partner": {
