@@ -9,15 +9,19 @@ import { OutreachCampaignsTab } from "@/components/admin/outreach/OutreachCampai
 import { OutreachInboxTab } from "@/components/admin/outreach/OutreachInboxTab";
 import { OutreachAnalyticsTab } from "@/components/admin/outreach/OutreachAnalyticsTab";
 import { OutreachSettingsTab } from "@/components/admin/outreach/OutreachSettingsTab";
-import { OutreachControlPanel } from "@/components/admin/outreach/OutreachControlPanel";
 import { OutreachHelpDialog } from "@/components/admin/outreach/OutreachHelpDialog";
 import { OutreachCapsWidget } from "@/components/admin/outreach/OutreachCapsWidget";
-
+import { useOutreachPipeline } from "@/hooks/useOutreachPipeline";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 
 const AIOutreachPage = () => {
   const { t } = useTranslation();
+  const { runPipeline, isRunningPipeline, lastRun } = useOutreachPipeline();
   const [activeTab, setActiveTab] = useState("leads");
   const [helpOpen, setHelpOpen] = useState(false);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [showRunResult, setShowRunResult] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -32,13 +36,52 @@ const AIOutreachPage = () => {
             <p className="text-sm text-muted-foreground">{t("outreach.subtitle")}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
-          <HelpCircle className="h-4 w-4 mr-2" />
-          {t("outreach.help.howToUse")}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setPipelineRunning(true);
+              runPipeline(undefined).finally(() => {
+                setPipelineRunning(false);
+                setShowRunResult(true);
+              }).catch(error => {
+                toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+              });
+            }}
+            disabled={isRunningPipeline || pipelineRunning}
+            className="gap-2"
+          >
+            <Zap className="h-4 w-4" />
+            {isRunningPipeline || pipelineRunning ? t("outreach.runningPipeline") : t("outreach.runFullPipeline")}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+            <HelpCircle className="h-4 w-4 mr-2" />
+            {t("outreach.help.howToUse")}
+          </Button>
+        </div>
       </div>
 
       <OutreachHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
+
+      {/* Pipeline Run Result Dialog */}
+      <Dialog open={showRunResult} onOpenChange={setShowRunResult}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("outreach.pipelineComplete")}</DialogTitle>
+            <DialogDescription>
+              {lastRun?.dry_run ? t("outreach.dryRunMode") : t("outreach.liveMode")}
+            </DialogDescription>
+          </DialogHeader>
+          {lastRun && (
+            <div className="space-y-2 text-sm">
+              <p><strong>Enriched:</strong> {lastRun.totals?.enriched || 0}</p>
+              <p><strong>Rated:</strong> {lastRun.totals?.rated || 0}</p>
+              <p><strong>Drafted:</strong> {lastRun.totals?.drafted || 0}</p>
+              <p><strong>Sent:</strong> {lastRun.totals?.sent || 0}</p>
+              <p><strong>Follow-ups:</strong> {lastRun.totals?.followups || 0}</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Caps Widget */}
       <OutreachCapsWidget />
