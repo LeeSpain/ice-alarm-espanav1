@@ -3261,8 +3261,19 @@
         "emailsSent": "Emails Sent",
         "repliesReceived": "Replies Received",
         "conversions": "Conversions"
-      }
+      },
+      "recentRuns": "Recent Pipeline Runs",
+      "runType": "Run Type",
+      "startedAt": "Started At",
+      "totals": "Totals",
+      "status": "Status",
+      "noRuns": "No pipeline runs yet"
     },
+    "runFullPipeline": "Run Full Pipeline",
+    "runningPipeline": "Running Pipeline...",
+    "pipelineComplete": "Pipeline Run Complete",
+    "dryRunMode": "Dry Run (Simulation)",
+    "liveMode": "Live Mode",
     "settings": {
       "minScore": "Minimum Qualification Score",
       "minScoreDesc": "Only leads rated at or above this score can be moved to CRM"

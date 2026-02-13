@@ -3237,8 +3237,19 @@
         "emailsSent": "Emails Enviados",
         "repliesReceived": "Respuestas Recibidas",
         "conversions": "Conversiones"
-      }
+      },
+      "recentRuns": "Ejecuciones Recientes del Pipeline",
+      "runType": "Tipo de Ejecución",
+      "startedAt": "Iniciado",
+      "totals": "Totales",
+      "status": "Estado",
+      "noRuns": "Sin ejecuciones del pipeline aún"
     },
+    "runFullPipeline": "Ejecutar Pipeline Completo",
+    "runningPipeline": "Ejecutando Pipeline...",
+    "pipelineComplete": "Ejecución del Pipeline Completada",
+    "dryRunMode": "Modo Simulación",
+    "liveMode": "Modo En Vivo",
     "settings": {
       "minScore": "Puntuación Mínima de Calificación",
       "minScoreDesc": "Solo leads con esta puntuación o superior pueden pasar al CRM"
