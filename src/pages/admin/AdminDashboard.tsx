@@ -26,6 +26,7 @@ import { NotificationLog } from "@/components/admin/dashboard/NotificationLog";
 import { EV07BStatusWidget } from "@/components/admin/dashboard/EV07BStatusWidget";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
+import { IsabellaStatusBanner } from "@/components/admin/dashboard/IsabellaStatusBanner";
 
 interface DashboardStats {
   active_members: number;
@@ -106,6 +107,9 @@ export default function AdminDashboard() {
           <Link to="/admin/members/new">{t('adminDashboard.addMember')}</Link>
         </Button>
       </div>
+
+      {/* Isabella Status Banner */}
+      <IsabellaStatusBanner />
 
       {/* Sales Command Strip - Real-time sales metrics */}
       <SalesCommandStrip />
