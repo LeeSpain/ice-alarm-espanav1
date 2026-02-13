@@ -1,95 +1,192 @@
 
+# Final Integration: Isabella Operations - Complete & Test
 
-# AI Command Centre Restructure
+## Current Status
+✅ **Completed:**
+- Database migration (`isabella_settings` table created with 19 functions)
+- Hook implementation (`useIsabellaSettings.ts`) with all 4 functions
+- IsabellaOperationsPage created with full toggle UI
+- AICommandCentre rewritten with 3-card layout
+- Route added (`/admin/ai/operations`)
+- Sidebar updated with Headphones icon and Isabella Operations menu item
+- IsabellaStatusBanner created and integrated into AdminDashboard
+- Locale files partially updated
 
-## Overview
+❌ **Still Needed:**
+1. **Translation Keys** - Add missing isabella, aiCommandCentre, and sidebar keys to both en.json and es.json
+2. **Function Configuration Mapping** - Create `src/lib/isabella-function-config.ts` to link functions to AI agents
+3. **Advanced Configuration Links** - Add section to IsabellaOperationsPage with quick links to AI agent config pages
+4. **End-to-End Testing** - Verify all toggles work, persist, and update stats correctly
 
-Restructure the AI Command Centre from 5 agent cards to a clean 3-section layout: Isabella Operations (toggle controls), AI Outreach Pipeline (existing page), and Isabella Content (existing Media Manager). No existing functionality is deleted.
+## Phase 1: Add Missing Translation Keys
 
-## Phase 1: Database Migration
+**Location:** `src/i18n/locales/en.json` and `src/i18n/locales/es.json`
 
-Create `isabella_settings` table with 19 function rows, RLS policies (staff read, admin/super_admin update), and an `updated_at` trigger.
+**Keys to Add:**
+- `sidebar.isabellaOperations`: "Isabella Operations"
+- `isabella.*`: 80+ keys covering function names, descriptions, sections, status messages, banner text
+- `aiCommandCentre.*`: 10+ keys for card titles, descriptions, buttons
 
-**Table schema:**
-- `id` UUID primary key
-- `function_key` TEXT unique, not null
-- `enabled` BOOLEAN default false
-- `enabled_at` TIMESTAMPTZ nullable
-- `enabled_by` UUID references staff(id) nullable
-- `config` JSONB default '{}'
-- `created_at` / `updated_at` TIMESTAMPTZ
-
-**Seed data:** 19 function keys (all disabled except `chat_widget` which is enabled).
-
-**RLS policies:**
-- Authenticated staff can SELECT all rows (using `is_staff(auth.uid())`)
-- Only admins can UPDATE (using `is_admin(auth.uid())`)
-
-## Phase 2: New Hook -- `src/hooks/useIsabellaSettings.ts`
-
-Provides:
-- `useIsabellaSettings()` -- fetch all settings ordered by function_key
-- `useIsabellaSetting(functionKey)` -- fetch single setting
-- `useUpdateIsabellaSetting()` -- mutation to toggle enabled, set enabled_at/enabled_by
-- `useIsabellaStats()` -- count enabled functions, interactions today (from ai_runs), escalations today (from ai_events)
-
-## Phase 3: New Page -- `src/pages/admin/IsabellaOperationsPage.tsx`
-
-Toggle page with 5 sections (Alert Handling, Inbound Communications, Outbound Communications, Sales and Leads, Always Human). Each toggle row shows function name, description, and Switch component. Always Human section shows Lock icons with informational text (no toggles).
-
-## Phase 4: Rewrite `src/pages/admin/AICommandCentre.tsx`
-
-Replace the 5 agent cards with 3 navigation cards:
-1. **Isabella Operations** -- links to `/admin/ai/operations`
-2. **AI Outreach Pipeline** -- links to `/admin/ai-outreach`
-3. **Isabella Content** -- links to `/admin/media-manager`
-
-Plus a Quick Stats section below.
-
-## Phase 5: Route Update -- `src/App.tsx`
-
-Add lazy import for `IsabellaOperationsPage` and route `ai/operations` inside the admin route group. All existing routes (ai, ai/agents/:agentKey, ai-outreach, media-manager) remain untouched.
-
-## Phase 6: Sidebar Update -- `src/components/layout/AdminSidebar.tsx`
-
-Add `Headphones` icon import and a second item under the "ai" menu group:
+**Implementation Pattern:**
+```json
+{
+  "isabella": {
+    "title": "Isabella Operations",
+    "subtitle": "Control which functions Isabella handles automatically",
+    "sections": {
+      "alertHandling": "Alert Handling",
+      "inboundCommunications": "Inbound Communications",
+      "outboundCommunications": "Outbound Communications",
+      "salesAndLeads": "Sales & Leads",
+      "alwaysHuman": "Always Human"
+    },
+    "functions": {
+      "deviceOfflineResponse": "Device Offline Response",
+      "deviceOfflineResponseDesc": "When device offline 5+ min, Isabella calls member, then emergency contacts. Escalates if no response.",
+      // ... 18 more functions
+    },
+    "alwaysHumanItems": {
+      "emergencyDispatch": "112 Emergency Dispatch - Human only, legal requirement",
+      "physicalHandling": "Physical Device Handling - Human only, requires hands",
+      "bankTransfers": "Bank Transfers - Human only, financial authority",
+      "largeRefunds": "Refunds Over €100 - Human only, approval required"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "functionsActive": "{{count}} functions active",
+      "interactionsToday": "{{count}} interactions today",
+      "escalatedToHumans": "{{count}} escalated to humans"
+    },
+    "banner": {
+      "isabellaActive": "ISABELLA ACTIVE",
+      "humanMode": "HUMAN MODE: All alerts and communications routed to staff",
+      "managing": "Managing {{interactions}} interactions today | {{escalated}} escalated to humans"
+    }
+  },
+  "aiCommandCentre": {
+    "title": "AI Command Centre",
+    "subtitle": "Manage Isabella and AI-powered automation",
+    "isabellaOperations": {
+      "title": "Isabella Operations",
+      "description": "Customer, member, and alert handling",
+      "button": "Manage Functions"
+    },
+    "outreachPipeline": {
+      "title": "AI Outreach Pipeline",
+      "description": "B2B lead discovery, research, and sales automation",
+      "button": "Open Pipeline"
+    },
+    "isabellaContent": {
+      "title": "Isabella Content",
+      "description": "Social media, blog posts, and video generation",
+      "button": "Content Manager"
+    }
+  }
+}
 ```
-{ icon: Headphones, labelKey: "sidebar.isabellaOperations", path: "/admin/ai/operations" }
+
+## Phase 2: Create isabella-function-config.ts
+
+**Location:** `src/lib/isabella-function-config.ts`
+
+**Purpose:** Map each Isabella function to its underlying AI agent, triggers, and capabilities for future automation hooks.
+
+**Structure:**
+```typescript
+export const ISABELLA_FUNCTION_CONFIG = {
+  device_offline_response: {
+    agent_key: "customer_service_expert",
+    triggers: ["device.offline", "alert.device_offline"],
+    capabilities: ["voice_call", "sms", "escalate"],
+  },
+  // ... 18 more functions
+}
+
+// Helper function to check if a function is enabled
+export async function isIsabellaFunctionEnabled(functionKey: string): Promise<boolean>
 ```
 
-## Phase 7: Isabella Status Banner
+This file serves as a single source of truth for integrating Isabella toggles with the broader AI infrastructure.
 
-**New component:** `src/components/admin/dashboard/IsabellaStatusBanner.tsx`
-- Shows green Alert when functions are active, muted Alert in human mode
-- Displays enabled function count, interactions, escalations
-- "Manage" link to `/admin/ai/operations`
+## Phase 3: Add Advanced Configuration Section to IsabellaOperationsPage
 
-**Modify:** `src/pages/admin/AdminDashboard.tsx` -- add `<IsabellaStatusBanner />` after the page header, before SalesCommandStrip.
+**Location:** `src/pages/admin/IsabellaOperationsPage.tsx`
 
-## Phase 8: Translations
+**Addition:** Below the "Always Human" section, add a new Card showing:
+- Title: "Advanced Configuration"
+- Description: "Configure the AI agents that power Isabella's functions"
+- Links to each agent detail page:
+  - Customer Service Expert (`/admin/ai/agents/customer_service_expert`)
+  - Main Brain (`/admin/ai/agents/main_brain`)
+  - Member Specialist (`/admin/ai/agents/member_specialist`)
 
-Add `isabella`, `aiCommandCentre`, and `sidebar.isabellaOperations` keys to both `en.json` and `es.json` (~80 new keys per file covering all function names, descriptions, section headers, status messages, and banner text).
+This allows admins to drill down and customize agent prompts, memory, training data, and permissions.
 
-## Phase 9: Preservation
+## Phase 4: End-to-End Testing Checklist
 
-These files remain completely untouched:
-- `src/pages/admin/AIAgentDetail.tsx`
-- `src/components/admin/ai/*` (all 7 components)
-- `src/hooks/useAIAgents.ts`
-- Route `/admin/ai/agents/:agentKey` stays functional
+After all code changes are complete, verify:
 
-## Files Summary
+**Database & Persistence:**
+- [ ] Navigate to `/admin/ai/operations`
+- [ ] Toggle "Low Battery Alerts" ON
+- [ ] Verify toast shows "Saved"
+- [ ] Refresh page
+- [ ] Verify "Low Battery Alerts" is still ON
+- [ ] Check database: `isabella_settings` row for `low_battery_alerts` has `enabled=true` and `enabled_at` is recent
 
-| Action | File |
-|--------|------|
-| **New** | `src/hooks/useIsabellaSettings.ts` |
-| **New** | `src/pages/admin/IsabellaOperationsPage.tsx` |
-| **New** | `src/components/admin/dashboard/IsabellaStatusBanner.tsx` |
-| **Rewrite** | `src/pages/admin/AICommandCentre.tsx` |
-| **Edit** | `src/App.tsx` (add lazy import + route) |
-| **Edit** | `src/components/layout/AdminSidebar.tsx` (add menu item + icon) |
-| **Edit** | `src/pages/admin/AdminDashboard.tsx` (add banner) |
-| **Edit** | `src/i18n/locales/en.json` (add ~80 keys) |
-| **Edit** | `src/i18n/locales/es.json` (add ~80 keys) |
-| **Migration** | Create `isabella_settings` table + RLS + seed data |
+**Navigation & UI:**
+- [ ] `/admin/ai` shows 3-card layout (Isabella Operations, Outreach Pipeline, Isabella Content)
+- [ ] `/admin/ai/operations` shows 5 sections (Alert Handling, Inbound, Outbound, Sales, Always Human)
+- [ ] Sidebar shows "Isabella Operations" under AI Command Centre
+- [ ] Can click cards to navigate between routes
 
+**Dashboard Integration:**
+- [ ] AdminDashboard shows IsabellaStatusBanner at the top
+- [ ] Banner shows "ISABELLA ACTIVE" when any function is enabled
+- [ ] Banner shows list of enabled functions
+- [ ] Banner shows interaction count and escalation count
+- [ ] "Manage" link goes to `/admin/ai/operations`
+
+**Stats & Real-time:**
+- [ ] Enable 3+ functions
+- [ ] AICommandCentre card 1 shows "3 functions active"
+- [ ] Stats refresh every 30 seconds
+- [ ] Escalation count updates when escalations occur
+
+**Chat Widgets (Critical):**
+- [ ] HeaderChatButton on public site still works
+- [ ] MemberChatButton on member portal still works
+- [ ] StaffHeaderChatButton on staff portal still works
+- [ ] AdminHeaderChatButton on admin panel still works
+
+**Agent Configuration (Preserved):**
+- [ ] `/admin/ai/agents/main_brain` page loads
+- [ ] `/admin/ai/agents/customer_service_expert` page loads
+- [ ] All 6 tabs work (Instructions, Tools, Memory, Training, Simulator, Audit)
+- [ ] Can edit agent instructions and see changes persist
+
+**Translations:**
+- [ ] Toggle language to Spanish
+- [ ] IsabellaOperationsPage titles and labels appear in Spanish
+- [ ] AICommandCentre titles and labels appear in Spanish
+- [ ] No "isabella.functions.*" keys show as untranslated
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/i18n/locales/en.json` | Add ~80 isabella & aiCommandCentre keys |
+| `src/i18n/locales/es.json` | Add ~80 isabella & aiCommandCentre keys (Spanish) |
+| `src/lib/isabella-function-config.ts` | Create new file with function-to-agent mapping |
+| `src/pages/admin/IsabellaOperationsPage.tsx` | Add Advanced Configuration section at bottom |
+
+## Success Criteria
+
+✅ All 19 functions show correct UI state (enabled/disabled)
+✅ Toggles persist after page refresh
+✅ Dashboard banner shows real-time stats
+✅ All translations display correctly in EN/ES
+✅ Advanced config links let admins access agent details
+✅ Chat widgets remain fully functional
+✅ No console errors related to missing translations or components
