@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
@@ -59,6 +60,7 @@ export default function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Subscribe to realtime updates
   useDeviceRealtime();
@@ -92,10 +94,10 @@ export default function DeviceDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-device-detail", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-devices"] });
-      toast({ title: "Device updated successfully" });
+      toast({ title: t("adminDeviceDetail.updated", "Device updated successfully") });
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to update device", description: error.message, variant: "destructive" });
+      toast({ title: t("adminDeviceDetail.failedUpdate", "Failed to update device"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -151,7 +153,7 @@ export default function DeviceDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading device details...</div>
+        <div className="text-muted-foreground">{t("adminDeviceDetail.loading", "Loading device details...")}</div>
       </div>
     );
   }
@@ -161,12 +163,12 @@ export default function DeviceDetailPage() {
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          {t("common.back", "Back")}
         </Button>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              Device not found or an error occurred.
+              {t("adminDeviceDetail.notFound", "Device not found or an error occurred.")}
             </div>
           </CardContent>
         </Card>
@@ -186,7 +188,7 @@ export default function DeviceDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{device.model || "EV-07B"} Device</h1>
+            <h1 className="text-2xl font-bold">{device.model || "EV-07B"} {t("adminDeviceDetail.device", "Device")}</h1>
             <p className="text-muted-foreground font-mono">{device.imei}</p>
           </div>
         </div>
@@ -212,25 +214,25 @@ export default function DeviceDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Device Information
+              {t("adminDeviceDetail.deviceInfo", "Device Information")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Model</p>
+                <p className="text-sm text-muted-foreground">{t("adminDeviceDetail.model", "Model")}</p>
                 <p className="font-medium">{device.model || "EV-07B"}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Serial Number</p>
+                <p className="text-sm text-muted-foreground">{t("adminDeviceDetail.serialNumber", "Serial Number")}</p>
                 <p className="font-medium font-mono">{device.serial_number || "N/A"}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">SIM Number</p>
+                <p className="text-sm text-muted-foreground">{t("adminDeviceDetail.simNumber", "SIM Number")}</p>
                 <p className="font-medium">{device.sim_phone_number}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Configuration</p>
+                <p className="text-sm text-muted-foreground">{t("adminDeviceDetail.configuration", "Configuration")}</p>
                 <p className="font-medium capitalize">{device.configuration_status || "pending"}</p>
               </div>
             </div>
@@ -238,7 +240,7 @@ export default function DeviceDetailPage() {
             <Separator />
             
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Battery Level</p>
+              <p className="text-sm text-muted-foreground mb-2">{t("adminDeviceDetail.batteryLevel", "Battery Level")}</p>
               {getBatteryIndicator(device.battery_level)}
             </div>
 
@@ -246,7 +248,7 @@ export default function DeviceDetailPage() {
               <>
                 <Separator />
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t("common.notes", "Notes")}</p>
                   <p className="text-sm">{device.notes}</p>
                 </div>
               </>
@@ -259,26 +261,26 @@ export default function DeviceDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {isOnline ? <Wifi className="h-5 w-5 text-alert-resolved" /> : <WifiOff className="h-5 w-5 text-alert-sos" />}
-              Connectivity Status
+              {t("adminDeviceDetail.connectivity", "Connectivity Status")}
             </CardTitle>
             <CardDescription>
-              Real-time connection monitoring
+              {t("adminDeviceDetail.realtimeMonitoring", "Real-time connection monitoring")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
               <div className={`h-3 w-3 rounded-full ${isOnline ? "bg-alert-resolved animate-pulse" : "bg-alert-sos"}`} />
-              <span className="font-medium">{isOnline ? "Connected" : "Disconnected"}</span>
+              <span className="font-medium">{isOnline ? t("adminDeviceDetail.connected", "Connected") : t("adminDeviceDetail.disconnected", "Disconnected")}</span>
             </div>
 
             <div className="grid gap-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Last Check-in:</span>
+                <span className="text-sm text-muted-foreground">{t("adminDeviceDetail.lastCheckin", "Last Check-in")}:</span>
                 <span className="text-sm font-medium">
                   {device.last_checkin_at 
                     ? formatDistanceToNow(new Date(device.last_checkin_at), { addSuffix: true })
-                    : "Never"}
+                    : t("adminDeviceDetail.never", "Never")}
                 </span>
               </div>
 
@@ -286,7 +288,7 @@ export default function DeviceDetailPage() {
                 <div className="flex items-center gap-2 text-alert-sos">
                   <AlertTriangle className="h-4 w-4" />
                   <span className="text-sm">
-                    Offline since {format(new Date(device.offline_since), "dd MMM yyyy, HH:mm")}
+                    {t("adminDeviceDetail.offlineSince", "Offline since")} {format(new Date(device.offline_since), "dd MMM yyyy, HH:mm")}
                   </span>
                 </div>
               )}
@@ -305,13 +307,13 @@ export default function DeviceDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Last Known Location
+              {t("adminDeviceDetail.lastLocation", "Last Known Location")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {device.last_location_lat && device.last_location_lng ? (
               <div className="space-y-2">
-                <p className="font-medium">{device.last_location_address || "Address not available"}</p>
+                <p className="font-medium">{device.last_location_address || t("adminDeviceDetail.addressNotAvailable", "Address not available")}</p>
                 <p className="text-sm text-muted-foreground">
                   Coordinates: {device.last_location_lat.toFixed(6)}, {device.last_location_lng.toFixed(6)}
                 </p>
@@ -322,12 +324,12 @@ export default function DeviceDetailPage() {
                     rel="noopener noreferrer"
                   >
                     <MapPin className="mr-2 h-4 w-4" />
-                    Open in Google Maps
+                    {t("adminDeviceDetail.openInMaps", "Open in Google Maps")}
                   </a>
                 </Button>
               </div>
             ) : (
-              <p className="text-muted-foreground">No location data available</p>
+              <p className="text-muted-foreground">{t("adminDeviceDetail.noLocation", "No location data available")}</p>
             )}
           </CardContent>
         </Card>
@@ -337,7 +339,7 @@ export default function DeviceDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Member Assignment
+              {t("adminDeviceDetail.memberAssignment", "Member Assignment")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -351,7 +353,7 @@ export default function DeviceDetailPage() {
                 </div>
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/admin/members/${device.member.id}`}>
-                    View Member Profile
+                    {t("adminDeviceDetail.viewMemberProfile", "View Member Profile")}
                   </Link>
                 </Button>
                 {device.assigned_at && (
@@ -361,7 +363,7 @@ export default function DeviceDetailPage() {
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground">Not assigned to any member</p>
+              <p className="text-muted-foreground">{t("adminDeviceDetail.notAssigned", "Not assigned to any member")}</p>
             )}
           </CardContent>
         </Card>
@@ -371,8 +373,8 @@ export default function DeviceDetailPage() {
       {device.member && (
         <Card>
           <CardHeader>
-            <CardTitle>Device Lifecycle</CardTitle>
-            <CardDescription>Track the device through the allocation workflow</CardDescription>
+            <CardTitle>{t("adminDeviceDetail.lifecycle", "Device Lifecycle")}</CardTitle>
+            <CardDescription>{t("adminDeviceDetail.lifecycleDesc", "Track the device through the allocation workflow")}</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Timeline */}
@@ -383,7 +385,7 @@ export default function DeviceDetailPage() {
                   : "bg-muted text-muted-foreground"
               }`}>
                 <Package className="h-4 w-4" />
-                Allocated
+                {t("adminDeviceDetail.allocated", "Allocated")}
               </div>
               <div className="h-0.5 w-8 bg-border" />
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
@@ -392,7 +394,7 @@ export default function DeviceDetailPage() {
                   : "bg-muted text-muted-foreground"
               }`}>
                 <Truck className="h-4 w-4" />
-                With Staff
+                {t("adminDeviceDetail.withStaff", "With Staff")}
               </div>
               <div className="h-0.5 w-8 bg-border" />
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
@@ -401,26 +403,26 @@ export default function DeviceDetailPage() {
                   : "bg-muted text-muted-foreground"
               }`}>
                 <CheckCircle className="h-4 w-4" />
-                Live
+                {t("adminDeviceDetail.live", "Live")}
               </div>
             </div>
 
             {/* Timestamps */}
             <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
               <div>
-                <p className="text-muted-foreground">Allocated</p>
+                <p className="text-muted-foreground">{t("adminDeviceDetail.allocated", "Allocated")}</p>
                 <p className="font-medium">
                   {device.assigned_at ? format(new Date(device.assigned_at), "dd MMM, HH:mm") : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Collected</p>
+                <p className="text-muted-foreground">{t("adminDeviceDetail.collected", "Collected")}</p>
                 <p className="font-medium">
                   {device.collected_at ? format(new Date(device.collected_at), "dd MMM, HH:mm") : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Live</p>
+                <p className="text-muted-foreground">{t("adminDeviceDetail.live", "Live")}</p>
                 <p className="font-medium">
                   {device.live_at ? format(new Date(device.live_at), "dd MMM, HH:mm") : "—"}
                 </p>
@@ -433,18 +435,18 @@ export default function DeviceDetailPage() {
                 {device.status === "allocated" && (
                   <Button onClick={handleMarkCollected} disabled={updateDeviceMutation.isPending}>
                     <Truck className="mr-2 h-4 w-4" />
-                    Mark Collected
+                    {t("adminDeviceDetail.markCollected", "Mark Collected")}
                   </Button>
                 )}
                 {device.status === "with_staff" && (
                   <Button onClick={handleMarkLive} disabled={updateDeviceMutation.isPending}>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark Live
+                    {t("adminDeviceDetail.markLive", "Mark Live")}
                   </Button>
                 )}
                 <Button variant="destructive" onClick={handleMarkFaulty} disabled={updateDeviceMutation.isPending}>
                   <AlertTriangle className="mr-2 h-4 w-4" />
-                  Mark Faulty
+                  {t("adminDeviceDetail.markFaulty", "Mark Faulty")}
                 </Button>
               </div>
             )}

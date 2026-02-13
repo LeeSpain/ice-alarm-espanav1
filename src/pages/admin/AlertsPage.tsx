@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
-  Search, 
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
@@ -46,6 +46,7 @@ const alertTypeIcons: Record<string, React.ElementType> = {
 };
 
 export default function AlertsPage() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -85,13 +86,13 @@ export default function AlertsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "incoming":
-        return <Badge variant="destructive" className="animate-pulse">Incoming</Badge>;
+        return <Badge variant="destructive" className="animate-pulse">{t("adminAlerts.incoming", "Incoming")}</Badge>;
       case "in_progress":
-        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">In Progress</Badge>;
+        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">{t("adminAlerts.inProgress", "In Progress")}</Badge>;
       case "resolved":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Resolved</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("adminAlerts.resolved", "Resolved")}</Badge>;
       case "escalated":
-        return <Badge variant="destructive">Escalated</Badge>;
+        return <Badge variant="destructive">{t("adminAlerts.escalated", "Escalated")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -114,9 +115,9 @@ export default function AlertsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Alerts History</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("adminAlerts.title", "Alerts History")}</h1>
           <p className="text-muted-foreground">
-            View and manage all alert records.
+            {t("adminAlerts.subtitle", "View and manage all alert records.")}
           </p>
         </div>
       </div>
@@ -130,11 +131,11 @@ export default function AlertsPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="incoming">Incoming</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
-                <SelectItem value="escalated">Escalated</SelectItem>
+                <SelectItem value="all">{t("adminAlerts.allStatus", "All Status")}</SelectItem>
+                <SelectItem value="incoming">{t("adminAlerts.incoming", "Incoming")}</SelectItem>
+                <SelectItem value="in_progress">{t("adminAlerts.inProgress", "In Progress")}</SelectItem>
+                <SelectItem value="resolved">{t("adminAlerts.resolved", "Resolved")}</SelectItem>
+                <SelectItem value="escalated">{t("adminAlerts.escalated", "Escalated")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
@@ -142,13 +143,13 @@ export default function AlertsPage() {
                 <SelectValue placeholder="Alert Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="sos_button">SOS Button</SelectItem>
-                <SelectItem value="fall_detected">Fall Detected</SelectItem>
-                <SelectItem value="low_battery">Low Battery</SelectItem>
-                <SelectItem value="geo_fence">Geo-fence</SelectItem>
-                <SelectItem value="check_in">Check-in</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
+                <SelectItem value="all">{t("adminAlerts.allTypes", "All Types")}</SelectItem>
+                <SelectItem value="sos_button">{t("adminAlerts.sosButton", "SOS Button")}</SelectItem>
+                <SelectItem value="fall_detected">{t("adminAlerts.fallDetected", "Fall Detected")}</SelectItem>
+                <SelectItem value="low_battery">{t("adminAlerts.lowBattery", "Low Battery")}</SelectItem>
+                <SelectItem value="geo_fence">{t("adminAlerts.geoFence", "Geo-fence")}</SelectItem>
+                <SelectItem value="check_in">{t("adminAlerts.checkIn", "Check-in")}</SelectItem>
+                <SelectItem value="manual">{t("adminAlerts.manual", "Manual")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -161,19 +162,19 @@ export default function AlertsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Received</TableHead>
-                <TableHead>Resolved</TableHead>
-                <TableHead>Handled By</TableHead>
+                <TableHead>{t("adminAlerts.member", "Member")}</TableHead>
+                <TableHead>{t("adminAlerts.type", "Type")}</TableHead>
+                <TableHead>{t("common.status", "Status")}</TableHead>
+                <TableHead>{t("adminAlerts.received", "Received")}</TableHead>
+                <TableHead>{t("adminAlerts.resolvedAt", "Resolved")}</TableHead>
+                <TableHead>{t("adminAlerts.handledBy", "Handled By")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
-                    Loading alerts...
+                    {t("adminAlerts.loading", "Loading alerts...")}
                   </TableCell>
                 </TableRow>
               ) : data?.alerts && data.alerts.length > 0 ? (
@@ -192,7 +193,7 @@ export default function AlertsPage() {
                           <p className="text-sm text-muted-foreground">{alert.member.phone}</p>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Unknown</span>
+                        <span className="text-muted-foreground">{t("adminAlerts.unknown", "Unknown")}</span>
                       )}
                     </TableCell>
                     <TableCell>{getTypeBadge(alert.alert_type)}</TableCell>
@@ -218,7 +219,7 @@ export default function AlertsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No alerts found
+                    {t("adminAlerts.noAlerts", "No alerts found")}
                   </TableCell>
                 </TableRow>
               )}
