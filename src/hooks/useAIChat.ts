@@ -277,8 +277,8 @@ export function useAIChat(options: UseAIChatOptions | string = {}) {
     setInputValue("");
     setIsLoading(true);
 
-    // Save user message to database (don't await to keep UI fast)
-    saveMessageToDb(userMessage.content, "user");
+    // Save user message to database (don't await to keep UI fast, ignore RLS errors for anonymous users)
+    saveMessageToDb(userMessage.content, "user").catch(() => {});
 
     try {
       // Build conversation history for context
