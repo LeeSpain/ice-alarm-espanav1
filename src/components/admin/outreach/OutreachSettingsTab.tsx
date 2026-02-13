@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useOutreachCaps, type CapSetting, type OutreachCapsSettings } from "@/hooks/useOutreachCaps";
 import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OutreachControlPanel } from "./OutreachControlPanel";
 
 interface CapRowProps {
   label: string;
@@ -56,96 +58,109 @@ function CapRow({ label, description, value, onChange }: CapRowProps) {
 }
 
 export function OutreachSettingsTab() {
-  const { t } = useTranslation();
-  const { settings, isLoading, updateSetting, isUpdating } = useOutreachCaps();
-  const [localSettings, setLocalSettings] = useState<OutreachCapsSettings>(settings);
-  const [hasChanges, setHasChanges] = useState(false);
+   const { t } = useTranslation();
+   const { settings, isLoading, updateSetting, isUpdating } = useOutreachCaps();
+   const [localSettings, setLocalSettings] = useState<OutreachCapsSettings>(settings);
+   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
+   useEffect(() => {
+     setLocalSettings(settings);
+   }, [settings]);
 
-  const handleChange = (key: keyof OutreachCapsSettings, value: CapSetting) => {
-    setLocalSettings((prev) => ({ ...prev, [key]: value }));
-    setHasChanges(true);
-  };
+   const handleChange = (key: keyof OutreachCapsSettings, value: CapSetting) => {
+     setLocalSettings((prev) => ({ ...prev, [key]: value }));
+     setHasChanges(true);
+   };
 
-  const handleSave = async () => {
-    const keys = Object.keys(localSettings) as (keyof OutreachCapsSettings)[];
-    for (const key of keys) {
-      if (JSON.stringify(localSettings[key]) !== JSON.stringify(settings[key])) {
-        await updateSetting({ key, value: localSettings[key] });
-      }
-    }
-    setHasChanges(false);
-  };
+   const handleSave = async () => {
+     const keys = Object.keys(localSettings) as (keyof OutreachCapsSettings)[];
+     for (const key of keys) {
+       if (JSON.stringify(localSettings[key]) !== JSON.stringify(settings[key])) {
+         await updateSetting({ key, value: localSettings[key] });
+       }
+     }
+     setHasChanges(false);
+   };
 
-  const capRows: { key: keyof OutreachCapsSettings; labelKey: string; descKey: string }[] = [
-    {
-      key: "max_qualified_per_day",
-      labelKey: "outreach.caps.maxQualified",
-      descKey: "outreach.caps.maxQualifiedDesc",
-    },
-    {
-      key: "max_ai_ratings_per_day",
-      labelKey: "outreach.caps.maxRatings",
-      descKey: "outreach.caps.maxRatingsDesc",
-    },
-    {
-      key: "max_ai_research_per_day",
-      labelKey: "outreach.caps.maxResearch",
-      descKey: "outreach.caps.maxResearchDesc",
-    },
-    {
-      key: "max_ai_emails_per_day",
-      labelKey: "outreach.caps.maxEmails",
-      descKey: "outreach.caps.maxEmailsDesc",
-    },
-    {
-      key: "max_emails_per_inbox_per_day",
-      labelKey: "outreach.caps.maxEmailsInbox",
-      descKey: "outreach.caps.maxEmailsInboxDesc",
-    },
-  ];
+   const capRows: { key: keyof OutreachCapsSettings; labelKey: string; descKey: string }[] = [
+     {
+       key: "max_qualified_per_day",
+       labelKey: "outreach.caps.maxQualified",
+       descKey: "outreach.caps.maxQualifiedDesc",
+     },
+     {
+       key: "max_ai_ratings_per_day",
+       labelKey: "outreach.caps.maxRatings",
+       descKey: "outreach.caps.maxRatingsDesc",
+     },
+     {
+       key: "max_ai_research_per_day",
+       labelKey: "outreach.caps.maxResearch",
+       descKey: "outreach.caps.maxResearchDesc",
+     },
+     {
+       key: "max_ai_emails_per_day",
+       labelKey: "outreach.caps.maxEmails",
+       descKey: "outreach.caps.maxEmailsDesc",
+     },
+     {
+       key: "max_emails_per_inbox_per_day",
+       labelKey: "outreach.caps.maxEmailsInbox",
+       descKey: "outreach.caps.maxEmailsInboxDesc",
+     },
+   ];
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <div>
-              <CardTitle>{t("outreach.caps.title")}</CardTitle>
-              <CardDescription>{t("outreach.caps.subtitle")}</CardDescription>
-            </div>
-          </div>
-          {hasChanges && (
-            <Button onClick={handleSave} disabled={isUpdating} size="sm">
-              <Save className="mr-2 h-4 w-4" />
-              {t("common.save")}
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="py-8 text-center text-muted-foreground">
-            {t("common.loading")}
-          </div>
-        ) : (
-          <div className="divide-y">
-            {capRows.map(({ key, labelKey, descKey }) => (
-              <CapRow
-                key={key}
-                label={t(labelKey)}
-                description={t(descKey)}
-                value={localSettings[key]}
-                onChange={(value) => handleChange(key, value)}
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+   return (
+     <Tabs defaultValue="control" className="w-full space-y-4">
+       <TabsList>
+         <TabsTrigger value="control">Control Panel</TabsTrigger>
+         <TabsTrigger value="caps">Rate Limits</TabsTrigger>
+       </TabsList>
+
+       <TabsContent value="control" className="space-y-4">
+         <OutreachControlPanel />
+       </TabsContent>
+
+       <TabsContent value="caps">
+         <Card>
+           <CardHeader>
+             <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2">
+                 <Settings className="h-5 w-5 text-primary" />
+                 <div>
+                   <CardTitle>{t("outreach.caps.title")}</CardTitle>
+                   <CardDescription>{t("outreach.caps.subtitle")}</CardDescription>
+                 </div>
+               </div>
+               {hasChanges && (
+                 <Button onClick={handleSave} disabled={isUpdating} size="sm">
+                   <Save className="mr-2 h-4 w-4" />
+                   {t("common.save")}
+                 </Button>
+               )}
+             </div>
+           </CardHeader>
+           <CardContent>
+             {isLoading ? (
+               <div className="py-8 text-center text-muted-foreground">
+                 {t("common.loading")}
+               </div>
+             ) : (
+               <div className="divide-y">
+                 {capRows.map(({ key, labelKey, descKey }) => (
+                   <CapRow
+                     key={key}
+                     label={t(labelKey)}
+                     description={t(descKey)}
+                     value={localSettings[key]}
+                     onChange={(value) => handleChange(key, value)}
+                   />
+                 ))}
+               </div>
+             )}
+           </CardContent>
+         </Card>
+       </TabsContent>
+     </Tabs>
+   );
+ }
