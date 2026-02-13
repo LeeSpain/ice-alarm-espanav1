@@ -3938,6 +3938,14 @@
       "isabellaActive": "ISABELLA ACTIVE",
       "humanMode": "HUMAN MODE: All alerts and communications routed to staff",
       "managing": "Managing {{interactions}} interactions today | {{escalated}} escalated to humans"
+    },
+    "advancedConfig": {
+      "title": "Advanced Configuration",
+      "description": "Configure the AI agents that power Isabella's functions",
+      "customerServiceAgent": "Customer Service & Sales Agent",
+      "mainBrain": "Main Brain",
+      "memberSpecialist": "Member Specialist",
+      "hint": "These links let you customise AI prompts, memory, and permissions."
     }
   },
   "aiCommandCentre": {
