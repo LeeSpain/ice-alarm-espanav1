@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 
 interface ShiftNote {
@@ -45,6 +46,7 @@ interface ShiftNote {
 }
 
 export default function ShiftNotesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [notes, setNotes] = useState<ShiftNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);

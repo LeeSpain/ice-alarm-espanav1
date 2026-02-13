@@ -13,9 +13,11 @@ import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useDeviceStockStats } from "@/hooks/useDeviceStock";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { getPendantFinalPrice } from "@/config/pricing";
 
 export default function EV07BPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("stock");
   
@@ -46,12 +48,12 @@ export default function EV07BPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Smartphone className="h-6 w-6 text-primary" />
-            EV-07B Device Operations
-          </h1>
-          <p className="text-muted-foreground">
-            Manage EV-07B pendant stock, monitor connectivity, and track operational costs
+           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+             <Smartphone className="h-6 w-6 text-primary" />
+             {t("adminEV07B.title", "EV-07B Device Operations")}
+           </h1>
+           <p className="text-muted-foreground">
+             {t("adminEV07B.subtitle", "Manage EV-07B pendant stock, monitor connectivity, and track operational costs")}
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/admin/settings?tab=pricing")}>

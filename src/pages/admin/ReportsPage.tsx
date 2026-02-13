@@ -10,8 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 export default function ReportsPage() {
+  const { t } = useTranslation();
   // Fetch subscription breakdown
   const { data: subscriptionData } = useQuery({
     queryKey: ["reports-subscriptions"],
@@ -76,10 +78,10 @@ export default function ReportsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-          <p className="text-muted-foreground">
-            Analytics and insights for ICE Alarm España.
-          </p>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminReports.title", "Reports")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminReports.subtitle", "Analytics and insights for ICE Alarm España.")}
+           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline">

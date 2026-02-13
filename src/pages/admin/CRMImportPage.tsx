@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { parseCSV, parseCSVRow, getImportStats, type ParsedCRMRow } from "@/lib/crmImport";
 
 type ImportMode = 'members_only' | 'members_and_contacts';
 
 export default function CRMImportPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<ParsedCRMRow[]>([]);
@@ -376,10 +378,10 @@ export default function CRMImportPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">CRM Import</h1>
-          <p className="text-muted-foreground">Import contacts from KarmaCRM CSV exports</p>
-        </div>
+         <div>
+           <h1 className="text-2xl font-bold">{t("adminCRMImport.title", "CRM Import")}</h1>
+           <p className="text-muted-foreground">{t("adminCRMImport.subtitle", "Import contacts from KarmaCRM CSV exports")}</p>
+         </div>
       </div>
 
       {/* Upload Area */}

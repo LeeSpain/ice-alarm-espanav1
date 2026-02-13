@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface CRMContact {
@@ -39,6 +40,7 @@ interface CRMContact {
 }
 
 export default function CRMContactsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [contacts, setContacts] = useState<CRMContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,12 +115,12 @@ export default function CRMContactsPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">CRM Contacts</h1>
-          <p className="text-muted-foreground">
-            Incomplete records from CRM import that need follow-up
-          </p>
-        </div>
+         <div className="flex-1">
+           <h1 className="text-2xl font-bold">{t("adminCRM.title", "CRM Contacts")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminCRM.subtitle", "Incomplete records from CRM import that need follow-up")}
+           </p>
+         </div>
         <Badge variant="secondary">{filteredContacts.length} contacts</Badge>
       </div>
 

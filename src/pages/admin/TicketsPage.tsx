@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface TicketType {
@@ -59,6 +60,7 @@ interface Staff {
 }
 
 export default function AdminTicketsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<TicketType[]>([]);
@@ -310,10 +312,10 @@ export default function AdminTicketsPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Staff Support Tickets</h1>
-          <p className="text-muted-foreground">Manage internal support tickets from staff</p>
-        </div>
+         <div>
+           <h1 className="text-2xl font-bold">{t("adminTickets.title", "Staff Support Tickets")}</h1>
+           <p className="text-muted-foreground">{t("adminTickets.subtitle", "Manage internal support tickets from staff")}</p>
+         </div>
       </div>
 
       {/* Filters */}

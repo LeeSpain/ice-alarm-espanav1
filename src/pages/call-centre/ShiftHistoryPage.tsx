@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 

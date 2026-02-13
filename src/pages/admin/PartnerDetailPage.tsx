@@ -36,6 +36,7 @@ import { PartnerAlertsTab } from "@/components/admin/partner/PartnerAlertsTab";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { logPartnerActivity, logCommissionActivity } from "@/lib/auditLog";
+import { useTranslation } from "react-i18next";
 import { logCrmEvent } from "@/lib/crmEvents";
 import { Database } from "@/integrations/supabase/types";
 
@@ -138,6 +139,7 @@ const commissionStatusColors: Record<CommissionStatus, string> = {
 };
 
 export default function PartnerDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -336,10 +338,10 @@ export default function PartnerDetailPage() {
   if (!partner) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground">Partner not found</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/admin/partners")}>
-          Back to Partners
-        </Button>
+       <p className="text-muted-foreground">{t("adminPartners.partnerNotFound", "Partner not found")}</p>
+         <Button variant="outline" className="mt-4" onClick={() => navigate("/admin/partners")}>
+           {t("adminPartners.backToPartners", "Back to Partners")}
+         </Button>
       </div>
     );
   }

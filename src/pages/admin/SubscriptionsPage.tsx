@@ -39,10 +39,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 const ITEMS_PER_PAGE = 20;
 
 export default function SubscriptionsPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -113,12 +115,12 @@ export default function SubscriptionsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Subscriptions</h1>
-          <p className="text-muted-foreground">
-            Manage member subscriptions and billing.
-          </p>
-        </div>
+         <div>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminSubscriptions.title", "Subscriptions")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminSubscriptions.subtitle", "Manage member subscriptions and billing.")}
+           </p>
+         </div>
       </div>
 
       {/* Filters */}

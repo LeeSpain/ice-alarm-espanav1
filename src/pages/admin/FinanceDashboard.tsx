@@ -40,6 +40,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 import { usePendingCostsTotal } from "@/hooks/useOperationalCosts";
 
 const CHART_COLORS = {
@@ -83,7 +84,7 @@ interface OrderStatus {
 }
 
 export default function FinanceDashboard() {
-  // Fetch pending costs total
+  const { t } = useTranslation();
   const { data: pendingCostsTotal } = usePendingCostsTotal();
 
   // Fetch main finance stats
@@ -395,13 +396,13 @@ export default function FinanceDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Finance Dashboard</h1>
-          <p className="text-muted-foreground">
-            Financial overview and key metrics for ICE Alarm España
-          </p>
-        </div>
+       <div className="flex items-center justify-between">
+         <div>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminFinance.title", "Finance Dashboard")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminFinance.subtitle", "Financial overview and key metrics for ICE Alarm España")}
+           </p>
+         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to="/admin/reports">

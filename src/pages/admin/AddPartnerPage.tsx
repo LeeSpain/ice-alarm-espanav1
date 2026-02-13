@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, UserPlus, Building2, MapPin, Bell, DollarSign } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 const partnerFormSchema = z.object({
@@ -39,6 +40,7 @@ const partnerFormSchema = z.object({
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
 export default function AddPartnerPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -136,12 +138,12 @@ export default function AddPartnerPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/partners")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Add New Partner</h1>
-          <p className="text-muted-foreground">
-            Create a new affiliate partner manually
-          </p>
-        </div>
+         <div>
+           <h1 className="text-2xl font-bold">{t("adminAddPartner.title", "Add New Partner")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminAddPartner.subtitle", "Create a new affiliate partner manually")}
+           </p>
+         </div>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)}>
