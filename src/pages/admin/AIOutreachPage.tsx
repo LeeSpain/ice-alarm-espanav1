@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Megaphone, Users, Target, Mail, BarChart3, HelpCircle, Settings } from "lucide-react";
+import { Megaphone, Users, Target, Mail, BarChart3, HelpCircle, Settings, Zap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { OutreachLeadsTab } from "@/components/admin/outreach/OutreachLeadsTab";
@@ -9,8 +9,10 @@ import { OutreachCampaignsTab } from "@/components/admin/outreach/OutreachCampai
 import { OutreachInboxTab } from "@/components/admin/outreach/OutreachInboxTab";
 import { OutreachAnalyticsTab } from "@/components/admin/outreach/OutreachAnalyticsTab";
 import { OutreachSettingsTab } from "@/components/admin/outreach/OutreachSettingsTab";
+import { OutreachControlPanel } from "@/components/admin/outreach/OutreachControlPanel";
 import { OutreachHelpDialog } from "@/components/admin/outreach/OutreachHelpDialog";
 import { OutreachCapsWidget } from "@/components/admin/outreach/OutreachCapsWidget";
+
 
 const AIOutreachPage = () => {
   const { t } = useTranslation();
