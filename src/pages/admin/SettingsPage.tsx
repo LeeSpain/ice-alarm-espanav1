@@ -22,6 +22,7 @@ import {
   FlaskConical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
@@ -70,6 +71,7 @@ const KEY = {
 } as const;
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -411,55 +413,55 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage system configuration and integrations.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("adminSettings.title", "Settings")}</h1>
+        <p className="text-muted-foreground">{t("adminSettings.subtitle", "Manage system configuration and integrations.")}</p>
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="communications">Communications</TabsTrigger>
-          <TabsTrigger value="images">Images</TabsTrigger>
-          <TabsTrigger value="documentation">Docs</TabsTrigger>
+          <TabsTrigger value="company">{t("adminSettings.company", "Company")}</TabsTrigger>
+          <TabsTrigger value="pricing">{t("adminSettings.pricing", "Pricing")}</TabsTrigger>
+          <TabsTrigger value="payments">{t("adminSettings.payments", "Payments")}</TabsTrigger>
+          <TabsTrigger value="communications">{t("adminSettings.communications", "Communications")}</TabsTrigger>
+          <TabsTrigger value="images">{t("adminSettings.images", "Images")}</TabsTrigger>
+          <TabsTrigger value="documentation">{t("adminSettings.documentation", "Docs")}</TabsTrigger>
         </TabsList>
 
         {/* Company Tab */}
         <TabsContent value="company">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                Company Profile
+                {t("adminSettings.companyProfile", "Company Profile")}
               </CardTitle>
-              <CardDescription>Basic company information displayed to members</CardDescription>
+              <CardDescription>{t("adminSettings.companyProfileDesc", "Basic company information displayed to members")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Company Name</Label>
+                   <Label>{t("adminSettings.companyName", "Company Name")}</Label>
                   <Input
                     value={companySettings.company_name}
                     onChange={(e) => setCompanySettings((prev) => ({ ...prev, company_name: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Emergency Phone</Label>
+                   <Label>{t("adminSettings.emergencyPhone", "Emergency Phone")}</Label>
                   <Input
                     value={companySettings.emergency_phone}
                     onChange={(e) => setCompanySettings((prev) => ({ ...prev, emergency_phone: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Support Email</Label>
+                   <Label>{t("adminSettings.supportEmail", "Support Email")}</Label>
                   <Input
                     value={companySettings.support_email}
                     onChange={(e) => setCompanySettings((prev) => ({ ...prev, support_email: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Address</Label>
+                   <Label>{t("adminSettings.address", "Address")}</Label>
                   <Input
                     value={companySettings.address}
                     onChange={(e) => setCompanySettings((prev) => ({ ...prev, address: e.target.value }))}
@@ -468,11 +470,11 @@ export default function SettingsPage() {
               </div>
               <Button onClick={handleSaveCompany} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4 mr-2" />
+                   <Save className="h-4 w-4 mr-2" />
                 )}
-                Save Changes
+                {t("common.saveChanges", "Save Changes")}
               </Button>
             </CardContent>
           </Card>
