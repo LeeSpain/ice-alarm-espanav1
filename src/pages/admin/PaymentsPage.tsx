@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   Search, 
   Download,
@@ -33,6 +34,7 @@ import { format } from "date-fns";
 const ITEMS_PER_PAGE = 20;
 
 export default function PaymentsPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -71,13 +73,13 @@ export default function PaymentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Completed</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("adminPayments.completed", "Completed")}</Badge>;
       case "pending":
-        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">Pending</Badge>;
+        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">{t("adminPayments.pending", "Pending")}</Badge>;
       case "failed":
-        return <Badge variant="destructive">Failed</Badge>;
+        return <Badge variant="destructive">{t("adminPayments.failed", "Failed")}</Badge>;
       case "refunded":
-        return <Badge variant="secondary">Refunded</Badge>;
+        return <Badge variant="secondary">{t("adminPayments.refunded", "Refunded")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -85,11 +87,11 @@ export default function PaymentsPage() {
 
   const getTypeBadge = (type: string) => {
     const labels: Record<string, string> = {
-      registration: "Registration",
-      subscription: "Subscription",
-      device: "Device",
-      shipping: "Shipping",
-      order: "Order",
+      registration: t("adminPayments.types.registration", "Registration"),
+      subscription: t("adminPayments.types.subscription", "Subscription"),
+      device: t("adminPayments.types.device", "Device"),
+      shipping: t("adminPayments.types.shipping", "Shipping"),
+      order: t("adminPayments.types.order", "Order"),
     };
     return <Badge variant="outline">{labels[type] || type}</Badge>;
   };
@@ -99,14 +101,14 @@ export default function PaymentsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("adminPayments.title", "Payments")}</h1>
           <p className="text-muted-foreground">
-            View and manage all payment transactions.
+            {t("adminPayments.subtitle", "View and manage all payment transactions.")}
           </p>
         </div>
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
-          Export
+          {t("adminPayments.export", "Export")}
         </Button>
       </div>
 
@@ -117,7 +119,7 @@ export default function PaymentsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by invoice number..."
+                placeholder={t("adminPayments.searchInvoice", "Search by invoice number...")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -131,11 +133,11 @@ export default function PaymentsPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="all">{t("adminPayments.allStatus", "All Status")}</SelectItem>
+                <SelectItem value="completed">{t("adminPayments.completed", "Completed")}</SelectItem>
+                <SelectItem value="pending">{t("adminPayments.pending", "Pending")}</SelectItem>
+                <SelectItem value="failed">{t("adminPayments.failed", "Failed")}</SelectItem>
+                <SelectItem value="refunded">{t("adminPayments.refunded", "Refunded")}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
@@ -143,12 +145,12 @@ export default function PaymentsPage() {
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="registration">Registration</SelectItem>
-                <SelectItem value="subscription">Subscription</SelectItem>
-                <SelectItem value="device">Device</SelectItem>
-                <SelectItem value="shipping">Shipping</SelectItem>
-                <SelectItem value="order">Order</SelectItem>
+                <SelectItem value="all">{t("adminPayments.allTypes", "All Types")}</SelectItem>
+                <SelectItem value="registration">{t("adminPayments.types.registration", "Registration")}</SelectItem>
+                <SelectItem value="subscription">{t("adminPayments.types.subscription", "Subscription")}</SelectItem>
+                <SelectItem value="device">{t("adminPayments.types.device", "Device")}</SelectItem>
+                <SelectItem value="shipping">{t("adminPayments.types.shipping", "Shipping")}</SelectItem>
+                <SelectItem value="order">{t("adminPayments.types.order", "Order")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -161,20 +163,20 @@ export default function PaymentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Invoice</TableHead>
+                <TableHead>{t("adminPayments.member", "Member")}</TableHead>
+                <TableHead>{t("adminPayments.amount", "Amount")}</TableHead>
+                <TableHead>{t("adminPayments.type", "Type")}</TableHead>
+                <TableHead>{t("adminPayments.method", "Method")}</TableHead>
+                <TableHead>{t("adminPayments.status", "Status")}</TableHead>
+                <TableHead>{t("adminPayments.date", "Date")}</TableHead>
+                <TableHead>{t("adminPayments.invoice", "Invoice")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
-                    Loading payments...
+                    {t("adminPayments.loading", "Loading payments...")}
                   </TableCell>
                 </TableRow>
               ) : data?.payments && data.payments.length > 0 ? (
@@ -191,7 +193,7 @@ export default function PaymentsPage() {
                           <p className="text-sm text-muted-foreground">{payment.member.email}</p>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Unknown</span>
+                        <span className="text-muted-foreground">{t("adminPayments.unknown", "Unknown")}</span>
                       )}
                     </TableCell>
                     <TableCell className="font-medium">€{Number(payment.amount).toFixed(2)}</TableCell>
@@ -219,7 +221,7 @@ export default function PaymentsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No payments found
+                    {t("adminPayments.noPayments", "No payments found")}
                   </TableCell>
                 </TableRow>
               )}
@@ -232,7 +234,7 @@ export default function PaymentsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0)} of {data?.totalCount || 0} payments
+            {t("adminPayments.showing", "Showing")} {((page - 1) * ITEMS_PER_PAGE) + 1} {t("adminPayments.to", "to")} {Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0)} {t("adminPayments.of", "of")} {data?.totalCount || 0} {t("adminPayments.paymentsLabel", "payments")}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -242,10 +244,10 @@ export default function PaymentsPage() {
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              {t("adminPayments.previous", "Previous")}
             </Button>
             <span className="text-sm">
-              Page {page} of {totalPages}
+              {t("adminPayments.page", "Page")} {page} {t("adminPayments.of", "of")} {totalPages}
             </span>
             <Button
               variant="outline"
@@ -253,7 +255,7 @@ export default function PaymentsPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t("adminPayments.next", "Next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

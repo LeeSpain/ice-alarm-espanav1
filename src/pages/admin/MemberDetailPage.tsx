@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -54,6 +55,7 @@ export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [member, setMember] = useState<Member | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [device, setDevice] = useState<Device | null>(null);
@@ -84,7 +86,7 @@ export default function MemberDetailPage() {
       setMember(data);
     } catch (error) {
       console.error("Error fetching member:", error);
-      toast.error("Failed to load member");
+      toast.error(t("adminMemberDetail.failedLoad", "Failed to load member"));
       navigate(backPath);
     } finally {
       setIsLoading(false);
@@ -131,11 +133,11 @@ export default function MemberDetailPage() {
         .eq("id", member.id);
 
       if (error) throw error;
-      toast.success(`Member ${member.status === "suspended" ? "activated" : "suspended"}`);
+      toast.success(t("adminMemberDetail.memberUpdated", `Member ${member.status === "suspended" ? "activated" : "suspended"}`));
       fetchMember();
     } catch (error) {
       console.error("Error updating member:", error);
-      toast.error("Failed to update member");
+      toast.error(t("adminMemberDetail.failedUpdate", "Failed to update member"));
     }
   };
 
@@ -148,11 +150,11 @@ export default function MemberDetailPage() {
         .eq("id", member.id);
 
       if (error) throw error;
-      toast.success("Member deleted");
+      toast.success(t("adminMemberDetail.memberDeleted", "Member deleted"));
       navigate(backPath);
     } catch (error) {
       console.error("Error deleting member:", error);
-      toast.error("Failed to delete member");
+      toast.error(t("adminMemberDetail.failedDelete", "Failed to delete member"));
     }
   };
 
@@ -167,9 +169,9 @@ export default function MemberDetailPage() {
   if (!member) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Member not found</p>
+        <p className="text-muted-foreground">{t("adminMemberDetail.notFound", "Member not found")}</p>
         <Button variant="link" onClick={() => navigate(backPath)}>
-          Back to Members
+          {t("adminMemberDetail.backToMembers", "Back to Members")}
         </Button>
       </div>
     );
@@ -182,7 +184,7 @@ export default function MemberDetailPage() {
       {/* Back Button */}
       <Button variant="ghost" onClick={() => navigate(backPath)} className="mb-2">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Members
+        {t("adminMemberDetail.backToMembers", "Back to Members")}
       </Button>
 
       {/* Member Header */}
@@ -198,18 +200,18 @@ export default function MemberDetailPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1 bg-muted p-1">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="medical">Medical</TabsTrigger>
-          <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="device">Device</TabsTrigger>
-          <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="crm">CRM</TabsTrigger>
+          <TabsTrigger value="profile">{t("adminMemberDetail.tabs.profile", "Profile")}</TabsTrigger>
+          <TabsTrigger value="medical">{t("adminMemberDetail.tabs.medical", "Medical")}</TabsTrigger>
+          <TabsTrigger value="contacts">{t("adminMemberDetail.tabs.contacts", "Contacts")}</TabsTrigger>
+          <TabsTrigger value="device">{t("adminMemberDetail.tabs.device", "Device")}</TabsTrigger>
+          <TabsTrigger value="subscription">{t("adminMemberDetail.tabs.subscription", "Subscription")}</TabsTrigger>
+          <TabsTrigger value="payments">{t("adminMemberDetail.tabs.payments", "Payments")}</TabsTrigger>
+          <TabsTrigger value="messages">{t("adminMemberDetail.tabs.messages", "Messages")}</TabsTrigger>
+          <TabsTrigger value="notes">{t("adminMemberDetail.tabs.notes", "Notes")}</TabsTrigger>
+          <TabsTrigger value="activity">{t("adminMemberDetail.tabs.activity", "Activity")}</TabsTrigger>
+          <TabsTrigger value="alerts">{t("adminMemberDetail.tabs.alerts", "Alerts")}</TabsTrigger>
+          <TabsTrigger value="tasks">{t("adminMemberDetail.tabs.tasks", "Tasks")}</TabsTrigger>
+          <TabsTrigger value="crm">{t("adminMemberDetail.tabs.crm", "CRM")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
