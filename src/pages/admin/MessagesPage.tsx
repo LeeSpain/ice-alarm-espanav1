@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -94,6 +95,7 @@ interface Member {
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -497,30 +499,30 @@ export default function MessagesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge className="bg-blue-500">Open</Badge>;
+         return <Badge className="bg-blue-500">{t("adminMessages.open", "Open")}</Badge>;
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+         return <Badge variant="secondary">{t("common.pending", "Pending")}</Badge>;
       case "resolved":
-        return <Badge className="bg-green-600">Resolved</Badge>;
+         return <Badge className="bg-green-600">{t("adminMessages.resolved", "Resolved")}</Badge>;
       case "closed":
-        return <Badge variant="outline">Closed</Badge>;
+         return <Badge variant="outline">{t("adminMessages.closed", "Closed")}</Badge>;
       default:
-        return <Badge>{status}</Badge>;
+         return <Badge>{status}</Badge>;
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "urgent":
-        return <Badge variant="destructive">Urgent</Badge>;
+         return <Badge variant="destructive">{t("adminMessages.urgent", "Urgent")}</Badge>;
       case "high":
-        return <Badge className="bg-orange-500">High</Badge>;
+         return <Badge className="bg-orange-500">{t("adminMessages.high", "High")}</Badge>;
       case "normal":
-        return null;
+         return null;
       case "low":
-        return <Badge variant="outline">Low</Badge>;
+         return <Badge variant="outline">{t("adminMessages.low", "Low")}</Badge>;
       default:
-        return null;
+         return null;
     }
   };
 
@@ -536,50 +538,50 @@ export default function MessagesPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Messages</h1>
-          <p className="text-muted-foreground">Manage member conversations</p>
-        </div>
+       {/* Header */}
+       <div className="flex items-center justify-between">
+         <div>
+           <h1 className="text-2xl font-bold">{t("adminMessages.title", "Messages")}</h1>
+           <p className="text-muted-foreground">{t("adminMessages.subtitle", "Manage member conversations")}</p>
+         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Conversation
-            </Button>
+             <Button>
+               <Plus className="mr-2 h-4 w-4" />
+               {t("adminMessages.newConversation", "New Conversation")}
+             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Start New Conversation</DialogTitle>
-              <DialogDescription>Create a new conversation with a member or staff</DialogDescription>
-            </DialogHeader>
+           <DialogContent className="max-w-md">
+             <DialogHeader>
+               <DialogTitle>{t("adminMessages.startNewConversation", "Start New Conversation")}</DialogTitle>
+               <DialogDescription>{t("adminMessages.createNewConversation", "Create a new conversation with a member or staff")}</DialogDescription>
+             </DialogHeader>
             <div className="space-y-4 py-4">
               {/* Conversation Type Selector */}
-              <Tabs value={newConversation.type} onValueChange={(v) => setNewConversation({ ...newConversation, type: v as "member" | "staff", memberId: "", staffParticipants: [] })}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="member" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Member
-                  </TabsTrigger>
-                  <TabsTrigger value="staff" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Staff
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+               <Tabs value={newConversation.type} onValueChange={(v) => setNewConversation({ ...newConversation, type: v as "member" | "staff", memberId: "", staffParticipants: [] })}>
+                 <TabsList className="grid w-full grid-cols-2">
+                   <TabsTrigger value="member" className="flex items-center gap-2">
+                     <User className="h-4 w-4" />
+                     {t("common.member", "Member")}
+                   </TabsTrigger>
+                   <TabsTrigger value="staff" className="flex items-center gap-2">
+                     <Users className="h-4 w-4" />
+                     {t("common.staff", "Staff")}
+                   </TabsTrigger>
+                 </TabsList>
+               </Tabs>
 
               {/* Member Selection */}
-              {newConversation.type === "member" && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Member</label>
-                  <Select
-                    value={newConversation.memberId}
-                    onValueChange={(v) => setNewConversation({ ...newConversation, memberId: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a member..." />
-                    </SelectTrigger>
+               {newConversation.type === "member" && (
+                 <div className="space-y-2">
+                   <label className="text-sm font-medium">{t("adminMessages.selectMember", "Select Member")}</label>
+                   <Select
+                     value={newConversation.memberId}
+                     onValueChange={(v) => setNewConversation({ ...newConversation, memberId: v })}
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder={t("adminMessages.selectMemberPlaceholder", "Select a member...")} />
+                     </SelectTrigger>
                     <SelectContent>
                       {members.map((member) => (
                         <SelectItem key={member.id} value={member.id}>

@@ -13,6 +13,7 @@ import { Plus, Search, Users, DollarSign, Send, TrendingUp, ChevronLeft, Chevron
 import { useNavigate } from "react-router-dom";
 import { format, subDays, isAfter } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
+import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
@@ -51,6 +52,7 @@ const statusColors: Record<PartnerStatus, string> = {
 };
 
 export default function PartnersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,50 +234,50 @@ export default function PartnersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Partners / Affiliates</h1>
-          <p className="text-muted-foreground">
-            Manage your partner network and track referral commissions
-          </p>
-        </div>
+         <div>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminPartners.title", "Partners / Affiliates")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminPartners.subtitle", "Manage your partner network and track referral commissions")}
+           </p>
+         </div>
         <Button onClick={() => navigate("/admin/partners/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Partner
-        </Button>
+           <Plus className="mr-2 h-4 w-4" />
+           {t("common.add", "Add")} {t("adminPartners.partner", "Partner")}
+         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Partners</CardTitle>
+       {/* Stats Cards */}
+       <div className="grid gap-4 md:grid-cols-4">
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-sm font-medium">{t("adminPartners.totalPartners", "Total Partners")}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{globalStats?.totalPartners || 0}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Partners</CardTitle>
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-sm font-medium">{t("adminPartners.activePartners", "Active Partners")}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{globalStats?.activePartners || 0}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Invites Sent</CardTitle>
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-sm font-medium">{t("adminPartners.totalInvites", "Total Invites Sent")}</CardTitle>
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{globalStats?.totalInvites || 0}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Paid (EUR)</CardTitle>
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-sm font-medium">{t("adminPartners.totalPaid", "Total Paid (EUR)")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -290,86 +292,86 @@ export default function PartnersPage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, email, or referral code..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+             <Input
+                 placeholder={t("adminPartners.searchPlaceholder", "Search by name, email, or referral code...")}
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="pl-10"
+               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as PartnerStatus | "all"); setPage(1); }}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="referral">Referral</SelectItem>
-                <SelectItem value="care">Care</SelectItem>
-                <SelectItem value="residential">Residential</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="7">Last 7 Days</SelectItem>
-                <SelectItem value="30">Last 30 Days</SelectItem>
-                <SelectItem value="90">Last 90 Days</SelectItem>
-              </SelectContent>
-            </Select>
+             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as PartnerStatus | "all"); setPage(1); }}>
+               <SelectTrigger className="w-[150px]">
+                 <SelectValue placeholder={t("common.status", "Status")} />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">{t("adminPartners.allStatus", "All Status")}</SelectItem>
+                 <SelectItem value="pending">{t("common.pending", "Pending")}</SelectItem>
+                 <SelectItem value="active">{t("common.active", "Active")}</SelectItem>
+                 <SelectItem value="suspended">{t("adminPartners.suspended", "Suspended")}</SelectItem>
+               </SelectContent>
+             </Select>
+             <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
+               <SelectTrigger className="w-[150px]">
+                 <SelectValue placeholder={t("common.type", "Type")} />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">{t("adminPartners.allTypes", "All Types")}</SelectItem>
+                 <SelectItem value="referral">{t("adminPartners.referral", "Referral")}</SelectItem>
+                 <SelectItem value="care">{t("adminPartners.care", "Care")}</SelectItem>
+                 <SelectItem value="residential">{t("adminPartners.residential", "Residential")}</SelectItem>
+               </SelectContent>
+             </Select>
+             <Select value={dateFilter} onValueChange={setDateFilter}>
+               <SelectTrigger className="w-[150px]">
+                 <SelectValue placeholder={t("common.dateRange", "Date Range")} />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">{t("common.allTime", "All Time")}</SelectItem>
+                 <SelectItem value="7">{t("adminPartners.last7Days", "Last 7 Days")}</SelectItem>
+                 <SelectItem value="30">{t("adminPartners.last30Days", "Last 30 Days")}</SelectItem>
+                 <SelectItem value="90">{t("adminPartners.last90Days", "Last 90 Days")}</SelectItem>
+               </SelectContent>
+             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Partners Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Partners</CardTitle>
-          <CardDescription>
-            View and manage all partner accounts
-          </CardDescription>
-        </CardHeader>
+       {/* Partners Table */}
+       <Card>
+         <CardHeader>
+           <CardTitle>{t("adminPartners.allPartners", "All Partners")}</CardTitle>
+           <CardDescription>
+             {t("adminPartners.viewAndManage", "View and manage all partner accounts")}
+           </CardDescription>
+         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
-          ) : filteredPartners?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No partners found
-            </div>
-          ) : (
+           ) : filteredPartners?.length === 0 ? (
+             <div className="text-center py-8 text-muted-foreground">
+               {t("adminPartners.noPartnersFound", "No partners found")}
+             </div>
+           ) : (
             <Table>
-              <TableHeader>
-                <TableRow>
-                   <TableHead>Partner</TableHead>
-                   <TableHead>Type</TableHead>
-                   <TableHead>Organization</TableHead>
-                   <TableHead>Code</TableHead>
-                   <TableHead>Status</TableHead>
-                   <TableHead className="text-center">Invites</TableHead>
-                   <TableHead className="text-center">Registered</TableHead>
-                   <TableHead className="text-center">Delivered</TableHead>
-                   <TableHead className="text-right">Pending</TableHead>
-                   <TableHead className="text-right">Approved</TableHead>
-                   <TableHead className="text-right">Paid</TableHead>
-                   <TableHead>Joined</TableHead>
-                   <TableHead className="w-[60px]"></TableHead>
-                 </TableRow>
-              </TableHeader>
+               <TableHeader>
+                 <TableRow>
+                    <TableHead>{t("common.partner", "Partner")}</TableHead>
+                    <TableHead>{t("common.type", "Type")}</TableHead>
+                    <TableHead>{t("adminPartners.organization", "Organization")}</TableHead>
+                    <TableHead>{t("adminPartners.code", "Code")}</TableHead>
+                    <TableHead>{t("common.status", "Status")}</TableHead>
+                    <TableHead className="text-center">{t("adminPartners.invites", "Invites")}</TableHead>
+                    <TableHead className="text-center">{t("adminPartners.registered", "Registered")}</TableHead>
+                    <TableHead className="text-center">{t("adminPartners.delivered", "Delivered")}</TableHead>
+                    <TableHead className="text-right">{t("adminPartners.pending", "Pending")}</TableHead>
+                    <TableHead className="text-right">{t("adminPartners.approved", "Approved")}</TableHead>
+                    <TableHead className="text-right">{t("adminPartners.paid", "Paid")}</TableHead>
+                    <TableHead>{t("common.joined", "Joined")}</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
+                  </TableRow>
+               </TableHeader>
               <TableBody>
                 {filteredPartners?.map((partner) => {
                   const stats = partnerStatsMap?.[partner.id];
