@@ -1788,6 +1788,7 @@
     "documents": "Documentos",
     "aiCommandCentre": "Centro de Mando IA",
     "aiOverview": "Vista General",
+    "isabellaOperations": "Operaciones Isabella",
     "mediaManager": "Gestor de Medios",
     "aiOutreach": "AI Outreach",
     "videoHub": "Centro de Video"
@@ -3845,5 +3846,93 @@
     "urgent": "Urgente",
     "high": "Alta",
     "low": "Baja"
+  },
+  "isabella": {
+    "title": "Operaciones Isabella",
+    "subtitle": "Controle qué funciones gestiona Isabella automáticamente",
+    "sections": {
+      "alertHandling": "Gestión de Alertas",
+      "inboundCommunications": "Comunicaciones Entrantes",
+      "outboundCommunications": "Comunicaciones Salientes",
+      "salesAndLeads": "Ventas y Leads",
+      "alwaysHuman": "Siempre Humano"
+    },
+    "functions": {
+      "deviceOfflineResponse": "Respuesta Dispositivo Offline",
+      "deviceOfflineResponseDesc": "Cuando el dispositivo está offline 5+ min, Isabella llama al miembro y luego a contactos de emergencia. Escala si no hay respuesta.",
+      "lowBatteryAlerts": "Alertas de Batería Baja",
+      "lowBatteryAlertsDesc": "Isabella envía SMS recordatorio para cargar el dispositivo.",
+      "sosButtonTriage": "Triaje Botón SOS",
+      "sosButtonTriageDesc": "Isabella llama para evaluar. Deriva emergencias a humano.",
+      "fallDetectionTriage": "Triaje Detección de Caída",
+      "fallDetectionTriageDesc": "Isabella llama para evaluar. Deriva lesiones a humano.",
+      "inboundPhoneCalls": "Llamadas Entrantes",
+      "inboundPhoneCallsDesc": "Isabella contesta todas las llamadas, gestiona consultas, transfiere solo cuando se solicita o es complejo.",
+      "inboundSms": "SMS Entrantes",
+      "inboundSmsDesc": "Isabella responde automáticamente a mensajes SMS.",
+      "inboundWhatsapp": "WhatsApp Entrante",
+      "inboundWhatsappDesc": "Isabella responde automáticamente a mensajes de WhatsApp.",
+      "inboundEmail": "Email Entrante",
+      "inboundEmailDesc": "Isabella responde automáticamente a emails.",
+      "chatWidget": "Widget de Chat",
+      "chatWidgetDesc": "Isabella gestiona el chat del sitio web.",
+      "courtesyCalls": "Llamadas de Cortesía",
+      "courtesyCallsDesc": "Llamadas de control programadas a miembros.",
+      "welcomeCalls": "Llamadas de Bienvenida (Día 1)",
+      "welcomeCallsDesc": "Isabella da la bienvenida a nuevos miembros tras el registro.",
+      "onboardingCheckins": "Seguimiento de Incorporación",
+      "onboardingCheckinsDesc": "Isabella llama los días 3, 7, 14 tras el registro.",
+      "paymentReminders": "Recordatorios de Pago",
+      "paymentRemindersDesc": "Isabella llama a miembros con pagos fallidos.",
+      "followupCalls": "Llamadas de Seguimiento",
+      "followupCallsDesc": "Isabella hace seguimiento de problemas técnicos/dispositivos.",
+      "birthdayCalls": "Llamadas de Cumpleaños",
+      "birthdayCallsDesc": "Isabella realiza llamadas de felicitación de cumpleaños.",
+      "leadFollowupCalls": "Seguimiento de Leads",
+      "leadFollowupCallsDesc": "Isabella llama a nuevos leads para cualificar.",
+      "abandonedSignupRecovery": "Recuperación de Registro Abandonado",
+      "abandonedSignupRecoveryDesc": "Isabella llama a personas que iniciaron el registro pero no terminaron.",
+      "partnerEnquiryHandling": "Gestión Consultas Partners",
+      "partnerEnquiryHandlingDesc": "Isabella gestiona consultas entrantes de partners.",
+      "b2bOutreachCampaigns": "Campañas B2B Outreach",
+      "b2bOutreachCampaignsDesc": "Isabella investiga prospectos, envía emails y realiza llamadas."
+    },
+    "alwaysHumanItems": {
+      "emergencyDispatch": "Despacho de Emergencia 112 - Solo humano, requisito legal",
+      "physicalHandling": "Manipulación Física de Dispositivos - Solo humano, requiere manos",
+      "bankTransfers": "Transferencias Bancarias - Solo humano, autoridad financiera",
+      "largeRefunds": "Reembolsos Más de €100 - Solo humano, aprobación requerida"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "functionsActive": "{{count}} funciones activas",
+      "interactionsToday": "{{count}} interacciones hoy",
+      "escalatedToHumans": "{{count}} escaladas a humanos"
+    },
+    "banner": {
+      "isabellaActive": "ISABELLA ACTIVA",
+      "humanMode": "MODO HUMANO: Todas las alertas y comunicaciones derivadas al personal",
+      "managing": "Gestionando {{interactions}} interacciones hoy | {{escalated}} escaladas a humanos"
+    }
+  },
+  "aiCommandCentre": {
+    "title": "Centro de Mando IA",
+    "subtitle": "Gestione Isabella y la automatización con IA",
+    "isabellaOperations": {
+      "title": "Operaciones Isabella",
+      "description": "Gestión de clientes, miembros y alertas",
+      "button": "Gestionar Funciones"
+    },
+    "outreachPipeline": {
+      "title": "Pipeline de Outreach IA",
+      "description": "Descubrimiento de leads B2B, investigación y automatización de ventas",
+      "button": "Abrir Pipeline"
+    },
+    "isabellaContent": {
+      "title": "Contenido Isabella",
+      "description": "Redes sociales, blog y generación de vídeo",
+      "button": "Gestor de Contenido"
+    }
   }
 }

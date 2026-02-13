@@ -1812,6 +1812,7 @@
     "documents": "Documents",
     "aiCommandCentre": "AI Command Centre",
     "aiOverview": "Overview",
+    "isabellaOperations": "Isabella Operations",
     "mediaManager": "Media Manager",
     "aiOutreach": "AI Outreach",
     "videoHub": "Video Hub"
@@ -3869,5 +3870,93 @@
     "urgent": "Urgent",
     "high": "High",
     "low": "Low"
+  },
+  "isabella": {
+    "title": "Isabella Operations",
+    "subtitle": "Control which functions Isabella handles automatically",
+    "sections": {
+      "alertHandling": "Alert Handling",
+      "inboundCommunications": "Inbound Communications",
+      "outboundCommunications": "Outbound Communications",
+      "salesAndLeads": "Sales & Leads",
+      "alwaysHuman": "Always Human"
+    },
+    "functions": {
+      "deviceOfflineResponse": "Device Offline Response",
+      "deviceOfflineResponseDesc": "When device offline 5+ min, Isabella calls member, then emergency contacts. Escalates if no response.",
+      "lowBatteryAlerts": "Low Battery Alerts",
+      "lowBatteryAlertsDesc": "Isabella sends SMS reminder to charge device.",
+      "sosButtonTriage": "SOS Button Triage",
+      "sosButtonTriageDesc": "Isabella calls to assess. Routes emergencies to human.",
+      "fallDetectionTriage": "Fall Detection Triage",
+      "fallDetectionTriageDesc": "Isabella calls to assess. Routes injuries to human.",
+      "inboundPhoneCalls": "Inbound Phone Calls",
+      "inboundPhoneCallsDesc": "Isabella answers all calls, handles enquiries, transfers only when requested or complex.",
+      "inboundSms": "Inbound SMS",
+      "inboundSmsDesc": "Isabella auto-responds to SMS messages.",
+      "inboundWhatsapp": "Inbound WhatsApp",
+      "inboundWhatsappDesc": "Isabella auto-responds to WhatsApp messages.",
+      "inboundEmail": "Inbound Email",
+      "inboundEmailDesc": "Isabella auto-responds to emails.",
+      "chatWidget": "Chat Widget",
+      "chatWidgetDesc": "Isabella handles website chat.",
+      "courtesyCalls": "Courtesy/Welfare Calls",
+      "courtesyCallsDesc": "Scheduled check-in calls to members.",
+      "welcomeCalls": "Welcome Calls (Day 1)",
+      "welcomeCallsDesc": "Isabella welcomes new members after signup.",
+      "onboardingCheckins": "Onboarding Check-ins",
+      "onboardingCheckinsDesc": "Isabella calls Day 3, 7, 14 after signup.",
+      "paymentReminders": "Payment Reminders",
+      "paymentRemindersDesc": "Isabella calls members with failed payments.",
+      "followupCalls": "Follow-up Calls",
+      "followupCallsDesc": "Isabella follows up on device/technical issues.",
+      "birthdayCalls": "Birthday Calls",
+      "birthdayCallsDesc": "Isabella makes birthday greeting calls.",
+      "leadFollowupCalls": "Lead Follow-up Calls",
+      "leadFollowupCallsDesc": "Isabella calls new leads to qualify.",
+      "abandonedSignupRecovery": "Abandoned Signup Recovery",
+      "abandonedSignupRecoveryDesc": "Isabella calls people who started signup but didn't finish.",
+      "partnerEnquiryHandling": "Partner Enquiry Handling",
+      "partnerEnquiryHandlingDesc": "Isabella handles inbound partner questions.",
+      "b2bOutreachCampaigns": "B2B Outreach Campaigns",
+      "b2bOutreachCampaignsDesc": "Isabella researches prospects, sends emails, makes calls."
+    },
+    "alwaysHumanItems": {
+      "emergencyDispatch": "112 Emergency Dispatch - Human only, legal requirement",
+      "physicalHandling": "Physical Device Handling - Human only, requires hands",
+      "bankTransfers": "Bank Transfers - Human only, financial authority",
+      "largeRefunds": "Refunds Over €100 - Human only, approval required"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "functionsActive": "{{count}} functions active",
+      "interactionsToday": "{{count}} interactions today",
+      "escalatedToHumans": "{{count}} escalated to humans"
+    },
+    "banner": {
+      "isabellaActive": "ISABELLA ACTIVE",
+      "humanMode": "HUMAN MODE: All alerts and communications routed to staff",
+      "managing": "Managing {{interactions}} interactions today | {{escalated}} escalated to humans"
+    }
+  },
+  "aiCommandCentre": {
+    "title": "AI Command Centre",
+    "subtitle": "Manage Isabella and AI-powered automation",
+    "isabellaOperations": {
+      "title": "Isabella Operations",
+      "description": "Customer, member, and alert handling",
+      "button": "Manage Functions"
+    },
+    "outreachPipeline": {
+      "title": "AI Outreach Pipeline",
+      "description": "B2B lead discovery, research, and sales automation",
+      "button": "Open Pipeline"
+    },
+    "isabellaContent": {
+      "title": "Isabella Content",
+      "description": "Social media, blog posts, and video generation",
+      "button": "Content Manager"
+    }
   }
 }

@@ -27,6 +27,7 @@ import {
   Share2,
   Megaphone,
   Video,
+  Headphones,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -140,7 +141,8 @@ const menuGroups: MenuGroup[] = [
     icon: Brain,
     labelKey: "sidebar.aiCommandCentre",
     items: [
-      { icon: Brain, labelKey: "sidebar.aiOverview", path: "/admin/ai" }
+      { icon: Brain, labelKey: "sidebar.aiOverview", path: "/admin/ai" },
+      { icon: Headphones, labelKey: "sidebar.isabellaOperations", path: "/admin/ai/operations" }
     ]
   },
   {

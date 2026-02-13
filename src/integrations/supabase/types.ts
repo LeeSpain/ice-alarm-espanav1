@@ -1590,6 +1590,47 @@ export type Database = {
           },
         ]
       }
+      isabella_settings: {
+        Row: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          enabled_at: string | null
+          enabled_by: string | null
+          function_key: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
+          function_key: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
+          function_key?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "isabella_settings_enabled_by_fkey"
+            columns: ["enabled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
