@@ -2799,6 +2799,7 @@ export type Database = {
           id: string
           leads_count: number | null
           max_emails_per_lead: number | null
+          messaging_tone: string | null
           min_ai_score: number | null
           name: string
           outreach_goal: string
@@ -2823,6 +2824,7 @@ export type Database = {
           id?: string
           leads_count?: number | null
           max_emails_per_lead?: number | null
+          messaging_tone?: string | null
           min_ai_score?: number | null
           name: string
           outreach_goal?: string
@@ -2847,6 +2849,7 @@ export type Database = {
           id?: string
           leads_count?: number | null
           max_emails_per_lead?: number | null
+          messaging_tone?: string | null
           min_ai_score?: number | null
           name?: string
           outreach_goal?: string
@@ -2864,6 +2867,7 @@ export type Database = {
         Row: {
           ai_score: number | null
           assigned_ai_agent: string | null
+          bounce_count: number
           campaign_id: string | null
           category: string | null
           company_name: string
@@ -2872,12 +2876,16 @@ export type Database = {
           converted_to_member_id: string | null
           converted_to_partner_id: string | null
           created_at: string | null
+          do_not_contact: boolean
           email: string | null
           email_count: number | null
+          followup_count: number
           id: string
           last_contacted_at: string | null
           last_reply_at: string | null
+          lawful_basis: string | null
           location: string | null
+          next_followup_at: string | null
           personalization_hooks: Json | null
           phone: string | null
           pipeline_type: string
@@ -2885,12 +2893,14 @@ export type Database = {
           research_summary: string | null
           source: string
           status: string
+          unsubscribe_token: string | null
           updated_at: string | null
           website_url: string | null
         }
         Insert: {
           ai_score?: number | null
           assigned_ai_agent?: string | null
+          bounce_count?: number
           campaign_id?: string | null
           category?: string | null
           company_name: string
@@ -2899,12 +2909,16 @@ export type Database = {
           converted_to_member_id?: string | null
           converted_to_partner_id?: string | null
           created_at?: string | null
+          do_not_contact?: boolean
           email?: string | null
           email_count?: number | null
+          followup_count?: number
           id?: string
           last_contacted_at?: string | null
           last_reply_at?: string | null
+          lawful_basis?: string | null
           location?: string | null
+          next_followup_at?: string | null
           personalization_hooks?: Json | null
           phone?: string | null
           pipeline_type?: string
@@ -2912,12 +2926,14 @@ export type Database = {
           research_summary?: string | null
           source: string
           status?: string
+          unsubscribe_token?: string | null
           updated_at?: string | null
           website_url?: string | null
         }
         Update: {
           ai_score?: number | null
           assigned_ai_agent?: string | null
+          bounce_count?: number
           campaign_id?: string | null
           category?: string | null
           company_name?: string
@@ -2926,12 +2942,16 @@ export type Database = {
           converted_to_member_id?: string | null
           converted_to_partner_id?: string | null
           created_at?: string | null
+          do_not_contact?: boolean
           email?: string | null
           email_count?: number | null
+          followup_count?: number
           id?: string
           last_contacted_at?: string | null
           last_reply_at?: string | null
+          lawful_basis?: string | null
           location?: string | null
+          next_followup_at?: string | null
           personalization_hooks?: Json | null
           phone?: string | null
           pipeline_type?: string
@@ -2939,6 +2959,7 @@ export type Database = {
           research_summary?: string | null
           source?: string
           status?: string
+          unsubscribe_token?: string | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -2991,11 +3012,14 @@ export type Database = {
       }
       outreach_email_drafts: {
         Row: {
+          approval_required: boolean
+          auto_approved: boolean
           body_html: string | null
           body_text: string
           campaign_id: string | null
           created_at: string | null
           crm_lead_id: string
+          draft_type: string
           external_message_id: string | null
           id: string
           scheduled_for: string | null
@@ -3005,11 +3029,14 @@ export type Database = {
           subject: string
         }
         Insert: {
+          approval_required?: boolean
+          auto_approved?: boolean
           body_html?: string | null
           body_text: string
           campaign_id?: string | null
           created_at?: string | null
           crm_lead_id: string
+          draft_type?: string
           external_message_id?: string | null
           id?: string
           scheduled_for?: string | null
@@ -3019,11 +3046,14 @@ export type Database = {
           subject: string
         }
         Update: {
+          approval_required?: boolean
+          auto_approved?: boolean
           body_html?: string | null
           body_text?: string
           campaign_id?: string | null
           created_at?: string | null
           crm_lead_id?: string
+          draft_type?: string
           external_message_id?: string | null
           id?: string
           scheduled_for?: string | null
@@ -3148,7 +3178,11 @@ export type Database = {
           contact_name: string | null
           created_at: string | null
           discovered_at: string | null
+          do_not_contact: boolean
+          domain: string | null
           email: string | null
+          enriched_at: string | null
+          enrichment_data: Json | null
           id: string
           location: string | null
           notes: string | null
@@ -3157,6 +3191,7 @@ export type Database = {
           raw_data: Json | null
           source: string
           status: string
+          unsubscribe_token: string | null
           updated_at: string | null
           website_url: string | null
         }
@@ -3169,7 +3204,11 @@ export type Database = {
           contact_name?: string | null
           created_at?: string | null
           discovered_at?: string | null
+          do_not_contact?: boolean
+          domain?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_data?: Json | null
           id?: string
           location?: string | null
           notes?: string | null
@@ -3178,6 +3217,7 @@ export type Database = {
           raw_data?: Json | null
           source?: string
           status?: string
+          unsubscribe_token?: string | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -3190,7 +3230,11 @@ export type Database = {
           contact_name?: string | null
           created_at?: string | null
           discovered_at?: string | null
+          do_not_contact?: boolean
+          domain?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_data?: Json | null
           id?: string
           location?: string | null
           notes?: string | null
@@ -3199,8 +3243,48 @@ export type Database = {
           raw_data?: Json | null
           source?: string
           status?: string
+          unsubscribe_token?: string | null
           updated_at?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      outreach_run_logs: {
+        Row: {
+          created_at: string
+          dry_run: boolean
+          errors: Json | null
+          finished_at: string | null
+          id: string
+          run_type: string
+          started_at: string
+          steps: Json | null
+          totals: Json | null
+          triggered_by: string
+        }
+        Insert: {
+          created_at?: string
+          dry_run?: boolean
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          run_type: string
+          started_at?: string
+          steps?: Json | null
+          totals?: Json | null
+          triggered_by?: string
+        }
+        Update: {
+          created_at?: string
+          dry_run?: boolean
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          steps?: Json | null
+          totals?: Json | null
+          triggered_by?: string
         }
         Relationships: []
       }
@@ -3228,6 +3312,33 @@ export type Database = {
           setting_key?: string
           setting_value?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      outreach_suppression: {
+        Row: {
+          created_at: string
+          domain: string | null
+          email: string
+          id: string
+          reason: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          email: string
+          id?: string
+          reason: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          email?: string
+          id?: string
+          reason?: string
+          source?: string
         }
         Relationships: []
       }
