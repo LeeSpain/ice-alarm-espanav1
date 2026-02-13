@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/ui/logo";
 import { CheckCircle, Users, DollarSign, Send, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function PartnerOnboarding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<"info" | "form" | "success">("info");
 
@@ -41,12 +43,12 @@ export default function PartnerOnboarding() {
         <main className="flex-1 flex items-center justify-center px-4 pb-16">
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Become an ICE Alarm Partner
-              </h1>
-              <p className="text-xl text-muted-foreground">
-                Help protect seniors in your community while earning commissions
-              </p>
+             <h1 className="text-4xl font-bold tracking-tight">
+                 {t("partnerOnboarding.title", "Become an ICE Alarm Partner")}
+               </h1>
+               <p className="text-xl text-muted-foreground">
+                 {t("partnerOnboarding.subtitle", "Help protect seniors in your community while earning commissions")}
+               </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">

@@ -11,6 +11,7 @@ import { DollarSign, Filter, Search, CheckCircle, RefreshCw, ChevronLeft, Chevro
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { logCommissionActivity } from "@/lib/auditLog";
+import { useTranslation } from "react-i18next";
 import { logCrmEvent } from "@/lib/crmEvents";
 import { Database } from "@/integrations/supabase/types";
 
@@ -52,6 +53,7 @@ interface Commission {
 }
 
 export default function CommissionsPage() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<CommissionStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -199,12 +201,12 @@ export default function CommissionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Partner Commissions</h1>
-          <p className="text-muted-foreground">
-            Manage and track partner referral commissions
-          </p>
-        </div>
+         <div>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminCommissions.title", "Partner Commissions")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminCommissions.subtitle", "Manage and track partner referral commissions")}
+           </p>
+         </div>
         <Button 
           onClick={() => triggerProcessing.mutate()}
           disabled={triggerProcessing.isPending}

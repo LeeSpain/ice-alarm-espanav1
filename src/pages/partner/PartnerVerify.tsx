@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function PartnerVerify() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -61,9 +63,9 @@ export default function PartnerVerify() {
               <div className="mx-auto">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
-              <CardTitle className="text-2xl">Verifying Your Account</CardTitle>
+              <CardTitle className="text-2xl">{t("partnerVerify.verifyingTitle", "Verifying Your Account")}</CardTitle>
               <CardDescription>
-                Please wait while we verify your email address...
+                {t("partnerVerify.verifyingDesc", "Please wait while we verify your email address...")}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -85,7 +87,7 @@ export default function PartnerVerify() {
               <div className="mx-auto rounded-full bg-red-100 p-4 w-fit dark:bg-red-900">
                 <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
               </div>
-              <CardTitle className="text-2xl">Verification Failed</CardTitle>
+              <CardTitle className="text-2xl">{t("partnerVerify.failedTitle", "Verification Failed")}</CardTitle>
               <CardDescription className="text-base">
                 {errorMessage}
               </CardDescription>

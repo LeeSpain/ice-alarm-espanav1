@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -47,6 +48,7 @@ interface Lead {
 }
 
 export default function CallCentreLeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -197,16 +199,16 @@ export default function CallCentreLeadsPage() {
       {/* Header */}
       <div className="p-4 border-b bg-background">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold">Leads</h1>
-            <p className="text-sm text-muted-foreground">
-              Contact form enquiries from potential members
-            </p>
-          </div>
-          <Button onClick={fetchLeads} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+           <div>
+             <h1 className="text-2xl font-bold">{t("callCentreLeads.title", "Leads")}</h1>
+             <p className="text-sm text-muted-foreground">
+               {t("callCentreLeads.subtitle", "Contact form enquiries from potential members")}
+             </p>
+           </div>
+           <Button onClick={fetchLeads} variant="outline" size="sm">
+             <RefreshCw className="h-4 w-4 mr-2" />
+             {t("common.refresh", "Refresh")}
+           </Button>
         </div>
 
         {/* Stats */}

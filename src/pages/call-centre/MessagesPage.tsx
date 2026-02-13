@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -92,6 +93,7 @@ interface Member {
 }
 
 export default function CallCentreMessagesPage() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -519,8 +521,8 @@ export default function CallCentreMessagesPage() {
       <div className="border-b p-4 bg-background/50">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">Messages</h1>
-            <p className="text-muted-foreground">Manage member conversations</p>
+           <h1 className="text-2xl font-bold">{t("callCentreMessages.title", "Messages")}</h1>
+           <p className="text-muted-foreground">{t("callCentreMessages.subtitle", "Manage member conversations")}</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

@@ -20,6 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -109,6 +110,7 @@ const STEP_NAMES = [
 ];
 
 export default function LeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { staffRole } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -357,16 +359,16 @@ export default function LeadsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-          <p className="text-muted-foreground">
-            Manage contact form submissions and prospective members
-          </p>
-        </div>
-        <Button onClick={fetchLeads} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+         <div>
+           <h1 className="text-3xl font-bold tracking-tight">{t("adminLeads.title", "Leads")}</h1>
+           <p className="text-muted-foreground">
+             {t("adminLeads.subtitle", "Manage contact form submissions and prospective members")}
+           </p>
+         </div>
+         <Button onClick={fetchLeads} variant="outline" size="sm">
+           <RefreshCw className="h-4 w-4 mr-2" />
+           {t("common.refresh", "Refresh")}
+         </Button>
       </div>
 
       {/* Stats */}

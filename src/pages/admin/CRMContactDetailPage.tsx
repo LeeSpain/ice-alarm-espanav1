@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface CRMContact {
@@ -52,6 +53,7 @@ interface ImportRow {
 }
 
 export default function CRMContactDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -227,9 +229,9 @@ export default function CRMContactDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Contact not found</p>
-        <Button variant="link" onClick={() => navigate("/admin/crm-contacts")}>
-          Back to CRM Contacts
-        </Button>
+       <Button variant="link" onClick={() => navigate("/admin/crm-contacts")}>
+           {t("adminCRM.backToContacts", "Back to CRM Contacts")}
+         </Button>
       </div>
     );
   }

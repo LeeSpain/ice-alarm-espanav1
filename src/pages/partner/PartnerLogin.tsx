@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Loader2, Handshake } from "lucide-react";
 
 const loginSchema = z.object({
@@ -20,6 +21,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function PartnerLogin() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,9 +93,9 @@ export default function PartnerLogin() {
             <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit mb-2">
               <Handshake className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Partner Login</CardTitle>
+            <CardTitle className="text-2xl">{t("partnerLogin.title", "Partner Login")}</CardTitle>
             <CardDescription>
-              Sign in to access your partner dashboard
+              {t("partnerLogin.subtitle", "Sign in to access your partner dashboard")}
             </CardDescription>
           </CardHeader>
           <CardContent>

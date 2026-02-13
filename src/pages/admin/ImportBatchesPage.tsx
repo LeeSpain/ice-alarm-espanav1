@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
 interface ImportBatch {
@@ -48,6 +49,7 @@ interface ImportRow {
 }
 
 export default function ImportBatchesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,10 +155,10 @@ export default function ImportBatchesPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/crm-import")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Import Batches</h1>
-          <p className="text-muted-foreground">Review past CRM imports and their results</p>
-        </div>
+         <div>
+           <h1 className="text-2xl font-bold">{t("adminImportBatches.title", "Import Batches")}</h1>
+           <p className="text-muted-foreground">{t("adminImportBatches.subtitle", "Review past CRM imports and their results")}</p>
+         </div>
       </div>
 
       {/* Batches List */}

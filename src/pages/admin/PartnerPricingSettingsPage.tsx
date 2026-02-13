@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DollarSign, Users, Building2, Home, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -45,6 +46,7 @@ const DEFAULT_PRICING_TEMPLATES: Omit<DefaultPricing, "id">[] = [
 ];
 
 export default function PartnerPricingSettingsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"referral" | "care" | "residential">("referral");
@@ -154,12 +156,12 @@ export default function PartnerPricingSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Partner Pricing Settings</h1>
-        <p className="text-muted-foreground">
-          Configure default pricing for each partner type
-        </p>
-      </div>
+       <div>
+         <h1 className="text-3xl font-bold tracking-tight">{t("adminPartnerPricing.title", "Partner Pricing Settings")}</h1>
+         <p className="text-muted-foreground">
+           {t("adminPartnerPricing.subtitle", "Configure default pricing for each partner type")}
+         </p>
+       </div>
 
       {/* Partner Type Tabs */}
       <div className="flex gap-2">
