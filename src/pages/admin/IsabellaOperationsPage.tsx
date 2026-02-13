@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Lock, Activity, AlertTriangle, Zap } from "lucide-react";
+import { Lock, Activity, AlertTriangle, Zap, Settings, ExternalLink } from "lucide-react";
 import { useIsabellaSettings, useUpdateIsabellaSetting, useIsabellaStats } from "@/hooks/useIsabellaSettings";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -144,6 +145,38 @@ export default function IsabellaOperationsPage() {
                   <p className="text-sm">{t(key)}</p>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          {/* Advanced Configuration */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <CardTitle className="text-lg">{t("isabella.advancedConfig.title", "Advanced Configuration")}</CardTitle>
+                  <CardDescription>{t("isabella.advancedConfig.description", "Configure the AI agents that power Isabella's functions")}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { label: t("isabella.advancedConfig.customerServiceAgent", "Customer Service & Sales Agent"), path: "/admin/ai/agents/customer_service_expert" },
+                { label: t("isabella.advancedConfig.mainBrain", "Main Brain"), path: "/admin/ai/agents/main_brain" },
+                { label: t("isabella.advancedConfig.memberSpecialist", "Member Specialist"), path: "/admin/ai/agents/member_specialist" },
+              ].map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="flex items-center justify-between py-2.5 px-3 rounded-md border hover:bg-muted/50 transition-colors group"
+                >
+                  <span className="text-sm font-medium">{link.label}</span>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+              ))}
+              <p className="text-xs text-muted-foreground pt-2">
+                {t("isabella.advancedConfig.hint", "These links let you customise AI prompts, memory, and permissions.")}
+              </p>
             </CardContent>
           </Card>
         </>
