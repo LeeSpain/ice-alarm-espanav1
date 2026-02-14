@@ -58,6 +58,56 @@ export type Database = {
           },
         ]
       }
+      admin_ideas: {
+        Row: {
+          category: string
+          completed: boolean
+          content: string | null
+          created_at: string
+          id: string
+          is_checklist: boolean
+          position: number
+          priority: string
+          staff_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          completed?: boolean
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_checklist?: boolean
+          position?: number
+          priority?: string
+          staff_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          completed?: boolean
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_checklist?: boolean
+          position?: number
+          priority?: string
+          staff_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_ideas_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_actions: {
         Row: {
           action_type: string
