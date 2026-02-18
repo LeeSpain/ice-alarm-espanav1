@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, User, LogOut, Clock, Settings, Phone } from "lucide-react";
+import { Search, User, LogOut, Clock, Settings, Phone, Lightbulb } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { StaffHeaderChatButton } from "@/components/chat/StaffHeaderChatButton";
+import { IdeasNotepad } from "@/components/admin/IdeasNotepad";
+import { useAdminIdeas } from "@/hooks/useAdminIdeas";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +27,8 @@ export function CallCentreHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [staffId, setStaffId] = useState<string | null>(null);
+  const [ideasOpen, setIdeasOpen] = useState(false);
+  const { uncompleteCount } = useAdminIdeas();
 
   // Fetch staff info
   const { data: staffInfo } = useQuery({
@@ -85,6 +89,17 @@ export function CallCentreHeader() {
 
         {/* AI Chat Button */}
         <StaffHeaderChatButton staffName={displayName} />
+
+        {/* Ideas Notepad */}
+        <Button variant="ghost" size="icon" className="relative" onClick={() => setIdeasOpen(true)}>
+          <Lightbulb className="h-5 w-5 text-yellow-500" />
+          {uncompleteCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center px-1">
+              {uncompleteCount}
+            </span>
+          )}
+        </Button>
+        <IdeasNotepad open={ideasOpen} onOpenChange={setIdeasOpen} />
 
         {/* Notification Bell */}
         <NotificationBell staffId={staffId} />
