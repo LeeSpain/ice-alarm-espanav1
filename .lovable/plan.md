@@ -1,73 +1,55 @@
 
 
-# Admin Ideas & Notes Pad
+# Replace Legal Pages with Professional Content
 
-## What We're Building
+## Overview
 
-A "Lightbulb" icon button in the admin header bar that opens a professional popup (Dialog) where you can capture app ideas, notes, and checklists. Everything persists in the database so nothing gets lost between sessions.
+Replace the existing placeholder Terms of Service and Privacy Policy page content with the comprehensive, professionally written legal documents you've uploaded. The page layout (header, footer, back button, styling) stays the same -- only the body content changes.
 
-## Database
+## Changes
 
-Create a new `admin_ideas` table:
+### 1. `src/pages/TermsPage.tsx`
+Replace all hardcoded section content with the full 20-section Terms of Service document, including:
+- Agreement to Terms, Who We Are, Description of Services
+- Important Limitations & Disclaimers (technology, response time, AI assistant)
+- Eligibility, Account, Devices & Equipment
+- Subscription & Payment (Stripe, refunds, non-payment)
+- Cancellation & Termination (cooling-off period)
+- Limitation of Liability (with bold caps formatting preserved)
+- Indemnification, Intellectual Property, Privacy, Communications
+- Modifications, Dispute Resolution, General Provisions
+- Contact Us, Acknowledgment
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID PK | |
-| staff_id | UUID (FK staff) | Who created it |
-| title | TEXT | Idea/note title |
-| content | TEXT | Rich text body |
-| category | TEXT | "idea", "bug", "feature", "note" |
-| priority | TEXT | "low", "medium", "high" |
-| is_checklist | BOOLEAN | Whether this is a checklist item |
-| completed | BOOLEAN | Checklist done state |
-| position | INTEGER | Sort order |
-| created_at | TIMESTAMPTZ | |
-| updated_at | TIMESTAMPTZ | |
+Special formatting will be preserved: bold/caps warnings, nested lists, sub-sections (e.g. 3.1, 3.2).
 
-RLS: Staff can CRUD their own rows. Admins/super_admins can see all.
+### 2. `src/pages/PrivacyPage.tsx`
+Replace all hardcoded section content with the full 16-section Privacy Policy document, including:
+- Who We Are, What This Policy Covers
+- Data We Collect (with sub-categories: account, health, emergency contacts, payment, device, usage, communications, third parties)
+- Legal Basis table (GDPR Article 6 references)
+- How We Use Your Data (emergency response, AI-assisted, administration)
+- Who We Share Data With (provider table with locations and safeguards)
+- International Data Transfers
+- Data Retention table (with specific periods per data type)
+- Your Rights (access, rectification, erasure, restriction, portability, object, withdraw consent)
+- Data Security, Children's Privacy, Automated Decision-Making
+- Cookies, Changes, Complaints (AEPD details), Contact
 
-## New Files
+Tables will be rendered as styled HTML tables for the provider list and data retention schedules.
 
-### 1. `src/components/admin/IdeasNotepad.tsx`
-A Dialog component containing:
-- **Header**: Title "Ideas & Notes" with category filter tabs (All / Ideas / Features / Bugs / Notes)
-- **Add form**: Title input, category selector, priority badge picker, and a text area for content
-- **Toggle**: Switch between "Note" and "Checklist" mode
-- **List**: Scrollable list of saved items, each showing:
-  - Checkbox (for checklist items)
-  - Title + priority badge
-  - Category tag
-  - Expand/collapse for content
-  - Delete button
-- **Filters**: Filter by category, priority, or completion status
-- **Counter badge**: Shows total uncompleted items on the header icon
+## What Stays the Same
+- Page layout structure (header with logo, language selector, sign-in button)
+- Back button navigation
+- Document header icon and title area
+- Prose styling classes
+- Footer with copyright and links
+- Last updated date reference via translation key
 
-### 2. `src/hooks/useAdminIdeas.ts`
-- `useQuery` to fetch ideas for the current staff member
-- `useMutation` for create, update (toggle complete, edit), delete
-- Optimistic updates for instant checkbox toggling
-
-## Changes to Existing Files
-
-### `src/components/layout/AdminHeader.tsx`
-- Import `Lightbulb` icon from lucide-react
-- Add a button between NotificationBell and User Menu that opens the IdeasNotepad dialog
-- Show a small count badge if there are uncompleted checklist items
-
-## UI Design
-
-The dialog will follow the existing app design system:
-- Uses shadcn Card, Badge, Checkbox, Tabs, ScrollArea, Dialog components
-- Dark-friendly with muted backgrounds
-- Compact but readable layout
-- Smooth transitions for expanding/collapsing notes
-
-## Technical Details
+## Files Changed
 
 | File | Action |
 |------|--------|
-| Migration SQL | Create `admin_ideas` table + RLS policies |
-| `src/hooks/useAdminIdeas.ts` | New hook for CRUD operations |
-| `src/components/admin/IdeasNotepad.tsx` | New dialog component |
-| `src/components/layout/AdminHeader.tsx` | Add lightbulb button |
+| `src/pages/TermsPage.tsx` | Rewrite body content with full Terms document |
+| `src/pages/PrivacyPage.tsx` | Rewrite body content with full Privacy Policy document |
 
+No database changes, no new files, no new dependencies.
