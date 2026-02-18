@@ -83,11 +83,11 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[780px] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
         {/* Header */}
-        <div className="px-8 pt-7 pb-4 bg-gradient-to-b from-muted/40 to-transparent">
+        <div className="px-8 pt-7 pb-4 bg-gradient-to-b from-primary/10 via-accent to-transparent">
           <DialogHeader className="space-y-1">
             <DialogTitle className="flex items-center gap-3 text-xl font-semibold">
-              <div className="h-9 w-9 rounded-lg bg-yellow-500/15 flex items-center justify-center">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
+              <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                <Lightbulb className="h-5 w-5 text-primary" />
               </div>
               {t("ideasNotepad.title", "Ideas & Notes")}
             </DialogTitle>
@@ -99,12 +99,12 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
           {/* Stats strip */}
           <div className="flex items-center gap-6 mt-4 pl-12">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <FileText className="h-3.5 w-3.5" />
+              <FileText className="h-3.5 w-3.5 text-primary" />
               <span className="font-medium text-foreground">{ideas.length}</span> {t("ideasNotepad.totalItems", "total items")}
             </div>
             {totalChecklist > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                 <span className="font-medium text-foreground">{completedCount}/{totalChecklist}</span> {t("ideasNotepad.completed", "completed")}
               </div>
             )}
@@ -116,7 +116,7 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
         {/* Add button / form */}
         <div className="px-8 py-4">
           {!showAddForm ? (
-            <Button onClick={() => setShowAddForm(true)} className="w-full justify-start gap-2 h-11" variant="outline">
+            <Button onClick={() => setShowAddForm(true)} className="w-full justify-start gap-2 h-11 border-l-4 border-l-primary/50" variant="outline">
               <Plus className="h-4 w-4" />
               {t("ideasNotepad.addPlaceholder", "Add new idea, note, or checklist item...")}
             </Button>
@@ -188,15 +188,15 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
         {/* Filter Tabs */}
         <div className="px-8">
           <Tabs value={filterTab} onValueChange={setFilterTab}>
-            <TabsList className="h-9 w-full justify-start bg-muted/50">
-              <TabsTrigger value="all" className="text-xs px-4 h-7 data-[state=active]:shadow-sm">
+            <TabsList className="h-9 w-full justify-start bg-accent">
+              <TabsTrigger value="all" className="text-xs px-4 h-7 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm">
                 {t("ideasNotepad.all", "All")} ({ideas.length})
               </TabsTrigger>
               {CATEGORY_META.map((c) => {
                 const count = ideas.filter((i) => i.category === c.value).length;
                 const CIcon = c.icon;
                 return (
-                  <TabsTrigger key={c.value} value={c.value} className="text-xs px-4 h-7 gap-1.5 data-[state=active]:shadow-sm">
+                  <TabsTrigger key={c.value} value={c.value} className="text-xs px-4 h-7 gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm">
                     <CIcon className="h-3 w-3" />
                     {t(`ideasNotepad.categories.${c.key}`, c.value)} {count > 0 && <span className="text-muted-foreground">({count})</span>}
                   </TabsTrigger>
@@ -212,8 +212,8 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
             <div className="text-sm text-muted-foreground text-center py-16">{t("ideasNotepad.loadingItems", "Loading your items...")}</div>
           ) : filteredIdeas.length === 0 ? (
             <div className="text-center py-16">
-              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <Lightbulb className="h-6 w-6 text-muted-foreground" />
+              <div className="h-12 w-12 rounded-full bg-accent flex items-center justify-center mx-auto mb-3">
+                <Lightbulb className="h-6 w-6 text-primary" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">{t("ideasNotepad.noItems", "No items yet")}</p>
               <p className="text-xs text-muted-foreground mt-1">{t("ideasNotepad.noItemsHint", "Click the button above to add your first idea")}</p>
@@ -230,8 +230,8 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                   <div
                     key={idea.id}
                     className={cn(
-                      "group border rounded-lg transition-all hover:shadow-sm",
-                      idea.completed ? "opacity-50 bg-muted/20" : "bg-background"
+                      "group border rounded-lg transition-all",
+                      idea.completed ? "opacity-50 bg-muted/20" : "bg-background border-l-4 border-l-primary/20 hover:shadow-md hover:border-l-primary/60"
                     )}
                   >
                     <div className="flex items-start gap-3 p-4">
@@ -271,12 +271,17 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                               <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto">
                                 <Clock className="h-3 w-3" />
                                 {format(new Date(idea.created_at), "MMM d, HH:mm")}
+                                {idea.staff && (idea.staff.first_name || idea.staff.last_name) && (
+                                  <span className="ml-1.5 text-primary/70">
+                                    · {[idea.staff.first_name, idea.staff.last_name].filter(Boolean).join(" ")}
+                                  </span>
+                                )}
                               </span>
                             </div>
                           </div>
                         </button>
                         {isExpanded && idea.content && (
-                          <div className="mt-3 ml-6 pl-4 border-l-2 border-muted">
+                          <div className="mt-3 ml-6 pl-4 border-l-2 border-primary/30">
                             <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                               {idea.content}
                             </p>
