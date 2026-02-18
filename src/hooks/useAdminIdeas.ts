@@ -15,6 +15,7 @@ export type AdminIdea = {
   position: number;
   created_at: string;
   updated_at: string;
+  staff?: { first_name: string | null; last_name: string | null } | null;
 };
 
 type CreateIdeaInput = {
@@ -48,7 +49,7 @@ export function useAdminIdeas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("admin_ideas")
-        .select("*")
+        .select("*, staff:staff(first_name, last_name)")
         .order("position", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
