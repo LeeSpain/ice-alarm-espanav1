@@ -16,18 +16,19 @@ import { useAdminIdeas, type AdminIdea } from "@/hooks/useAdminIdeas";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
-const CATEGORIES = [
-  { value: "idea", label: "Idea", icon: Lightbulb, color: "bg-yellow-500/15 text-yellow-600 border-yellow-500/25 dark:text-yellow-400" },
-  { value: "feature", label: "Feature", icon: Sparkles, color: "bg-blue-500/15 text-blue-600 border-blue-500/25 dark:text-blue-400" },
-  { value: "bug", label: "Bug", icon: Bug, color: "bg-red-500/15 text-red-600 border-red-500/25 dark:text-red-400" },
-  { value: "note", label: "Note", icon: FileText, color: "bg-muted text-muted-foreground border-border" },
+const CATEGORY_META = [
+  { value: "idea", key: "idea", icon: Lightbulb, color: "bg-yellow-500/15 text-yellow-600 border-yellow-500/25 dark:text-yellow-400" },
+  { value: "feature", key: "feature", icon: Sparkles, color: "bg-blue-500/15 text-blue-600 border-blue-500/25 dark:text-blue-400" },
+  { value: "bug", key: "bug", icon: Bug, color: "bg-red-500/15 text-red-600 border-red-500/25 dark:text-red-400" },
+  { value: "note", key: "note", icon: FileText, color: "bg-muted text-muted-foreground border-border" },
 ] as const;
 
-const PRIORITIES = [
-  { value: "low", label: "Low", color: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
-  { value: "medium", label: "Medium", color: "bg-orange-500/15 text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
-  { value: "high", label: "High", color: "bg-red-500/15 text-red-600 dark:text-red-400", dot: "bg-red-500" },
+const PRIORITY_META = [
+  { value: "low", key: "low", color: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+  { value: "medium", key: "medium", color: "bg-orange-500/15 text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
+  { value: "high", key: "high", color: "bg-red-500/15 text-red-600 dark:text-red-400", dot: "bg-red-500" },
 ] as const;
 
 interface IdeasNotepadProps {
@@ -36,6 +37,7 @@ interface IdeasNotepadProps {
 }
 
 export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
+  const { t } = useTranslation();
   const { ideas, createIdea, updateIdea, deleteIdea, isLoading } = useAdminIdeas();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -60,7 +62,7 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
           setContent("");
           setIsChecklist(false);
           setShowAddForm(false);
-          toast.success("Item added successfully");
+          toast.success(t("ideasNotepad.itemAdded", "Item added successfully"));
         },
       }
     );
@@ -71,11 +73,11 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
   };
 
   const handleDelete = (id: string) => {
-    deleteIdea.mutate(id, { onSuccess: () => toast.success("Item removed") });
+    deleteIdea.mutate(id, { onSuccess: () => toast.success(t("ideasNotepad.itemRemoved", "Item removed")) });
   };
 
-  const getCategoryMeta = (cat: string) => CATEGORIES.find((c) => c.value === cat) || CATEGORIES[3];
-  const getPriorityMeta = (p: string) => PRIORITIES.find((pr) => pr.value === p) || PRIORITIES[1];
+  const getCategoryMeta = (cat: string) => CATEGORY_META.find((c) => c.value === cat) || CATEGORY_META[3];
+  const getPriorityMeta = (p: string) => PRIORITY_META.find((pr) => pr.value === p) || PRIORITY_META[1];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -87,10 +89,10 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
               <div className="h-9 w-9 rounded-lg bg-yellow-500/15 flex items-center justify-center">
                 <Lightbulb className="h-5 w-5 text-yellow-500" />
               </div>
-              Ideas & Notes
+              {t("ideasNotepad.title", "Ideas & Notes")}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground pl-12">
-              Capture ideas, track bugs, plan features, and manage your app development checklist.
+              {t("ideasNotepad.description", "Capture ideas, track bugs, plan features, and manage your app development checklist.")}
             </DialogDescription>
           </DialogHeader>
 
@@ -98,12 +100,12 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
           <div className="flex items-center gap-6 mt-4 pl-12">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{ideas.length}</span> total items
+              <span className="font-medium text-foreground">{ideas.length}</span> {t("ideasNotepad.totalItems", "total items")}
             </div>
             {totalChecklist > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span className="font-medium text-foreground">{completedCount}/{totalChecklist}</span> completed
+                <span className="font-medium text-foreground">{completedCount}/{totalChecklist}</span> {t("ideasNotepad.completed", "completed")}
               </div>
             )}
           </div>
@@ -116,12 +118,12 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
           {!showAddForm ? (
             <Button onClick={() => setShowAddForm(true)} className="w-full justify-start gap-2 h-11" variant="outline">
               <Plus className="h-4 w-4" />
-              Add new idea, note, or checklist item...
+              {t("ideasNotepad.addPlaceholder", "Add new idea, note, or checklist item...")}
             </Button>
           ) : (
             <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
               <Input
-                placeholder="Title — What's on your mind?"
+                placeholder={t("ideasNotepad.titlePlaceholder", "Title — What's on your mind?")}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAdd()}
@@ -129,7 +131,7 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                 autoFocus
               />
               <Textarea
-                placeholder="Add details, context, or steps..."
+                placeholder={t("ideasNotepad.detailsPlaceholder", "Add details, context, or steps...")}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[80px] text-sm resize-none bg-background"
@@ -140,10 +142,10 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
+                    {CATEGORY_META.map((c) => (
                       <SelectItem key={c.value} value={c.value}>
                         <span className="flex items-center gap-2">
-                          <c.icon className="h-3.5 w-3.5" /> {c.label}
+                          <c.icon className="h-3.5 w-3.5" /> {t(`ideasNotepad.categories.${c.key}`, c.value)}
                         </span>
                       </SelectItem>
                     ))}
@@ -154,11 +156,11 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRIORITIES.map((p) => (
+                    {PRIORITY_META.map((p) => (
                       <SelectItem key={p.value} value={p.value}>
                         <span className="flex items-center gap-2">
                           <span className={cn("h-2 w-2 rounded-full", p.dot)} />
-                          {p.label}
+                          {t(`ideasNotepad.priorities.${p.key}`, p.value)}
                         </span>
                       </SelectItem>
                     ))}
@@ -167,15 +169,15 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                 <div className="flex items-center gap-2">
                   <Switch id="checklist-toggle" checked={isChecklist} onCheckedChange={setIsChecklist} />
                   <Label htmlFor="checklist-toggle" className="text-xs flex items-center gap-1.5 cursor-pointer">
-                    <ListChecks className="h-3.5 w-3.5" /> Checklist
+                    <ListChecks className="h-3.5 w-3.5" /> {t("ideasNotepad.checklist", "Checklist")}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
                   <Button variant="ghost" size="sm" onClick={() => { setShowAddForm(false); setTitle(""); setContent(""); }}>
-                    Cancel
+                    {t("common.cancel", "Cancel")}
                   </Button>
                   <Button size="sm" onClick={handleAdd} disabled={!title.trim() || createIdea.isPending} className="px-5">
-                    <Plus className="h-4 w-4 mr-1" /> Add Item
+                    <Plus className="h-4 w-4 mr-1" /> {t("ideasNotepad.addItem", "Add Item")}
                   </Button>
                 </div>
               </div>
@@ -188,15 +190,15 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
           <Tabs value={filterTab} onValueChange={setFilterTab}>
             <TabsList className="h-9 w-full justify-start bg-muted/50">
               <TabsTrigger value="all" className="text-xs px-4 h-7 data-[state=active]:shadow-sm">
-                All ({ideas.length})
+                {t("ideasNotepad.all", "All")} ({ideas.length})
               </TabsTrigger>
-              {CATEGORIES.map((c) => {
+              {CATEGORY_META.map((c) => {
                 const count = ideas.filter((i) => i.category === c.value).length;
                 const CIcon = c.icon;
                 return (
                   <TabsTrigger key={c.value} value={c.value} className="text-xs px-4 h-7 gap-1.5 data-[state=active]:shadow-sm">
                     <CIcon className="h-3 w-3" />
-                    {c.label} {count > 0 && <span className="text-muted-foreground">({count})</span>}
+                    {t(`ideasNotepad.categories.${c.key}`, c.value)} {count > 0 && <span className="text-muted-foreground">({count})</span>}
                   </TabsTrigger>
                 );
               })}
@@ -207,14 +209,14 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
         {/* Ideas List */}
         <ScrollArea className="flex-1 px-8 py-4 min-h-0">
           {isLoading ? (
-            <div className="text-sm text-muted-foreground text-center py-16">Loading your items...</div>
+            <div className="text-sm text-muted-foreground text-center py-16">{t("ideasNotepad.loadingItems", "Loading your items...")}</div>
           ) : filteredIdeas.length === 0 ? (
             <div className="text-center py-16">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                 <Lightbulb className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">No items yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Click the button above to add your first idea</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("ideasNotepad.noItems", "No items yet")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("ideasNotepad.noItemsHint", "Click the button above to add your first idea")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -260,11 +262,11 @@ export function IdeasNotepad({ open, onOpenChange }: IdeasNotepadProps) {
                             <div className="flex items-center gap-2 mt-1.5">
                               <Badge variant="outline" className={cn("text-[11px] px-2 py-0.5 font-normal", catMeta.color)}>
                                 <CatIcon className="h-3 w-3 mr-1" />
-                                {catMeta.label}
+                                {t(`ideasNotepad.categories.${catMeta.key}`, catMeta.value)}
                               </Badge>
                               <Badge variant="outline" className={cn("text-[11px] px-2 py-0.5 font-normal gap-1", priMeta.color)}>
                                 <span className={cn("h-1.5 w-1.5 rounded-full", priMeta.dot)} />
-                                {priMeta.label}
+                                {t(`ideasNotepad.priorities.${priMeta.key}`, priMeta.value)}
                               </Badge>
                               <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto">
                                 <Clock className="h-3 w-3" />
