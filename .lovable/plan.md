@@ -1,86 +1,64 @@
 
 
-# Complete i18n Translation Review
+# Ideas & Notes -- Brand Styling Upgrade + Admin Visibility
 
-## Problem Found
+## Overview
 
-Three components from recent changes contain hardcoded English strings with no Spanish translations:
+Two changes: (1) restyle the notepad dialog with the ICE Alarm coral brand colors instead of plain white, and (2) ensure that when staff submit ideas, admins can always see them -- which already works at the data level since the query fetches all rows without a staff_id filter, but we will add a visible staff name indicator so admins know who submitted each item.
 
-### 1. Ideas & Notes Pad (`IdeasNotepad.tsx`) -- HIGH PRIORITY
-Currently has **zero** translation support. Every single string is hardcoded English:
-- Dialog title: "Ideas & Notes"
-- Description: "Capture ideas, track bugs..."
-- Stats: "total items", "completed"
-- Button: "Add new idea, note, or checklist item..."
-- Form placeholders: "Title -- What's on your mind?", "Add details, context, or steps..."
-- Category labels: "Idea", "Feature", "Bug", "Note"
-- Priority labels: "Low", "Medium", "High"
-- Toggle label: "Checklist"
-- Buttons: "Cancel", "Add Item"
-- Empty state: "No items yet", "Click the button above..."
-- Loading: "Loading your items..."
-- Toast messages: "Item added successfully", "Item removed"
-- Tab label: "All"
+## Visual Changes
 
-### 2. Admin Header (`AdminHeader.tsx`) -- MEDIUM PRIORITY
-A few hardcoded strings:
-- Search placeholder: "Search members, devices..."
-- Role labels: "Super Admin", "Admin", "Staff"
+### Brand Color Upgrade (`IdeasNotepad.tsx`)
 
-### 3. Legal Pages (`TermsContent.tsx` + `PrivacyContent.tsx`) -- HIGH PRIORITY
-~860 lines of professional legal content entirely in English. This is a bilingual platform serving Spain -- the legal documents must be available in Spanish.
+**Header area:**
+- Replace `bg-gradient-to-b from-muted/40` with a coral gradient: `bg-gradient-to-b from-primary/10 via-accent to-transparent`
+- Lightbulb icon container: change from `bg-yellow-500/15` to `bg-primary/15` with `text-primary` icon
+- Stats strip icons get `text-primary` accent
 
----
+**Add button:**
+- The "Add new idea" outline button gets a coral left border accent: `border-l-4 border-l-primary/50`
 
-## Implementation Plan
+**Filter tabs:**
+- Active tab gets brand styling: `data-[state=active]:bg-primary data-[state=active]:text-primary-foreground`
+- Tab bar background uses `bg-accent`
 
-### Step 1: Add i18n keys to `en.json`
+**Item cards:**
+- Non-completed items get a subtle left border accent: `border-l-4 border-l-primary/20`
+- Hover state uses brand shadow: `hover:shadow-md hover:border-l-primary/60`
+- Expanded content border changes from `border-muted` to `border-primary/30`
 
-Add new translation blocks:
+**Empty state:**
+- Icon container uses `bg-accent` with `text-primary` icon
 
-- `ideasNotepad.*` -- ~25 keys for the notepad UI (title, description, labels, placeholders, empty states, toasts)
-- `adminHeader.*` -- 4 keys (search placeholder, role labels)
-- `legal.termsContent.*` -- Structured keys for all 20 sections of the Terms of Service (section headings, paragraphs, list items, warnings)
-- `legal.privacyContent.*` -- Structured keys for all 16 sections of the Privacy Policy (section headings, paragraphs, table cells, list items)
+**Add Item button:**
+- Already uses primary color by default -- no change needed
 
-### Step 2: Add Spanish translations to `es.json`
+### Staff Name on Each Item
 
-Mirror all new keys with professional Spanish translations:
+- Add a small "by [Staff Name]" label next to the timestamp on each idea card
+- This requires fetching staff info alongside ideas. Update the query to join `staff(first_name, last_name)` via `staff_id`
+- Admins will see which staff member submitted each item
 
-- `ideasNotepad.*` -- Spanish UI labels
-- `adminHeader.*` -- Spanish labels
-- `legal.termsContent.*` -- Full professional Spanish translation of the Terms of Service
-- `legal.privacyContent.*` -- Full professional Spanish translation of the Privacy Policy
+## Data Visibility (Admin sees all staff ideas)
 
-### Step 3: Update `IdeasNotepad.tsx`
+The current `useAdminIdeas` hook already queries ALL rows from `admin_ideas` without filtering by `staff_id`. The existing RLS policy allows staff to see their own items and admins to see all. This means admins already see staff-submitted ideas -- no database changes needed.
 
-- Import `useTranslation`
-- Replace all hardcoded strings with `t()` calls using English fallbacks
-- Update category/priority label arrays to use translation keys
+## Technical Details
 
-### Step 4: Update `AdminHeader.tsx`
-
-- Replace "Search members, devices..." placeholder with `t("adminHeader.searchPlaceholder", "Search members, devices...")`
-- Replace role labels with `t()` calls
-
-### Step 5: Update `TermsContent.tsx` and `PrivacyContent.tsx`
-
-- Import `useTranslation`
-- Replace every hardcoded heading, paragraph, list item, table cell, and warning with `t()` calls
-- Maintain all formatting (bold, caps, tables, nested lists)
-
----
-
-## Files Changed
+### Files Changed
 
 | File | Action |
 |------|--------|
-| `src/i18n/locales/en.json` | Add ~300+ new keys for notepad, header, terms, privacy |
-| `src/i18n/locales/es.json` | Add matching Spanish translations for all new keys |
-| `src/components/admin/IdeasNotepad.tsx` | Add `useTranslation`, replace all hardcoded strings |
-| `src/components/layout/AdminHeader.tsx` | Replace 4 hardcoded strings with `t()` calls |
-| `src/components/legal/TermsContent.tsx` | Add `useTranslation`, replace all content with `t()` calls |
-| `src/components/legal/PrivacyContent.tsx` | Add `useTranslation`, replace all content with `t()` calls |
+| `src/components/admin/IdeasNotepad.tsx` | Brand color styling, add staff name display |
+| `src/hooks/useAdminIdeas.ts` | Update query to join staff name via `staff_id` foreign key |
 
-No database changes. No new dependencies.
+### Query Change in `useAdminIdeas.ts`
+
+Change the select from `"*"` to `"*, staff:staff(first_name, last_name)"` so each idea includes the submitter's name. Update the `AdminIdea` type to include an optional `staff` field.
+
+### No Database Changes
+
+- No new tables or migrations required
+- RLS policies already grant admin full visibility
+- The `admin_ideas.staff_id` already references the `staff` table
 
