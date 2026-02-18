@@ -1,64 +1,80 @@
 
 
-# Ideas & Notes -- Brand Styling Upgrade + Admin Visibility
+# Build Stock Sync Endpoint + Admin UI Stats
 
 ## Overview
 
-Two changes: (1) restyle the notepad dialog with the ICE Alarm coral brand colors instead of plain white, and (2) ensure that when staff submit ideas, admins can always see them -- which already works at the data level since the query fetches all rows without a staff_id filter, but we will add a visible staff name indicator so admins know who submitted each item.
+Create a new backend function (`ev07b-stock-sync`) that MonitorLinq calls to automatically add/remove devices from ICE Alarm Espana's stock. Also enhance the Devices page with stock-level stats cards.
 
-## Visual Changes
+## What Gets Built
 
-### Brand Color Upgrade (`IdeasNotepad.tsx`)
+### 1. New Edge Function: `ev07b-stock-sync`
 
-**Header area:**
-- Replace `bg-gradient-to-b from-muted/40` with a coral gradient: `bg-gradient-to-b from-primary/10 via-accent to-transparent`
-- Lightbulb icon container: change from `bg-yellow-500/15` to `bg-primary/15` with `text-primary` icon
-- Stats strip icons get `text-primary` accent
+**File:** `supabase/functions/ev07b-stock-sync/index.ts`
 
-**Add button:**
-- The "Add new idea" outline button gets a coral left border accent: `border-l-4 border-l-primary/50`
+- Authenticates via `x-api-key` header using existing `EV07B_CHECKIN_KEY` secret (no new secrets needed)
+- Uses `npm:@supabase/supabase-js@2` import per project standards
+- Uses `Deno.serve()` API
 
-**Filter tabs:**
-- Active tab gets brand styling: `data-[state=active]:bg-primary data-[state=active]:text-primary-foreground`
-- Tab bar background uses `bg-accent`
+**Two actions:**
 
-**Item cards:**
-- Non-completed items get a subtle left border accent: `border-l-4 border-l-primary/20`
-- Hover state uses brand shadow: `hover:shadow-md hover:border-l-primary/60`
-- Expanded content border changes from `border-muted` to `border-primary/30`
+| Action | Purpose | Behavior |
+|--------|---------|----------|
+| `add` | MonitorLinq allocates devices to Spain | Creates devices with `in_stock` status. Idempotent -- if IMEI exists, returns existing device_id |
+| `remove` | Device returned to Holland | Sets status to `returned` with reason in notes. Blocked (409) if device has a `member_id` |
 
-**Empty state:**
-- Icon container uses `bg-accent` with `text-primary` icon
+**Validation:**
+- 401 for invalid/missing API key
+- 400 for missing required fields (imei, sim_phone_number on add; imei on remove)
+- 404 if device not found on remove
+- 409 if trying to remove an allocated device
+- Per-device error reporting in batch add (partial success supported)
 
-**Add Item button:**
-- Already uses primary color by default -- no change needed
+**Implementation** follows the sample code from the command, with minor adjustments:
+- Uses `npm:` specifier instead of `esm.sh`
+- CORS headers include all required Lovable headers
+- Parameterized queries only (no string interpolation in filters)
 
-### Staff Name on Each Item
+### 2. Config Update: `supabase/config.toml`
 
-- Add a small "by [Staff Name]" label next to the timestamp on each idea card
-- This requires fetching staff info alongside ideas. Update the query to join `staff(first_name, last_name)` via `staff_id`
-- Admins will see which staff member submitted each item
+Add JWT bypass entry:
+```toml
+[functions.ev07b-stock-sync]
+verify_jwt = false
+```
 
-## Data Visibility (Admin sees all staff ideas)
+### 3. Admin Devices Page Stats Cards
 
-The current `useAdminIdeas` hook already queries ALL rows from `admin_ideas` without filtering by `staff_id`. The existing RLS policy allows staff to see their own items and admins to see all. This means admins already see staff-submitted ideas -- no database changes needed.
+**File:** `src/pages/admin/DevicesPage.tsx`
 
-## Technical Details
+Replace the single "Total Devices" card with 4 stats cards using data from `useDeviceStockStats()` (already exists in `useDeviceStock.ts`):
 
-### Files Changed
+| Card | Icon | Color | Source |
+|------|------|-------|--------|
+| In Stock | Package | gray | `stats.in_stock` |
+| Allocated | Users | blue | `stats.allocated` |
+| Live | Wifi | green | `stats.live` |
+| Total | Smartphone | primary | `stats.total` |
+
+### 4. i18n Keys
+
+Add translation keys for the new stats card labels in both `en.json` and `es.json`:
+- `admin.devices.stats.inStock` / "En Stock"
+- `admin.devices.stats.allocated` / "Asignados"
+- `admin.devices.stats.live` / "Activos"
+
+---
+
+## Files Changed
 
 | File | Action |
 |------|--------|
-| `src/components/admin/IdeasNotepad.tsx` | Brand color styling, add staff name display |
-| `src/hooks/useAdminIdeas.ts` | Update query to join staff name via `staff_id` foreign key |
+| `supabase/functions/ev07b-stock-sync/index.ts` | New -- edge function |
+| `supabase/config.toml` | Add `verify_jwt = false` entry |
+| `src/pages/admin/DevicesPage.tsx` | Add 4 stats cards using existing hook |
+| `src/i18n/locales/en.json` | Add 3 stats label keys |
+| `src/i18n/locales/es.json` | Add 3 stats label keys |
 
-### Query Change in `useAdminIdeas.ts`
+No database changes needed -- `returned` status already exists in the `device_status` enum, and the `devices` table already has all required columns (`notes`, `model`, `serial_number`, `sim_iccid`, `is_online`).
 
-Change the select from `"*"` to `"*, staff:staff(first_name, last_name)"` so each idea includes the submitter's name. Update the `AdminIdea` type to include an optional `staff` field.
-
-### No Database Changes
-
-- No new tables or migrations required
-- RLS policies already grant admin full visibility
-- The `admin_ideas.staff_id` already references the `staff` table
-
+No new secrets needed -- reuses `EV07B_CHECKIN_KEY`.
