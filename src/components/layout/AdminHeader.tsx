@@ -72,10 +72,10 @@ export function AdminHeader() {
   const displayEmail = staffInfo?.email || user?.email || "";
 
   const roleLabel = staffRole === "super_admin" 
-    ? "Super Admin" 
+    ? t("adminHeader.roles.superAdmin", "Super Admin") 
     : staffRole === "admin" 
-    ? "Admin" 
-    : "Staff";
+    ? t("adminHeader.roles.admin", "Admin") 
+    : t("adminHeader.roles.staff", "Staff");
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
@@ -83,7 +83,7 @@ export function AdminHeader() {
       <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search members, devices..."
+          placeholder={t("adminHeader.searchPlaceholder", "Search members, devices...")}
           className="pl-10 bg-secondary/50 border-0 focus-visible:ring-1"
         />
       </div>
