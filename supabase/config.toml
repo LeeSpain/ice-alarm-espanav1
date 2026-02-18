@@ -143,3 +143,6 @@ verify_jwt = false
 
 [functions.outreach-unsubscribe]
 verify_jwt = false
+
+[functions.ev07b-stock-sync]
+verify_jwt = false

@@ -15,7 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Wifi,
-  WifiOff
+  WifiOff,
+  Package,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +47,7 @@ import {
 import { format } from "date-fns";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
+import { useDeviceStockStats } from "@/hooks/useDeviceStock";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -59,6 +62,7 @@ export default function DevicesPage() {
   // Subscribe to realtime updates
   useDeviceRealtime();
   useAlertsRealtime();
+  const { data: stockStats } = useDeviceStockStats();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-devices", searchQuery, statusFilter, assignmentFilter, page],
@@ -158,11 +162,50 @@ export default function DevicesPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+                <Package className="h-5 w-5 text-secondary-foreground" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stockStats?.in_stock ?? 0}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.devices.stats.inStock")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stockStats?.allocated ?? 0}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.devices.stats.allocated")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Wifi className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stockStats?.live ?? 0}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.devices.stats.live")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Smartphone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{data?.totalCount || 0}</p>
+                <p className="text-2xl font-bold">{stockStats?.total ?? 0}</p>
                 <p className="text-sm text-muted-foreground">{t("admin.devices.totalDevices")}</p>
               </div>
             </div>

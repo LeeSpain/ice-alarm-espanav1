@@ -2681,7 +2681,12 @@
       "confirmUnassign": "¿Está seguro de que desea desasignar este dispositivo?",
       "deviceUnassigned": "Dispositivo desasignado",
       "unassignFailed": "Error al desasignar dispositivo",
-      "sendingConfigSms": "Enviando SMS de configuración..."
+      "sendingConfigSms": "Enviando SMS de configuración...",
+      "stats": {
+        "inStock": "En Stock",
+        "allocated": "Asignados",
+        "live": "Activos"
+      }
     },
     "table": {
       "name": "Nombre",

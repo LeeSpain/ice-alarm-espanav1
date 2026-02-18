@@ -2705,7 +2705,12 @@
       "confirmUnassign": "Are you sure you want to unassign this device?",
       "deviceUnassigned": "Device unassigned",
       "unassignFailed": "Failed to unassign device",
-      "sendingConfigSms": "Sending configuration SMS..."
+      "sendingConfigSms": "Sending configuration SMS...",
+      "stats": {
+        "inStock": "In Stock",
+        "allocated": "Allocated",
+        "live": "Live"
+      }
     },
     "table": {
       "name": "Name",
