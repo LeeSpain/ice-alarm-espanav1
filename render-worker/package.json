@@ -4,10 +4,9 @@
   "description": "Remotion + FFmpeg render worker for ICE Alarm Video Hub",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc && npm run build:remotion",
-    "build:remotion": "npx remotion bundle src/remotion/index.ts --bundle-dir=dist/remotion-bundle",
-    "start": "node dist/index.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.0",
