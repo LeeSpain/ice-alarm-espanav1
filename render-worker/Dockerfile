@@ -1,59 +1,42 @@
-# Render Worker for ICE Alarm Video Hub
-# Uses Node.js + Remotion + FFmpeg
+FROM node:20-slim
 
-FROM node:20-bookworm
-
-# Install FFmpeg and Chrome dependencies for Remotion
+# Install system dependencies needed for Remotion/FFmpeg
 RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    chromium \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libatspi2.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libxrandr2 \
-    xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
+  ffmpeg \
+  chromium \
+  fonts-liberation \
+  libatk-bridge2.0-0 \
+  libatk1.0-0 \
+  libcups2 \
+  libdrm2 \
+  libgbm1 \
+  libgtk-3-0 \
+  libnspr4 \
+  libnss3 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxkbcommon0 \
+  libxrandr2 \
+  xdg-utils \
+  --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
 
-# Set Chrome path for Remotion
-ENV CHROME_PATH=/usr/bin/chromium
-
-# Create app directory
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json* ./
 
-# Install all dependencies (including devDeps for build)
-RUN npm ci
+# Use npm install (not frozen)
+RUN npm install
 
 # Copy source
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
 
-# Build TypeScript and Remotion bundle
+# Build TypeScript
 RUN npm run build
 
-# Remove devDependencies after build
-RUN npm prune --production
-
-# Expose port
 EXPOSE 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:3001/health || exit 1
-
-# Start the worker
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
