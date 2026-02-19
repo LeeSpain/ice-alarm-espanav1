@@ -36,14 +36,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDeps for build)
+RUN npm ci
 
 # Copy source
 COPY . .
 
 # Build TypeScript and Remotion bundle
 RUN npm run build
+
+# Remove devDependencies after build
+RUN npm prune --production
 
 # Expose port
 EXPOSE 3001
