@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
@@ -489,7 +490,9 @@ export function ClientLayout() {
         </header>
 
         <main className="p-4 md:p-6">
-          <Outlet />
+          <SectionErrorBoundary section="client" homePath="/dashboard">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>

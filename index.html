@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/icon-512.png" type="image/png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#E74C3C" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ICE Alarm" />
+    <link rel="apple-touch-icon" href="/icon-512.png" />
     <title>ICE Alarm España - 24/7 Personal Emergency Response</title>
     <meta name="description" content="ICE Alarm España provides 24/7 bilingual emergency monitoring for expats in Spain. GPS tracking, fall detection, and instant help at the push of a button.">
     <meta name="author" content="ICE Alarm España" />
@@ -40,5 +46,19 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(function (reg) {
+              console.log("[ICE Alarm] Service worker registered:", reg.scope);
+            })
+            .catch(function (err) {
+              console.warn("[ICE Alarm] Service worker registration failed:", err);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,10 +1,13 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import * as Sentry from "@sentry/react";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Label for Sentry to identify which section errored */
+  section?: string;
 }
 
 interface State {
@@ -24,6 +27,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
+    Sentry.withScope((scope) => {
+      if (this.props.section) {
+        scope.setTag("section", this.props.section);
+      }
+      scope.setExtra("componentStack", errorInfo.componentStack);
+      Sentry.captureException(error);
+    });
   }
 
   private handleRetry = () => {

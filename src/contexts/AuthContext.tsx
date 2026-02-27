@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 
 type StaffRole = "super_admin" | "admin" | "call_centre" | null;
 
@@ -78,6 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         partner_id: string | null;
         member_id: string | null;
       };
+
+      // Set Sentry user context for error tracking
+      setSentryUser({
+        id: userId,
+        role: roleInfo.is_staff ? (roleInfo.staff_role || "staff") : roleInfo.is_partner ? "partner" : "member",
+      });
 
       if (roleInfo.is_staff && roleInfo.staff_role) {
         setIsStaff(true);
@@ -256,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    clearSentryUser();
     setUser(null);
     setSession(null);
     setIsStaff(false);

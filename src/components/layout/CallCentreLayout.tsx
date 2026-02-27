@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { CallCentreSidebar } from "./CallCentreSidebar";
 import { CallCentreHeader } from "./CallCentreHeader";
+import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { cn } from "@/lib/utils";
 
 export function CallCentreLayout() {
@@ -17,7 +18,9 @@ export function CallCentreLayout() {
       )}>
         <CallCentreHeader />
         <main className="p-4 md:p-6">
-          <Outlet />
+          <SectionErrorBoundary section="call-centre" homePath="/call-centre">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>

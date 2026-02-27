@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { PartnerSidebar } from "./PartnerSidebar";
 import { PartnerHeader } from "@/components/partner/PartnerHeader";
 import { AgreementRequiredModal } from "@/components/partner/AgreementRequiredModal";
+import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { cn } from "@/lib/utils";
@@ -69,7 +70,9 @@ export function PartnerLayout() {
               </div>
             </div>
           )}
-          <Outlet />
+          <SectionErrorBoundary section="partner" homePath="/partner-dashboard">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
 

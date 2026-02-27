@@ -9,7 +9,12 @@ import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelectionModal } from "@/components/LanguageSelectionModal";
+import { CookieConsentBanner } from "@/components/gdpr/CookieConsentBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SessionTimeoutWarning } from "@/components/SessionTimeoutWarning";
+import { GlobalSearch } from "@/components/GlobalSearch";
+import { SkipLink } from "@/components/ui/skip-link";
+import { RouteAnnouncer } from "@/components/ui/route-announcer";
 import i18n from "@/i18n";
 
 // Auth - Not lazy loaded (critical path)
@@ -31,6 +36,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const BlogListPage = lazy(() => import("./pages/blog/BlogListPage"));
 const BlogPostPage = lazy(() => import("./pages/blog/BlogPostPage"));
 const ReferralRedirect = lazy(() => import("./pages/ReferralRedirect"));
+const KnowledgeBasePage = lazy(() => import("./pages/KnowledgeBasePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Join Flow - Lazy loaded
@@ -80,6 +86,11 @@ const PartnerPricingSettingsPage = lazy(() => import("./pages/admin/PartnerPrici
 const VideoHubPage = lazy(() => import("./pages/admin/VideoHubPage"));
 const CommunicationsDashboardPage = lazy(() => import("./pages/admin/CommunicationsDashboardPage"));
 const IsabellaOperationsPage = lazy(() => import("./pages/admin/IsabellaOperationsPage"));
+const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
+const BlogManagerPage = lazy(() => import("./pages/admin/BlogManagerPage"));
+const AuditLogPage = lazy(() => import("./pages/admin/AuditLogPage"));
+const SLADashboardPage = lazy(() => import("./pages/admin/SLADashboardPage"));
+const FeedbackDashboardPage = lazy(() => import("./pages/admin/FeedbackDashboardPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -214,19 +225,27 @@ const App = () => {
       <BrowserRouter>
         <ScrollToTop />
         <PageTracker />
+        <RouteAnnouncer />
         <TooltipProvider>
           <AuthProvider>
             <Toaster />
             <Sonner />
-            
+            <SessionTimeoutWarning />
+            <GlobalSearch />
+
             {/* Language Selection Modal for First-Time Visitors */}
             <LanguageSelectionModal
               open={showLanguageModal}
               onLanguageSelect={handleLanguageSelect}
             />
-            
+
+            {/* GDPR Cookie Consent Banner */}
+            <CookieConsentBanner />
+
+            <SkipLink />
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
+                <div id="main-content">
                 <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Index />} />
@@ -242,6 +261,7 @@ const App = () => {
                 <Route path="/register" element={<Navigate to="/join" replace />} />
                 <Route path="/complete-registration" element={<CompleteRegistration />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
+                <Route path="/help" element={<KnowledgeBasePage />} />
                 <Route path="/member-update" element={<MemberUpdatePage />} />
 
                 {/* Admin Dashboard Routes - Require Admin Role */}
@@ -271,6 +291,7 @@ const App = () => {
                   <Route path="messages" element={<MessagesPage />} />
                   <Route path="tasks" element={<TasksPage />} />
                   <Route path="tickets" element={<AdminTicketsPage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="leads" element={<LeadsPage />} />
                   <Route path="members/new" element={<AddMemberWizard />} />
                   <Route path="members/:id" element={<MemberDetailPage />} />
@@ -291,6 +312,10 @@ const App = () => {
                   <Route path="video-hub" element={<VideoHubPage />} />
                   <Route path="communications" element={<CommunicationsDashboardPage />} />
                   <Route path="partner-pricing" element={<PartnerPricingSettingsPage />} />
+                  <Route path="blog" element={<BlogManagerPage />} />
+                  <Route path="audit-log" element={<AuditLogPage />} />
+                  <Route path="sla" element={<SLADashboardPage />} />
+                  <Route path="feedback" element={<FeedbackDashboardPage />} />
                 </Route>
 
                 {/* Partner Public Routes */}
@@ -367,6 +392,7 @@ const App = () => {
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
                 </Routes>
+                </div>
               </Suspense>
             </ErrorBoundary>
           </AuthProvider>

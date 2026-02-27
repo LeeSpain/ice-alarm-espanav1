@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
+import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { cn } from "@/lib/utils";
 
 export function AdminLayout() {
@@ -17,7 +18,9 @@ export function AdminLayout() {
       )}>
         <AdminHeader />
         <main className="p-4 md:p-6">
-          <Outlet />
+          <SectionErrorBoundary section="admin" homePath="/admin">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
     </div>
