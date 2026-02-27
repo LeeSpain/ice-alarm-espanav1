@@ -7,7 +7,7 @@ export interface DeviceStock {
   imei: string;
   serial_number: string | null;
   sim_iccid: string | null;
-  sim_phone_number: string;
+  sim_phone_number: string | null;
   model: string;
   status: string;
   member_id: string | null;
@@ -27,7 +27,7 @@ export interface NewDeviceInput {
   imei: string;
   serial_number?: string;
   sim_iccid?: string;
-  sim_phone_number: string;
+  sim_phone_number?: string;
 }
 
 export type DeviceStatusFilter = "all" | "in_stock" | "allocated" | "live" | "with_staff" | "faulty" | "reserved";
@@ -88,7 +88,7 @@ export function useAddDeviceStock() {
           imei: input.imei,
           serial_number: input.serial_number || null,
           sim_iccid: input.sim_iccid || null,
-          sim_phone_number: input.sim_phone_number,
+          sim_phone_number: input.sim_phone_number || null,
           model: "EV-07B",
           status: "in_stock",
           member_id: null,

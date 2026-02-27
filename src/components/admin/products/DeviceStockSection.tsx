@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { 
-  Smartphone, Plus, Wifi, WifiOff, Package, 
-  User, AlertTriangle, Truck, CheckCircle2 
+import {
+  Smartphone, Plus, Wifi, WifiOff, Package,
+  User, AlertTriangle, Truck, CheckCircle2, Upload
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDeviceStock, useDeviceStockStats, type DeviceStatusFilter } from "@/hooks/useDeviceStock";
 import { AddDeviceModal } from "./AddDeviceModal";
+import { BulkImeiImportModal } from "./BulkImeiImportModal";
 import { formatDistanceToNow } from "date-fns";
 
 export function DeviceStockSection() {
   const [statusFilter, setStatusFilter] = useState<DeviceStatusFilter>("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   
   const { data: devices, isLoading } = useDeviceStock(statusFilter);
   const { data: stats } = useDeviceStockStats();
@@ -80,10 +82,16 @@ export function DeviceStockSection() {
             Manage your EV-07B pendant inventory and track device lifecycle
           </CardDescription>
         </div>
-        <Button onClick={() => setAddModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Stock
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setBulkImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Import
+          </Button>
+          <Button onClick={() => setAddModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Device
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Stats Summary */}
@@ -224,6 +232,7 @@ export function DeviceStockSection() {
       </CardContent>
 
       <AddDeviceModal open={addModalOpen} onOpenChange={setAddModalOpen} />
+      <BulkImeiImportModal open={bulkImportOpen} onOpenChange={setBulkImportOpen} />
     </Card>
   );
 }

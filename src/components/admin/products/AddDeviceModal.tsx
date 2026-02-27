@@ -34,10 +34,6 @@ export function AddDeviceModal({ open, onOpenChange }: AddDeviceModalProps) {
       return;
     }
     
-    if (!formData.sim_phone_number.trim()) {
-      return;
-    }
-
     await addDevice.mutateAsync(formData);
     
     // Reset form and close modal
@@ -76,16 +72,15 @@ export function AddDeviceModal({ open, onOpenChange }: AddDeviceModalProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="sim_phone_number">SIM Phone Number *</Label>
+            <Label htmlFor="sim_phone_number">SIM Phone Number</Label>
             <Input
               id="sim_phone_number"
-              placeholder="+34 XXX XXX XXX"
+              placeholder="+34 XXX XXX XXX (optional — add later during provisioning)"
               value={formData.sim_phone_number}
               onChange={(e) => setFormData({ ...formData, sim_phone_number: e.target.value })}
-              required
             />
             <p className="text-xs text-muted-foreground">
-              The phone number of the SIM card in the device
+              Optional — can be added later during device provisioning
             </p>
           </div>
 

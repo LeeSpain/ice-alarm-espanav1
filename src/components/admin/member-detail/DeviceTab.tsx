@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { 
-  Loader2, Smartphone, Battery, MapPin, Clock, Settings, 
-  Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench
+import {
+  Loader2, Smartphone, Battery, MapPin, Clock, Settings,
+  Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench,
+  ClipboardList, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,7 @@ import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 interface Device {
   id: string;
   imei: string;
-  sim_phone_number: string;
+  sim_phone_number: string | null;
   device_type: string;
   status: string;
   battery_level: number | null;
@@ -48,6 +49,8 @@ interface Device {
   model: string | null;
   collected_at: string | null;
   live_at: string | null;
+  management_mode: string | null;
+  provisioning_checklist: Record<string, any> | null;
 }
 
 interface DeviceTabProps {
@@ -358,6 +361,49 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         </CardContent>
       </Card>
 
+      {/* Provisioning Status */}
+      {device.management_mode !== "api" && (
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <ClipboardList className="h-4 w-4" />
+                Provisioning Status
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+                <a href={`/admin/devices/${device.id}`}>
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Full Details
+                </a>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const checklist = device.provisioning_checklist || {};
+              const steps = Object.values(checklist);
+              const completed = steps.filter((s: any) => s?.completed).length;
+              const total = 14;
+              const percent = Math.round((completed / total) * 100);
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{completed} of {total} steps</span>
+                    <span className="font-medium">{percent}%</span>
+                  </div>
+                  <Progress value={percent} className="h-2" />
+                  {percent === 100 && (
+                    <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" /> Fully provisioned
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Device Info Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -411,7 +457,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">SIM Number</p>
-              <p className="font-mono">{device.sim_phone_number}</p>
+              <p className="font-mono">{device.sim_phone_number || <span className="text-muted-foreground italic text-sm">Not assigned</span>}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Configuration Status</p>
