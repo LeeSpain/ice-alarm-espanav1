@@ -1075,7 +1075,6 @@ export type Database = {
         Row: {
           assigned_at: string | null
           battery_level: number | null
-          charging_base_mac: string | null
           collected_at: string | null
           collected_by_staff_id: string | null
           configuration_status:
@@ -1091,31 +1090,21 @@ export type Database = {
           last_location_lat: number | null
           last_location_lng: number | null
           live_at: string | null
-          management_mode: string | null
           member_id: string | null
-          mic_volume: number | null
           model: string | null
           notes: string | null
           offline_since: string | null
-          apn_name: string | null
-          apn_ip_port: string | null
-          provisioning_checklist: Record<string, any> | null
           purchased_at: string | null
-          reporting_mode: string | null
           reserved_at: string | null
           reserved_order_id: string | null
           serial_number: string | null
           sim_iccid: string | null
-          sim_phone_number: string | null
-          sms_command_log: Record<string, any>[] | null
-          sos_number: string | null
-          speaker_volume: number | null
+          sim_phone_number: string
           status: Database["public"]["Enums"]["device_status"] | null
         }
         Insert: {
           assigned_at?: string | null
           battery_level?: number | null
-          charging_base_mac?: string | null
           collected_at?: string | null
           collected_by_staff_id?: string | null
           configuration_status?:
@@ -1131,31 +1120,21 @@ export type Database = {
           last_location_lat?: number | null
           last_location_lng?: number | null
           live_at?: string | null
-          management_mode?: string | null
           member_id?: string | null
-          mic_volume?: number | null
           model?: string | null
           notes?: string | null
           offline_since?: string | null
-          apn_name?: string | null
-          apn_ip_port?: string | null
-          provisioning_checklist?: Record<string, any> | null
           purchased_at?: string | null
-          reporting_mode?: string | null
           reserved_at?: string | null
           reserved_order_id?: string | null
           serial_number?: string | null
           sim_iccid?: string | null
-          sim_phone_number?: string | null
-          sms_command_log?: Record<string, any>[] | null
-          sos_number?: string | null
-          speaker_volume?: number | null
+          sim_phone_number: string
           status?: Database["public"]["Enums"]["device_status"] | null
         }
         Update: {
           assigned_at?: string | null
           battery_level?: number | null
-          charging_base_mac?: string | null
           collected_at?: string | null
           collected_by_staff_id?: string | null
           configuration_status?:
@@ -1171,25 +1150,16 @@ export type Database = {
           last_location_lat?: number | null
           last_location_lng?: number | null
           live_at?: string | null
-          management_mode?: string | null
           member_id?: string | null
-          mic_volume?: number | null
           model?: string | null
           notes?: string | null
           offline_since?: string | null
-          apn_name?: string | null
-          apn_ip_port?: string | null
-          provisioning_checklist?: Record<string, any> | null
           purchased_at?: string | null
-          reporting_mode?: string | null
           reserved_at?: string | null
           reserved_order_id?: string | null
           serial_number?: string | null
           sim_iccid?: string | null
-          sim_phone_number?: string | null
-          sms_command_log?: Record<string, any>[] | null
-          sos_number?: string | null
-          speaker_volume?: number | null
+          sim_phone_number?: string
           status?: Database["public"]["Enums"]["device_status"] | null
         }
         Relationships: [
