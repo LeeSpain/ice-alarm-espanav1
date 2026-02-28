@@ -191,15 +191,35 @@ queryClient.prefetchQuery({
 });
 
 // Intercept recovery redirects from password reset emails
+// We must let Supabase process the hash tokens FIRST to establish the session,
+// then navigate to /reset-password once the PASSWORD_RECOVERY event fires.
 const RecoveryRedirect = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
+    if (!hash.includes('type=recovery')) return;
+
+    // Listen for Supabase to process the recovery tokens from the hash
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        sessionStorage.setItem('isRecoveryFlow', 'true');
+        navigate('/reset-password', { replace: true });
+        subscription.unsubscribe();
+      }
+    });
+
+    // Safety timeout: if the event doesn't fire within 10s, navigate anyway
+    const timeout = setTimeout(() => {
       sessionStorage.setItem('isRecoveryFlow', 'true');
       navigate('/reset-password', { replace: true });
-    }
+      subscription.unsubscribe();
+    }, 10000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [navigate]);
 
   return null;
