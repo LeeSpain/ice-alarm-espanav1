@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,12 +17,19 @@ import { toast } from "sonner";
 
 export default function Login() {
   const { t } = useTranslation();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
+
+  // If user is already authenticated via a recovery link, redirect to reset-password
+  useEffect(() => {
+    if (user && window.location.hash.includes('type=recovery')) {
+      navigate('/reset-password', { replace: true });
+    }
+  }, [user, navigate]);
 
   const loginSchema = z.object({
     email: z.string().email(t("validation.invalidEmail")),

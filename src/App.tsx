@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageLoader } from "@/components/ui/page-loader";
 import { PageTracker } from "@/components/analytics/PageTracker";
@@ -190,6 +190,20 @@ queryClient.prefetchQuery({
   staleTime: 1000 * 60 * 30, // 30 minutes
 });
 
+// Intercept recovery redirects from password reset emails
+const RecoveryRedirect = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      navigate('/reset-password', { replace: true });
+    }
+  }, [navigate]);
+
+  return null;
+};
+
 const App = () => {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -228,6 +242,7 @@ const App = () => {
         <ScrollToTop />
         <PageTracker />
         <RouteAnnouncer />
+        <RecoveryRedirect />
         <TooltipProvider>
           <AuthProvider>
             <Toaster />
