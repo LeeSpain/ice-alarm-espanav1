@@ -157,7 +157,6 @@ export default function MembersPage() {
 
   const handleExportCSV = () => {
     // TODO: Implement CSV export
-    console.log("Export CSV");
   };
 
   return (

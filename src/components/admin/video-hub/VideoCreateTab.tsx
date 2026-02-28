@@ -346,7 +346,6 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         throw new Error(error.message || t("videoHub.create.renderFailed"));
       }
 
-      console.log("Render queued:", data);
       toast.success(t("videoHub.create.renderQueued"));
       onComplete();
     } catch (error) {

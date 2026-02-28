@@ -25,8 +25,6 @@ export function useOpsRealtime() {
           table: "devices",
         },
         (payload) => {
-          console.log("Device realtime update:", payload.eventType);
-
           // Invalidate all device-related queries
           queryClient.invalidateQueries({ queryKey: ["device-stock"] });
           queryClient.invalidateQueries({ queryKey: ["device-stock-stats"] });
@@ -51,8 +49,6 @@ export function useOpsRealtime() {
           table: "alerts",
         },
         (payload) => {
-          console.log("Alert realtime update:", payload.eventType);
-
           // Invalidate all alert-related queries
           queryClient.invalidateQueries({ queryKey: ["device-offline-alerts"] });
           queryClient.invalidateQueries({ queryKey: ["ev07b-status-summary"] });

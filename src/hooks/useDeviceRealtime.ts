@@ -24,8 +24,6 @@ export function useDeviceRealtime(memberId?: string) {
           ...(memberId ? { filter: `member_id=eq.${memberId}` } : {}),
         },
         (payload) => {
-          console.log("Device realtime update:", payload.eventType, payload.new);
-
           // Invalidate all device-related queries
           queryClient.invalidateQueries({ queryKey: ["device-stock"] });
           queryClient.invalidateQueries({ queryKey: ["device-stock-stats"] });

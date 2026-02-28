@@ -28,7 +28,6 @@ export function useBrowserNotifications() {
   const showNotification = useCallback(
     (title: string, options?: NotificationOptions) => {
       if (!isSupported || permission !== "granted") {
-        console.log("Notifications not available or not permitted");
         return null;
       }
 

@@ -20,8 +20,6 @@ export function useAlertsRealtime() {
           table: "alerts",
         },
         (payload) => {
-          console.log("Alert realtime update:", payload.eventType);
-
           // Invalidate all alert-related queries
           queryClient.invalidateQueries({ queryKey: ["device-offline-alerts"] });
           queryClient.invalidateQueries({ queryKey: ["ev07b-status-summary"] });

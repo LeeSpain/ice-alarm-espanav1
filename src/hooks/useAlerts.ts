@@ -85,7 +85,7 @@ const playAlertSound = () => {
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.5);
   } catch (e) {
-    console.log("Audio not supported");
+    // Audio API not supported in this browser
   }
 };
 

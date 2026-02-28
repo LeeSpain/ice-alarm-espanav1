@@ -42,7 +42,6 @@ export async function logCrmEvent(
       return null;
     }
 
-    console.log(`CRM event logged: ${eventType}`, payload);
     return data.id;
   } catch (error) {
     console.error(`Exception logging CRM event (${eventType}):`, error);
@@ -123,7 +122,6 @@ export function storeReferralData(
       localStorage.setItem("partner_utm", JSON.stringify(utmParams));
     }
     
-    console.log("Partner referral stored:", { referralCode, utmParams });
   }
 }
 

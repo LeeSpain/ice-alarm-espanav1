@@ -32,8 +32,6 @@ export function useVideoExports() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'video_exports' },
         (payload) => {
-          console.log('[Realtime] Video export update:', payload.eventType, payload.new);
-          
           // Optimistically update the cache for faster UI updates
           if (payload.eventType === 'INSERT') {
             const newExport = payload.new as VideoExport;
@@ -59,9 +57,7 @@ export function useVideoExports() {
           queryClient.invalidateQueries({ queryKey: ['video-exports'] });
         }
       )
-      .subscribe((status) => {
-        console.log('[Realtime] video_exports subscription:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);

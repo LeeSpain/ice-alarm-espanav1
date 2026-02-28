@@ -30,8 +30,6 @@ export function useVideoRenders(projectId?: string) {
           ...(projectId ? { filter: `project_id=eq.${projectId}` } : {})
         },
         (payload) => {
-          console.log('[Realtime] Video render update:', payload.eventType, payload.new);
-          
           // Optimistically update the cache for faster UI updates
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newRender = payload.new as VideoRender;
@@ -55,9 +53,7 @@ export function useVideoRenders(projectId?: string) {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('[Realtime] video_renders subscription:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);

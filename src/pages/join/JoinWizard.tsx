@@ -60,7 +60,6 @@ export default function JoinWizard() {
       
       // Store referral code and UTM data - first-touch wins, don't overwrite existing
       storeReferralData(refCode, utmParams);
-      console.log("Partner referral captured:", refCode, utmParams);
     }
   }, [searchParams]);
 
