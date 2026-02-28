@@ -3,12 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { PRICING } from "@/config/pricing";
 import { STALE_TIMES } from "@/config/constants";
 
+type PaymentGateway = "stripe" | "mollie";
+
 interface PricingSettings {
   registrationFeeEnabled: boolean;
   registrationFeeDiscount: number; // 0-100
   registrationFeeBase: number;
   registrationFeeFinal: number;
   testModeEnabled: boolean;
+  activeGateway: PaymentGateway;
   isLoading: boolean;
 }
 
@@ -19,7 +22,7 @@ export function usePricingSettings(): PricingSettings {
       const { data, error } = await supabase
         .from("system_settings")
         .select("key, value")
-        .in("key", ["registration_fee_enabled", "registration_fee_discount", "registration_test_mode_enabled"]);
+        .in("key", ["registration_fee_enabled", "registration_fee_discount", "registration_test_mode_enabled", "settings_active_payment_gateway"]);
 
       if (error) throw error;
 
@@ -32,6 +35,7 @@ export function usePricingSettings(): PricingSettings {
         registrationFeeEnabled: settingsMap.registration_fee_enabled !== "false",
         registrationFeeDiscount: parseFloat(settingsMap.registration_fee_discount || "0"),
         testModeEnabled: settingsMap.registration_test_mode_enabled === "true",
+        activeGateway: (settingsMap.settings_active_payment_gateway as PaymentGateway) || "stripe",
       };
     },
     staleTime: STALE_TIMES.VERY_LONG,
@@ -40,6 +44,7 @@ export function usePricingSettings(): PricingSettings {
   const registrationFeeEnabled = settings?.registrationFeeEnabled ?? true;
   const registrationFeeDiscount = settings?.registrationFeeDiscount ?? 0;
   const testModeEnabled = settings?.testModeEnabled ?? false;
+  const activeGateway = settings?.activeGateway ?? "stripe";
   const registrationFeeBase = PRICING.registration.amount;
 
   // Calculate final fee
@@ -54,6 +59,7 @@ export function usePricingSettings(): PricingSettings {
     registrationFeeBase,
     registrationFeeFinal,
     testModeEnabled,
+    activeGateway,
     isLoading,
   };
 }

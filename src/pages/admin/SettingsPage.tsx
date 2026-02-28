@@ -20,6 +20,7 @@ import {
   Percent,
   Tag,
   FlaskConical,
+  ToggleLeft,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -65,6 +66,11 @@ const KEY = {
   // Maps
   GOOGLE_MAPS: "google_maps_api_key",
 
+  // Mollie
+  ACTIVE_GATEWAY: "settings_active_payment_gateway",
+  MOLLIE_API_KEY: "settings_mollie_api_key",
+  MOLLIE_WEBHOOK_SECRET: "settings_mollie_webhook_secret",
+
   // Facebook (✅ MUST match your edge function + reads)
   FB_PAGE_ID: "settings_facebook_page_id",
   FB_PAGE_TOKEN: "settings_facebook_page_access_token",
@@ -103,10 +109,18 @@ export default function SettingsPage() {
   // Test mode state
   const [testModeEnabled, setTestModeEnabled] = useState(false);
 
+  // Payment gateway state
+  const [activeGateway, setActiveGateway] = useState<"stripe" | "mollie">("stripe");
+
   // Integration keys state
   const [stripeKeys, setStripeKeys] = useState({
     secret_key: "",
     publishable_key: "",
+    webhook_secret: "",
+  });
+
+  const [mollieKeys, setMollieKeys] = useState({
+    api_key: "",
     webhook_secret: "",
   });
 
@@ -187,11 +201,20 @@ export default function SettingsPage() {
       shipping: settingsMap.shipping || prev.shipping,
     }));
 
+    // Active gateway
+    setActiveGateway((settingsMap[KEY.ACTIVE_GATEWAY] as "stripe" | "mollie") || "stripe");
+
     // Stripe (masked)
     setStripeKeys({
       secret_key: mask(settingsMap[KEY.STRIPE_SECRET]),
       publishable_key: settingsMap[KEY.STRIPE_PUBLISHABLE] || "",
       webhook_secret: mask(settingsMap[KEY.STRIPE_WEBHOOK]),
+    });
+
+    // Mollie (masked)
+    setMollieKeys({
+      api_key: mask(settingsMap[KEY.MOLLIE_API_KEY]),
+      webhook_secret: mask(settingsMap[KEY.MOLLIE_WEBHOOK_SECRET]),
     });
 
     // Twilio non-secret fields - safe to populate
@@ -296,6 +319,29 @@ export default function SettingsPage() {
     saveMutation.mutate({
       [KEY.TEST_MODE_ENABLED]: checked.toString(),
     });
+  };
+
+  const handleSaveGateway = (gateway: "stripe" | "mollie") => {
+    setActiveGateway(gateway);
+    saveMutation.mutate({ [KEY.ACTIVE_GATEWAY]: gateway });
+  };
+
+  const handleSaveMollie = () => {
+    const updates: Record<string, string> = {};
+
+    if (mollieKeys.api_key && !mollieKeys.api_key.includes("•")) {
+      updates[KEY.MOLLIE_API_KEY] = mollieKeys.api_key;
+    }
+    if (mollieKeys.webhook_secret && !mollieKeys.webhook_secret.includes("•")) {
+      updates[KEY.MOLLIE_WEBHOOK_SECRET] = mollieKeys.webhook_secret;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "No changes to save", description: "Enter new values to update the keys." });
+      return;
+    }
+
+    saveMutation.mutate(updates);
   };
 
   const handleSaveStripe = () => {
@@ -732,9 +778,67 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Payments Tab (Stripe) */}
+        {/* Payments Tab */}
         <TabsContent value="payments">
-          <Card>
+          {/* Active Gateway Selector */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ToggleLeft className="h-5 w-5" />
+                Active Payment Gateway
+              </CardTitle>
+              <CardDescription>
+                Choose which payment provider handles new member checkouts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleSaveGateway("stripe")}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    activeGateway === "stripe"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-lg">Stripe</span>
+                    {activeGateway === "stripe" && (
+                      <Badge className="bg-alert-resolved text-alert-resolved-foreground">
+                        <Check className="mr-1 h-3 w-3" />Active
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Cards, Apple Pay, Google Pay. Global coverage.
+                  </p>
+                </button>
+                <button
+                  onClick={() => handleSaveGateway("mollie")}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    activeGateway === "mollie"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-lg">Mollie</span>
+                    {activeGateway === "mollie" && (
+                      <Badge className="bg-alert-resolved text-alert-resolved-foreground">
+                        <Check className="mr-1 h-3 w-3" />Active
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    iDEAL, Bancontact, SEPA, cards. EU-focused.
+                  </p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stripe Configuration */}
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
@@ -839,6 +943,89 @@ export default function SettingsPage() {
                   payment_intent.payment_failed, customer.subscription.updated, customer.subscription.deleted,
                   invoice.paid, invoice.payment_failed
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mollie Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Mollie Configuration
+                {getIntegrationStatus([KEY.MOLLIE_API_KEY]) ? (
+                  <Badge className="bg-alert-resolved text-alert-resolved-foreground ml-2">
+                    <Check className="mr-1 h-3 w-3" />
+                    Configured
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 ml-2">
+                    <AlertCircle className="mr-1 h-3 w-3" />
+                    Not Configured
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Connect your Mollie account for EU payment processing. Get your API key from the{" "}
+                <a
+                  href="https://my.mollie.com/dashboard/developers/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Mollie Dashboard
+                </a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>API Key</Label>
+                  <div className="relative">
+                    <Input
+                      type="password"
+                      value={mollieKeys.api_key}
+                      onChange={(e) => setMollieKeys((prev) => ({ ...prev, api_key: e.target.value }))}
+                      placeholder="live_..."
+                      className="pr-10"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Starts with live_ (production) or test_ (testing)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Webhook Secret (optional)</Label>
+                  <Input
+                    type="password"
+                    value={mollieKeys.webhook_secret}
+                    onChange={(e) => setMollieKeys((prev) => ({ ...prev, webhook_secret: e.target.value }))}
+                    placeholder="Optional additional security"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional extra verification for webhook callbacks
+                  </p>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveMollie} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save Mollie Configuration
+              </Button>
+
+              <Separator className="my-6" />
+
+              <div className="rounded-lg bg-muted p-4">
+                <h4 className="font-medium mb-2">Webhook URL</h4>
+                <p className="text-sm text-muted-foreground mb-2">Mollie sends webhook callbacks automatically. Ensure this URL is reachable:</p>
+                <code className="block p-2 bg-background rounded border text-sm break-all">
+                  {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mollie-webhook`}
+                </code>
               </div>
             </CardContent>
           </Card>

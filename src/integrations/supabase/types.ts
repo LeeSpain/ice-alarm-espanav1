@@ -4144,6 +4144,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_type: Database["public"]["Enums"]["payment_type"]
           status: Database["public"]["Enums"]["payment_status"] | null
+          mollie_payment_id: string | null
           stripe_payment_id: string | null
           subscription_id: string | null
         }
@@ -4153,6 +4154,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           member_id: string
+          mollie_payment_id?: string | null
           notes?: string | null
           order_id?: string | null
           paid_at?: string | null
@@ -4168,6 +4170,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           member_id?: string
+          mollie_payment_id?: string | null
           notes?: string | null
           order_id?: string | null
           paid_at?: string | null
@@ -4569,6 +4572,8 @@ export type Database = {
           renewal_date: string
           start_date: string
           status: Database["public"]["Enums"]["subscription_status"] | null
+          mollie_customer_id: string | null
+          mollie_subscription_id: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
         }
@@ -4579,6 +4584,8 @@ export type Database = {
           has_pendant?: boolean | null
           id?: string
           member_id: string
+          mollie_customer_id?: string | null
+          mollie_subscription_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           registration_fee_paid?: boolean | null
@@ -4595,6 +4602,8 @@ export type Database = {
           has_pendant?: boolean | null
           id?: string
           member_id?: string
+          mollie_customer_id?: string | null
+          mollie_subscription_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           registration_fee_paid?: boolean | null
@@ -5442,7 +5451,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
       partner_status: "pending" | "active" | "suspended"
-      payment_method: "stripe" | "bank_transfer" | "paypal"
+      payment_method: "stripe" | "bank_transfer" | "paypal" | "mollie"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       payment_type:
         | "registration"
@@ -5680,7 +5689,7 @@ export const Constants = {
         "cancelled",
       ],
       partner_status: ["pending", "active", "suspended"],
-      payment_method: ["stripe", "bank_transfer", "paypal"],
+      payment_method: ["stripe", "bank_transfer", "paypal", "mollie"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       payment_type: [
         "registration",

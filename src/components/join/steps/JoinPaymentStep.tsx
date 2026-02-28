@@ -20,7 +20,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { registrationFeeEnabled, registrationFeeDiscount, testModeEnabled } = usePricingSettings();
+  const { registrationFeeEnabled, registrationFeeDiscount, testModeEnabled, activeGateway } = usePricingSettings();
 
   const order = calculateOrder({ 
     membershipType: data.membershipType, 
@@ -33,7 +33,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
   });
   const total = order.grandTotal;
 
-  const handlePayWithStripe = async () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
     setError(null);
     try {
@@ -44,12 +44,25 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
       onUpdate({ memberId: registrationResult.memberId, orderId: registrationResult.orderNumber });
       const successUrl = `${window.location.origin}/join?success=true&order=${registrationResult.orderNumber}`;
       const cancelUrl = `${window.location.origin}/join?cancelled=true`;
-      const { data: checkoutResult, error: checkoutError } = await supabase.functions.invoke("create-checkout", { body: { memberId: registrationResult.memberId, orderId: registrationResult.orderId, paymentId: registrationResult.paymentId, subscriptionId: registrationResult.subscriptionId, lineItems: registrationResult.lineItems, customerEmail: data.primaryMember.email, customerName: `${data.primaryMember.firstName} ${data.primaryMember.lastName}`, successUrl, cancelUrl, metadata: registrationResult.partnerMemberId ? { partner_member_id: registrationResult.partnerMemberId, ...(registrationResult.partnerSubscriptionId ? { partner_subscription_id: registrationResult.partnerSubscriptionId } : {}) } : undefined } });
-      if (checkoutError) { if (checkoutResult?.code === "STRIPE_NOT_CONFIGURED") { setError("Payment system is being configured. Please try again later or contact support."); return; } throw new Error(checkoutError.message || "Failed to create checkout session"); }
-      if (!checkoutResult?.url) throw new Error("No checkout URL received");
+      const partnerMeta = registrationResult.partnerMemberId ? { partner_member_id: registrationResult.partnerMemberId, ...(registrationResult.partnerSubscriptionId ? { partner_subscription_id: registrationResult.partnerSubscriptionId } : {}) } : undefined;
+
+      let checkoutUrl: string;
+
+      if (activeGateway === "mollie") {
+        const { data: checkoutResult, error: checkoutError } = await supabase.functions.invoke("create-mollie-checkout", { body: { memberId: registrationResult.memberId, orderId: registrationResult.orderId, paymentId: registrationResult.paymentId, subscriptionId: registrationResult.subscriptionId, lineItems: registrationResult.lineItems, customerEmail: data.primaryMember.email, customerName: `${data.primaryMember.firstName} ${data.primaryMember.lastName}`, successUrl, cancelUrl, billingFrequency: data.billingFrequency, subscriptionAmount: order.subscriptionFinal, metadata: partnerMeta } });
+        if (checkoutError) { if (checkoutResult?.code === "MOLLIE_NOT_CONFIGURED") { setError(t("joinWizard.payment.gatewayNotConfigured")); return; } throw new Error(checkoutError.message || "Failed to create checkout"); }
+        if (!checkoutResult?.url) throw new Error("No checkout URL received");
+        checkoutUrl = checkoutResult.url;
+      } else {
+        const { data: checkoutResult, error: checkoutError } = await supabase.functions.invoke("create-checkout", { body: { memberId: registrationResult.memberId, orderId: registrationResult.orderId, paymentId: registrationResult.paymentId, subscriptionId: registrationResult.subscriptionId, lineItems: registrationResult.lineItems, customerEmail: data.primaryMember.email, customerName: `${data.primaryMember.firstName} ${data.primaryMember.lastName}`, successUrl, cancelUrl, metadata: partnerMeta } });
+        if (checkoutError) { if (checkoutResult?.code === "STRIPE_NOT_CONFIGURED") { setError(t("joinWizard.payment.gatewayNotConfigured")); return; } throw new Error(checkoutError.message || "Failed to create checkout session"); }
+        if (!checkoutResult?.url) throw new Error("No checkout URL received");
+        checkoutUrl = checkoutResult.url;
+      }
+
       onPaymentInitiated();
       clearReferralData();
-      window.location.href = checkoutResult.url;
+      window.location.href = checkoutUrl;
     } catch (err) { console.error("Payment error:", err); setError(err instanceof Error ? err.message : "An unexpected error occurred"); } finally { setIsProcessing(false); }
   };
 
@@ -163,7 +176,7 @@ export function JoinPaymentStep({ data, onUpdate, onPaymentInitiated }: JoinPaym
         </Card>
       )}
 
-      <Card className="bg-muted/50"><CardContent className="pt-6"><Button onClick={handlePayWithStripe} disabled={isProcessing} className="w-full h-14 text-lg gap-3" size="lg">{isProcessing ? (<><Loader2 className="h-5 w-5 animate-spin" />{t("joinWizard.payment.processing")}</>) : (<><CreditCard className="h-5 w-5" />{t("joinWizard.payment.payWithStripe", { amount: formatPrice(total) })}<ExternalLink className="h-4 w-4 ml-1" /></>)}</Button><div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground"><Lock className="h-3 w-3" /><span>{t("joinWizard.payment.securedBy")}</span></div><p className="text-xs text-center text-muted-foreground mt-3">{t("joinWizard.payment.redirectNote")}</p></CardContent></Card>
+      <Card className="bg-muted/50"><CardContent className="pt-6"><Button onClick={handlePayment} disabled={isProcessing} className="w-full h-14 text-lg gap-3" size="lg">{isProcessing ? (<><Loader2 className="h-5 w-5 animate-spin" />{t("joinWizard.payment.processing")}</>) : (<><CreditCard className="h-5 w-5" />{t(activeGateway === "mollie" ? "joinWizard.payment.payWithMollie" : "joinWizard.payment.payWithStripe", { amount: formatPrice(total) })}<ExternalLink className="h-4 w-4 ml-1" /></>)}</Button><div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground"><Lock className="h-3 w-3" /><span>{t("joinWizard.payment.securedBy")}</span></div><p className="text-xs text-center text-muted-foreground mt-3">{t(activeGateway === "mollie" ? "joinWizard.payment.redirectNoteMollie" : "joinWizard.payment.redirectNote")}</p></CardContent></Card>
       <div className="flex items-center justify-center gap-6 py-4"><div className="flex items-center gap-2 text-muted-foreground"><Shield className="h-5 w-5" /><span className="text-sm">{t("joinWizard.payment.securePayment")}</span></div><div className="flex items-center gap-2 text-muted-foreground"><CreditCard className="h-5 w-5" /><span className="text-sm">{t("joinWizard.payment.allCardsAccepted")}</span></div></div>
     </div>
   );

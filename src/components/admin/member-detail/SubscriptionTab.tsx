@@ -33,6 +33,8 @@ interface Subscription {
   registration_fee_paid: boolean | null;
   has_pendant: boolean | null;
   stripe_subscription_id: string | null;
+  mollie_subscription_id: string | null;
+  mollie_customer_id: string | null;
 }
 
 interface SubscriptionTabProps {
@@ -68,8 +70,22 @@ export function SubscriptionTab({ memberId }: SubscriptionTabProps) {
 
   const updateStatus = async (newStatus: string) => {
     if (!subscription) return;
-    
+
     try {
+      // If cancelling, also cancel on the payment gateway
+      if (newStatus === "cancelled") {
+        if (subscription.mollie_subscription_id && subscription.mollie_customer_id) {
+          const { error: mollieErr } = await supabase.functions.invoke("cancel-mollie-subscription", {
+            body: { subscriptionId: subscription.id },
+          });
+          if (mollieErr) {
+            console.error("Mollie cancellation error:", mollieErr);
+            toast.error("Failed to cancel Mollie subscription. DB updated locally.");
+          }
+        }
+        // Stripe cancellation would be handled via Stripe Dashboard or API if needed
+      }
+
       const { error } = await supabase
         .from("subscriptions")
         .update({ status: newStatus as "active" | "paused" | "cancelled" | "expired" })
@@ -200,7 +216,11 @@ export function SubscriptionTab({ memberId }: SubscriptionTabProps) {
             </div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm capitalize">Payment: {subscription.payment_method}</span>
+              <span className="text-sm capitalize">
+                Payment: {subscription.payment_method}
+                {subscription.mollie_subscription_id && " (Mollie)"}
+                {subscription.stripe_subscription_id && " (Stripe)"}
+              </span>
             </div>
           </div>
 
