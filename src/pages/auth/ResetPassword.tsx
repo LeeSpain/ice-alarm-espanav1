@@ -41,6 +41,9 @@ export default function ResetPassword() {
       const hash = window.location.hash;
       if (hash && hash.includes("type=recovery")) {
         setIsValid(true);
+      } else if (sessionStorage.getItem('isRecoveryFlow') === 'true') {
+        sessionStorage.removeItem('isRecoveryFlow');
+        setIsValid(true);
       } else {
         // Also check if there's already a session (user clicked link)
         const { data } = await supabase.auth.getSession();
