@@ -1,30 +1,45 @@
 
 
-## Translation Audit: Missing `gdpr` Namespace
+## Isabella Operations Upgrade — 31 New Functions
 
-### Problem
-The entire `gdpr` translation namespace is **missing from both** `en.json` and `es.json`. This means every `t("gdpr....")` call in `CookieConsentBanner.tsx` and `GdprSettingsSection.tsx` renders raw key strings instead of proper text — affecting the cookie banner, cookie settings dialog, GDPR settings panel, and account deletion dialog.
+### Step 1: Insert 31 rows into `isabella_settings`
+Run the user's SQL (7 INSERT statements with ON CONFLICT DO NOTHING) using the insert tool to add all 31 new function keys with their enabled defaults and config JSON.
 
-### Keys Needed (extracted from source code)
+### Step 2: Update `src/pages/admin/IsabellaOperationsPage.tsx`
+- Add 31 new entries to `FUNCTION_KEY_MAP` (name + description keys for each new function)
+- Add 6 new sections to `SECTIONS` array:
+  - "Boss / Owner Intelligence" → 7 keys
+  - "Member Lifecycle Automation" → 6 keys
+  - "Device & Infrastructure Monitoring" → 5 keys
+  - "Partner Network Management" → 5 keys
+  - "Content & Marketing Automation" → 5 keys
+  - "Compliance & Legal" → 5 keys
+- Import icons: `Crown`, `UserCheck`, `Cpu`, `Handshake`, `Megaphone`, `ShieldCheck`, `Info`
+- Add icon + color to each section definition (existing 4 sections get icons too)
+- Render section icon + color accent on each `Card` header
+- Add "X/Y active" `Badge` per section (count enabled vs total in that section)
+- Add `Tooltip` with info icon on each function row showing its `config` JSON
+- Add hover background on function rows (`hover:bg-muted/50`)
 
-**Cookie Banner** (`gdpr.cookieBanner.*`):
-- `title`, `description`, `customize`, `rejectNonEssential`, `acceptAll`
+### Step 3: Update `src/lib/isabella-function-config.ts`
+Add 31 new entries to `ISABELLA_FUNCTION_CONFIG` with appropriate `agent_key`, `triggers`, `description`, and `capabilities`.
 
-**Cookie Settings Dialog** (`gdpr.cookieSettings.*`):
-- `title`, `description`, `essential`, `essentialDescription`, `analytics`, `analyticsDescription`, `marketing`, `marketingDescription`, `savePreferences`
+### Step 4: Update `src/components/admin/dashboard/IsabellaStatusBanner.tsx`
+Add 31 new entries to `FUNCTION_LABELS` map for the new function keys.
 
-**GDPR Settings Section** (`gdpr.settings.*`):
-- `title`, `description`, `downloadTitle`, `downloadDescription`, `downloading`, `downloadButton`, `cookieTitle`, `cookieDescription`, `cookieButton`, `deleteTitle`, `deleteDescription`, `deleteSubmitted`, `deleteButton`
+### Step 5: Update `src/i18n/locales/en.json`
+Under `isabella.sections` add 6 new section titles + descriptions. Under `isabella.functions` add 31 pairs (name + desc) for every new function.
 
-**Delete Dialog** (`gdpr.deleteDialog.*`):
-- `title`, `warning`, `details`, `submitting`, `confirm`
+### Step 6: Update `src/i18n/locales/es.json`
+Mirror all new keys with Spanish translations.
 
-### Implementation Steps
-
-1. **Add `gdpr` namespace to `en.json`** — Insert all ~30 keys above with proper English text for cookie consent, data export, cookie preferences, and account deletion flows.
-
-2. **Add `gdpr` namespace to `es.json`** — Insert the same ~30 keys with proper Spanish translations, maintaining the same structure.
-
-### Technical Detail
-Both files currently have 399 top-level namespace entries. The `gdpr` block will be added as a new top-level entry in each file (likely near other user-facing sections). No code changes are needed in the components — they already reference these keys correctly.
+### Files Modified
+| File | Change |
+|------|--------|
+| `isabella_settings` table | +31 rows (data insert) |
+| `IsabellaOperationsPage.tsx` | +31 function mappings, +6 sections, icons, badges, tooltips |
+| `isabella-function-config.ts` | +31 config entries |
+| `IsabellaStatusBanner.tsx` | +31 label entries |
+| `en.json` | +68 translation keys |
+| `es.json` | +68 translation keys |
 
