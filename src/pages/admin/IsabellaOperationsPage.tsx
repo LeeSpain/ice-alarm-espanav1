@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Lock, Activity, AlertTriangle, Zap, Settings, ExternalLink, Info,
-  Bell, PhoneIncoming, PhoneOutgoing, TrendingUp,
   Crown, UserCheck, Cpu, Handshake, Megaphone, ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -74,7 +73,7 @@ interface SectionDef {
   descKey?: string;
   keys: string[];
   icon: LucideIcon;
-  color: string;
+  iconColor: string;
 }
 
 const SECTIONS: SectionDef[] = [
@@ -82,71 +81,71 @@ const SECTIONS: SectionDef[] = [
     titleKey: "isabella.sections.alertHandling",
     descKey: "isabella.sections.alertHandlingDesc",
     keys: ["device_offline_response", "low_battery_alerts", "sos_button_triage", "fall_detection_triage"],
-    icon: Bell,
-    color: "text-red-500",
+    icon: AlertTriangle,
+    iconColor: "text-red-500",
   },
   {
     titleKey: "isabella.sections.inboundCommunications",
     descKey: "isabella.sections.inboundCommunicationsDesc",
     keys: ["inbound_phone_calls", "inbound_sms", "inbound_whatsapp", "inbound_email", "chat_widget"],
-    icon: PhoneIncoming,
-    color: "text-blue-500",
+    icon: Activity,
+    iconColor: "text-blue-500",
   },
   {
     titleKey: "isabella.sections.outboundCommunications",
     descKey: "isabella.sections.outboundCommunicationsDesc",
     keys: ["courtesy_calls", "welcome_calls", "onboarding_checkins", "payment_reminders", "followup_calls", "birthday_calls"],
-    icon: PhoneOutgoing,
-    color: "text-indigo-500",
+    icon: Zap,
+    iconColor: "text-amber-500",
   },
   {
     titleKey: "isabella.sections.salesAndLeads",
     descKey: "isabella.sections.salesAndLeadsDesc",
     keys: ["lead_followup_calls", "abandoned_signup_recovery", "partner_enquiry_handling", "b2b_outreach_campaigns"],
-    icon: TrendingUp,
-    color: "text-green-500",
+    icon: Megaphone,
+    iconColor: "text-green-500",
   },
   {
     titleKey: "isabella.sections.bossIntelligence",
     descKey: "isabella.sections.bossIntelligenceDesc",
     keys: ["new_sale_notification", "cancellation_alert", "failed_payment_escalation", "daily_boss_briefing", "weekly_revenue_summary", "emergency_escalation_alert", "negative_feedback_alert"],
     icon: Crown,
-    color: "text-yellow-500",
+    iconColor: "text-yellow-500",
   },
   {
     titleKey: "isabella.sections.memberLifecycle",
     descKey: "isabella.sections.memberLifecycleDesc",
     keys: ["membership_anniversary", "inactivity_check", "subscription_renewal_reminder", "medical_profile_incomplete", "device_not_activated", "upgrade_suggestion"],
     icon: UserCheck,
-    color: "text-teal-500",
+    iconColor: "text-teal-500",
   },
   {
     titleKey: "isabella.sections.deviceInfrastructure",
     descKey: "isabella.sections.deviceInfrastructureDesc",
     keys: ["stock_low_alert", "device_health_monitor", "sim_expiry_warning", "bulk_offline_alert", "provisioning_stalled"],
     icon: Cpu,
-    color: "text-purple-500",
+    iconColor: "text-purple-500",
   },
   {
     titleKey: "isabella.sections.partnerNetwork",
     descKey: "isabella.sections.partnerNetworkDesc",
     keys: ["new_partner_signup", "partner_first_referral", "partner_commission_due", "partner_inactive_warning", "partner_agreement_expiring"],
     icon: Handshake,
-    color: "text-orange-500",
+    iconColor: "text-orange-500",
   },
   {
     titleKey: "isabella.sections.contentMarketing",
     descKey: "isabella.sections.contentMarketingDesc",
     keys: ["auto_generate_scheduled_content", "content_approval_reminder", "auto_publish_approved_content", "blog_post_performance", "social_engagement_alert"],
     icon: Megaphone,
-    color: "text-pink-500",
+    iconColor: "text-pink-500",
   },
   {
     titleKey: "isabella.sections.complianceLegal",
     descKey: "isabella.sections.complianceLegalDesc",
     keys: ["gdpr_deletion_request", "gdpr_export_request", "sla_breach_alert", "audit_anomaly_detection", "operational_cost_due"],
     icon: ShieldCheck,
-    color: "text-emerald-500",
+    iconColor: "text-emerald-500",
   },
 ];
 
@@ -216,8 +215,10 @@ export default function IsabellaOperationsPage() {
                 <Card key={section.titleKey}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <SectionIcon className={`h-5 w-5 ${section.color}`} />
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                          <SectionIcon className={`h-5 w-5 ${section.iconColor}`} />
+                        </div>
                         <div>
                           <CardTitle className="text-lg">{t(section.titleKey)}</CardTitle>
                           {section.descKey && (
@@ -275,7 +276,15 @@ export default function IsabellaOperationsPage() {
             {/* Always Human */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">{t("isabella.sections.alwaysHuman", "Always Human")}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{t("isabella.sections.alwaysHuman", "Always Human")}</CardTitle>
+                    <CardDescription className="mt-0.5">{t("isabella.sections.alwaysHumanDesc", "These tasks are too critical or sensitive for automation and will always require a human.")}</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {ALWAYS_HUMAN.map((key) => (
