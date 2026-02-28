@@ -101,3 +101,9 @@ project_id = "pduhccavshrhfkfbjgmj"
     verify_jwt = false
   [functions.youtube-publish]
     verify_jwt = false
+  [functions.create-mollie-checkout]
+    verify_jwt = false
+  [functions.mollie-webhook]
+    verify_jwt = false
+  [functions.cancel-mollie-subscription]
+    verify_jwt = false
