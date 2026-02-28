@@ -50,7 +50,7 @@ serve(async (req) => {
     const { data: stripeSettings, error: settingsError } = await supabase
       .from("system_settings")
       .select("value")
-      .eq("key", "stripe_secret_key")
+      .eq("key", "settings_stripe_secret_key")
       .single();
 
     if (settingsError || !stripeSettings?.value) {
