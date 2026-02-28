@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { sendEmail } from "../_shared/email.ts";
 
@@ -143,6 +144,13 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
     const body = await req.text();
 
+    if (!signature) {
+      return new Response(
+        JSON.stringify({ error: "Missing stripe-signature header" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get webhook secret from settings
     const { data: webhookSettings } = await supabase
       .from("system_settings")
@@ -150,14 +158,33 @@ serve(async (req) => {
       .eq("key", "stripe_webhook_secret")
       .single();
 
-    // For now, we'll trust the webhook (in production, verify signature)
-    const event = JSON.parse(body);
-    
-    console.log("Stripe webhook received:", event.type);
+    if (!webhookSettings?.value) {
+      console.error("Stripe webhook secret not configured in system_settings");
+      return new Response(
+        JSON.stringify({ error: "Webhook secret not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify webhook signature
+    const stripe = new Stripe(stripeSettings.value, { apiVersion: "2023-10-16" });
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSettings.value);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown verification error";
+      console.error("Webhook signature verification failed:", message);
+      return new Response(
+        JSON.stringify({ error: `Webhook signature verification failed: ${message}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Stripe webhook verified:", event.type);
 
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object;
+        const session = event.data.object as any;
         console.log("Checkout completed:", session.id);
         
         // Update order status
@@ -190,6 +217,19 @@ serve(async (req) => {
               status: "active"
             })
             .eq("member_id", session.metadata.member_id);
+
+          // Also activate partner subscription for couple memberships
+          if (session.metadata?.partner_subscription_id) {
+            await supabase
+              .from("subscriptions")
+              .update({
+                stripe_subscription_id: session.subscription,
+                stripe_customer_id: session.customer,
+                status: "active"
+              })
+              .eq("id", session.metadata.partner_subscription_id);
+            console.log("Partner subscription activated:", session.metadata.partner_subscription_id);
+          }
         }
 
         // Activate member on successful payment
@@ -431,7 +471,7 @@ serve(async (req) => {
       }
 
       case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object;
+        const paymentIntent = event.data.object as any;
         console.log("Payment succeeded:", paymentIntent.id);
         
         await supabase
@@ -445,7 +485,7 @@ serve(async (req) => {
       }
 
       case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object;
+        const paymentIntent = event.data.object as any;
         console.log("Payment failed:", paymentIntent.id);
         
         await supabase
@@ -459,7 +499,7 @@ serve(async (req) => {
       }
 
       case "customer.subscription.updated": {
-        const subscription = event.data.object;
+        const subscription = event.data.object as any;
         console.log("Subscription updated:", subscription.id);
         
         const statusMap: Record<string, string> = {
@@ -479,7 +519,7 @@ serve(async (req) => {
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object;
+        const subscription = event.data.object as any;
         console.log("Subscription deleted:", subscription.id);
         
         await supabase
@@ -490,7 +530,7 @@ serve(async (req) => {
       }
 
       case "invoice.paid": {
-        const invoice = event.data.object;
+        const invoice = event.data.object as any;
         console.log("Invoice paid:", invoice.id);
         
         // Create payment record
@@ -519,7 +559,7 @@ serve(async (req) => {
       }
 
       case "invoice.payment_failed": {
-        const invoice = event.data.object;
+        const invoice = event.data.object as any;
         console.log("Invoice payment failed:", invoice.id);
         
         if (invoice.subscription) {

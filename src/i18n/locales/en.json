@@ -466,6 +466,9 @@
     "online": "Online",
     "offline": "Offline",
     "refresh": "Refresh",
+    "previous": "Previous",
+    "pageXofY": "Page {{page}} of {{total}}",
+    "showingXofY": "Showing {{from}} to {{to}} of {{total}}",
     "all": "All",
     "new": "New",
     "refunded": "Refunded",
@@ -802,7 +805,9 @@
     "nextOfKinNotified": "Next of Kin Notified",
     "escalated": "Escalated",
     "activeAlerts": "Active Alerts",
-    "incomingAlerts": "Incoming Alerts"
+    "incomingAlerts": "Incoming Alerts",
+    "sos": "SOS",
+    "deviceOffline": "Device Offline"
   },
   "alertHistory": {
     "subtitle": "View your past alerts and how they were resolved",
@@ -972,7 +977,12 @@
     "quarterly": "/quarter",
     "cardEnding": "Visa ending in ****4242",
     "expires": "Expires 12/26",
-    "changePlanNote": "To change between Single and Couple plans, please contact our support team."
+    "changePlanNote": "To change between Single and Couple plans, please contact our support team.",
+    "contactToUpgrade": "Please contact support to upgrade your plan.",
+    "contactToUpdatePayment": "Please contact support to update your payment method.",
+    "invoiceComingSoon": "Invoice downloads coming soon.",
+    "creditCard": "Credit Card",
+    "bankTransfer": "Bank Transfer"
   },
   "support": {
     "contactSupport": "Contact Support",
@@ -1003,6 +1013,8 @@
       "addContactsAnswer": "Go to 'Emergency Contacts' in your dashboard. You can add up to 3 contacts who will be called if we can't reach you."
     },
     "messageSent": "Message sent! We'll get back to you soon.",
+    "reportIssueSubject": "Device Issue Report",
+    "requestReplacementSubject": "Device Replacement Request",
     "emergencyNumber": "ICE Alarm Emergency Number",
     "saveNumber": "Save this number in your phone for emergencies!",
     "title": "Support Hub",

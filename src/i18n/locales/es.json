@@ -466,6 +466,9 @@
     "online": "En línea",
     "offline": "Desconectado",
     "refresh": "Actualizar",
+    "previous": "Anterior",
+    "pageXofY": "Página {{page}} de {{total}}",
+    "showingXofY": "Mostrando {{from}} a {{to}} de {{total}}",
     "all": "Todos",
     "new": "Nuevo",
     "refunded": "Reembolsado",
@@ -802,7 +805,9 @@
     "nextOfKinNotified": "Familiar notificado",
     "escalated": "Escalado",
     "activeAlerts": "Alertas activas",
-    "incomingAlerts": "Alertas entrantes"
+    "incomingAlerts": "Alertas entrantes",
+    "sos": "SOS",
+    "deviceOffline": "Dispositivo sin conexión"
   },
   "alertHistory": {
     "subtitle": "Ver tus alertas pasadas y cómo se resolvieron",
@@ -964,7 +969,12 @@
     "mo": "/mes",
     "yr": "/año",
     "quarterly": "/trimestre",
-    "changePlanNote": "Para cambiar entre planes Individual y Pareja, contacte con nuestro equipo de soporte."
+    "changePlanNote": "Para cambiar entre planes Individual y Pareja, contacte con nuestro equipo de soporte.",
+    "contactToUpgrade": "Contacte con soporte para mejorar su plan.",
+    "contactToUpdatePayment": "Contacte con soporte para actualizar su método de pago.",
+    "invoiceComingSoon": "Las descargas de facturas estarán disponibles próximamente.",
+    "creditCard": "Tarjeta de Crédito",
+    "bankTransfer": "Transferencia Bancaria"
   },
   "support": {
     "contactSupport": "Contactar soporte",
@@ -995,6 +1005,8 @@
       "addContactsAnswer": "Vaya a 'Contactos de Emergencia' en su panel. Puede añadir hasta 3 contactos que serán llamados si no podemos localizarle."
     },
     "messageSent": "¡Mensaje enviado! Le responderemos pronto.",
+    "reportIssueSubject": "Informe de problema con el dispositivo",
+    "requestReplacementSubject": "Solicitud de reemplazo del dispositivo",
     "emergencyNumber": "Número de emergencia ICE Alarm",
     "saveNumber": "¡Guarde este número en su teléfono para emergencias!",
     "title": "Centro de Soporte",

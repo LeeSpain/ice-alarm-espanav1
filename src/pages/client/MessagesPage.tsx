@@ -139,26 +139,30 @@ export default function MessagesPage() {
 
       const conversationsWithDetails = await Promise.all(
         (data || []).map(async (conv) => {
-          const { data: lastMsg } = await supabase
-            .from("messages")
-            .select("content, is_read, sender_type")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+          try {
+            const { data: lastMsg } = await supabase
+              .from("messages")
+              .select("content, is_read, sender_type")
+              .eq("conversation_id", conv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
 
-          const { count } = await supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("conversation_id", conv.id)
-            .eq("is_read", false)
-            .eq("sender_type", "staff");
+            const { count } = await supabase
+              .from("messages")
+              .select("*", { count: "exact", head: true })
+              .eq("conversation_id", conv.id)
+              .eq("is_read", false)
+              .eq("sender_type", "staff");
 
-          return {
-            ...conv,
-            last_message_preview: lastMsg?.content?.substring(0, 80) + (lastMsg?.content && lastMsg.content.length > 80 ? "..." : "") || "",
-            has_unread: (count || 0) > 0,
-          };
+            return {
+              ...conv,
+              last_message_preview: lastMsg?.content?.substring(0, 80) + (lastMsg?.content && lastMsg.content.length > 80 ? "..." : "") || "",
+              has_unread: (count || 0) > 0,
+            };
+          } catch {
+            return { ...conv, last_message_preview: "", has_unread: false };
+          }
         })
       );
 

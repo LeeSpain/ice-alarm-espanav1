@@ -42,6 +42,7 @@ import {
   Heart,
   Users
 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { InlineAIChat } from "@/components/chat/InlineAIChat";
 import { format, formatDistanceToNow } from "date-fns";
@@ -72,6 +73,7 @@ export default function SupportPage() {
   const { settings: companySettings } = useCompanySettings();
   const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
   const { memberId, isLoading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // FAQ items with translations
   const FAQ_ITEMS = [
@@ -118,6 +120,22 @@ export default function SupportPage() {
   const [newMessage, setNewMessage] = useState("");
   const [replyMessage, setReplyMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-open new message dialog from query params (e.g. from DevicePage)
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action) {
+      const subjectMap: Record<string, string> = {
+        report_issue: t("support.reportIssueSubject", "Device Issue Report"),
+        request_replacement: t("support.requestReplacementSubject", "Device Replacement Request"),
+      };
+      setNewSubject(subjectMap[action] || action.replace(/_/g, " "));
+      setIsDialogOpen(true);
+      // Clear the action param so it doesn't re-open on navigation
+      searchParams.delete("action");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -193,26 +211,30 @@ export default function SupportPage() {
 
       const conversationsWithDetails = await Promise.all(
         (data || []).map(async (conv) => {
-          const { data: lastMsg } = await supabase
-            .from("messages")
-            .select("content, is_read, sender_type")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+          try {
+            const { data: lastMsg } = await supabase
+              .from("messages")
+              .select("content, is_read, sender_type")
+              .eq("conversation_id", conv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
 
-          const { count } = await supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("conversation_id", conv.id)
-            .eq("is_read", false)
-            .eq("sender_type", "staff");
+            const { count } = await supabase
+              .from("messages")
+              .select("*", { count: "exact", head: true })
+              .eq("conversation_id", conv.id)
+              .eq("is_read", false)
+              .eq("sender_type", "staff");
 
-          return {
-            ...conv,
-            last_message_preview: lastMsg?.content?.substring(0, 80) + (lastMsg?.content && lastMsg.content.length > 80 ? "..." : "") || "",
-            has_unread: (count || 0) > 0,
-          };
+            return {
+              ...conv,
+              last_message_preview: lastMsg?.content?.substring(0, 80) + (lastMsg?.content && lastMsg.content.length > 80 ? "..." : "") || "",
+              has_unread: (count || 0) > 0,
+            };
+          } catch {
+            return { ...conv, last_message_preview: "", has_unread: false };
+          }
         })
       );
 

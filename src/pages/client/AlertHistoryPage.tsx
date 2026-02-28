@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useMemberAlerts } from "@/hooks/useMemberProfile";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,12 +69,18 @@ export default function AlertHistoryPage() {
   const { data: alerts, isLoading } = useMemberAlerts();
   const [typeFilter, setTypeFilter] = useState<AlertType>("all");
   const [statusFilter, setStatusFilter] = useState<AlertStatus>("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
-  const filteredAlerts = alerts?.filter(alert => {
+  const filteredAlerts = useMemo(() => alerts?.filter(alert => {
     const matchesType = typeFilter === "all" || alert.alert_type === typeFilter;
     const matchesStatus = statusFilter === "all" || alert.status === statusFilter;
     return matchesType && matchesStatus;
-  }) || [];
+  }) || [], [alerts, typeFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAlerts.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, totalPages);
+  const paginatedAlerts = filteredAlerts.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   const alertCounts = {
     total: alerts?.length || 0,
@@ -153,7 +160,7 @@ export default function AlertHistoryPage() {
               <span className="text-sm font-medium">{t("common.filter")}:</span>
             </div>
             <div className="flex flex-1 gap-3 flex-wrap">
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as AlertType)}>
+              <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v as AlertType); setPage(1); }}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder={t("alertHistory.allTypes")} />
                 </SelectTrigger>
@@ -167,7 +174,7 @@ export default function AlertHistoryPage() {
                 </SelectContent>
               </Select>
               
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AlertStatus)}>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as AlertStatus); setPage(1); }}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder={t("alertHistory.allStatuses")} />
                 </SelectTrigger>
@@ -183,7 +190,7 @@ export default function AlertHistoryPage() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => { setTypeFilter("all"); setStatusFilter("all"); }}
+                  onClick={() => { setTypeFilter("all"); setStatusFilter("all"); setPage(1); }}
                 >
                   {t("common.clear")}
                 </Button>
@@ -212,7 +219,7 @@ export default function AlertHistoryPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredAlerts.map((alert) => {
+          {paginatedAlerts.map((alert) => {
             const config = ALERT_CONFIG[alert.alert_type as keyof typeof ALERT_CONFIG] 
               || ALERT_CONFIG.check_in;
             const Icon = config.icon;
@@ -288,6 +295,42 @@ export default function AlertHistoryPage() {
               </Card>
             );
           })}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                {t("common.showingXofY", "Showing {{from}} to {{to}} of {{total}}", {
+                  from: ((clampedPage - 1) * PAGE_SIZE) + 1,
+                  to: Math.min(clampedPage * PAGE_SIZE, filteredAlerts.length),
+                  total: filteredAlerts.length,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={clampedPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  {t("common.previous", "Previous")}
+                </Button>
+                <span className="text-sm">
+                  {t("common.pageXofY", "Page {{page}} of {{total}}", { page: clampedPage, total: totalPages })}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={clampedPage === totalPages}
+                >
+                  {t("common.next", "Next")}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   AlertTriangle, 
   Clock, 
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { es, enGB } from "date-fns/locale";
 import i18n from "@/i18n";
@@ -123,6 +125,7 @@ export default function StaffDashboard() {
   const [birthdays, setBirthdays] = useState<BirthdayMember[]>([]);
   const [courtesyCalls, setCourtesyCalls] = useState<CourtesyCall[]>([]);
   const [isCompletingCall, setIsCompletingCall] = useState<string | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
 
   // Locale-aware date formatting
   const dateLocale = i18n.language === 'es' ? es : enGB;
@@ -198,16 +201,23 @@ export default function StaffDashboard() {
   }, [staffId]);
 
   const fetchDashboardData = async () => {
-    await Promise.all([
-      fetchAlertStats(),
-      fetchActiveAlerts(),
-      fetchUnreadMessages(),
-      fetchRecentMessages(),
-      fetchMyTasks(),
-      fetchShiftNotes(),
-      fetchBirthdays(),
-      fetchCourtesyCalls()
-    ]);
+    try {
+      await Promise.all([
+        fetchAlertStats(),
+        fetchActiveAlerts(),
+        fetchUnreadMessages(),
+        fetchRecentMessages(),
+        fetchMyTasks(),
+        fetchShiftNotes(),
+        fetchBirthdays(),
+        fetchCourtesyCalls()
+      ]);
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+      toast.error(t("staffDashboard.fetchError", "Failed to load dashboard data"));
+    } finally {
+      setDashboardLoading(false);
+    }
   };
 
   const fetchAlertStats = async () => {
@@ -219,6 +229,10 @@ export default function StaffDashboard() {
       supabase.from('alerts').select('id', { count: 'exact' }).eq('status', 'in_progress'),
       supabase.from('alerts').select('id', { count: 'exact' }).eq('status', 'resolved').gte('resolved_at', today.toISOString())
     ]);
+
+    if (incomingRes.error || inProgressRes.error || resolvedRes.error) {
+      throw new Error("Failed to fetch alert stats");
+    }
 
     setStats({
       incoming: incomingRes.count || 0,
@@ -399,12 +413,12 @@ export default function StaffDashboard() {
 
   const getAlertLabel = (type: string) => {
     switch (type) {
-      case 'sos_button': return 'SOS';
+      case 'sos_button': return t('alerts.sos', 'SOS');
       case 'fall_detected': return t('alerts.fallDetected');
       case 'low_battery': return t('alerts.lowBattery');
       case 'geo_fence': return t('alerts.geoFenceAlert');
       case 'check_in': return t('alerts.checkIn');
-      case 'device_offline': return 'Device Offline';
+      case 'device_offline': return t('alerts.deviceOffline', 'Device Offline');
       default: return type;
     }
   };
@@ -435,7 +449,7 @@ export default function StaffDashboard() {
                   <AlertTriangle className={`h-5 w-5 ${stats.incoming > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.incoming}</p>
+                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.incoming}</p>}
                   <p className="text-xs text-muted-foreground">{t('staffDashboard.incomingAlerts')}</p>
                 </div>
               </div>
@@ -449,7 +463,7 @@ export default function StaffDashboard() {
                   <Clock className="h-5 w-5 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.inProgress}</p>}
                   <p className="text-xs text-muted-foreground">{t('staffDashboard.inProgress')}</p>
                 </div>
               </div>
@@ -463,7 +477,7 @@ export default function StaffDashboard() {
                   <MessageSquare className={`h-5 w-5 ${unreadMessages > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{unreadMessages}</p>
+                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{unreadMessages}</p>}
                   <p className="text-xs text-muted-foreground">{t('staffDashboard.unreadMessages')}</p>
                 </div>
               </div>
@@ -477,7 +491,7 @@ export default function StaffDashboard() {
                   <CheckCircle className="h-5 w-5 text-status-active" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.resolvedToday}</p>
+                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.resolvedToday}</p>}
                   <p className="text-xs text-muted-foreground">{t('staffDashboard.resolvedToday')}</p>
                 </div>
               </div>
@@ -491,7 +505,7 @@ export default function StaffDashboard() {
                   <ClipboardList className={`h-5 w-5 ${myTasksCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{myTasksCount}</p>
+                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{myTasksCount}</p>}
                   <p className="text-xs text-muted-foreground">{t('staffDashboard.myTasksDue')}</p>
                 </div>
               </div>
@@ -632,7 +646,7 @@ export default function StaffDashboard() {
         <Card className="shadow-sm bg-background/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.myTasksDueToday')}</CardTitle>
+              <CardTitle className="text-lg">{t('staffDashboard.myTasksDue')}</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/call-centre/tasks">
                   {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />

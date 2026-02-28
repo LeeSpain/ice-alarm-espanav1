@@ -11,18 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  Loader2, 
-  CreditCard, 
-  Calendar, 
-  Download, 
+import {
+  Loader2,
+  CreditCard,
+  Calendar,
+  Download,
   CheckCircle,
   Clock,
   XCircle,
   ArrowUpRight,
-  Smartphone
+  Smartphone,
+  Banknote
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function SubscriptionPage() {
   const { t } = useTranslation();
@@ -173,7 +175,7 @@ export default function SubscriptionPage() {
                     {t("subscription.savePerYear", { amount: subscription.plan_type === "single" ? "54.99" : "76.99" })}
                   </p>
                 </div>
-                <Button>
+                <Button onClick={() => toast.info(t("subscription.contactToUpgrade", "Please contact support to upgrade your plan."))}>
                   {t("subscription.upgrade")}
                   <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -195,15 +197,29 @@ export default function SubscriptionPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded flex items-center justify-center text-white text-xs font-bold">
-                VISA
-              </div>
+              {subscription.payment_method === "stripe" || subscription.payment_method === "card" ? (
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                </div>
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Banknote className="h-5 w-5 text-primary" />
+                </div>
+              )}
               <div>
-                <p className="font-medium">{t("subscription.cardEnding")}</p>
-                <p className="text-sm text-muted-foreground">{t("subscription.expires")}</p>
+                <p className="font-medium">
+                  {subscription.payment_method === "stripe" || subscription.payment_method === "card"
+                    ? t("subscription.creditCard", "Credit Card")
+                    : subscription.payment_method === "bank_transfer"
+                    ? t("subscription.bankTransfer", "Bank Transfer")
+                    : subscription.payment_method === "paypal"
+                    ? "PayPal"
+                    : t("subscription.paymentMethod")}
+                </p>
+                <p className="text-sm text-muted-foreground">{t("common.active")}</p>
               </div>
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => toast.info(t("subscription.contactToUpdatePayment", "Please contact support to update your payment method."))}>
               {t("common.update")}
             </Button>
           </div>
@@ -262,7 +278,7 @@ export default function SubscriptionPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {payment.invoice_number && (
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => toast.info(t("subscription.invoiceComingSoon", "Invoice downloads coming soon."))}>
                           <Download className="h-4 w-4" />
                         </Button>
                       )}

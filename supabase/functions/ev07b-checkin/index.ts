@@ -8,7 +8,23 @@ interface CheckinPayload {
   lat?: number;
   lng?: number;
   address?: string;
+  event_type?: "sos" | "fall" | "checkin" | "geofence";
 }
+
+const LOW_BATTERY_THRESHOLD = 20;
+
+const EVENT_TO_ALERT_TYPE: Record<string, string> = {
+  sos: "sos_button",
+  fall: "fall_detected",
+  geofence: "geo_fence",
+};
+
+const ALERT_MESSAGES: Record<string, (imei: string) => string> = {
+  sos_button: (imei) => `SOS button pressed on device ${imei}`,
+  fall_detected: (imei) => `Fall detected on device ${imei}`,
+  geo_fence: (imei) => `Geofence violation on device ${imei}`,
+  low_battery: (imei) => `Low battery on device ${imei}`,
+};
 
 /**
  * EV-07B Check-in Edge Function
@@ -140,14 +156,85 @@ serve(async (req) => {
       device_id: device.id,
       battery_level: updateData.battery_level,
       has_location: !!(body.lat && body.lng),
+      event_type: body.event_type || "checkin",
     });
 
+    // --- Alert creation ---
+    const alertsCreated: string[] = [];
+
+    if (device.member_id) {
+      const locationData = {
+        location_lat: (typeof body.lat === "number" && body.lat >= -90 && body.lat <= 90) ? body.lat : null,
+        location_lng: (typeof body.lng === "number" && body.lng >= -180 && body.lng <= 180) ? body.lng : null,
+        location_address: body.address?.substring(0, 500) || null,
+      };
+
+      // Helper: create alert if no open alert of same type exists for this device
+      async function createAlertIfNew(alertType: string) {
+        const { data: existing } = await supabase
+          .from("alerts")
+          .select("id")
+          .eq("device_id", device.id)
+          .eq("alert_type", alertType)
+          .in("status", ["incoming", "in_progress"])
+          .maybeSingle();
+
+        if (existing) return null;
+
+        const message = ALERT_MESSAGES[alertType]?.(body.imei) || `Alert: ${alertType} on ${body.imei}`;
+        const { data: newAlert } = await supabase
+          .from("alerts")
+          .insert({
+            device_id: device.id,
+            member_id: device.member_id,
+            alert_type: alertType,
+            status: "incoming",
+            message,
+            received_at: now,
+            ...locationData,
+          })
+          .select("id")
+          .single();
+
+        if (newAlert?.id) {
+          console.log(`Created ${alertType} alert for device ${body.imei}`);
+          alertsCreated.push(alertType);
+
+          // Notify partners
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/partner-alert-notify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({ alert_id: newAlert.id, member_id: device.member_id }),
+            });
+          } catch (notifyErr) {
+            console.error("Partner notification error:", notifyErr);
+          }
+        }
+        return newAlert?.id || null;
+      }
+
+      // Event-based alerts (SOS, fall, geofence)
+      if (body.event_type && EVENT_TO_ALERT_TYPE[body.event_type]) {
+        await createAlertIfNew(EVENT_TO_ALERT_TYPE[body.event_type]);
+      }
+
+      // Low battery alert (threshold-based)
+      if (typeof body.battery_level === "number" && body.battery_level <= LOW_BATTERY_THRESHOLD) {
+        await createAlertIfNew("low_battery");
+      }
+    }
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         device_id: device.id,
         checked_in_at: now,
         is_online: true,
+        alerts_created: alertsCreated,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

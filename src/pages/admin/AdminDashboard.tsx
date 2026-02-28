@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
   useAlertsRealtime();
 
   // Single RPC call replaces 7 separate queries
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const { data: alerts } = await supabase
         .from("alerts")
-        .select("*")
+        .select("*, member:members(first_name, last_name)")
         .in("status", ["incoming", "in_progress"])
         .order("received_at", { ascending: false })
         .limit(5);
@@ -115,6 +116,14 @@ export default function AdminDashboard() {
       {/* Sales Command Strip - Real-time sales metrics */}
       <SalesCommandStrip />
 
+      {/* Error Banner */}
+      {statsError && (
+        <div className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+          <p className="text-sm text-destructive">{t("adminDashboard.statsError", "Failed to load dashboard stats.")}</p>
+          <Button variant="outline" size="sm" onClick={() => refetchStats()}>{t("common.refresh")}</Button>
+        </div>
+      )}
+
       {/* Stats Grid - Now using single RPC data */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
@@ -123,7 +132,7 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.active_members || 0}</div>
+            {statsLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-2xl font-bold">{stats?.active_members || 0}</div>}
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               {stats?.new_members_30d ? (
                 <>
@@ -143,9 +152,11 @@ export default function AdminDashboard() {
             <Bell className={`h-4 w-4 ${stats?.active_alerts ? "text-alert-sos" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${stats?.active_alerts ? "text-alert-sos" : ""}`}>
-              {stats?.active_alerts || 0}
-            </div>
+            {statsLoading ? <Skeleton className="h-8 w-12" /> : (
+              <div className={`text-2xl font-bold ${stats?.active_alerts ? "text-alert-sos" : ""}`}>
+                {stats?.active_alerts || 0}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {stats?.active_alerts ? t('common.requireAttention') : t('common.noActiveAlerts')}
             </p>
@@ -158,9 +169,11 @@ export default function AdminDashboard() {
             <Smartphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.devices_in_stock || 0} / {stats?.devices_assigned || 0}
-            </div>
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
+              <div className="text-2xl font-bold">
+                {stats?.devices_in_stock || 0} / {stats?.devices_assigned || 0}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">{t('common.inStockAssigned')}</p>
           </CardContent>
         </Card>
@@ -171,9 +184,11 @@ export default function AdminDashboard() {
             <ShoppingCart className={`h-4 w-4 ${stats?.pending_orders ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${stats?.pending_orders ? "text-amber-500" : ""}`}>
-              {stats?.pending_orders || 0}
-            </div>
+            {statsLoading ? <Skeleton className="h-8 w-12" /> : (
+              <div className={`text-2xl font-bold ${stats?.pending_orders ? "text-amber-500" : ""}`}>
+                {stats?.pending_orders || 0}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">{t('common.needProcessing')}</p>
           </CardContent>
         </Card>
@@ -184,7 +199,7 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{(stats?.monthly_revenue || 0).toLocaleString()}</div>
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">€{(stats?.monthly_revenue || 0).toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">{t('common.thisMonth')}</p>
           </CardContent>
         </Card>
@@ -195,9 +210,11 @@ export default function AdminDashboard() {
             <Calendar className={`h-4 w-4 ${stats?.expiring_subscriptions ? "text-amber-500" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${stats?.expiring_subscriptions ? "text-amber-500" : ""}`}>
-              {stats?.expiring_subscriptions || 0}
-            </div>
+            {statsLoading ? <Skeleton className="h-8 w-12" /> : (
+              <div className={`text-2xl font-bold ${stats?.expiring_subscriptions ? "text-amber-500" : ""}`}>
+                {stats?.expiring_subscriptions || 0}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">{t('common.inNext30Days')}</p>
           </CardContent>
         </Card>
@@ -246,7 +263,13 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {alert.alert_type.replace("_", " ").toUpperCase()}
+                          {alert.alert_type === "sos_button" ? t("alerts.sos", "SOS")
+                            : alert.alert_type === "fall_detected" ? t("alerts.fallDetected", "Fall Detected")
+                            : alert.alert_type === "device_offline" ? t("alerts.deviceOffline", "Device Offline")
+                            : alert.alert_type === "low_battery" ? t("alerts.lowBattery", "Low Battery")
+                            : alert.alert_type === "geo_fence" ? t("alerts.geoFenceAlert", "Geo-fence Alert")
+                            : alert.alert_type.replace("_", " ")}
+                          {alert.member && ` — ${alert.member.first_name} ${alert.member.last_name}`}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(alert.received_at), "HH:mm - dd MMM")}

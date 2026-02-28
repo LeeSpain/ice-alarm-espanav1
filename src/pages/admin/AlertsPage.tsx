@@ -232,7 +232,11 @@ export default function AlertsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {((page - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0)} of {data?.totalCount || 0} alerts
+            {t("common.showingXofY", "Showing {{from}} to {{to}} of {{total}}", {
+              from: ((page - 1) * ITEMS_PER_PAGE) + 1,
+              to: Math.min(page * ITEMS_PER_PAGE, data?.totalCount || 0),
+              total: data?.totalCount || 0,
+            })}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -242,10 +246,10 @@ export default function AlertsPage() {
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              {t("common.previous", "Previous")}
             </Button>
             <span className="text-sm">
-              Page {page} of {totalPages}
+              {t("common.pageXofY", "Page {{page}} of {{total}}", { page, total: totalPages })}
             </span>
             <Button
               variant="outline"
@@ -253,7 +257,7 @@ export default function AlertsPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t("common.next", "Next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isAdminRole as checkAdminRole } from "@/config/constants";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { format } from "date-fns";
 import { es, enGB } from "date-fns/locale";
 import i18n from "@/i18n";
@@ -47,6 +48,8 @@ export default function ClientDashboard() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { settings: companySettings } = useCompanySettings();
+  const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
 
   // Determine if admin is viewing
   const isAdminRole = isStaff && checkAdminRole(staffRole);
@@ -218,7 +221,7 @@ export default function ClientDashboard() {
             title={t("dashboard.callUs")}
             asChild
           >
-            <a href="tel:+34900123456">
+            <a href={`tel:${phoneForLink}`}>
               <Phone className="h-5 w-5" />
             </a>
           </Button>
@@ -228,7 +231,7 @@ export default function ClientDashboard() {
             title={t("dashboard.whatsappUs")}
             asChild
           >
-            <a href="https://wa.me/34900123456" target="_blank" rel="noopener noreferrer">
+            <a href={`https://wa.me/${phoneForLink.replace("+", "")}`} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-5 w-5" />
             </a>
           </Button>

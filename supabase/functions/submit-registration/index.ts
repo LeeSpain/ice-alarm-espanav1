@@ -524,6 +524,34 @@ serve(async (req) => {
 
     console.log("Subscription created:", subscriptionData.id);
 
+    // 6b. Create partner subscription if couple membership
+    let partnerSubscriptionData = null;
+    if (partnerMemberData) {
+      const { data: partnerSub, error: partnerSubError } = await supabase
+        .from("subscriptions")
+        .insert({
+          member_id: partnerMemberData.id,
+          plan_type: body.membershipType,
+          billing_frequency: body.billingFrequency,
+          amount: subscriptionNet,
+          start_date: new Date().toISOString().split("T")[0],
+          renewal_date: renewalDate.toISOString().split("T")[0],
+          has_pendant: body.includePendant,
+          registration_fee_paid: false,
+          status: "pending",
+          payment_method: "stripe",
+        })
+        .select()
+        .single();
+
+      if (partnerSubError) {
+        console.error("Error creating partner subscription:", partnerSubError);
+      } else {
+        partnerSubscriptionData = partnerSub;
+        console.log("Partner subscription created:", partnerSub.id);
+      }
+    }
+
     // 7. Generate order number
     const orderNumber = `ICE-${Date.now().toString(36).toUpperCase()}`;
 
@@ -891,6 +919,7 @@ serve(async (req) => {
         success: true,
         memberId: primaryMemberData.id,
         partnerMemberId: partnerMemberData?.id || null,
+        partnerSubscriptionId: partnerSubscriptionData?.id || null,
         subscriptionId: subscriptionData.id,
         orderId: orderData.id,
         orderNumber: orderNumber,

@@ -21,10 +21,12 @@ import {
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function DevicePage() {
   const { t } = useTranslation();
   const { memberId } = useAuth();
+  const navigate = useNavigate();
   const { data: device, isLoading: deviceLoading } = useMemberDevice();
   const { data: subscription, isLoading: subLoading } = useMemberSubscription();
   const { settings: companySettings } = useCompanySettings();
@@ -203,7 +205,7 @@ export default function DevicePage() {
               </div>
             </div>
 
-            <Button size="lg" className="w-full touch-target">
+            <Button size="lg" className="w-full touch-target" onClick={() => navigate("/pendant")}>
               <ShoppingCart className="mr-2 h-5 w-5" />
               {t('device.purchasePendant', 'Purchase Pendant')}
             </Button>
@@ -404,11 +406,11 @@ export default function DevicePage() {
 
       {/* Actions */}
       <div className="grid gap-3 md:grid-cols-2">
-        <Button variant="outline" className="touch-target">
+        <Button variant="outline" className="touch-target" onClick={() => navigate("/dashboard/support?action=report_issue")}>
           <Wrench className="mr-2 h-4 w-4" />
           {t('device.reportIssue')}
         </Button>
-        <Button variant="outline" className="touch-target">
+        <Button variant="outline" className="touch-target" onClick={() => navigate("/dashboard/support?action=request_replacement")}>
           <RefreshCw className="mr-2 h-4 w-4" />
           {t('device.requestReplacement')}
         </Button>
