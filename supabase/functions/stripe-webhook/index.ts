@@ -223,12 +223,46 @@ serve(async (req) => {
         if (session.subscription && session.metadata?.member_id) {
           await supabase
             .from("subscriptions")
-            .update({ 
+            .update({
               stripe_subscription_id: session.subscription,
               stripe_customer_id: session.customer,
               status: "active"
             })
             .eq("member_id", session.metadata.member_id);
+        }
+
+        // Activate member on successful payment
+        if (session.metadata?.member_id) {
+          const { error: activateError } = await supabase
+            .from("members")
+            .update({ status: "active" })
+            .eq("id", session.metadata.member_id);
+
+          if (activateError) {
+            console.error("Error activating member:", activateError);
+          } else {
+            console.log("Member activated:", session.metadata.member_id);
+          }
+
+          // Also activate partner member if this is a couple membership
+          const { data: partnerMember } = await supabase
+            .from("members")
+            .select("id")
+            .eq("partner_member_id", session.metadata.member_id)
+            .maybeSingle();
+
+          if (partnerMember) {
+            const { error: partnerActivateError } = await supabase
+              .from("members")
+              .update({ status: "active" })
+              .eq("id", partnerMember.id);
+
+            if (partnerActivateError) {
+              console.error("Error activating partner member:", partnerActivateError);
+            } else {
+              console.log("Partner member activated:", partnerMember.id);
+            }
+          }
         }
 
         // AUTO-ALLOCATE EV-07B devices from stock
