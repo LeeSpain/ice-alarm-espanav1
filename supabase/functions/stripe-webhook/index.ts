@@ -245,22 +245,16 @@ serve(async (req) => {
           }
 
           // Also activate partner member if this is a couple membership
-          const { data: partnerMember } = await supabase
-            .from("members")
-            .select("id")
-            .eq("partner_member_id", session.metadata.member_id)
-            .maybeSingle();
-
-          if (partnerMember) {
+          if (session.metadata?.partner_member_id) {
             const { error: partnerActivateError } = await supabase
               .from("members")
               .update({ status: "active" })
-              .eq("id", partnerMember.id);
+              .eq("id", session.metadata.partner_member_id);
 
             if (partnerActivateError) {
               console.error("Error activating partner member:", partnerActivateError);
             } else {
-              console.log("Partner member activated:", partnerMember.id);
+              console.log("Partner member activated:", session.metadata.partner_member_id);
             }
           }
         }
