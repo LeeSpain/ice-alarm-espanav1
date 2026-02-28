@@ -1,62 +1,58 @@
 
 
-## Analysis
+## Problem
 
-After reviewing the codebase, the page already has the 10-section structure, all 50 function keys, and both EN/ES translations. However, several specific changes are needed to match the requirements exactly.
+When you click the recovery link in the email, here's what happens:
 
-## Changes Required
+1. The `/verify` endpoint redirects to your app with `#type=recovery` in the URL hash
+2. `RecoveryRedirect` in `App.tsx` detects `type=recovery` and calls `navigate('/reset-password', { replace: true })` — this **strips the hash** from the URL
+3. `ResetPassword.tsx` loads and checks `window.location.hash` for `type=recovery` — but the hash is gone
+4. It falls back to `getSession()` — but there's a race condition; the session may not be established yet
+5. Both checks fail → `isValid = false` → you see "Invalid or Expired Link"
 
-### 1. `src/pages/admin/IsabellaOperationsPage.tsx`
+The root cause: `RecoveryRedirect` strips the hash when navigating, and the session isn't ready fast enough.
 
-**Icon updates for first 4 sections:**
-- Alert Handling: `Bell` → `AlertTriangle`
-- Inbound: `PhoneIncoming` → `Activity`
-- Outbound: `PhoneOutgoing` → `Zap`
-- Sales: `TrendingUp` → `Megaphone`
+## Fix (2 files)
 
-**Section header UI upgrade:**
-- Add 9x9 rounded-lg bg-muted icon container around each section icon
-- Rename interface field `color` → `iconColor`
+### 1. `src/App.tsx` — RecoveryRedirect
 
-**FUNCTION_KEY_MAP fixes** (3 content keys use wrong translation keys):
-- `auto_generate_scheduled_content` descKey: `autoGenerateScheduledContentDesc` (keep as-is, matches translations)
-- `auto_publish_approved_content` descKey: `autoPublishApprovedContentDesc` (keep as-is)
-- These already match the translations, so no change needed here.
+Set a sessionStorage flag before navigating so `ResetPassword` knows it's a recovery flow even after the hash is stripped:
 
-**Always Human section upgrade:**
-- Add Lock icon in 9x9 bg-muted container in the header
-- Add `alwaysHumanDesc` description below the title
-- Add muted color styling
+```tsx
+const RecoveryRedirect = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      sessionStorage.setItem('isRecoveryFlow', 'true');
+      navigate('/reset-password', { replace: true });
+    }
+  }, [navigate]);
+  return null;
+};
+```
 
-**Remove unused icon imports** (`Bell`, `PhoneIncoming`, `PhoneOutgoing`, `TrendingUp`) since they're being replaced.
+### 2. `src/pages/auth/ResetPassword.tsx` — checkSession
 
-### 2. `src/lib/isabella-function-config.ts`
+Add the sessionStorage flag as a third validity check and consume it:
 
-**Interface update:** Add `notify_roles?: ("admin" | "call_centre" | "partner")[]` and `critical?: boolean` to `IsabellaFunctionConfig`.
+```tsx
+const checkSession = async () => {
+  const hash = window.location.hash;
+  if (hash && hash.includes("type=recovery")) {
+    setIsValid(true);
+  } else if (sessionStorage.getItem('isRecoveryFlow') === 'true') {
+    sessionStorage.removeItem('isRecoveryFlow');
+    setIsValid(true);
+  } else {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      setIsValid(true);
+    }
+  }
+  setIsChecking(false);
+};
+```
 
-**Update agent_keys and triggers** for all 31 new functions per the user's table (many currently use `customer_service_expert` but should use `main_brain`).
-
-**Add `getIsabellaFunctionConfig` helper** at the bottom of the file.
-
-### 3. `src/i18n/locales/en.json`
-
-**Update section descriptions** to match user's exact wording (6 sections have slightly different text).
-
-**Add `alwaysHumanDesc`** key.
-
-**Update function descriptions** for all 31 new functions to match user's detailed descriptions (current descriptions are shorter/different).
-
-### 4. `src/i18n/locales/es.json`
-
-**Mirror all EN changes** with Spanish translations:
-- Updated section descriptions
-- `alwaysHumanDesc` in Spanish
-- Updated function descriptions for all 31 new functions
-
-### Implementation Order
-
-1. Update `isabella-function-config.ts` (interface + triggers + helper)
-2. Update `IsabellaOperationsPage.tsx` (icons, UI, Always Human)
-3. Update `en.json` (section descs, function descs, alwaysHumanDesc)
-4. Update `es.json` (same changes in Spanish)
+This ensures the recovery flow works regardless of hash timing or session race conditions.
 
