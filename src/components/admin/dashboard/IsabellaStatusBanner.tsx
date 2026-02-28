@@ -24,6 +24,45 @@ const FUNCTION_LABELS: Record<string, string> = {
   abandoned_signup_recovery: "isabella.functions.abandonedSignupRecovery",
   partner_enquiry_handling: "isabella.functions.partnerEnquiryHandling",
   b2b_outreach_campaigns: "isabella.functions.b2bOutreachCampaigns",
+  // Boss / Owner Intelligence
+  new_sale_notification: "isabella.functions.newSaleNotification",
+  cancellation_alert: "isabella.functions.cancellationAlert",
+  failed_payment_escalation: "isabella.functions.failedPaymentEscalation",
+  daily_boss_briefing: "isabella.functions.dailyBossBriefing",
+  weekly_revenue_summary: "isabella.functions.weeklyRevenueSummary",
+  emergency_escalation_alert: "isabella.functions.emergencyEscalationAlert",
+  negative_feedback_alert: "isabella.functions.negativeFeedbackAlert",
+  // Member Lifecycle
+  membership_anniversary: "isabella.functions.membershipAnniversary",
+  inactivity_check: "isabella.functions.inactivityCheck",
+  subscription_renewal_reminder: "isabella.functions.subscriptionRenewalReminder",
+  medical_profile_incomplete: "isabella.functions.medicalProfileIncomplete",
+  device_not_activated: "isabella.functions.deviceNotActivated",
+  upgrade_suggestion: "isabella.functions.upgradeSuggestion",
+  // Device & Infrastructure
+  stock_low_alert: "isabella.functions.stockLowAlert",
+  device_health_monitor: "isabella.functions.deviceHealthMonitor",
+  sim_expiry_warning: "isabella.functions.simExpiryWarning",
+  bulk_offline_alert: "isabella.functions.bulkOfflineAlert",
+  provisioning_stalled: "isabella.functions.provisioningStalled",
+  // Partner Network
+  new_partner_signup: "isabella.functions.newPartnerSignup",
+  partner_first_referral: "isabella.functions.partnerFirstReferral",
+  partner_commission_due: "isabella.functions.partnerCommissionDue",
+  partner_inactive_warning: "isabella.functions.partnerInactiveWarning",
+  partner_agreement_expiring: "isabella.functions.partnerAgreementExpiring",
+  // Content & Marketing
+  auto_generate_scheduled_content: "isabella.functions.autoGenerateScheduledContent",
+  content_approval_reminder: "isabella.functions.contentApprovalReminder",
+  auto_publish_approved_content: "isabella.functions.autoPublishApprovedContent",
+  blog_post_performance: "isabella.functions.blogPostPerformance",
+  social_engagement_alert: "isabella.functions.socialEngagementAlert",
+  // Compliance & Legal
+  gdpr_deletion_request: "isabella.functions.gdprDeletionRequest",
+  gdpr_export_request: "isabella.functions.gdprExportRequest",
+  sla_breach_alert: "isabella.functions.slaBreachAlert",
+  audit_anomaly_detection: "isabella.functions.auditAnomalyDetection",
+  operational_cost_due: "isabella.functions.operationalCostDue",
 };
 
 export function IsabellaStatusBanner() {
