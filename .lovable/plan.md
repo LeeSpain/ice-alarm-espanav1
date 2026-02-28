@@ -2,57 +2,30 @@
 
 ## Problem
 
-When you click the recovery link in the email, here's what happens:
+The Stripe keys are **never found** because of a key name mismatch:
 
-1. The `/verify` endpoint redirects to your app with `#type=recovery` in the URL hash
-2. `RecoveryRedirect` in `App.tsx` detects `type=recovery` and calls `navigate('/reset-password', { replace: true })` — this **strips the hash** from the URL
-3. `ResetPassword.tsx` loads and checks `window.location.hash` for `type=recovery` — but the hash is gone
-4. It falls back to `getSession()` — but there's a race condition; the session may not be established yet
-5. Both checks fail → `isValid = false` → you see "Invalid or Expired Link"
+- **Save path**: Settings page calls `save-api-keys` with `service: "settings"` and key `stripe_secret_key` → edge function stores it as `settings_stripe_secret_key`
+- **Read path**: `create-checkout` and `stripe-webhook` query for `stripe_secret_key` (no prefix) → no match → "not configured"
 
-The root cause: `RecoveryRedirect` strips the hash when navigating, and the session isn't ready fast enough.
+The `system_settings` table has zero rows matching `stripe_secret_key`. If Stripe keys were ever saved through the UI, they'd be under `settings_stripe_secret_key`.
 
-## Fix (2 files)
+## Fix (2 edge functions)
 
-### 1. `src/App.tsx` — RecoveryRedirect
-
-Set a sessionStorage flag before navigating so `ResetPassword` knows it's a recovery flow even after the hash is stripped:
-
-```tsx
-const RecoveryRedirect = () => {
-  const navigate = useNavigate();
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      sessionStorage.setItem('isRecoveryFlow', 'true');
-      navigate('/reset-password', { replace: true });
-    }
-  }, [navigate]);
-  return null;
-};
+### 1. `supabase/functions/create-checkout/index.ts`
+Change the query from:
+```
+.eq("key", "stripe_secret_key")
+```
+to:
+```
+.eq("key", "settings_stripe_secret_key")
 ```
 
-### 2. `src/pages/auth/ResetPassword.tsx` — checkSession
+### 2. `supabase/functions/stripe-webhook/index.ts`
+Same change — update both the secret key and webhook secret lookups:
+- `stripe_secret_key` → `settings_stripe_secret_key`
+- `stripe_webhook_secret` → `settings_stripe_webhook_secret`
 
-Add the sessionStorage flag as a third validity check and consume it:
-
-```tsx
-const checkSession = async () => {
-  const hash = window.location.hash;
-  if (hash && hash.includes("type=recovery")) {
-    setIsValid(true);
-  } else if (sessionStorage.getItem('isRecoveryFlow') === 'true') {
-    sessionStorage.removeItem('isRecoveryFlow');
-    setIsValid(true);
-  } else {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      setIsValid(true);
-    }
-  }
-  setIsChecking(false);
-};
-```
-
-This ensures the recovery flow works regardless of hash timing or session race conditions.
+### 3. Verify data exists
+After fixing the key names, you'll still need to enter your Stripe keys through the admin Settings page (API Keys section) since no Stripe keys currently exist in the database at all.
 
