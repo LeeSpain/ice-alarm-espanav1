@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { STALE_TIMES } from "@/config/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +69,7 @@ export default function KnowledgeBasePage() {
       if (error) throw error;
       return (data || []) as KBArticle[];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: STALE_TIMES.LONG,
   });
 
   // Filter articles by language, search, and category

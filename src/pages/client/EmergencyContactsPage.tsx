@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEmergencyContacts } from "@/hooks/useMemberProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { LIMITS } from "@/config/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -219,7 +220,7 @@ export default function EmergencyContactsPage() {
     );
   }
 
-  const canAddMore = (contacts?.length || 0) < 3;
+  const canAddMore = (contacts?.length || 0) < LIMITS.EMERGENCY_CONTACTS;
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { STALE_TIMES, INTERVALS } from "@/config/constants";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Users, 
@@ -54,8 +55,8 @@ export default function AdminDashboard() {
       if (error) throw error;
       return data as unknown as DashboardStats;
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchInterval: 30000, // Refresh every 30s for alerts
+    staleTime: STALE_TIMES.MEDIUM,
+    refetchInterval: INTERVALS.DASHBOARD_REFRESH,
   });
 
   // Fetch active alerts list (separate query for the detail cards)
@@ -68,11 +69,11 @@ export default function AdminDashboard() {
         .in("status", ["incoming", "in_progress"])
         .order("received_at", { ascending: false })
         .limit(5);
-      
+
       return alerts || [];
     },
-    staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 30000,
+    staleTime: STALE_TIMES.SHORT,
+    refetchInterval: INTERVALS.DASHBOARD_REFRESH,
   });
 
   // Fetch recent activity
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
       
       return data || [];
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: STALE_TIMES.MEDIUM,
   });
 
   return (

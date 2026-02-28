@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { TIMEOUTS } from "@/config/constants";
 
-const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-const WARNING_MS = 5 * 60 * 1000; // Show warning 5 minutes before timeout
+const TIMEOUT_MS = TIMEOUTS.SESSION_IDLE;
+const WARNING_MS = TIMEOUTS.SESSION_WARNING;
 
 const ACTIVITY_EVENTS = [
   "mousedown",
@@ -55,7 +56,7 @@ export function useSessionTimeout() {
 
     // Throttle activity events to avoid excessive timer resets
     let lastActivity = Date.now();
-    const THROTTLE_MS = 30_000; // Only reset every 30s at most
+    const THROTTLE_MS = TIMEOUTS.ACTIVITY_THROTTLE;
 
     const handleActivity = () => {
       const now = Date.now();

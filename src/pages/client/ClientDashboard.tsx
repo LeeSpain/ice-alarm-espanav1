@@ -7,6 +7,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminRole as checkAdminRole } from "@/config/constants";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -48,7 +49,7 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
 
   // Determine if admin is viewing
-  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const isAdminRole = isStaff && checkAdminRole(staffRole);
   const memberIdParam = searchParams.get("memberId");
   const isTemplatePreview = isAdminRole && !memberIdParam;
   const effectiveMemberId = isAdminRole ? memberIdParam : authMemberId;

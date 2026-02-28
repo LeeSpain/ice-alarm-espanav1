@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { STALE_TIMES, INTERVALS } from "@/config/constants";
 
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -26,7 +27,7 @@ export function useIsabellaSettings() {
       if (error) throw error;
       return data as IsabellaSetting[];
     },
-    staleTime: 1000 * 60 * 2,
+    staleTime: STALE_TIMES.MEDIUM,
   });
 }
 
@@ -114,7 +115,7 @@ export function useIsabellaStats() {
         escalationsToday: escalationsToday || 0,
       };
     },
-    staleTime: 1000 * 60,
-    refetchInterval: 30000,
+    staleTime: STALE_TIMES.SHORT,
+    refetchInterval: INTERVALS.DASHBOARD_REFRESH,
   });
 }

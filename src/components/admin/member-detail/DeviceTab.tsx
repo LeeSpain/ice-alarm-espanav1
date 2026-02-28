@@ -218,9 +218,30 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
     }
   };
 
+  const [isSendingSms, setIsSendingSms] = useState(false);
+
   const sendConfigSms = async () => {
+    if (!device) return;
+
+    setIsSendingSms(true);
     toast.info(t("admin.devices.sendingConfigSms"));
-    // TODO: Implement SMS sending via Twilio edge function
+
+    try {
+      const { error } = await supabase.functions.invoke("send-device-sms", {
+        body: { deviceId: device.id, command: "configure" },
+      });
+
+      if (error) throw error;
+
+      toast.success(t("admin.devices.configSmsSent", "Configuration SMS sent successfully"));
+    } catch (error: any) {
+      console.error("Error sending configuration SMS:", error);
+      toast.error(
+        t("admin.devices.configSmsFailed", "Failed to send configuration SMS. Please try again.")
+      );
+    } finally {
+      setIsSendingSms(false);
+    }
   };
 
   if (isLoading) {
@@ -500,9 +521,9 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={sendConfigSms}>
-              <Send className="mr-2 h-4 w-4" />
-              Send Configuration SMS
+            <Button variant="outline" onClick={sendConfigSms} disabled={isSendingSms}>
+              {isSendingSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {isSendingSms ? "Sending..." : "Send Configuration SMS"}
             </Button>
             <Button variant="outline" className="text-destructive" onClick={unassignDevice}>
               <X className="mr-2 h-4 w-4" />

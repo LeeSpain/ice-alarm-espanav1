@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminRole as checkAdminRole } from "@/config/constants";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export default function PartnerInvitesPage() {
   const [searchParams] = useSearchParams();
 
   // Admin view mode detection
-  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const isAdminRole = isStaff && checkAdminRole(staffRole);
   const partnerIdParam = searchParams.get("partnerId");
   const isAdminViewMode = isAdminRole && !!partnerIdParam;
 

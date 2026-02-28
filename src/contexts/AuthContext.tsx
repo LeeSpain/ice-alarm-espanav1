@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
+import { TIMEOUTS } from "@/config/constants";
 
 type StaffRole = "super_admin" | "admin" | "call_centre" | null;
 
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
   };
   
-  const ROLE_FETCH_TIMEOUT = 8000; // 8 seconds - more forgiving
+  const ROLE_FETCH_TIMEOUT = TIMEOUTS.ROLE_FETCH;
 
   const fetchUserRole = async (userId: string) => {
     // Prevent duplicate fetches for the same user

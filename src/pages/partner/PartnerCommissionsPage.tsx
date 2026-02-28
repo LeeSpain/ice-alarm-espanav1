@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminRole as checkAdminRole } from "@/config/constants";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,7 @@ export default function PartnerCommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<CommissionStatus | "all">("all");
 
   // Admin view mode detection
-  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const isAdminRole = isStaff && checkAdminRole(staffRole);
   const partnerIdParam = searchParams.get("partnerId");
   const isAdminViewMode = isAdminRole && !!partnerIdParam;
 

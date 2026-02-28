@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { STALE_TIMES, INTERVALS } from "@/config/constants";
 
 export interface PartnerAlertNotification {
   id: string;
@@ -47,7 +48,7 @@ export function usePartnerAlertNotifications(partnerId: string | undefined, limi
       return data as PartnerAlertNotification[];
     },
     enabled: !!partnerId,
-    staleTime: 30 * 1000, // 30 seconds - alerts need to be fresh
+    staleTime: STALE_TIMES.REALTIME,
   });
 
   const acknowledgeNotification = useMutation({
@@ -100,8 +101,8 @@ export function useUnacknowledgedAlerts(partnerId: string | undefined) {
       return data as PartnerAlertNotification[];
     },
     enabled: !!partnerId,
-    staleTime: 15 * 1000, // 15 seconds for unacknowledged
-    refetchInterval: 30 * 1000, // Poll every 30 seconds
+    staleTime: STALE_TIMES.REALTIME,
+    refetchInterval: INTERVALS.DASHBOARD_REFRESH,
   });
 }
 

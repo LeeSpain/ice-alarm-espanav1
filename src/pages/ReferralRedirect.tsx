@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { TIMEOUTS } from "@/config/constants";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -22,7 +23,7 @@ export default function ReferralRedirect() {
     const handleRedirect = async () => {
       if (!partnerCode || !postSlug) {
         setError("Invalid referral link");
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
         return;
       }
 
@@ -65,7 +66,7 @@ export default function ReferralRedirect() {
           }
 
           setError("Referral link not found");
-          setTimeout(() => navigate("/"), 2000);
+          setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
           return;
         }
 
@@ -111,7 +112,7 @@ export default function ReferralRedirect() {
       } catch (err) {
         console.error("Referral redirect error:", err);
         setError("Error processing referral");
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
       }
     };
 

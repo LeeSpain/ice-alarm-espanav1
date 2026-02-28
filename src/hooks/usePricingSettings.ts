@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PRICING } from "@/config/pricing";
+import { STALE_TIMES } from "@/config/constants";
 
 interface PricingSettings {
   registrationFeeEnabled: boolean;
@@ -33,7 +34,7 @@ export function usePricingSettings(): PricingSettings {
         testModeEnabled: settingsMap.registration_test_mode_enabled === "true",
       };
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: STALE_TIMES.VERY_LONG,
   });
 
   const registrationFeeEnabled = settings?.registrationFeeEnabled ?? true;

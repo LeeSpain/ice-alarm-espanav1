@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminRole as checkAdminRole } from "@/config/constants";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { usePartnerAlertNotifications } from "@/hooks/usePartnerAlertNotifications";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export default function PartnerAlertsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Admin view mode detection
-  const isAdminRole = isStaff && (staffRole === "admin" || staffRole === "super_admin");
+  const isAdminRole = isStaff && checkAdminRole(staffRole);
   const partnerIdParam = searchParams.get("partnerId");
   const isAdminViewMode = isAdminRole && !!partnerIdParam;
 

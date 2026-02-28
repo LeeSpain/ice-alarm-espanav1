@@ -156,7 +156,36 @@ export default function MembersPage() {
   };
 
   const handleExportCSV = () => {
-    // TODO: Implement CSV export
+    const members = data?.members;
+    if (!members || members.length === 0) {
+      toast.error(t("admin.members.noResults"));
+      return;
+    }
+
+    const headers = ["ID", "First Name", "Last Name", "Email", "Phone", "City", "Status", "Created At"];
+    const rows = members.map((m: any) => [
+      m.id,
+      m.first_name,
+      m.last_name,
+      m.email,
+      m.phone,
+      m.city,
+      m.status,
+      m.created_at,
+    ]);
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `members-export-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully");
   };
 
   return (

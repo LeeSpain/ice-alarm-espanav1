@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { STALE_TIMES } from "@/config/constants";
 
 export interface PartnerMember {
   id: string;
@@ -40,7 +41,7 @@ export function usePartnerMembers(partnerId: string | undefined) {
       return data as PartnerMember[];
     },
     enabled: !!partnerId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: STALE_TIMES.MEDIUM,
   });
 }
 

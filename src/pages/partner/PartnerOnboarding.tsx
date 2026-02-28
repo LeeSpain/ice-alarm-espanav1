@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/ui/logo";
-import { CheckCircle, Users, DollarSign, Send, ArrowRight } from "lucide-react";
+import { CheckCircle, Users, DollarSign, Send, ArrowRight, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function PartnerOnboarding() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<"info" | "form" | "success">("info");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [preferredLanguage, setPreferredLanguage] = useState("en");
 
   const benefits = [
     {
@@ -126,36 +130,73 @@ export default function PartnerOnboarding() {
           <CardContent>
             <form
               className="space-y-4"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // TODO: Submit to Supabase
-                setStep("success");
+                setIsSubmitting(true);
+
+                const formData = new FormData(e.currentTarget);
+                const contactName = formData.get("contact_name") as string;
+                const email = formData.get("email") as string;
+                const companyName = (formData.get("company_name") as string) || null;
+                const phone = (formData.get("phone") as string) || null;
+                const language = preferredLanguage;
+                const message = (formData.get("message") as string) || null;
+
+                // Generate a referral code from the contact name
+                const referralCode = `REF-${contactName.replace(/\s+/g, "").toUpperCase().slice(0, 6)}-${Date.now().toString(36).toUpperCase()}`;
+
+                try {
+                  const { error } = await supabase.from("partners").insert({
+                    contact_name: contactName,
+                    email,
+                    company_name: companyName,
+                    phone,
+                    preferred_language: language,
+                    notes_internal: message,
+                    referral_code: referralCode,
+                    partner_type: "referral",
+                    status: "pending",
+                    payout_method: "bank_transfer",
+                  });
+
+                  if (error) throw error;
+                  setStep("success");
+                } catch (error: any) {
+                  console.error("Error submitting partner application:", error);
+                  toast.error(
+                    error?.message?.includes("duplicate")
+                      ? "An application with this email already exists."
+                      : "Failed to submit application. Please try again."
+                  );
+                } finally {
+                  setIsSubmitting(false);
+                }
               }}
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="contact_name">Your Name *</Label>
-                  <Input id="contact_name" required placeholder="John Smith" />
+                  <Input id="contact_name" name="contact_name" required placeholder="John Smith" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="company_name">Company Name (optional)</Label>
-                  <Input id="company_name" placeholder="ABC Care Services" />
+                  <Input id="company_name" name="company_name" placeholder="ABC Care Services" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" required placeholder="john@example.com" />
+                <Input id="email" name="email" type="email" required placeholder="john@example.com" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone (optional)</Label>
-                <Input id="phone" type="tel" placeholder="+34 600 000 000" />
+                <Input id="phone" name="phone" type="tel" placeholder="+34 600 000 000" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="language">Preferred Language *</Label>
-                <Select defaultValue="en">
+                <Select value={preferredLanguage} onValueChange={setPreferredLanguage}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -170,6 +211,7 @@ export default function PartnerOnboarding() {
                 <Label htmlFor="message">Tell us about yourself</Label>
                 <Textarea
                   id="message"
+                  name="message"
                   placeholder="How do you plan to refer customers? What's your network like?"
                   rows={4}
                 />
@@ -179,8 +221,9 @@ export default function PartnerOnboarding() {
                 <Button type="button" variant="outline" onClick={() => setStep("info")}>
                   Back
                 </Button>
-                <Button type="submit" className="flex-1">
-                  Submit Application
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
                 </Button>
               </div>
             </form>

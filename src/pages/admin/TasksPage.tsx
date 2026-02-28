@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
   Loader2, Plus, CheckCircle, Clock, AlertCircle,
-  User, Calendar, Search, MoreHorizontal, Phone
+  User, Calendar, Search, MoreHorizontal, Phone,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format, isToday, isPast, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { usePaginatedQuery } from "@/hooks/useSupabaseQuery";
 
 interface Task {
   id: string;
@@ -77,7 +79,6 @@ interface Member {
 export default function TasksPage() {
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
@@ -95,16 +96,47 @@ export default function TasksPage() {
     member_id: "",
   });
 
+  // Pre-filter tasks by tab (domain-specific logic)
+  const tabFilteredTasks = useMemo(() => {
+    switch (filter) {
+      case "pending":
+        return tasks.filter(t => t.status === "pending");
+      case "in_progress":
+        return tasks.filter(t => t.status === "in_progress");
+      case "completed":
+        return tasks.filter(t => t.status === "completed");
+      case "mine":
+        return tasks.filter(t => t.assigned_to === currentStaffId);
+      case "overdue":
+        return tasks.filter(t =>
+          t.due_date && isPast(parseISO(t.due_date)) && t.status !== "completed"
+        );
+      case "courtesy_calls":
+        return tasks.filter(t => t.task_type === "courtesy_call" && t.status !== "completed");
+      default:
+        return tasks;
+    }
+  }, [tasks, filter, currentStaffId]);
+
+  // Use shared hook for search + pagination
+  const {
+    paginatedItems: displayedTasks,
+    totalFiltered,
+    page,
+    setPage,
+    totalPages,
+  } = usePaginatedQuery<Task>({
+    items: tabFilteredTasks,
+    searchQuery,
+    searchFields: ["title", "description"],
+  });
+
   useEffect(() => {
     fetchCurrentStaff();
     fetchTasks();
     fetchStaff();
     fetchMembers();
   }, []);
-
-  useEffect(() => {
-    filterTasks();
-  }, [tasks, filter, searchQuery]);
 
   const fetchCurrentStaff = async () => {
     try {
@@ -155,46 +187,6 @@ export default function TasksPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const filterTasks = () => {
-    let filtered = [...tasks];
-
-    switch (filter) {
-      case "pending":
-        filtered = filtered.filter(t => t.status === "pending");
-        break;
-      case "in_progress":
-        filtered = filtered.filter(t => t.status === "in_progress");
-        break;
-      case "completed":
-        filtered = filtered.filter(t => t.status === "completed");
-        break;
-      case "mine":
-        filtered = filtered.filter(t => t.assigned_to === currentStaffId);
-        break;
-      case "overdue":
-        filtered = filtered.filter(t => 
-          t.due_date && isPast(parseISO(t.due_date)) && t.status !== "completed"
-        );
-        break;
-      case "courtesy_calls":
-        filtered = filtered.filter(t => t.task_type === "courtesy_call" && t.status !== "completed");
-        break;
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        t =>
-          t.title.toLowerCase().includes(query) ||
-          t.description?.toLowerCase().includes(query) ||
-          t.member?.first_name?.toLowerCase().includes(query) ||
-          t.member?.last_name?.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredTasks(filtered);
   };
 
   const fetchStaff = async () => {
@@ -400,7 +392,7 @@ export default function TasksPage() {
 
       {/* Task List */}
       <div className="grid gap-4">
-        {filteredTasks.length === 0 ? (
+        {displayedTasks.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
@@ -411,7 +403,7 @@ export default function TasksPage() {
             </CardContent>
           </Card>
         ) : (
-          filteredTasks.map((task) => (
+          displayedTasks.map((task) => (
             <Card key={task.id} className={cn(
               task.status === "completed" && "opacity-60",
               task.task_type === "courtesy_call" && "border-l-4 border-l-primary"
@@ -511,6 +503,31 @@ export default function TasksPage() {
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages} ({totalFiltered} results)
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* New Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
