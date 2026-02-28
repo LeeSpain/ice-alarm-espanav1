@@ -3,7 +3,7 @@ import {
   calculateOrder,
   PRICING,
   getSubscriptionNetPrice,
-  getSubscriptionFinalPrice,
+  // getSubscriptionFinalPrice,
   getSubscriptionMonthlyFinal,
   getAnnualSavings,
   getPendantFinalPrice,
