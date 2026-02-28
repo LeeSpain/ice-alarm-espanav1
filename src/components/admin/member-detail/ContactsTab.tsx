@@ -50,11 +50,11 @@ interface Contact {
   contact_name: string;
   relationship: string;
   phone: string;
-  email?: string;
-  speaks_spanish: boolean;
-  is_primary: boolean;
+  email: string | null;
+  speaks_spanish: boolean | null;
+  is_primary: boolean | null;
   priority_order: number;
-  notes?: string;
+  notes: string | null;
 }
 
 interface ContactsTabProps {
@@ -125,8 +125,8 @@ export function ContactsTab({ memberId }: ContactsTabProps) {
       relationship: contact.relationship,
       phone: contact.phone,
       email: contact.email || "",
-      speaks_spanish: contact.speaks_spanish,
-      is_primary: contact.is_primary,
+      speaks_spanish: contact.speaks_spanish ?? false,
+      is_primary: contact.is_primary ?? false,
       notes: contact.notes || "",
     });
     setIsDialogOpen(true);

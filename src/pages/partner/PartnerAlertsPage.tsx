@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { usePartnerAlertNotifications } from "@/hooks/usePartnerAlertNotifications";
@@ -29,7 +28,6 @@ import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
 export default function PartnerAlertsPage() {
-  const { t } = useTranslation();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");

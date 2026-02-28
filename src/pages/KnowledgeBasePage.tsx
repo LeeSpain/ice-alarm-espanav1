@@ -62,7 +62,7 @@ export default function KnowledgeBasePage() {
         .from("documentation")
         .select("id, title, slug, category, content, tags, language, updated_at")
         .eq("status", "published")
-        .in("category", ["user_guide", "faq", "general", "device"])
+        .in("category", ["user_guide", "faq", "general", "device"] as any)
         .order("importance", { ascending: false });
 
       if (error) throw error;

@@ -114,7 +114,7 @@ export function useCreateDocument() {
       const { data: staff } = await supabase
         .from('staff')
         .select('id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id ?? '')
         .single();
 
       const slug = input.slug || generateSlug(input.title);
@@ -170,7 +170,7 @@ export function useUpdateDocument() {
       const { data: staff } = await supabase
         .from('staff')
         .select('id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id ?? '')
         .single();
 
       // Get current version to increment

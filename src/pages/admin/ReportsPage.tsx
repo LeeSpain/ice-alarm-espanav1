@@ -2,14 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Download,
-  Users,
   Bell,
   CreditCard,
   Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { subMonths } from "date-fns";
 import { useTranslation } from "react-i18next";
 
 export default function ReportsPage() {

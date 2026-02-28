@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, User, Globe, Mail, Phone, MapPin, Lock, Save } from "lucide-react";
+import { Loader2, User, Mail, Phone, MapPin, Lock, Save } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";

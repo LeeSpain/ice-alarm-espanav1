@@ -250,17 +250,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setIsStaff(false);
-    setStaffRole(null);
-    setMemberId(null);
-    setPartnerId(null);
-    setIsPartner(false);
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     clearSentryUser();

@@ -73,7 +73,7 @@ export function CampaignCard({
     },
   };
 
-  const status = statusConfig[campaign.status] || statusConfig.draft;
+  const status = statusConfig[campaign.status || "draft"] || statusConfig.draft;
 
   const stats = [
     { label: t("outreach.campaigns.stats.leads"), value: campaign.leads_count, icon: Users },

@@ -337,7 +337,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         projectId = newProject.id;
       }
 
-      const { data, error } = await supabase.functions.invoke("video-render-queue", {
+      const { error } = await supabase.functions.invoke("video-render-queue", {
         body: { project_id: projectId },
       });
 
@@ -1103,7 +1103,7 @@ function PreviewStep({ projectData, settings, validationErrors, isValid, t }: an
 }
 
 // Quick Setup Step (streamlined essentials)
-function QuickSetupStep({ projectData, setProjectData, settings, templates, templatesLoading, addBullet, removeBullet, updateBullet, validationErrors, touched, onBlur, t }: any) {
+function QuickSetupStep({ projectData, setProjectData, settings, templates, templatesLoading: _templatesLoading, addBullet, removeBullet, updateBullet, validationErrors, touched, onBlur, t }: any) {
   const filledBulletCount = projectData.bullets.filter((b: string) => b.trim()).length;
 
   return (

@@ -19,10 +19,8 @@ export function GdprSettingsSection() {
   const { t } = useTranslation();
   const { exportData, isExporting } = useGdprExport();
   const {
-    status,
     requestDeletion,
     cancelDeletion,
-    reset,
     isPending,
     isSubmitting,
     isSubmitted,

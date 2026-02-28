@@ -17,10 +17,10 @@ interface MemberHeaderProps {
     last_name: string;
     email: string;
     phone: string;
-    photo_url?: string;
+    photo_url?: string | null;
     address_line_1: string;
     city: string;
-    province: string;
+    province: string | null;
     status: string;
   };
   subscription?: {
@@ -62,7 +62,7 @@ export function MemberHeader({
       <div className="flex flex-col md:flex-row md:items-start gap-4 p-4 bg-card rounded-lg border">
         {/* Photo */}
         <Avatar className="h-24 w-24">
-          <AvatarImage src={member.photo_url} alt={`${member.first_name} ${member.last_name}`} />
+          <AvatarImage src={member.photo_url ?? undefined} alt={`${member.first_name} ${member.last_name}`} />
           <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
         </Avatar>
 

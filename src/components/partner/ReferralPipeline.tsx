@@ -56,9 +56,10 @@ export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
       // Get commissions for converted members
       const memberIds = invites
         ?.filter((i) => i.converted_member_id)
-        .map((i) => i.converted_member_id) || [];
+        .map((i) => i.converted_member_id)
+        .filter((x): x is string => x !== null) || [];
 
-      let commissionsMap: Record<string, { status: CommissionStatus; amount: number }> = {};
+      const commissionsMap: Record<string, { status: CommissionStatus; amount: number }> = {};
 
       if (memberIds.length > 0) {
         const { data: commissions } = await supabase

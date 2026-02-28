@@ -110,7 +110,7 @@ export async function logSms({
     interactionType: direction === "outbound" ? "sms_sent" : "sms_received",
     description: messageContent,
     metadata: {
-      twilio_sid: twilioSid,
+      twilio_sid: twilioSid ?? null,
       to: phoneNumber,
       direction,
     },
@@ -125,7 +125,7 @@ export async function logSms({
       content: messageContent,
       message_type: "sms",
       metadata: {
-        twilio_sid: twilioSid,
+        twilio_sid: twilioSid ?? null,
         phone: phoneNumber,
       },
     });
@@ -154,7 +154,7 @@ export async function logCallStart({
     interactionType: direction === "outbound" ? "call_outbound" : "call_inbound",
     description: `Call ${direction === "outbound" ? "to" : "from"} ${phoneNumber}`,
     metadata: {
-      twilio_sid: callSid,
+      twilio_sid: callSid ?? null,
       phone: phoneNumber,
       direction,
       status: "in_progress",
@@ -179,7 +179,7 @@ export async function logCallEnd({
       description: `Call duration: ${formatDuration(durationSeconds)}${notes ? ` - ${notes}` : ""}`,
       metadata: {
         duration_seconds: durationSeconds,
-        recording_url: recordingUrl,
+        recording_url: recordingUrl ?? null,
         status: "completed",
       },
     })
@@ -214,7 +214,7 @@ export async function logWhatsApp({
     interactionType: direction === "outbound" ? "whatsapp_sent" : "whatsapp_received",
     description: messageContent,
     metadata: {
-      twilio_sid: twilioSid,
+      twilio_sid: twilioSid ?? null,
       to: phoneNumber,
       direction,
       channel: "whatsapp",
@@ -230,7 +230,7 @@ export async function logWhatsApp({
       content: messageContent,
       message_type: "whatsapp",
       metadata: {
-        twilio_sid: twilioSid,
+        twilio_sid: twilioSid ?? null,
         phone: phoneNumber,
       },
     });

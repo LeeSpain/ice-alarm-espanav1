@@ -46,10 +46,11 @@ export function useAgentHandoff() {
           .insert({
             title: `AI Escalation: ${reason.substring(0, 100)}`,
             description: `A conversation has been escalated from the AI assistant.\n\nReason: ${reason}\nConversation ID: ${conversationId}`,
-            type: "ai_escalation",
+            category: "ai_escalation" as any,
             priority: "medium",
-            status: "open",
-            created_by: user?.id || null,
+            status: "open" as any,
+            created_by: user?.id ?? "",
+            ticket_number: `ESC-${Date.now()}`,
           })
           .select("id")
           .single();

@@ -14,14 +14,14 @@ import { Link } from "react-router-dom";
 interface Conversation {
   id: string;
   subject: string | null;
-  status: string;
-  priority: string;
-  last_message_at: string;
-  member_id: string;
+  status: string | null;
+  priority: string | null;
+  last_message_at: string | null;
+  member_id: string | null;
   member?: {
     first_name: string;
     last_name: string;
-  };
+  } | null;
   unread_count?: number;
   last_message_preview?: string;
 }
@@ -31,8 +31,12 @@ interface Message {
   sender_type: string;
   sender_id: string | null;
   content: string;
-  message_type: string;
-  created_at: string;
+  message_type: string | null;
+  created_at: string | null;
+  is_read: boolean | null;
+  metadata: unknown;
+  read_at: string | null;
+  conversation_id: string;
   staff?: {
     first_name: string;
   } | null;
@@ -167,7 +171,7 @@ export function MessagesPanel() {
       if (error) throw error;
 
       // Get staff names
-      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
+      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, { first_name: s.first_name }]) || []);
 
@@ -305,7 +309,7 @@ export function MessagesPanel() {
                       {conv.subject || "No subject"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                      {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : "No messages"}
                     </p>
                   </div>
                 </div>
@@ -346,7 +350,7 @@ export function MessagesPanel() {
                     >
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                       <p className="text-[10px] opacity-70 mt-1 text-right">
-                        {format(new Date(msg.created_at), "h:mm a")}
+                        {msg.created_at ? format(new Date(msg.created_at), "h:mm a") : ""}
                       </p>
                     </div>
                   </div>

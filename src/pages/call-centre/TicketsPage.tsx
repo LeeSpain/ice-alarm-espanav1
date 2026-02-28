@@ -58,8 +58,8 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
-  is_internal: boolean;
-  staff?: { first_name: string; last_name: string };
+  is_internal: boolean | null;
+  staff?: { first_name: string; last_name: string } | null;
 }
 
 interface Member {
@@ -179,7 +179,7 @@ export default function TicketsPage() {
       console.error("Error fetching comments:", error);
       return;
     }
-    setComments(data || []);
+    setComments((data || []) as Comment[]);
   };
 
   const fetchMembers = async () => {
@@ -260,7 +260,7 @@ export default function TicketsPage() {
     try {
       const { error } = await supabase.from("ticket_comments").insert({
         ticket_id: selectedTicket.id,
-        staff_id: currentStaffId,
+        staff_id: currentStaffId!,
         content: replyMessage,
       });
 

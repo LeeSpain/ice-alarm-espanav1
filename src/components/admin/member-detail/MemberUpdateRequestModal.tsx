@@ -18,7 +18,7 @@ interface MemberData {
   phone: string;
   nie_dni: string | null;
   address_line_2: string | null;
-  preferred_language: string;
+  preferred_language: string | null;
 }
 
 interface MedicalData {

@@ -39,8 +39,8 @@ interface Conversation {
   id: string;
   subject: string | null;
   status: string;
-  priority: string;
-  last_message_at: string;
+  priority: string | null;
+  last_message_at: string | null;
   created_at: string;
   assigned_to: string | null;
   conversation_type: "member" | "staff" | "internal";
@@ -71,8 +71,8 @@ interface Message {
   sender_type: string;
   sender_id: string | null;
   content: string;
-  message_type: string;
-  is_read: boolean;
+  message_type: string | null;
+  is_read: boolean | null;
   created_at: string;
   staff?: {
     first_name: string;
@@ -217,7 +217,7 @@ export default function MessagesPage() {
       if (convError) throw convError;
 
       // Fetch assigned staff info
-      const assignedStaffIds = convData?.filter(c => c.assigned_to).map(c => c.assigned_to) || [];
+      const assignedStaffIds = convData?.filter(c => c.assigned_to).map(c => c.assigned_to).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase
         .from("staff")
         .select("id, first_name, last_name")
@@ -227,7 +227,7 @@ export default function MessagesPage() {
 
       // Fetch staff participants info for staff conversations
       const staffConvs = convData?.filter(c => c.conversation_type === "staff") || [];
-      const allParticipantIds = staffConvs.flatMap(c => c.staff_participants || []);
+      const allParticipantIds = staffConvs.flatMap(c => (c.staff_participants || []) as string[]);
       const { data: participantsData } = await supabase
         .from("staff")
         .select("id, first_name, last_name")
@@ -322,15 +322,15 @@ export default function MessagesPage() {
       if (error) throw error;
 
       // Fetch staff names
-      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
+      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name, last_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s]) || []);
 
       setMessages(
-        data?.map(m => ({
+        (data?.map(m => ({
           ...m,
           staff: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || null : null,
-        })) || []
+        })) || []) as Message[]
       );
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -403,8 +403,8 @@ export default function MessagesPage() {
         .from("conversations")
         .insert({
           member_id: isStaffConversation ? null : newConversation.memberId,
-          staff_participants: isStaffConversation 
-            ? [...newConversation.staffParticipants, currentStaffId].filter(Boolean)
+          staff_participants: isStaffConversation
+            ? [...newConversation.staffParticipants, currentStaffId].filter((s): s is string => s != null)
             : [],
           conversation_type: isStaffConversation ? "staff" : "member",
           subject: newConversation.subject,
@@ -760,7 +760,7 @@ export default function MessagesPage() {
                               )}
                             </div>
                             <span className="text-xs text-muted-foreground shrink-0">
-                              {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                              {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : ""}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground truncate mt-0.5">
@@ -771,7 +771,7 @@ export default function MessagesPage() {
                           </p>
                           <div className="flex items-center gap-2 mt-2">
                             {getStatusBadge(conv.status)}
-                            {getPriorityBadge(conv.priority)}
+                            {getPriorityBadge(conv.priority ?? "normal")}
                             {conv.conversation_type !== "staff" && (
                               conv.assigned_staff ? (
                                 <span className="text-xs text-muted-foreground">
@@ -828,7 +828,7 @@ export default function MessagesPage() {
                         </SelectContent>
                       </Select>
                       <Select
-                        value={selectedConversation.priority}
+                        value={selectedConversation.priority ?? undefined}
                         onValueChange={(v) => updateConversation("priority", v)}
                       >
                         <SelectTrigger className="w-[120px] h-8">

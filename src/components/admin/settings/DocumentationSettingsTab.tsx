@@ -48,7 +48,6 @@ import {
   Shield,
   Loader2,
   Printer,
-  Download,
   FileType,
 } from "lucide-react";
 import { format } from "date-fns";

@@ -30,7 +30,7 @@ export function usePushNotifications() {
       }
 
       // Store token in notification_settings (or system_integrations)
-      const { error } = await supabase.from("notification_settings").upsert(
+      const { error } = await (supabase.from("notification_settings") as any).upsert(
         {
           user_id: user.id,
           push_token: fcmToken,
@@ -62,8 +62,8 @@ export function usePushNotifications() {
     if (!user) return;
 
     try {
-      await supabase
-        .from("notification_settings")
+      await (supabase
+        .from("notification_settings") as any)
         .update({ push_enabled: false, push_token: null })
         .eq("user_id", user.id);
 

@@ -55,10 +55,10 @@ interface Note {
   id: string;
   note_type: string;
   content: string;
-  is_pinned: boolean;
-  is_private: boolean;
-  followup_date?: string;
-  followup_completed: boolean;
+  is_pinned: boolean | null;
+  is_private: boolean | null;
+  followup_date: string | null;
+  followup_completed: boolean | null;
   created_at: string;
   staff: {
     first_name: string;
@@ -116,7 +116,7 @@ export function NotesTab({ memberId }: NotesTabProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
+      setNotes((data || []) as Note[]);
     } catch (error) {
       console.error("Error fetching notes:", error);
       toast.error("Failed to load notes");
@@ -142,8 +142,8 @@ export function NotesTab({ memberId }: NotesTabProps) {
     form.reset({
       note_type: note.note_type as any,
       content: note.content,
-      is_pinned: note.is_pinned,
-      is_private: note.is_private,
+      is_pinned: note.is_pinned ?? false,
+      is_private: note.is_private ?? false,
       followup_date: note.followup_date || "",
     });
     setIsDialogOpen(true);

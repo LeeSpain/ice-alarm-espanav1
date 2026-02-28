@@ -1,8 +1,7 @@
 import { useLiveVisitors } from "@/hooks/useLiveVisitors";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Radio, Monitor, Smartphone, Tablet, Eye, Users } from "lucide-react";
+import { Radio, Monitor, Smartphone, Tablet, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function LiveVisitorsCard() {

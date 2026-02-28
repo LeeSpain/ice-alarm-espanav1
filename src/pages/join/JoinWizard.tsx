@@ -34,7 +34,6 @@ const steps = [
 ];
 
 const WIZARD_STORAGE_KEY = "join_wizard_data";
-const PARTNER_REF_KEY = "partner_ref";
 
 export default function JoinWizard() {
   const { t } = useTranslation();
@@ -43,13 +42,13 @@ export default function JoinWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [wizardData, setWizardData] = useState<JoinWizardData>(initialJoinWizardData);
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
   
   // Company settings for dynamic phone/email
   const { settings: companySettings } = useCompanySettings();
   
   // Progressive save hook
-  const { saveDraft, clearSession, isSaving } = useRegistrationDraft();
+  const { saveDraft, clearSession } = useRegistrationDraft();
 
   // Capture partner referral code and UTM params from URL
   useEffect(() => {

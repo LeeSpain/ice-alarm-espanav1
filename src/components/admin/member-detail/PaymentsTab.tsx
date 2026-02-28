@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
-  Loader2, Download, Plus, Filter, CreditCard, 
+  Loader2, Download, Plus, CreditCard, 
   CheckCircle, XCircle, Clock, AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,12 +39,12 @@ interface Payment {
   id: string;
   amount: number;
   payment_type: string;
-  payment_method: string;
+  payment_method: string | null;
   status: string;
-  invoice_number?: string;
+  invoice_number: string | null;
   created_at: string;
-  paid_at?: string;
-  notes?: string;
+  paid_at: string | null;
+  notes: string | null;
 }
 
 interface PaymentsTabProps {
@@ -73,7 +73,7 @@ export function PaymentsTab({ memberId }: PaymentsTabProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPayments(data || []);
+      setPayments((data || []) as Payment[]);
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to load payments");
@@ -295,7 +295,7 @@ export function PaymentsTab({ memberId }: PaymentsTabProps) {
                       {payment.payment_type.replace("_", " ")}
                     </TableCell>
                     <TableCell className="capitalize">
-                      {payment.payment_method.replace("_", " ")}
+                      {(payment.payment_method ?? "").replace("_", " ")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

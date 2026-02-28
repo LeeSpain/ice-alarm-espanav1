@@ -64,7 +64,7 @@ export default function CRMImportPage() {
       const { data: batch, error } = await supabase
         .from('crm_import_batches')
         .insert({
-          filename: file.name,
+          filename: selectedFile.name,
           total_rows: rows.length,
           status: 'parsed',
         })

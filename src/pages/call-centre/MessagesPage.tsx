@@ -37,8 +37,8 @@ interface Conversation {
   id: string;
   subject: string | null;
   status: string;
-  priority: string;
-  last_message_at: string;
+  priority: string | null;
+  last_message_at: string | null;
   created_at: string;
   assigned_to: string | null;
   conversation_type: "member" | "staff" | "internal";
@@ -69,8 +69,8 @@ interface Message {
   sender_type: string;
   sender_id: string | null;
   content: string;
-  message_type: string;
-  is_read: boolean;
+  message_type: string | null;
+  is_read: boolean | null;
   created_at: string;
   staff?: {
     first_name: string;
@@ -203,7 +203,7 @@ export default function CallCentreMessagesPage() {
 
       if (convError) throw convError;
 
-      const assignedStaffIds = convData?.filter(c => c.assigned_to).map(c => c.assigned_to) || [];
+      const assignedStaffIds = convData?.filter(c => c.assigned_to).map(c => c.assigned_to).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase
         .from("staff")
         .select("id, first_name, last_name")
@@ -213,7 +213,7 @@ export default function CallCentreMessagesPage() {
 
       // Fetch staff participants info for staff conversations
       const staffConvs = convData?.filter(c => c.conversation_type === "staff") || [];
-      const allParticipantIds = staffConvs.flatMap(c => c.staff_participants || []);
+      const allParticipantIds = staffConvs.flatMap(c => (c.staff_participants as string[] || []));
       const { data: participantsData } = await supabase
         .from("staff")
         .select("id, first_name, last_name")
@@ -304,15 +304,15 @@ export default function CallCentreMessagesPage() {
 
       if (error) throw error;
 
-      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
+      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name, last_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s]) || []);
 
       setMessages(
-        data?.map(m => ({
+        (data?.map(m => ({
           ...m,
           staff: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || null : null,
-        })) || []
+        })) || []) as Message[]
       );
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -384,8 +384,8 @@ export default function CallCentreMessagesPage() {
         .from("conversations")
         .insert({
           member_id: isStaffConversation ? null : newConversation.memberId,
-          staff_participants: isStaffConversation 
-            ? [...newConversation.staffParticipants, currentStaffId].filter(Boolean)
+          staff_participants: isStaffConversation
+            ? [...newConversation.staffParticipants, currentStaffId].filter((s): s is string => s != null)
             : [],
           conversation_type: isStaffConversation ? "staff" : "member",
           subject: newConversation.subject,
@@ -490,7 +490,7 @@ export default function CallCentreMessagesPage() {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
       case "urgent":
         return <Badge variant="destructive">Urgent</Badge>;
@@ -732,7 +732,7 @@ export default function CallCentreMessagesPage() {
                       <p className="text-xs text-muted-foreground truncate mt-1">{conv.last_message_preview}</p>
                     </div>
                     <div className="text-xs text-muted-foreground flex-shrink-0">
-                      {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                      {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : ""}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-2">
@@ -794,7 +794,7 @@ export default function CallCentreMessagesPage() {
                     </SelectContent>
                   </Select>
                   <Select
-                    value={selectedConversation.priority}
+                    value={selectedConversation.priority || "normal"}
                     onValueChange={(v) => updateConversation("priority", v)}
                   >
                     <SelectTrigger className="w-32">

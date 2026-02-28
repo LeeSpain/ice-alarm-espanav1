@@ -140,7 +140,7 @@ const commissionStatusColors: Record<CommissionStatus, string> = {
 
 export default function PartnerDetailPage() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [internalNotes, setInternalNotes] = useState("");

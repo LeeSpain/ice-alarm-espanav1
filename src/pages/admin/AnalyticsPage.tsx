@@ -275,6 +275,7 @@ export default function AnalyticsPage() {
     // Daily chart data
     const dailyData: Record<string, { date: string; visitors: Set<string>; pageViews: number }> = {};
     eventsData.forEach(e => {
+      if (!e.created_at) return;
       const date = format(new Date(e.created_at), "MMM dd");
       if (!dailyData[date]) {
         dailyData[date] = { date, visitors: new Set(), pageViews: 0 };

@@ -114,10 +114,10 @@ export default function StaffPreferencesPage() {
         email: data.email,
         phone: data.phone,
         role: data.role,
-        preferredLanguage: data.preferred_language || "en",
-        createdAt: new Date(data.created_at),
+        preferredLanguage: (data.preferred_language as "en" | "es") || "en",
+        createdAt: new Date(data.created_at ?? Date.now()),
         lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : null,
-        isActive: data.is_active,
+        isActive: data.is_active ?? true,
       };
 
       setStaffData(staffInfo);

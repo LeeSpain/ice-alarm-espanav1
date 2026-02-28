@@ -1,7 +1,6 @@
 import { 
   UserPlus, 
   Smartphone, 
-  Bell, 
   CreditCard, 
   Settings, 
   Edit,

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Accordion,
   AccordionContent,
@@ -157,7 +155,6 @@ function CommandLogEntry({ entry }: { entry: SmsCommandEntry }) {
 }
 
 export function SmsCommandPanel({ deviceId, simPhoneNumber }: SmsCommandPanelProps) {
-  const { t } = useTranslation();
   const {
     commandLog,
     loadCommandLog,

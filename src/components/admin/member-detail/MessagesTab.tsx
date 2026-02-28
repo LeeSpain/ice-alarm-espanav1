@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
-  Loader2, Plus, Send, MessageSquare, Phone, Mail,
-  User, Clock
+  Loader2, Plus, Send, MessageSquare, Phone, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +33,8 @@ interface Conversation {
   id: string;
   subject: string | null;
   status: string;
-  priority: string;
-  last_message_at: string;
+  priority: string | null;
+  last_message_at: string | null;
   created_at: string;
   assigned_to: string | null;
 }
@@ -45,8 +44,8 @@ interface Message {
   sender_type: string;
   sender_id: string | null;
   content: string;
-  message_type: string;
-  is_read: boolean;
+  message_type: string | null;
+  is_read: boolean | null;
   created_at: string;
   staff?: {
     first_name: string;
@@ -127,9 +126,9 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
         .order("last_message_at", { ascending: false });
 
       if (error) throw error;
-      setConversations(data || []);
+      setConversations((data || []) as Conversation[]);
       if (data && data.length > 0 && !selectedConversation) {
-        setSelectedConversation(data[0]);
+        setSelectedConversation(data[0] as Conversation);
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -150,13 +149,13 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
       if (error) throw error;
       
       // Fetch staff names for staff messages
-      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
+      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name, last_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s]) || []);
-      setMessages(data?.map(m => ({
+      setMessages((data?.map(m => ({
         ...m,
         staff: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || null : null
-      })) || []);
+      })) || []) as Message[]);
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -225,7 +224,7 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
       setNewSubject("");
       setNewMessage("");
       fetchConversations();
-      setSelectedConversation(convData);
+      setSelectedConversation(convData as Conversation);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
@@ -395,7 +394,7 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
                           {conv.subject || "No subject"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                          {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : ""}
                         </p>
                       </div>
                       {getStatusBadge(conv.status)}
@@ -430,7 +429,7 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
                         </SelectContent>
                       </Select>
                       <Select
-                        value={selectedConversation.priority}
+                        value={selectedConversation.priority ?? undefined}
                         onValueChange={(v) => updateConversation("priority", v)}
                       >
                         <SelectTrigger className="w-[120px] h-8">

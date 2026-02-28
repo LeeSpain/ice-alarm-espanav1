@@ -47,7 +47,7 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
       const { data, error } = await supabase
         .from("partners")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user?.id ?? "")
         .maybeSingle();
 
       if (error) throw error;
@@ -63,7 +63,7 @@ export function PartnerHeader({ isAdminViewMode = false, partnerIdParam }: Partn
       const { data, error } = await supabase
         .from("staff")
         .select("id, first_name, last_name, email")
-        .eq("user_id", user?.id)
+        .eq("user_id", user?.id ?? "")
         .single();
       if (error) throw error;
       return data;

@@ -48,7 +48,7 @@ export function useLiveVisitors(refreshInterval = 10000) {
       }> = {};
 
       events?.forEach((event) => {
-        if (event.visitor_id) {
+        if (event.visitor_id && event.created_at) {
           const eventTime = new Date(event.created_at);
           if (!visitorLastSeen[event.visitor_id] || eventTime > visitorLastSeen[event.visitor_id].lastSeen) {
             visitorLastSeen[event.visitor_id] = {

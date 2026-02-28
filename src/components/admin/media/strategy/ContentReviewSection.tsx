@@ -7,9 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Loader2,
-  Wand2,
   Check,
-  X,
   Eye,
   Send,
   RefreshCw,
@@ -31,13 +29,11 @@ export function ContentReviewSection() {
   const {
     items,
     isLoading,
-    generateContent,
     approveSlot,
     disableSlot,
     enableSlot,
     publishSlot,
     togglePublishTarget,
-    isGenerating,
     isApproving,
     isPublishing,
   } = useScheduledContent("ready");

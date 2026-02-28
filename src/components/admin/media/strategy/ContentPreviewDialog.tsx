@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Ban, Send, Loader2, Image as ImageIcon, FileText } from "lucide-react";
+import { Check, Ban, Send, Loader2, Image as ImageIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ScheduledContentItem } from "@/hooks/useScheduledContent";
 

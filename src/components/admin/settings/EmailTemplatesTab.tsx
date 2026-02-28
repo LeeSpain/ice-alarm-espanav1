@@ -21,7 +21,6 @@ import {
   Loader2,
   Save,
   Eye,
-  X,
 } from "lucide-react";
 import { useEmailTemplates, type EmailTemplate, type EmailTemplateUpdate } from "@/hooks/useEmailTemplates";
 

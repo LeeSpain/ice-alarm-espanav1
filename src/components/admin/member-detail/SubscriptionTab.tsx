@@ -28,11 +28,11 @@ interface Subscription {
   amount: number;
   status: string;
   start_date: string;
-  renewal_date: string;
-  payment_method: string;
-  registration_fee_paid: boolean;
-  has_pendant: boolean;
-  stripe_subscription_id?: string;
+  renewal_date: string | null;
+  payment_method: string | null;
+  registration_fee_paid: boolean | null;
+  has_pendant: boolean | null;
+  stripe_subscription_id: string | null;
 }
 
 interface SubscriptionTabProps {
@@ -57,7 +57,7 @@ export function SubscriptionTab({ memberId }: SubscriptionTabProps) {
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
-      setSubscription(data);
+      setSubscription(data as Subscription | null);
     } catch (error) {
       console.error("Error fetching subscription:", error);
       toast.error("Failed to load subscription");
@@ -171,7 +171,7 @@ export function SubscriptionTab({ memberId }: SubscriptionTabProps) {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Next Renewal</p>
-                <p className="font-medium">{format(new Date(subscription.renewal_date), "PPP")}</p>
+                <p className="font-medium">{subscription.renewal_date ? format(new Date(subscription.renewal_date), "PPP") : "-"}</p>
               </div>
             </div>
           </div>

@@ -40,7 +40,7 @@ export function StrategyItemList({
   onDelete,
   isCreating,
   isUpdating,
-  isDeleting,
+  isDeleting: _isDeleting,
   showAiPrompt,
   requireDescription,
 }: StrategyItemListProps) {

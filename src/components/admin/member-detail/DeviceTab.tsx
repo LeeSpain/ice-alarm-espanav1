@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
-  Loader2, Smartphone, Battery, MapPin, Clock, Settings,
+  Loader2, Smartphone, Battery, MapPin, Clock,
   Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench,
   ClipboardList, ExternalLink
 } from "lucide-react";
@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { LocationMap } from "@/components/maps/LocationMap";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 
@@ -94,7 +94,7 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .is("member_id", null);
 
       if (error) throw error;
-      setAvailableDevices(data || []);
+      setAvailableDevices((data || []) as unknown as Device[]);
     } catch (error) {
       console.error("Error fetching available devices:", error);
     }

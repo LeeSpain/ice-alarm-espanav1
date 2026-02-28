@@ -285,7 +285,7 @@ export default function PartnerPricingSettingsPage() {
                       €{Number(tier.commission_amount).toFixed(0)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(tier.effective_from), "dd MMM yy")}
+                      {tier.effective_from ? format(new Date(tier.effective_from), "dd MMM yy") : "—"}
                     </TableCell>
                     <TableCell>
                       <Button 

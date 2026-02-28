@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { 
-  Loader2, Plus, CheckCircle, Edit, Trash2, Clock,
+  Loader2, Plus, CheckCircle, Edit, Trash2,
   AlertTriangle, Calendar, User, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -119,16 +119,16 @@ export function TasksTab({ memberId }: TasksTabProps) {
       
       // Fetch staff names
       const staffIds = [...new Set([
-        ...data?.filter(t => t.assigned_to).map(t => t.assigned_to) || [],
-        ...data?.filter(t => t.created_by).map(t => t.created_by) || []
+        ...data?.filter(t => t.assigned_to).map(t => t.assigned_to).filter((x): x is string => x !== null) || [],
+        ...data?.filter(t => t.created_by).map(t => t.created_by).filter((x): x is string => x !== null) || []
       ])];
       const { data: staffData } = await supabase.from("staff").select("id, first_name, last_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s]) || []);
-      setTasks(data?.map(t => ({
+      setTasks((data?.map(t => ({
         ...t,
         assigned_staff: t.assigned_to ? staffMap.get(t.assigned_to) || null : null,
         created_by_staff: t.created_by ? staffMap.get(t.created_by) || null : null
-      })) || []);
+      })) || []) as Task[]);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast.error("Failed to load tasks");

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---- Mock @sentry/react ----
-const mockInit = vi.fn();
-const mockSetUser = vi.fn();
-const mockCaptureMessage = vi.fn();
-const mockBrowserTracingIntegration = vi.fn(() => "browser-tracing-mock");
-const mockReplayIntegration = vi.fn(() => "replay-mock");
+const { mockInit, mockSetUser, mockCaptureMessage, mockBrowserTracingIntegration, mockReplayIntegration } = vi.hoisted(() => ({
+  mockInit: vi.fn(),
+  mockSetUser: vi.fn(),
+  mockCaptureMessage: vi.fn(),
+  mockBrowserTracingIntegration: vi.fn(() => "browser-tracing-mock"),
+  mockReplayIntegration: vi.fn(() => "replay-mock"),
+}));
 
 vi.mock("@sentry/react", () => ({
   init: mockInit,

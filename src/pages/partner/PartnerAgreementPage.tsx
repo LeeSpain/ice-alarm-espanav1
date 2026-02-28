@@ -5,14 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { format } from "date-fns";
-import { FileSignature, Check, Download, Clock, User, CreditCard, Calendar } from "lucide-react";
+import { FileSignature, Check, Clock, User, CreditCard, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { agreementSections, CURRENT_AGREEMENT_VERSION } from "@/content/partnerAgreementTerms";
+import { agreementSections } from "@/content/partnerAgreementTerms";
 
 export default function PartnerAgreementPage() {
   const { t } = useTranslation();

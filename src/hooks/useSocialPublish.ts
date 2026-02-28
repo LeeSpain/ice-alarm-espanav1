@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -284,7 +284,7 @@ export function useSocialPublish() {
         SocialPlatform,
         (postId: string) => Promise<PublishResult>
       > = {
-        facebook: async (id) => {
+        facebook: async (_id) => {
           // Facebook uses existing publish mechanism via useSocialPosts
           return {
             success: false,
@@ -295,7 +295,7 @@ export function useSocialPublish() {
         instagram: publishToInstagram,
         twitter: publishToTwitter,
         linkedin: publishToLinkedIn,
-        youtube: async (id) => ({
+        youtube: async (_id) => ({
           success: false,
           platform: "youtube" as SocialPlatform,
           error: t(

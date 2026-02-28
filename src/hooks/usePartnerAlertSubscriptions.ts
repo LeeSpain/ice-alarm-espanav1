@@ -131,7 +131,7 @@ export function useUpdateAlertSubscription() {
   return useMutation({
     mutationFn: async ({
       id,
-      partnerId,
+      partnerId: _partnerId,
       notifyEmail,
       notifySms,
     }: {
@@ -164,7 +164,7 @@ export function useDeleteAlertSubscription() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, partnerId }: { id: string; partnerId: string }) => {
+    mutationFn: async ({ id, partnerId: _partnerId }: { id: string; partnerId: string }) => {
       const { error } = await supabase
         .from("partner_alert_subscriptions")
         .delete()

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { usePartnerMembers } from "@/hooks/usePartnerMembers";
@@ -24,7 +23,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 
 export default function PartnerMembersPage() {
-  const { t } = useTranslation();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,8 +41,7 @@ export default function PartnerMembersPage() {
   const { data: partnerMembers, isLoading: membersLoading } = usePartnerMembers(partnerId);
   const { 
     subscriptions, 
-    isLoading: subscriptionsLoading,
-    toggleSubscription 
+    toggleSubscription
   } = usePartnerAlertSubscriptions(partnerId);
 
   // Check if partner can access this page

@@ -28,10 +28,10 @@ export function useTwoFactorAuth() {
     return {
       totp: data.totp || [],
       verified: (data.totp || []).filter(
-        (f) => f.status === "verified"
+        (f) => (f.status as string) === "verified"
       ),
       unverified: (data.totp || []).filter(
-        (f) => f.status === "unverified"
+        (f) => (f.status as string) === "unverified"
       ),
     };
   };

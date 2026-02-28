@@ -41,8 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   Loader2, 
-  Phone as PhoneIcon, 
-  User,
+  Phone as PhoneIcon,
   Users,
   UserPlus,
   Shield,

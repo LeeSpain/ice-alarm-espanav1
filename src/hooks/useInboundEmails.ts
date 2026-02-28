@@ -14,7 +14,7 @@ export interface InboundEmail {
   module_matched: string | null;
   linked_entity_id: string | null;
   linked_entity_type: string | null;
-  is_reply: boolean;
+  is_reply: boolean | null;
   original_email_log_id: string | null;
   processed_at: string | null;
   created_at: string;

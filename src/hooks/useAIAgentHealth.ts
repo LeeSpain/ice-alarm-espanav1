@@ -46,7 +46,7 @@ export function useAIAgentHealth(enabled: boolean = true) {
         OFFLINE_TIMEOUT_MS
       );
 
-      const { data, error } = await supabase.functions.invoke("ai-run", {
+      const { error } = await supabase.functions.invoke("ai-run", {
         body: {
           agentKey: "customer_service_expert",
           context: {

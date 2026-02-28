@@ -238,8 +238,8 @@ export function GlobalSearch() {
             /^\d+$/.test(sanitised)
               ? supabase
                   .from("alerts")
-                  .select("id, alert_type, status, created_at")
-                  .eq("id", parseInt(sanitised, 10))
+                  .select("id, alert_type, status, received_at")
+                  .eq("id", sanitised)
                   .limit(6)
               : Promise.resolve({ data: [], error: null }),
           ]);

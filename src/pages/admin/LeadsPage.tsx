@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,15 +26,12 @@ import {
   Search, 
   Phone, 
   Mail, 
-  User, 
-  Calendar,
-  ArrowUpRight,
+  User,
   CheckCircle,
   XCircle,
   Clock,
   UserPlus,
   MessageSquare,
-  Filter,
   RefreshCw,
   MoreHorizontal,
   ExternalLink,
@@ -112,7 +109,7 @@ const STEP_NAMES = [
 export default function LeadsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { staffRole } = useAuth();
+  useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [drafts, setDrafts] = useState<RegistrationDraft[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);

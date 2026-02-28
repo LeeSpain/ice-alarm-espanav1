@@ -9,7 +9,6 @@ import {
 import { Globe, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 
 const languages = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -22,7 +21,7 @@ interface LanguageSelectorProps {
 
 export function LanguageSelector({ variant = "default" }: LanguageSelectorProps) {
   const { i18n } = useTranslation();
-  const { memberId, isStaff } = useAuth();
+  const { memberId } = useAuth();
   const currentLang = i18n.language?.split("-")[0] || "en";
 
   const handleLanguageChange = async (langCode: string) => {

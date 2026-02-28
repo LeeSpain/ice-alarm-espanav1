@@ -23,14 +23,11 @@ import {
   Battery,
   Navigation,
   Check,
-  X,
   Star,
-  Clock,
   Users,
   Zap,
   Droplets,
-  Signal,
-  ChevronRight
+  Signal
 } from "lucide-react";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -471,7 +468,7 @@ export default function PendantPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.map((testimonial) => (
               <Card 
                 key={testimonial.authorKey} 
                 className="bg-card border shadow-sm hover:shadow-md transition-shadow duration-300"

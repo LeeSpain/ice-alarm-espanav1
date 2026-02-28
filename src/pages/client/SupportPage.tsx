@@ -51,7 +51,7 @@ interface Conversation {
   id: string;
   subject: string | null;
   status: string;
-  last_message_at: string;
+  last_message_at: string | null;
   created_at: string;
   last_message_preview?: string;
   has_unread?: boolean;
@@ -61,8 +61,8 @@ interface Message {
   id: string;
   sender_type: string;
   content: string;
-  message_type: string;
-  is_read: boolean;
+  message_type: string | null;
+  is_read: boolean | null;
   created_at: string;
   staff_name?: string;
 }
@@ -216,7 +216,7 @@ export default function SupportPage() {
         })
       );
 
-      setConversations(conversationsWithDetails);
+      setConversations(conversationsWithDetails as Conversation[]);
     } catch (error) {
       console.error("Error fetching conversations:", error);
     } finally {
@@ -241,15 +241,15 @@ export default function SupportPage() {
         .eq("sender_type", "staff")
         .eq("is_read", false);
 
-      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id) || [];
+      const staffIds = data?.filter(m => m.sender_type === "staff" && m.sender_id).map(m => m.sender_id).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase.from("staff").select("id, first_name").in("id", staffIds);
       const staffMap = new Map(staffData?.map(s => [s.id, s.first_name]) || []);
 
       setMessages(
-        data?.map(m => ({
+        (data?.map(m => ({
           ...m,
           staff_name: m.sender_type === "staff" && m.sender_id ? staffMap.get(m.sender_id) || t("support.support") : undefined,
-        })) || []
+        })) || []) as Message[]
       );
 
       fetchConversations();
@@ -295,7 +295,7 @@ export default function SupportPage() {
       setNewSubject("");
       setNewMessage("");
       fetchConversations();
-      setSelectedConversation(convData);
+      setSelectedConversation(convData as Conversation);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error(t("support.failedToSend"));
@@ -666,7 +666,7 @@ export default function SupportPage() {
                         {getStatusBadge(conv.status)}
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                          {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : ""}
                         </span>
                       </div>
                     </div>

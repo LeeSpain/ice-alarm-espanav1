@@ -34,8 +34,8 @@ interface Member {
   province: string;
   postal_code: string;
   country: string;
-  preferred_language: string;
-  date_of_birth: string;
+  preferred_language: string | null;
+  date_of_birth: string | null;
   nie_dni: string | null;
   special_instructions: string | null;
 }
@@ -43,7 +43,7 @@ interface Member {
 interface Subscription {
   id: string;
   plan_type: string;
-  has_pendant: boolean;
+  has_pendant: boolean | null;
   status: string;
 }
 
@@ -52,7 +52,7 @@ interface Device {
 }
 
 export default function MemberDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -83,7 +83,7 @@ export default function MemberDetailPage() {
         .single();
 
       if (error) throw error;
-      setMember(data);
+      setMember(data as unknown as Member);
     } catch (error) {
       console.error("Error fetching member:", error);
       toast.error(t("adminMemberDetail.failedLoad", "Failed to load member"));
@@ -103,7 +103,7 @@ export default function MemberDetailPage() {
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
-      setSubscription(data);
+      setSubscription(data as Subscription | null);
     } catch (error) {
       console.error("Error fetching subscription:", error);
     }
@@ -189,7 +189,7 @@ export default function MemberDetailPage() {
 
       {/* Member Header */}
       <MemberHeader
-        member={member}
+        member={member as any}
         subscription={subscription}
         hasDevice={!!device}
         onEdit={() => setActiveTab("profile")}

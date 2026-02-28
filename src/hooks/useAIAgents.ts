@@ -128,7 +128,7 @@ export function useAIAgentConfig(agentId: string | undefined) {
       const { data, error } = await supabase
         .from("ai_agent_configs")
         .select("*")
-        .eq("agent_id", agentId)
+        .eq("agent_id", agentId!)
         .eq("is_active", true)
         .single();
 
@@ -150,14 +150,14 @@ export function useAIAgentStats(agentId: string | undefined) {
       const { count: runsCount } = await supabase
         .from("ai_runs")
         .select("*", { count: "exact", head: true })
-        .eq("agent_id", agentId)
+        .eq("agent_id", agentId!)
         .gte("created_at", last24h);
 
       // Get actions count
       const { data: runs } = await supabase
         .from("ai_runs")
         .select("id")
-        .eq("agent_id", agentId)
+        .eq("agent_id", agentId!)
         .gte("created_at", last24h);
 
       const runIds = runs?.map(r => r.id) || [];
@@ -174,7 +174,7 @@ export function useAIAgentStats(agentId: string | undefined) {
       const { data: lastRun } = await supabase
         .from("ai_runs")
         .select("created_at")
-        .eq("agent_id", agentId)
+        .eq("agent_id", agentId!)
         .order("created_at", { ascending: false })
         .limit(1)
         .single();

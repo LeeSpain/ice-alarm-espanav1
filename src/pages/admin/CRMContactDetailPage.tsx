@@ -39,8 +39,8 @@ interface CRMContact {
   address_line_1: string | null;
   address_line_2: string | null;
   notes: string | null;
-  tags: string[];
-  groups: string[];
+  tags: string[] | null;
+  groups: string[] | null;
   linked_member_id: string | null;
 }
 
@@ -54,7 +54,7 @@ interface ImportRow {
 
 export default function CRMContactDetailPage() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const showConvert = searchParams.get("convert") === "true";

@@ -36,8 +36,9 @@ export function usePostMetrics() {
       if (error) throw error;
 
       const counts: PostMetrics = { draft: 0, approved: 0, published: 0, failed: 0 };
-      data.forEach((post: { status: SocialPostStatus }) => {
-        if (counts[post.status] !== undefined) counts[post.status]++;
+      data.forEach((post) => {
+        const status = post.status as SocialPostStatus;
+        if (counts[status] !== undefined) counts[status]++;
       });
       return counts;
     },

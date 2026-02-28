@@ -71,7 +71,7 @@ export function useContentCalendar(startDate?: string, endDate?: string) {
 
   const updateItem = useMutation({
     mutationFn: async ({ id, ...data }: Partial<ContentCalendarItem> & { id: string }) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const { goal: _goal, audience: _audience, topic: _topic, image_style: _image_style, ...updateData } = data;
       const { error } = await supabase.from("media_content_calendar").update(updateData).eq("id", id);
       if (error) throw error;

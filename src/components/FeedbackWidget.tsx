@@ -64,13 +64,6 @@ export function FeedbackWidget() {
     setIsVisible(false);
   };
 
-  // NPS score colors
-  const getRatingColor = (score: number): string => {
-    if (score <= 6) return "bg-red-500 hover:bg-red-600 text-white";
-    if (score <= 8) return "bg-yellow-500 hover:bg-yellow-600 text-white";
-    return "bg-green-500 hover:bg-green-600 text-white";
-  };
-
   const getSelectedRatingColor = (score: number): string => {
     if (score <= 6) return "ring-red-500 bg-red-500 text-white";
     if (score <= 8) return "ring-yellow-500 bg-yellow-500 text-white";

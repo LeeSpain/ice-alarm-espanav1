@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
-  Loader2, Bell, MapPin, User, Clock, CheckCircle, 
-  AlertTriangle, Phone
+  Loader2, Bell, MapPin, User, CheckCircle, Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { LocationMap } from "@/components/maps/LocationMap";
 
 interface Alert {
@@ -43,8 +42,8 @@ interface Alert {
   received_at: string;
   claimed_at: string | null;
   resolved_at: string | null;
-  emergency_services_called: boolean;
-  next_of_kin_notified: boolean;
+  emergency_services_called: boolean | null;
+  next_of_kin_notified: boolean | null;
   resolution_notes: string | null;
   claimed_by_staff: {
     first_name: string;
@@ -79,7 +78,7 @@ export function AlertsTab({ memberId }: AlertsTabProps) {
         .order("received_at", { ascending: false });
 
       if (error) throw error;
-      setAlerts(data || []);
+      setAlerts((data || []) as Alert[]);
     } catch (error) {
       console.error("Error fetching alerts:", error);
       toast.error("Failed to load alerts");

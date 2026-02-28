@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2,
-  ExternalLink,
   CheckCircle2,
   XCircle,
   Settings,
@@ -64,9 +63,6 @@ export function SocialPublishDialog({
   const {
     platformStatuses,
     isLoadingStatuses,
-    publishToInstagram,
-    publishToTwitter,
-    publishToLinkedIn,
     publishToMultiple,
   } = useSocialPublish();
 
@@ -138,8 +134,6 @@ export function SocialPublishDialog({
   };
 
   const hasResults = results.length > 0;
-  const allSuccessful =
-    hasResults && results.every((r) => r.success);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

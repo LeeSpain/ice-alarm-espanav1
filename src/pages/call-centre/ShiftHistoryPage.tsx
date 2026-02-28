@@ -1,21 +1,16 @@
 import { useState, useEffect } from "react";
-import { format, startOfDay, endOfDay, subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import {
-  Calendar,
   Clock,
   AlertTriangle,
   MessageSquare,
   FileText,
   CheckCircle,
   Flag,
-  Phone,
   User,
   Filter,
-  ChevronLeft,
-  ChevronRight,
   Activity,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,9 +24,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
 
 interface ShiftNote {
   id: string;
@@ -150,7 +143,7 @@ export default function ShiftHistoryPage() {
         created_at,
         member:member_id (first_name, last_name)
       `)
-      .eq("staff_id", staffId)
+      .eq("staff_id", staffId!)
       .gte("created_at", startDate)
       .order("created_at", { ascending: false });
 
@@ -179,7 +172,7 @@ export default function ShiftHistoryPage() {
         resolved_at,
         member:member_id (first_name, last_name)
       `)
-      .eq("claimed_by", staffId)
+      .eq("claimed_by", staffId!)
       .gte("received_at", startDate)
       .order("received_at", { ascending: false });
 
@@ -207,7 +200,7 @@ export default function ShiftHistoryPage() {
         member:member_id (first_name, last_name),
         messages (id)
       `)
-      .eq("assigned_to", staffId)
+      .eq("assigned_to", staffId!)
       .gte("last_message_at", startDate)
       .order("last_message_at", { ascending: false });
 
@@ -229,17 +222,17 @@ export default function ShiftHistoryPage() {
       supabase
         .from("shift_notes")
         .select("id", { count: "exact" })
-        .eq("staff_id", staffId)
+        .eq("staff_id", staffId!)
         .gte("created_at", startDate),
       supabase
         .from("alerts")
         .select("id", { count: "exact" })
-        .eq("claimed_by", staffId)
+        .eq("claimed_by", staffId!)
         .gte("received_at", startDate),
       supabase
         .from("shift_notes")
         .select("id", { count: "exact" })
-        .eq("staff_id", staffId)
+        .eq("staff_id", staffId!)
         .eq("followup_completed", true)
         .gte("created_at", startDate),
     ]);

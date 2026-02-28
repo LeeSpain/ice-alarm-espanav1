@@ -228,7 +228,7 @@ export default function PartnersQAPage() {
         }
         
         const now = new Date();
-        const pastDue = data?.filter(c => new Date(c.release_at) <= now) || [];
+        const pastDue = data?.filter(c => c.release_at && new Date(c.release_at) <= now) || [];
         
         if (pastDue.length > 0) {
           return { 

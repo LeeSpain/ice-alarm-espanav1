@@ -47,7 +47,7 @@ interface CourtesyCallsCardProps {
 interface CompletedCall {
   id: string;
   title: string;
-  completed_at: string;
+  completed_at: string | null;
 }
 
 export function CourtesyCallsCard({ memberId }: CourtesyCallsCardProps) {

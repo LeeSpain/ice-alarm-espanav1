@@ -16,9 +16,7 @@ import {
   MessageCircle,
   ShoppingCart,
   Wrench,
-  RefreshCw,
-  Wifi,
-  WifiOff
+  RefreshCw
 } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";

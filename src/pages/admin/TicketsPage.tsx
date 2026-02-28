@@ -49,8 +49,8 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
-  is_internal: boolean;
-  staff?: { first_name: string; last_name: string };
+  is_internal: boolean | null;
+  staff?: { first_name: string; last_name: string } | null;
 }
 
 interface Staff {
@@ -156,7 +156,7 @@ export default function AdminTicketsPage() {
       .select(`*, staff:staff_id(first_name, last_name)`)
       .eq("ticket_id", ticketId)
       .order("created_at", { ascending: true });
-    setComments(data || []);
+    setComments((data || []) as Comment[]);
   };
 
   const filterTickets = () => {
@@ -225,7 +225,7 @@ export default function AdminTicketsPage() {
     try {
       const { error } = await supabase.from("ticket_comments").insert({
         ticket_id: selectedTicket.id,
-        staff_id: currentStaffId,
+        staff_id: currentStaffId!,
         content: replyMessage,
       });
 

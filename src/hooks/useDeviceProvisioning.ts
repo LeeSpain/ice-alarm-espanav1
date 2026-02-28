@@ -76,12 +76,12 @@ export function useDeviceProvisioning(deviceId: string) {
   const loadChecklist = useCallback(async () => {
     const { data, error } = await supabase
       .from("devices")
-      .select("provisioning_checklist")
+      .select("*")
       .eq("id", deviceId)
       .single();
 
-    if (!error && data?.provisioning_checklist) {
-      const existing = data.provisioning_checklist as ProvisioningChecklist;
+    if (!error && (data as any)?.provisioning_checklist) {
+      const existing = (data as any).provisioning_checklist as ProvisioningChecklist;
       // Merge with default to ensure all steps exist
       const merged = createEmptyChecklist();
       Object.keys(existing).forEach((key) => {
@@ -122,7 +122,7 @@ export function useDeviceProvisioning(deviceId: string) {
 
       const { error } = await supabase
         .from("devices")
-        .update(updateData)
+        .update(updateData as any)
         .eq("id", deviceId);
 
       if (error) throw error;
@@ -154,7 +154,7 @@ export function useDeviceProvisioning(deviceId: string) {
         .update({
           provisioning_checklist: updated,
           configuration_status: "pending",
-        })
+        } as any)
         .eq("id", deviceId);
 
       if (error) throw error;
@@ -179,7 +179,7 @@ export function useDeviceProvisioning(deviceId: string) {
         .update({
           provisioning_checklist: empty,
           configuration_status: "pending",
-        })
+        } as any)
         .eq("id", deviceId);
 
       if (error) throw error;

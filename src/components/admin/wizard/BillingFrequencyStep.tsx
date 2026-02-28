@@ -21,7 +21,6 @@ export function BillingFrequencyStep({ data, onUpdate }: BillingFrequencyStepPro
   const annualTotal = getSubscriptionFinalPrice(data.membershipType, 'annual');
   const annualMonthlyPrice = annualTotal / 12;
   const annualSavings = getAnnualSavings(data.membershipType);
-  const savingsPercentage = Math.round((annualSavings / (monthlyPrice * 12)) * 100);
 
   return (
     <div className="space-y-6">

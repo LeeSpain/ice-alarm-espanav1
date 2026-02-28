@@ -1,10 +1,13 @@
+import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 // ---- Mock Sentry ----
-const mockCaptureException = vi.fn();
-const mockSetTag = vi.fn();
-const mockSetExtra = vi.fn();
+const { mockCaptureException, mockSetTag, mockSetExtra } = vi.hoisted(() => ({
+  mockCaptureException: vi.fn(),
+  mockSetTag: vi.fn(),
+  mockSetExtra: vi.fn(),
+}));
 
 vi.mock("@sentry/react", () => ({
   withScope: (callback: (scope: { setTag: typeof mockSetTag; setExtra: typeof mockSetExtra }) => void) => {
@@ -28,7 +31,7 @@ import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 // ============================================================
 
 /** A component that throws on render */
-function ThrowingComponent({ message }: { message?: string }) {
+function ThrowingComponent({ message }: { message?: string }): React.JSX.Element {
   throw new Error(message || "Test render error");
 }
 

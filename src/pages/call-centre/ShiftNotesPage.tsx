@@ -8,12 +8,11 @@ import {
   Flag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -31,7 +30,6 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 
 interface ShiftNote {
@@ -46,7 +44,6 @@ interface ShiftNote {
 }
 
 export default function ShiftNotesPage() {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const [notes, setNotes] = useState<ShiftNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,7 +134,7 @@ export default function ShiftNotesPage() {
       const { data: staffData } = await supabase
         .from("staff")
         .select("id")
-        .eq("user_id", user?.id)
+        .eq("user_id", user?.id ?? "")
         .single();
 
       const { error } = await supabase

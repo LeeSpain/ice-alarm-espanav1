@@ -324,8 +324,8 @@ export function useMediaImageStyles() {
   });
 
   const createImageStyle = useMutation({
-    mutationFn: async (data: { name: string; description: string; ai_prompt_hint?: string }) => {
-      const { error } = await supabase.from("media_image_styles").insert(data);
+    mutationFn: async (data: { name: string; description?: string; ai_prompt_hint?: string }) => {
+      const { error } = await supabase.from("media_image_styles").insert({ ...data, description: data.description || "" });
       if (error) throw error;
     },
     onSuccess: () => {

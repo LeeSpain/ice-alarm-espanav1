@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
@@ -33,10 +33,10 @@ export interface EnrichedAlert {
     conditions: string[];
     medications: string[];
     allergies: string[];
-    bloodType?: string;
-    doctorName?: string;
-    doctorPhone?: string;
-    hospitalPreference?: string;
+    bloodType?: string | null;
+    doctorName?: string | null;
+    doctorPhone?: string | null;
+    hospitalPreference?: string | null;
   };
   device?: {
     id: string;
@@ -56,7 +56,7 @@ export interface EnrichedAlert {
   }[];
   subscription?: {
     planType: string;
-    hasPendant: boolean;
+    hasPendant: boolean | null;
   };
   previousAlerts?: {
     id: string;
@@ -264,7 +264,7 @@ export function useAlerts() {
       const { data: staff } = await supabase
         .from("staff")
         .select("id")
-        .eq("user_id", staffData.user?.id)
+        .eq("user_id", staffData.user?.id ?? "")
         .single();
 
       const { error } = await supabase

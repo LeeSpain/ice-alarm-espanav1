@@ -124,7 +124,7 @@ export default function SubscriptionPage() {
             <div className="p-4 rounded-lg bg-muted/50">
               <p className="text-sm text-muted-foreground">{t("subscription.amount")}</p>
               <p className="text-xl font-semibold">
-                €{subscription.amount.toFixed(2)}
+                €{(subscription.amount || 0).toFixed(2)}
                 <span className="text-sm font-normal text-muted-foreground">
                   /{subscription.billing_frequency === "monthly" ? t("subscription.mo") : t("subscription.yr")}
                 </span>
@@ -138,7 +138,7 @@ export default function SubscriptionPage() {
               <div>
                 <p className="text-sm text-muted-foreground">{t("subscription.startDate")}</p>
                 <p className="font-medium">
-                  {format(new Date(subscription.start_date), "dd MMM yyyy")}
+                  {subscription.start_date ? format(new Date(subscription.start_date), "dd MMM yyyy") : "—"}
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function SubscriptionPage() {
               <div>
                 <p className="text-sm text-muted-foreground">{t("subscription.nextRenewal")}</p>
                 <p className="font-medium text-primary">
-                  {format(new Date(subscription.renewal_date), "dd MMM yyyy")}
+                  {subscription.renewal_date ? format(new Date(subscription.renewal_date), "dd MMM yyyy") : "—"}
                 </p>
               </div>
             </div>
@@ -231,12 +231,12 @@ export default function SubscriptionPage() {
                 {payments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell>
-                      {format(new Date(payment.created_at), "dd MMM yyyy")}
+                      {payment.created_at ? format(new Date(payment.created_at), "dd MMM yyyy") : "—"}
                     </TableCell>
                     <TableCell className="capitalize">
-                      {payment.payment_type.replace("_", " ")}
+                      {(payment.payment_type || "").replace("_", " ")}
                     </TableCell>
-                    <TableCell>€{payment.amount.toFixed(2)}</TableCell>
+                    <TableCell>€{(payment.amount || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge 
                         variant={payment.status === "completed" ? "default" : "secondary"}

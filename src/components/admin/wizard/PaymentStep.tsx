@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCard, Building2, Loader2, Lock, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { calculateOrder, formatPrice, getSubscriptionNetPrice, PRICING } from "@/config/pricing";
+import { calculateOrder, formatPrice, getSubscriptionNetPrice } from "@/config/pricing";
 
 interface PaymentStepProps {
   data: WizardData;

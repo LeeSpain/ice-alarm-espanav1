@@ -18,7 +18,7 @@ interface JoinSummaryStepProps {
 
 export function JoinSummaryStep({ data, onUpdate }: JoinSummaryStepProps) {
   const { t } = useTranslation();
-  const { registrationFeeEnabled, registrationFeeDiscount, registrationFeeBase, registrationFeeFinal } = usePricingSettings();
+  const { registrationFeeEnabled, registrationFeeDiscount } = usePricingSettings();
   
   const monthlyFinal = getSubscriptionMonthlyFinal(data.membershipType);
   const annualFinal = getSubscriptionFinalPrice(data.membershipType, 'annual');

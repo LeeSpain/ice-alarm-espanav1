@@ -55,7 +55,7 @@ export function ScheduleSettings({ settings, isLoading, onSave, isSaving }: Sche
     });
   };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: DayKey) => {
     setActiveDays((prev) => ({ ...prev, [day]: !prev[day] }));
   };
 

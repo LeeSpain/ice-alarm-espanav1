@@ -90,12 +90,12 @@ export function useDeviceSmsCommands(deviceId: string) {
   const loadCommandLog = useCallback(async () => {
     const { data, error } = await supabase
       .from("devices")
-      .select("sms_command_log")
+      .select("*")
       .eq("id", deviceId)
       .single();
 
-    if (!error && data?.sms_command_log) {
-      setCommandLog(data.sms_command_log as SmsCommandEntry[]);
+    if (!error && (data as any)?.sms_command_log) {
+      setCommandLog((data as any).sms_command_log as SmsCommandEntry[]);
     }
   }, [deviceId]);
 
@@ -135,16 +135,16 @@ export function useDeviceSmsCommands(deviceId: string) {
       // Append to device's sms_command_log
       const { data: device } = await supabase
         .from("devices")
-        .select("sms_command_log")
+        .select("*")
         .eq("id", deviceId)
         .single();
 
-      const existingLog = (device?.sms_command_log as SmsCommandEntry[] | null) || [];
+      const existingLog = ((device as any)?.sms_command_log as SmsCommandEntry[] | null) || [];
       const updatedLog = [...existingLog, entry];
 
       await supabase
         .from("devices")
-        .update({ sms_command_log: updatedLog as any })
+        .update({ sms_command_log: updatedLog } as any)
         .eq("id", deviceId);
 
       return entry;
@@ -164,7 +164,7 @@ export function useDeviceSmsCommands(deviceId: string) {
     mutationFn: async () => {
       await supabase
         .from("devices")
-        .update({ sms_command_log: [] as any })
+        .update({ sms_command_log: [] } as any)
         .eq("id", deviceId);
     },
     onSuccess: () => {

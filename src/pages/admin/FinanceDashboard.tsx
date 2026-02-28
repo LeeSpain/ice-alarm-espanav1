@@ -38,7 +38,6 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Legend,
 } from "recharts";
 import { useTranslation } from "react-i18next";
 import { usePendingCostsTotal } from "@/hooks/useOperationalCosts";
@@ -258,7 +257,7 @@ export default function FinanceDashboard() {
       };
 
       data?.forEach(o => {
-        if (counts[o.status] !== undefined) {
+        if (o.status != null && counts[o.status] !== undefined) {
           counts[o.status]++;
         }
       });
@@ -328,7 +327,7 @@ export default function FinanceDashboard() {
       };
 
       data?.forEach(c => {
-        if (stats[c.status as keyof typeof stats] !== undefined) {
+        if (c.status && stats[c.status as keyof typeof stats] !== undefined) {
           stats[c.status as keyof typeof stats] += c.amount_eur || 0;
         }
       });

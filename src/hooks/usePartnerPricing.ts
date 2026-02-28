@@ -117,7 +117,7 @@ export function useDeletePartnerPricingTier() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, partnerId }: { id: string; partnerId: string }) => {
+    mutationFn: async ({ id, partnerId: _partnerId }: { id: string; partnerId: string }) => {
       const { error } = await supabase
         .from("partner_pricing_tiers")
         .delete()

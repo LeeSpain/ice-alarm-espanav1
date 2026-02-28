@@ -71,14 +71,14 @@ export interface DeviceInfo {
 export interface SubscriptionInfo {
   id: string;
   member_id: string;
-  plan_type: string;
-  billing_frequency: string;
-  amount: number;
+  plan_type: string | null;
+  billing_frequency: string | null;
+  amount: number | null;
   status: string;
-  start_date: string;
-  renewal_date: string;
-  has_pendant: boolean;
-  payment_method: string;
+  start_date: string | null;
+  renewal_date: string | null;
+  has_pendant: boolean | null;
+  payment_method: string | null;
 }
 
 export interface AlertHistory {

@@ -13,7 +13,6 @@ import { Logo } from "@/components/ui/logo";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Users, DollarSign, Send, ArrowRight, Loader2, Mail, Home, ArrowLeft, Heart } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 // Partner type for selection

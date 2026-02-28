@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { 
-  X, 
   MapPin, 
   Phone, 
   Clock, 
@@ -27,7 +26,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -37,7 +35,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
 type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
@@ -70,10 +67,10 @@ interface AlertDetailPanelProps {
       conditions: string[];
       medications: string[];
       allergies: string[];
-      bloodType?: string;
-      doctorName?: string;
-      doctorPhone?: string;
-      hospitalPreference?: string;
+      bloodType?: string | null;
+      doctorName?: string | null;
+      doctorPhone?: string | null;
+      hospitalPreference?: string | null;
     };
     device?: {
       id: string;
@@ -93,7 +90,7 @@ interface AlertDetailPanelProps {
     }[];
     subscription?: {
       planType: string;
-      hasPendant: boolean;
+      hasPendant: boolean | null;
     };
     previousAlerts?: {
       id: string;
@@ -133,7 +130,6 @@ export function AlertDetailPanel({
   const [emergencyServicesCalled, setEmergencyServicesCalled] = useState(false);
   const [nextOfKinNotified, setNextOfKinNotified] = useState(false);
   const [showPreviousAlerts, setShowPreviousAlerts] = useState(false);
-  const [selectedSmsTemplate, setSelectedSmsTemplate] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [isSendingSms, setIsSendingSms] = useState(false);
   const [sendingContactId, setSendingContactId] = useState<string | null>(null);

@@ -28,11 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import {
   Star,
-  TrendingUp,
-  TrendingDown,
   Minus,
   ThumbsUp,
   ThumbsDown,
@@ -55,7 +52,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays } from "date-fns";
 
 interface FeedbackEntry {
   id: string;
@@ -111,7 +108,7 @@ export default function FeedbackDashboardPage() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as FeedbackEntry[];
+      return (data || []) as unknown as FeedbackEntry[];
     },
   });
 

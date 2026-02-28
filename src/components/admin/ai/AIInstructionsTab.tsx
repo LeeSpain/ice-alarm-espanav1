@@ -4,7 +4,6 @@ import { Save } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateAgentConfig } from "@/hooks/useAIAgents";
 import type { AIAgent, AIAgentConfig } from "@/hooks/useAIAgents";
@@ -14,7 +13,7 @@ interface AIInstructionsTabProps {
   config: AIAgentConfig;
 }
 
-export function AIInstructionsTab({ agent, config }: AIInstructionsTabProps) {
+export function AIInstructionsTab({ agent: _agent, config }: AIInstructionsTabProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [systemInstruction, setSystemInstruction] = useState(config.system_instruction);

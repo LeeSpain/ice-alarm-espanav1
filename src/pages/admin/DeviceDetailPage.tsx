@@ -22,7 +22,6 @@ import {
   ClipboardList,
   Volume2,
   Phone,
-  Bluetooth,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,7 +76,7 @@ interface Device {
 }
 
 export default function DeviceDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -95,11 +94,11 @@ export default function DeviceDetailPage() {
           *,
           member:member_id (id, first_name, last_name, email)
         `)
-        .eq("id", id!)
+        .eq("id", id)
         .single();
 
       if (error) throw error;
-      return data as Device;
+      return data as unknown as Device;
     },
     enabled: !!id,
   });
@@ -109,7 +108,7 @@ export default function DeviceDetailPage() {
       const { error } = await supabase
         .from("devices")
         .update(updates)
-        .eq("id", id!);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

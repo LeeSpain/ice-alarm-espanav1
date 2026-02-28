@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Lock, Activity, AlertTriangle, Zap, Settings, ExternalLink } from "lucide-react";
-import { useIsabellaSettings, useUpdateIsabellaSetting, useIsabellaStats } from "@/hooks/useIsabellaSettings";
+import { useIsabellaSettings, useUpdateIsabellaSetting, useIsabellaStats, IsabellaSetting } from "@/hooks/useIsabellaSettings";
 import { useAuth } from "@/contexts/AuthContext";
 
 const FUNCTION_KEY_MAP: Record<string, { nameKey: string; descKey: string }> = {
@@ -63,10 +63,10 @@ export default function IsabellaOperationsPage() {
   const updateMutation = useUpdateIsabellaSetting();
   const { user } = useAuth();
 
-  const settingsMap = (settings || []).reduce((acc, s) => {
+  const settingsMap = (settings || []).reduce<Record<string, IsabellaSetting>>((acc, s) => {
     acc[s.function_key] = s;
     return acc;
-  }, {} as Record<string, typeof settings extends (infer U)[] ? U : never>);
+  }, {});
 
   const handleToggle = (functionKey: string, newEnabled: boolean) => {
     const setting = settingsMap[functionKey];

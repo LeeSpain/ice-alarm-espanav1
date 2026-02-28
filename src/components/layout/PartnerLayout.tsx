@@ -8,7 +8,6 @@ import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
 import { cn } from "@/lib/utils";
-import { CURRENT_AGREEMENT_VERSION } from "@/content/partnerAgreementTerms";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function PartnerLayout() {

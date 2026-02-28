@@ -14,7 +14,6 @@ import {
   ArrowRight,
   Check,
   Eye,
-  AlertTriangle,
   CheckCircle
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";

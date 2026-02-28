@@ -88,7 +88,7 @@ export function useAddDeviceStock() {
           imei: input.imei,
           serial_number: input.serial_number || null,
           sim_iccid: input.sim_iccid || null,
-          sim_phone_number: input.sim_phone_number || null,
+          sim_phone_number: input.sim_phone_number || "",
           model: "EV-07B",
           status: "in_stock",
           member_id: null,

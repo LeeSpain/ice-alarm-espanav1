@@ -111,7 +111,7 @@ export function useAcknowledgeAlert() {
   return useMutation({
     mutationFn: async ({
       notificationId,
-      partnerId,
+      partnerId: _partnerId,
       acknowledgedBy,
     }: {
       notificationId: string;

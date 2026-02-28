@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Mail, MessageCircle, Plus, Send, Share2, QrCode, FileText, Image, File } from "lucide-react";
+import { Copy, Mail, MessageCircle, Plus, Send, QrCode, FileText, Image, File } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";

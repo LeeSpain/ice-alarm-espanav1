@@ -17,14 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, isToday, isYesterday, formatDistanceToNow } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 
 interface Interaction {
   id: string;
   interaction_type: string;
   description: string | null;
   metadata: any;
-  created_at: string;
+  created_at: string | null;
   staff: {
     first_name: string;
     last_name: string;
@@ -99,7 +99,7 @@ export function ActivityTab({ memberId }: ActivityTabProps) {
       });
 
   const groupedInteractions = filteredInteractions.reduce((groups, interaction) => {
-    const date = new Date(interaction.created_at);
+    const date = new Date(interaction.created_at ?? "");
     let dateKey: string;
     
     if (isToday(date)) {
@@ -120,8 +120,8 @@ export function ActivityTab({ memberId }: ActivityTabProps) {
   const exportCSV = () => {
     const headers = ["Date", "Time", "Type", "Description", "Staff"];
     const rows = interactions.map((i) => [
-      format(new Date(i.created_at), "yyyy-MM-dd"),
-      format(new Date(i.created_at), "HH:mm:ss"),
+      format(new Date(i.created_at ?? ""), "yyyy-MM-dd"),
+      format(new Date(i.created_at ?? ""), "HH:mm:ss"),
       interactionConfig[i.interaction_type]?.label || i.interaction_type,
       i.description || "",
       i.staff ? `${i.staff.first_name} ${i.staff.last_name}` : "",
@@ -226,7 +226,7 @@ export function ActivityTab({ memberId }: ActivityTabProps) {
                                   )}
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                  {format(new Date(interaction.created_at), "HH:mm")}
+                                  {format(new Date(interaction.created_at ?? ""), "HH:mm")}
                                 </span>
                               </div>
                             </div>

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Globe, MapPin, Users, Bell, Save, DollarSign } from "lucide-react";
+import { Building2, Globe, MapPin, Bell, Save, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
 interface PartnerOrganizationTabProps {

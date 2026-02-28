@@ -135,7 +135,7 @@ export default function TasksPage() {
       if (error) throw error;
 
       // Fetch assigned staff info
-      const assignedStaffIds = data?.filter(t => t.assigned_to).map(t => t.assigned_to) || [];
+      const assignedStaffIds = data?.filter(t => t.assigned_to).map(t => t.assigned_to).filter((x): x is string => x !== null) || [];
       const { data: staffData } = await supabase
         .from("staff")
         .select("id, first_name, last_name")
@@ -148,7 +148,7 @@ export default function TasksPage() {
         assigned_staff: task.assigned_to ? staffMap.get(task.assigned_to) || null : null,
       })) || [];
 
-      setTasks(tasksWithStaff);
+      setTasks(tasksWithStaff as Task[]);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast.error("Failed to load tasks");

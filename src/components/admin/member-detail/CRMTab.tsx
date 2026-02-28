@@ -17,8 +17,8 @@ interface CRMProfile {
   referral_source: string | null;
   industry: string | null;
   department: string | null;
-  tags: string[];
-  groups: string[];
+  tags: string[] | null;
+  groups: string[] | null;
   updated_at: string;
   assigned_to_staff_id: string | null;
 }
@@ -47,7 +47,7 @@ interface MemberBasic {
   phone: string;
   nie_dni: string | null;
   address_line_2: string | null;
-  preferred_language: string;
+  preferred_language: string | null;
 }
 
 interface CRMTabProps {

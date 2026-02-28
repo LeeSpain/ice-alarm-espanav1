@@ -19,7 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sparkles,
   Image as ImageIcon,
-  Settings,
   BarChart3,
   CheckCircle2,
   Lightbulb,

@@ -24,7 +24,7 @@ export function useOpsRealtime() {
           schema: "public",
           table: "devices",
         },
-        (payload) => {
+        () => {
           // Invalidate all device-related queries
           queryClient.invalidateQueries({ queryKey: ["device-stock"] });
           queryClient.invalidateQueries({ queryKey: ["device-stock-stats"] });
@@ -48,7 +48,7 @@ export function useOpsRealtime() {
           schema: "public",
           table: "alerts",
         },
-        (payload) => {
+        () => {
           // Invalidate all alert-related queries
           queryClient.invalidateQueries({ queryKey: ["device-offline-alerts"] });
           queryClient.invalidateQueries({ queryKey: ["ev07b-status-summary"] });
