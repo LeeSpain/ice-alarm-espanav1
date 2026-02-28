@@ -44,6 +44,8 @@ const JoinWizard = lazy(() => import("./pages/join/JoinWizard"));
 
 // Auth Pages - Lazy loaded
 const Login = lazy(() => import("./pages/auth/Login"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const StaffLogin = lazy(() => import("./pages/auth/StaffLogin"));
 const CompleteRegistration = lazy(() => import("./pages/auth/CompleteRegistration"));
 const Unauthorized = lazy(() => import("./pages/auth/Unauthorized"));
@@ -257,6 +259,8 @@ const App = () => {
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/join" element={<JoinWizard />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/staff/login" element={<StaffLogin />} />
                 <Route path="/register" element={<Navigate to="/join" replace />} />
                 <Route path="/complete-registration" element={<CompleteRegistration />} />
