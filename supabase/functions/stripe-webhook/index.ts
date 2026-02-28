@@ -130,7 +130,7 @@ serve(async (req) => {
     const { data: stripeSettings } = await supabase
       .from("system_settings")
       .select("value")
-      .eq("key", "stripe_secret_key")
+      .eq("key", "settings_stripe_secret_key")
       .single();
 
     if (!stripeSettings?.value) {
@@ -155,7 +155,7 @@ serve(async (req) => {
     const { data: webhookSettings } = await supabase
       .from("system_settings")
       .select("value")
-      .eq("key", "stripe_webhook_secret")
+      .eq("key", "settings_stripe_webhook_secret")
       .single();
 
     if (!webhookSettings?.value) {
