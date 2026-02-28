@@ -1,24 +1,62 @@
 
 
-## Problem
+## Analysis
 
-When you click the password reset link in your email, it redirects through the authentication verification endpoint (`/verify`), which **automatically signs you in** with a recovery session. Because you're now signed in, the app's routing logic sees an authenticated user and redirects you to the homepage/dashboard instead of keeping you on `/reset-password`.
+After reviewing the codebase, the page already has the 10-section structure, all 50 function keys, and both EN/ES translations. However, several specific changes are needed to match the requirements exactly.
 
-The root cause is in the **Login page and general auth flow**: once Supabase processes the recovery token (via the `/verify` redirect), the `onAuthStateChange` listener fires a `SIGNED_IN` event. The app then treats you as a logged-in user and routes you to your default dashboard — never giving the `/reset-password` page a chance to load.
+## Changes Required
 
-## Fix (2 changes)
+### 1. `src/pages/admin/IsabellaOperationsPage.tsx`
 
-### 1. Intercept recovery redirects in `App.tsx`
+**Icon updates for first 4 sections:**
+- Alert Handling: `Bell` → `AlertTriangle`
+- Inbound: `PhoneIncoming` → `Activity`
+- Outbound: `PhoneOutgoing` → `Zap`
+- Sales: `TrendingUp` → `Megaphone`
 
-Add a top-level component that checks for `type=recovery` in the URL hash on initial load. If detected, immediately navigate to `/reset-password` before any other routing takes effect. This ensures the recovery flow always lands on the correct page.
+**Section header UI upgrade:**
+- Add 9x9 rounded-lg bg-muted icon container around each section icon
+- Rename interface field `color` → `iconColor`
 
-### 2. Exempt `/reset-password` from auth redirects
+**FUNCTION_KEY_MAP fixes** (3 content keys use wrong translation keys):
+- `auto_generate_scheduled_content` descKey: `autoGenerateScheduledContentDesc` (keep as-is, matches translations)
+- `auto_publish_approved_content` descKey: `autoPublishApprovedContentDesc` (keep as-is)
+- These already match the translations, so no change needed here.
 
-In the `AuthContext` or a wrapper, when the current path is `/reset-password`, skip the automatic role-based redirect that sends authenticated users to their dashboard. The `ResetPassword` page should be allowed to render even when a session exists (which is expected — the recovery link creates one).
+**Always Human section upgrade:**
+- Add Lock icon in 9x9 bg-muted container in the header
+- Add `alwaysHumanDesc` description below the title
+- Add muted color styling
 
-### Implementation details
+**Remove unused icon imports** (`Bell`, `PhoneIncoming`, `PhoneOutgoing`, `TrendingUp`) since they're being replaced.
 
-- **New `RecoveryRedirect` component** wrapping routes in `App.tsx`: checks `window.location.hash` for `type=recovery` on mount and calls `navigate('/reset-password', { replace: true })` if found.
-- **Login page (`Login.tsx`)**: add a check — if user is already authenticated AND the URL hash contains `type=recovery`, redirect to `/reset-password` instead of the dashboard.
-- No database or edge function changes needed.
+### 2. `src/lib/isabella-function-config.ts`
+
+**Interface update:** Add `notify_roles?: ("admin" | "call_centre" | "partner")[]` and `critical?: boolean` to `IsabellaFunctionConfig`.
+
+**Update agent_keys and triggers** for all 31 new functions per the user's table (many currently use `customer_service_expert` but should use `main_brain`).
+
+**Add `getIsabellaFunctionConfig` helper** at the bottom of the file.
+
+### 3. `src/i18n/locales/en.json`
+
+**Update section descriptions** to match user's exact wording (6 sections have slightly different text).
+
+**Add `alwaysHumanDesc`** key.
+
+**Update function descriptions** for all 31 new functions to match user's detailed descriptions (current descriptions are shorter/different).
+
+### 4. `src/i18n/locales/es.json`
+
+**Mirror all EN changes** with Spanish translations:
+- Updated section descriptions
+- `alwaysHumanDesc` in Spanish
+- Updated function descriptions for all 31 new functions
+
+### Implementation Order
+
+1. Update `isabella-function-config.ts` (interface + triggers + helper)
+2. Update `IsabellaOperationsPage.tsx` (icons, UI, Always Human)
+3. Update `en.json` (section descs, function descs, alwaysHumanDesc)
+4. Update `es.json` (same changes in Spanish)
 
