@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
+import { checkoutSchema, validateRequest } from "../_shared/validation.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 interface LineItem {
   name: string;
@@ -27,8 +27,17 @@ interface CheckoutRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const { allowed } = checkRateLimit(getClientIp(req), 10, 60_000);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -59,7 +68,10 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    const body: CheckoutRequest = await req.json();
+    const rawBody = await req.json();
+    const validated = validateRequest(checkoutSchema, rawBody, corsHeaders);
+    if (validated.error) return validated.error;
+    const body = validated.data as CheckoutRequest;
     console.log("Creating checkout session for:", body.customerEmail);
 
     // Convert line items to Stripe format

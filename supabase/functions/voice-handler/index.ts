@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const VERSION = "v2.1.0";
 const FN = "voice-handler";
@@ -11,18 +12,6 @@ const FALLBACK_TWIML =
   `<Hangup/>` +
   `</Response>`;
 
-const XML_HEADERS: HeadersInit = {
-  "Content-Type": "application/xml; charset=utf-8",
-  "Cache-Control": "no-store",
-  "Access-Control-Allow-Origin": "*",
-};
-
-const JSON_HEADERS: HeadersInit = {
-  "Content-Type": "application/json",
-  "Cache-Control": "no-store",
-  "Access-Control-Allow-Origin": "*",
-};
-
 function esc(t: string): string {
   return t
     .replace(/&/g, "&amp;")
@@ -32,27 +21,37 @@ function esc(t: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function twiml(body: string): Response {
-  return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`,
-    { status: 200, headers: XML_HEADERS },
-  );
-}
-
-function safeFallback(): Response {
-  return new Response(FALLBACK_TWIML, { status: 200, headers: XML_HEADERS });
-}
-
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
+  const XML_HEADERS: HeadersInit = {
+    "Content-Type": "application/xml; charset=utf-8",
+    "Cache-Control": "no-store",
+    ...corsHeaders,
+  };
+
+  const JSON_HEADERS: HeadersInit = {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store",
+    ...corsHeaders,
+  };
+
+  function twiml(body: string): Response {
+    return new Response(
+      `<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`,
+      { status: 200, headers: XML_HEADERS },
+    );
+  }
+
+  function safeFallback(): Response {
+    return new Response(FALLBACK_TWIML, { status: 200, headers: XML_HEADERS });
+  }
+
   try {
     // ── CORS ──
     if (req.method === "OPTIONS") {
       return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers":
-            "authorization, x-client-info, apikey, content-type",
-        },
+        headers: corsHeaders,
       });
     }
 

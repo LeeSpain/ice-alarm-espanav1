@@ -1,9 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 const SITE_URL = "https://icealarm.es";
 
@@ -73,6 +71,7 @@ async function generateAIIntro(postText: string, language: string): Promise<stri
 // ─────────────────────────── MAIN HANDLER ───────────────────────────
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

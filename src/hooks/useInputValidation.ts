@@ -57,8 +57,9 @@ export const notesSchema = z
   .optional()
   .or(z.literal(""));
 
-// Sanitize text input to prevent XSS
-export function sanitizeText(input: string): string {
+// Encode HTML entities for safe display in HTML attributes.
+// For stripping HTML from user input, use sanitizeText from @/lib/sanitize instead.
+export function escapeHtmlEntities(input: string): string {
   return input
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

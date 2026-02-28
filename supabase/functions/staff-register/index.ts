@@ -1,48 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@6.9.16";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { staffRegisterSchema, validateRequest } from "../_shared/validation.ts";
 
-// Gmail SMTP helper function
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "icealarmespana@gmail.com",
-        pass: appPassword,
-      },
-    });
-
-    await transporter.sendMail({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("Gmail SMTP error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 interface StaffRegistrationRequest {
   email: string;
@@ -72,6 +34,8 @@ function getRoleDisplayName(role: string): string {
 }
 
 serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -131,25 +95,12 @@ serve(async (req: Request) => {
       );
     }
 
-    // Parse request body
-    const body: StaffRegistrationRequest = await req.json();
+    // Parse and validate request body
+    const rawBody = await req.json();
+    const validated = validateRequest(staffRegisterSchema, rawBody, corsHeaders);
+    if (validated.error) return validated.error;
+    const body = validated.data as StaffRegistrationRequest;
     const { email, first_name, last_name, role, phone, preferred_language } = body;
-
-    // Validate required fields
-    if (!email || !first_name || !last_name || !role) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Validate role
-    if (!["admin", "call_centre_supervisor", "call_centre"].includes(role)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid role" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Create admin client for user creation
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -266,7 +217,7 @@ serve(async (req: Request) => {
         ? "Tu cuenta de personal de ICE Alarm ha sido creada" 
         : "Your ICE Alarm Staff Account Has Been Created";
 
-      const emailResult = await sendViaGmailSMTP(email, emailSubject, emailContent);
+      const emailResult = await sendEmail(email, emailSubject, emailContent);
 
       if (emailResult.success) {
         console.log("Welcome email sent successfully to:", email);

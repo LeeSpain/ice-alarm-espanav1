@@ -2,16 +2,16 @@
 // Twilio should now point to /functions/v1/voice-handler directly.
 // This exists only as a safety net if the old URL is still configured.
 
+import { getCorsHeaders } from "../_shared/cors.ts";
+
 const VERSION = "wrapper-v2.0.0";
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "authorization, x-client-info, apikey, content-type",
-      },
+      headers: corsHeaders,
     });
   }
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         headers: {
           "Content-Type": "application/xml; charset=utf-8",
           "Cache-Control": "no-store",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     );
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
           response.headers.get("Content-Type") ||
           "application/xml; charset=utf-8",
         "Cache-Control": "no-store",
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
       },
     });
   } catch (e) {
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
         headers: {
           "Content-Type": "application/xml; charset=utf-8",
           "Cache-Control": "no-store",
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
         },
       },
     );

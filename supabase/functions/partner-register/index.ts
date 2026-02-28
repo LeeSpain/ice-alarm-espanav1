@@ -1,48 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@6.9.16";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { partnerRegisterSchema, validateRequest } from "../_shared/validation.ts";
 
-// Gmail SMTP helper function
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "icealarmespana@gmail.com",
-        pass: appPassword,
-      },
-    });
-
-    await transporter.sendMail({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("Gmail SMTP error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 interface PartnerRegistrationRequest {
   contact_name: string;
@@ -82,6 +44,8 @@ function generateVerificationToken(): string {
 }
 
 serve(async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -95,15 +59,10 @@ serve(async (req: Request): Promise<Response> => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const data: PartnerRegistrationRequest = await req.json();
-
-    // Validate required fields
-    if (!data.contact_name || !data.email || !data.password || !data.payout_beneficiary_name || !data.payout_iban) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    const rawBody = await req.json();
+    const validated = validateRequest(partnerRegisterSchema, rawBody, corsHeaders);
+    if (validated.error) return validated.error;
+    const data = validated.data as PartnerRegistrationRequest;
 
     // Check if email already exists in partners table
     const { data: existingPartner } = await supabase
@@ -270,7 +229,7 @@ serve(async (req: Request): Promise<Response> => {
         };
 
     try {
-      const emailResult = await sendViaGmailSMTP(
+      const emailResult = await sendEmail(
         data.email,
         emailContent.subject,
         emailContent.html

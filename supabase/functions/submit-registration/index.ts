@@ -1,48 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@6.9.16";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
+import { registrationSchema, validateRequest } from "../_shared/validation.ts";
 
-// Gmail SMTP helper function
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "icealarmespana@gmail.com",
-        pass: appPassword,
-      },
-    });
-
-    await transporter.sendMail({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("Gmail SMTP error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 // Build registration confirmation email HTML
 function buildRegistrationConfirmationEmail(
@@ -311,8 +274,17 @@ async function createCrmProfile(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const { allowed } = checkRateLimit(getClientIp(req), 5, 60_000);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -321,7 +293,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const body: RegistrationRequest = await req.json();
+    const rawBody = await req.json();
+    const validated = validateRequest(registrationSchema, rawBody, corsHeaders);
+    if (validated.error) return validated.error;
+    const body: RegistrationRequest = validated.data as RegistrationRequest;
     console.log("Processing registration for:", body.primaryMember.email);
 
     // Fetch registration fee settings from database
@@ -897,7 +872,7 @@ serve(async (req) => {
           ? "Completa tu registro en ICE Alarm"
           : "Complete Your ICE Alarm Registration";
 
-        const emailResult = await sendViaGmailSMTP(body.primaryMember.email, emailSubject, emailHtml);
+        const emailResult = await sendEmail(body.primaryMember.email, emailSubject, emailHtml);
 
         if (!emailResult.success) {
           console.error("Error sending registration confirmation email:", emailResult.error);

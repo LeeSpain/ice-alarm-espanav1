@@ -1,9 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 interface FacebookMetrics {
   reactions_total: number;
@@ -21,6 +19,7 @@ interface PostResult {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

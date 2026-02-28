@@ -2,11 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import nodemailer from "npm:nodemailer@6.9.16";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 const SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -116,6 +112,8 @@ async function sendTestViaResend(
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

@@ -1,12 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
-import nodemailer from "npm:nodemailer@6.9.16";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
+import { sendEmailSchema, validateRequest } from "../_shared/validation.ts";
 
 const SINGLETON_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -33,58 +31,6 @@ function replaceVariables(text: string, variables: Record<string, string>): stri
     result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value || "");
   }
   return result;
-}
-
-// Send email via Gmail SMTP
-async function sendViaGmailSMTP(
-  settings: any,
-  to: string,
-  subject: string,
-  html: string,
-  text: string | undefined,
-  customHeaders: Record<string, string>,
-  replyTo?: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD secret is not configured" };
-  }
-
-  if (!settings.gmail_smtp_user) {
-    return { success: false, error: "Gmail SMTP user not configured in email settings" };
-  }
-
-  try {
-    const port = 465;
-    const transporter = nodemailer.createTransport({
-      host: settings.gmail_smtp_host || "smtp.gmail.com",
-      port: port,
-      secure: true,
-      auth: {
-        user: settings.gmail_smtp_user,
-        pass: appPassword,
-      },
-    });
-
-    const fromName = settings.from_name || "ICE Alarm España";
-    const fromEmail = settings.from_email || settings.gmail_smtp_user;
-
-    await transporter.sendMail({
-      from: `${fromName} <${fromEmail}>`,
-      to: to,
-      subject: subject,
-      html: html,
-      text: text || undefined,
-      replyTo: replyTo || settings.reply_to_email,
-      headers: customHeaders,
-    });
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Gmail SMTP error:", error);
-    return { success: false, error: error.message || "SMTP connection failed" };
-  }
 }
 
 // Send email via Resend
@@ -133,8 +79,18 @@ async function sendViaResend(
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const { allowed } = checkRateLimit(getClientIp(req), 10, 60_000);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -157,8 +113,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Parse request
-    const payload: SendEmailRequest = await req.json();
+    // Parse and validate request
+    const rawPayload = await req.json();
+    const validated = validateRequest(sendEmailSchema, rawPayload, corsHeaders);
+    if (validated.error) return validated.error;
+    const payload = validated.data as SendEmailRequest;
     const { 
       to, 
       module, 
@@ -299,14 +258,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (provider === "gmail") {
       console.log("Sending via Gmail SMTP...");
-      sendResult = await sendViaGmailSMTP(
-        settings,
+      sendResult = await sendEmail(
         to,
         subject,
-        html_body,
-        text_body,
-        customHeaders,
-        reply_to
+        html_body
       );
     } else {
       console.log("Sending via Resend...");

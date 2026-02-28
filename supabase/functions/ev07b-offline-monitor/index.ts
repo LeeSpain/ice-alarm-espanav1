@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 /**
  * EV-07B Offline Monitor
@@ -22,6 +20,7 @@ const ONLINE_WINDOW_SECONDS = 120;      // 2 minutes - device considered online 
 const OFFLINE_ALERT_SECONDS = 300;       // 5 minutes - create alert only after this duration offline
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

@@ -1,48 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@6.9.16";
-
-// Gmail SMTP helper function
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
-
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "icealarmespana@gmail.com",
-        pass: appPassword,
-      },
-    });
-
-    await transporter.sendMail({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("Gmail SMTP error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
 
 // Build member welcome email HTML
 function buildMemberWelcomeEmail(
@@ -154,6 +113,8 @@ function buildMemberWelcomeEmail(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req, "stripe-signature");
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -454,7 +415,7 @@ serve(async (req) => {
                 ? "¡Bienvenido a ICE Alarm! Tu membresía está activa"
                 : "Welcome to ICE Alarm! Your membership is active";
 
-              const emailResult = await sendViaGmailSMTP(memberData.email, emailSubject, emailHtml);
+              const emailResult = await sendEmail(memberData.email, emailSubject, emailHtml);
 
               if (!emailResult.success) {
                 console.error("Error sending member welcome email:", emailResult.error);

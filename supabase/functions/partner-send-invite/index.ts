@@ -1,48 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@6.9.16";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { sendEmail } from "../_shared/email.ts";
 
-// Gmail SMTP helper function
-async function sendViaGmailSMTP(
-  to: string,
-  subject: string,
-  html: string
-): Promise<{ success: boolean; error?: string }> {
-  const appPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!appPassword) {
-    return { success: false, error: "GMAIL_APP_PASSWORD not configured" };
-  }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "icealarmespana@gmail.com",
-        pass: appPassword,
-      },
-    });
-
-    await transporter.sendMail({
-      from: "ICE Alarm España <icealarmespana@gmail.com>",
-      to: to,
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("Gmail SMTP error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
-  }
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 interface PresentationAttachment {
   name: string;
@@ -68,6 +29,7 @@ function getQrCodeUrl(data: string, size: number = 200): string {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -189,7 +151,7 @@ serve(async (req) => {
         </div>
       `;
 
-      const emailResult = await sendViaGmailSMTP(recipient, subject, emailHtml);
+      const emailResult = await sendEmail(recipient, subject, emailHtml);
 
       if (!emailResult.success) {
         throw new Error(`Email sending failed: ${emailResult.error}`);

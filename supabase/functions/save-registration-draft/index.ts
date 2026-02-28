@@ -1,11 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { saveDraftSchema, validateRequest } from "../_shared/validation.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -17,15 +17,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const body = await req.json();
-    const { sessionId, currentStep, wizardData } = body;
-
-    if (!sessionId) {
-      return new Response(
-        JSON.stringify({ error: "Session ID is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const rawBody = await req.json();
+    const validated = validateRequest(saveDraftSchema, rawBody, corsHeaders);
+    if (validated.error) return validated.error;
+    const { sessionId, currentStep, wizardData } = validated.data;
 
     // Extract key identifiable info from wizard data for quick access
     const email = wizardData?.primaryMember?.email || null;

@@ -1,73 +1,82 @@
-# Welcome to your Lovable project
+# ICE Alarm Espa&ntilde;a
 
-## Project info
+Personal emergency alarm service for expats and elderly residents in Spain. Members get a GPS pendant (EV-07B) with 24/7 SOS monitoring, fall detection, and geo-fencing.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + Vite + TypeScript |
+| Styling | Tailwind CSS + shadcn/ui |
+| Backend | Supabase (Postgres, Auth, Edge Functions, Realtime) |
+| Payments | Stripe (checkout sessions, subscriptions) |
+| SMS/Voice | Twilio (device provisioning, WhatsApp notifications) |
+| Email | Gmail SMTP via Nodemailer (shared `_shared/email.ts`) |
+| Hosting | Vercel (frontend) + Supabase Cloud via Lovable (backend) |
+| Testing | Vitest |
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/LeeLovable/ice-alarm-espanav1.git
+cd ice-alarm-espanav1
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Requires Node.js 18+. The dev server runs at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Environment Variables
 
-**Use GitHub Codespaces**
+Frontend env vars are set in Vercel. Supabase Edge Function secrets are managed through the Lovable Cloud dashboard.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Key variables:
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase connection
+- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` — Stripe payments
+- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` — SMS/voice
+- `GMAIL_APP_PASSWORD` — Email sending
+- `GOOGLE_GEMINI_API_KEY` — AI features (Isabella agent)
 
-## What technologies are used for this project?
+## Project Structure
 
-This project is built with:
+```
+src/
+  pages/           # Route pages (admin/, client/, join/, public/)
+  components/      # UI components (admin/, dashboard/, join/, ui/)
+  hooks/           # Custom React hooks
+  config/          # Pricing, feature flags, constants
+  lib/             # Supabase client, sanitization, utilities
+  types/           # TypeScript type definitions
+  test/            # Vitest test files
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+supabase/
+  functions/       # 57 Deno Edge Functions
+    _shared/       # Shared helpers (cors.ts, email.ts)
+  migrations/      # SQL migrations
+```
 
-## How can I deploy this project?
+## Edge Functions
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+All edge functions use a shared CORS helper (`_shared/cors.ts`) that whitelists production domains. Functions are deployed through the Lovable Cloud dashboard (not `supabase functions deploy`).
 
-## Can I connect a custom domain to my Lovable project?
+## Testing
 
-Yes, you can!
+```sh
+npm run test        # Run all tests
+npx vitest run      # Single run
+npx vitest          # Watch mode
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+238 tests across 10 files covering pricing calculations, input validation, utilities, and component logic.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Deployment
+
+- **Frontend**: Push to `main` triggers Vercel auto-deploy to `icealarm.es`
+- **Edge Functions**: Update through the Lovable Cloud dashboard
+- **Migrations**: Apply through the Lovable Cloud Supabase SQL editor
+
+## Key Flows
+
+1. **Member Registration**: `/join` wizard &rarr; Stripe checkout &rarr; `stripe-webhook` activates member &rarr; admin provisions pendant
+2. **Device Provisioning**: 14-step checklist (SIM, APN, SOS number configured via Twilio SMS)
+3. **SOS Monitoring**: Pendant check-ins via `ev07b-checkin` &rarr; real-time alerts &rarr; staff dashboard

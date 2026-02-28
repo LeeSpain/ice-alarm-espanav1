@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+
 
 interface AgentConfig {
   id: string;
@@ -789,9 +787,13 @@ Suggested language:
    - Do not second-guess the need for escalation`;
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID();
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -803,8 +805,16 @@ serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    
+
     const { agentKey, eventId, context, simulationMode = false }: AgentRun = await req.json();
+
+    console.log(JSON.stringify({
+      event: "ai_run_start",
+      requestId,
+      agentKey,
+      source: context?.source || "unknown",
+      timestamp: new Date().toISOString(),
+    }));
 
     if (!agentKey) {
       throw new Error("agentKey is required");
@@ -844,13 +854,26 @@ serve(async (req) => {
         ? "\n\n**IMPORTANTE**: El usuario está comunicándose en ESPAÑOL. DEBES responder completamente en español. Usa terminología española natural y un tono amigable."
         : "\n\n**IMPORTANT**: The user is communicating in ENGLISH. You MUST respond entirely in English. Use natural English terminology and a friendly tone.";
 
-// Choose the appropriate system prompt based on agent
+// Try loading system prompt from DB (admin-configurable), fall back to hardcoded
       let systemPrompt = CUSTOMER_SERVICE_CHAT_PROMPT;
-      
+
       if (agentKey === "staff_support_specialist") {
         systemPrompt = STAFF_SUPPORT_CHAT_PROMPT;
       } else if (agentKey === "member_specialist") {
         systemPrompt = MEMBER_SPECIALIST_CHAT_PROMPT;
+      }
+
+      const { data: agentConfig } = await supabase
+        .from("ai_agents")
+        .select("system_instruction, business_context")
+        .eq("agent_key", agentKey)
+        .maybeSingle();
+
+      if (agentConfig?.system_instruction?.trim()) {
+        systemPrompt = agentConfig.system_instruction;
+        if (agentConfig.business_context?.trim()) {
+          systemPrompt += "\n\n" + agentConfig.business_context;
+        }
       }
 
       // For member_specialist, fetch member data and personalize the prompt
@@ -963,6 +986,15 @@ You are speaking directly with ${member?.first_name || "this member"}. Use their
       const aiResult = await aiResponse.json();
       const responseContent = aiResult.choices?.[0]?.message?.content || "";
 
+      console.log(JSON.stringify({
+        event: "ai_run_success",
+        requestId,
+        agentKey,
+        source: "chat_widget",
+        durationMs: Date.now() - startTime,
+        tokenCount: aiResult.usage?.total_tokens || null,
+      }));
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -1074,7 +1106,7 @@ When discussing emergency contacts, use the EXACT names listed above - never inv
       const messages = [
         { 
           role: "system", 
-          content: CUSTOMER_SERVICE_CHAT_PROMPT + voiceInstructions + memberContext + languageInstruction
+          content: systemPrompt + voiceInstructions + memberContext + languageInstruction
         },
         ...conversationHistory.map((msg: { role: string; content: string }) => ({
           role: msg.role,
@@ -1476,7 +1508,12 @@ If no action is needed, respond with {"actions": [], "analysis": "your analysis 
     );
 
   } catch (error) {
-    console.error("ai-run error:", error);
+    console.error(JSON.stringify({
+      event: "ai_run_error",
+      requestId,
+      error: error instanceof Error ? error.message : "Unknown error",
+      durationMs: Date.now() - startTime,
+    }));
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
