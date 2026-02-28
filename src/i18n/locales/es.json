@@ -354,6 +354,48 @@
       }
     }
   },
+  "gdpr": {
+    "cookieBanner": {
+      "title": "Usamos cookies",
+      "description": "Utilizamos cookies y tecnologías similares para mejorar su experiencia, analizar el tráfico y personalizar el contenido. Puede elegir qué cookies permite.",
+      "customize": "Personalizar",
+      "rejectNonEssential": "Rechazar no esenciales",
+      "acceptAll": "Aceptar todas"
+    },
+    "cookieSettings": {
+      "title": "Preferencias de Cookies",
+      "description": "Gestione sus preferencias de cookies a continuación. Las cookies esenciales están siempre activas ya que son necesarias para el funcionamiento del sitio web.",
+      "essential": "Cookies Esenciales",
+      "essentialDescription": "Necesarias para el correcto funcionamiento del sitio web. No se pueden desactivar.",
+      "analytics": "Cookies Analíticas",
+      "analyticsDescription": "Nos ayudan a entender cómo los visitantes interactúan con nuestro sitio web para mejorar el rendimiento.",
+      "marketing": "Cookies de Marketing",
+      "marketingDescription": "Se utilizan para ofrecer anuncios personalizados y medir la efectividad de las campañas.",
+      "savePreferences": "Guardar preferencias"
+    },
+    "settings": {
+      "title": "Privacidad y Datos",
+      "description": "Gestione su configuración de privacidad y datos personales conforme al RGPD.",
+      "downloadTitle": "Descargar Mis Datos",
+      "downloadDescription": "Exporte una copia de todos los datos personales que tenemos sobre usted.",
+      "downloading": "Descargando...",
+      "downloadButton": "Descargar",
+      "cookieTitle": "Preferencias de Cookies",
+      "cookieDescription": "Gestione qué cookies y tecnologías de seguimiento están activas.",
+      "cookieButton": "Gestionar Cookies",
+      "deleteTitle": "Eliminar Mi Cuenta",
+      "deleteDescription": "Elimine permanentemente su cuenta y todos los datos asociados.",
+      "deleteSubmitted": "Solicitud enviada",
+      "deleteButton": "Eliminar Cuenta"
+    },
+    "deleteDialog": {
+      "title": "¿Eliminar su cuenta?",
+      "warning": "Esta acción es irreversible. Todos sus datos personales, contactos de emergencia, información médica, alertas e historial de pagos serán eliminados permanentemente.",
+      "details": "Su solicitud de eliminación será procesada en un plazo de 30 días según lo exige el artículo 17 del RGPD (Derecho de supresión).",
+      "submitting": "Enviando...",
+      "confirm": "Sí, eliminar mi cuenta"
+    }
+  },
   "common": {
     "notSpecified": "No especificado",
     "loading": "Cargando...",
