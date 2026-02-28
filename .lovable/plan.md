@@ -1,80 +1,30 @@
 
 
-# Build Stock Sync Endpoint + Admin UI Stats
+## Translation Audit: Missing `gdpr` Namespace
 
-## Overview
+### Problem
+The entire `gdpr` translation namespace is **missing from both** `en.json` and `es.json`. This means every `t("gdpr....")` call in `CookieConsentBanner.tsx` and `GdprSettingsSection.tsx` renders raw key strings instead of proper text — affecting the cookie banner, cookie settings dialog, GDPR settings panel, and account deletion dialog.
 
-Create a new backend function (`ev07b-stock-sync`) that MonitorLinq calls to automatically add/remove devices from ICE Alarm Espana's stock. Also enhance the Devices page with stock-level stats cards.
+### Keys Needed (extracted from source code)
 
-## What Gets Built
+**Cookie Banner** (`gdpr.cookieBanner.*`):
+- `title`, `description`, `customize`, `rejectNonEssential`, `acceptAll`
 
-### 1. New Edge Function: `ev07b-stock-sync`
+**Cookie Settings Dialog** (`gdpr.cookieSettings.*`):
+- `title`, `description`, `essential`, `essentialDescription`, `analytics`, `analyticsDescription`, `marketing`, `marketingDescription`, `savePreferences`
 
-**File:** `supabase/functions/ev07b-stock-sync/index.ts`
+**GDPR Settings Section** (`gdpr.settings.*`):
+- `title`, `description`, `downloadTitle`, `downloadDescription`, `downloading`, `downloadButton`, `cookieTitle`, `cookieDescription`, `cookieButton`, `deleteTitle`, `deleteDescription`, `deleteSubmitted`, `deleteButton`
 
-- Authenticates via `x-api-key` header using existing `EV07B_CHECKIN_KEY` secret (no new secrets needed)
-- Uses `npm:@supabase/supabase-js@2` import per project standards
-- Uses `Deno.serve()` API
+**Delete Dialog** (`gdpr.deleteDialog.*`):
+- `title`, `warning`, `details`, `submitting`, `confirm`
 
-**Two actions:**
+### Implementation Steps
 
-| Action | Purpose | Behavior |
-|--------|---------|----------|
-| `add` | MonitorLinq allocates devices to Spain | Creates devices with `in_stock` status. Idempotent -- if IMEI exists, returns existing device_id |
-| `remove` | Device returned to Holland | Sets status to `returned` with reason in notes. Blocked (409) if device has a `member_id` |
+1. **Add `gdpr` namespace to `en.json`** — Insert all ~30 keys above with proper English text for cookie consent, data export, cookie preferences, and account deletion flows.
 
-**Validation:**
-- 401 for invalid/missing API key
-- 400 for missing required fields (imei, sim_phone_number on add; imei on remove)
-- 404 if device not found on remove
-- 409 if trying to remove an allocated device
-- Per-device error reporting in batch add (partial success supported)
+2. **Add `gdpr` namespace to `es.json`** — Insert the same ~30 keys with proper Spanish translations, maintaining the same structure.
 
-**Implementation** follows the sample code from the command, with minor adjustments:
-- Uses `npm:` specifier instead of `esm.sh`
-- CORS headers include all required Lovable headers
-- Parameterized queries only (no string interpolation in filters)
+### Technical Detail
+Both files currently have 399 top-level namespace entries. The `gdpr` block will be added as a new top-level entry in each file (likely near other user-facing sections). No code changes are needed in the components — they already reference these keys correctly.
 
-### 2. Config Update: `supabase/config.toml`
-
-Add JWT bypass entry:
-```toml
-[functions.ev07b-stock-sync]
-verify_jwt = false
-```
-
-### 3. Admin Devices Page Stats Cards
-
-**File:** `src/pages/admin/DevicesPage.tsx`
-
-Replace the single "Total Devices" card with 4 stats cards using data from `useDeviceStockStats()` (already exists in `useDeviceStock.ts`):
-
-| Card | Icon | Color | Source |
-|------|------|-------|--------|
-| In Stock | Package | gray | `stats.in_stock` |
-| Allocated | Users | blue | `stats.allocated` |
-| Live | Wifi | green | `stats.live` |
-| Total | Smartphone | primary | `stats.total` |
-
-### 4. i18n Keys
-
-Add translation keys for the new stats card labels in both `en.json` and `es.json`:
-- `admin.devices.stats.inStock` / "En Stock"
-- `admin.devices.stats.allocated` / "Asignados"
-- `admin.devices.stats.live` / "Activos"
-
----
-
-## Files Changed
-
-| File | Action |
-|------|--------|
-| `supabase/functions/ev07b-stock-sync/index.ts` | New -- edge function |
-| `supabase/config.toml` | Add `verify_jwt = false` entry |
-| `src/pages/admin/DevicesPage.tsx` | Add 4 stats cards using existing hook |
-| `src/i18n/locales/en.json` | Add 3 stats label keys |
-| `src/i18n/locales/es.json` | Add 3 stats label keys |
-
-No database changes needed -- `returned` status already exists in the `device_status` enum, and the `devices` table already has all required columns (`notes`, `model`, `serial_number`, `sim_iccid`, `is_online`).
-
-No new secrets needed -- reuses `EV07B_CHECKIN_KEY`.
