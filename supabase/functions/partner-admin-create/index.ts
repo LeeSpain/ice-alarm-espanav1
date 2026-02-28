@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer@^6.9.0";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 // Gmail SMTP helper function
 async function sendViaGmailSMTP(
