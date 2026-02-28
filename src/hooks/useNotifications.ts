@@ -15,10 +15,32 @@ export interface NotificationRecord {
   metadata: Record<string, unknown> | null;
 }
 
+/**
+ * Maps a raw notification_log row to our NotificationRecord interface.
+ * The actual table columns are: id, admin_user_id, event_type, entity_type,
+ * entity_id, message, status, provider_message_id, error, created_at.
+ */
+function mapRow(row: Record<string, unknown>): NotificationRecord {
+  return {
+    id: row.id as string,
+    type: (row.event_type as NotificationType) ?? "system",
+    title: (row.event_type as string) ?? "Notification",
+    message: (row.message as string) ?? "",
+    read: (row.status as string) === "read",
+    created_at: row.created_at as string,
+    user_id: (row.admin_user_id as string) ?? null,
+    metadata: {
+      entity_type: row.entity_type,
+      entity_id: row.entity_id,
+      status: row.status,
+      provider_message_id: row.provider_message_id,
+      error: row.error,
+    } as Record<string, unknown>,
+  };
+}
+
 interface UseNotificationsOptions {
-  /** Limit results per page */
   pageSize?: number;
-  /** Only fetch for this user_id (pass null to skip fetching) */
   userId?: string | null;
 }
 
@@ -34,16 +56,15 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  // Fetch unread count (always current)
+  // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
     try {
-      let query = (supabase
-        .from("notification_log") as any)
+      let query = (supabase.from("notification_log") as any)
         .select("id", { count: "exact", head: true })
-        .eq("read", false);
+        .neq("status", "read");
 
       if (userId) {
-        query = query.or(`user_id.eq.${userId},user_id.is.null`);
+        query = query.or(`admin_user_id.eq.${userId},admin_user_id.is.null`);
       }
 
       const { count, error } = await query;
@@ -59,30 +80,29 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     async (pageNum: number = 0, append: boolean = false) => {
       setIsLoading(true);
       try {
-        let query = (supabase
-          .from("notification_log") as any)
+        let query = (supabase.from("notification_log") as any)
           .select("*")
           .order("created_at", { ascending: false })
           .range(pageNum * pageSize, (pageNum + 1) * pageSize - 1);
 
         if (userId) {
-          query = query.or(`user_id.eq.${userId},user_id.is.null`);
+          query = query.or(`admin_user_id.eq.${userId},admin_user_id.is.null`);
         }
 
         if (typeFilter !== "all") {
-          query = query.eq("type", typeFilter);
+          query = query.eq("event_type", typeFilter);
         }
 
         if (readFilter === "read") {
-          query = query.eq("read", true);
+          query = query.eq("status", "read");
         } else if (readFilter === "unread") {
-          query = query.eq("read", false);
+          query = query.neq("status", "read");
         }
 
         const { data, error } = await query;
         if (error) throw error;
 
-        const records = (data ?? []) as NotificationRecord[];
+        const records = ((data as Record<string, unknown>[]) ?? []).map(mapRow);
         setHasMore(records.length === pageSize);
 
         if (append) {
@@ -101,38 +121,33 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   );
 
   // Mark a single notification as read
-  const markAsRead = useCallback(
-    async (notificationId: string) => {
-      try {
-        const { error } = await (supabase
-          .from("notification_log") as any)
-          .update({ read: true })
-          .eq("id", notificationId);
+  const markAsRead = useCallback(async (notificationId: string) => {
+    try {
+      const { error } = await (supabase.from("notification_log") as any)
+        .update({ status: "read" })
+        .eq("id", notificationId);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (error) {
-        console.error("Error marking notification as read:", error);
-        toast.error("Failed to update notification");
-      }
-    },
-    []
-  );
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast.error("Failed to update notification");
+    }
+  }, []);
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
-      let query = (supabase
-        .from("notification_log") as any)
-        .update({ read: true })
-        .eq("read", false);
+      let query = (supabase.from("notification_log") as any)
+        .update({ status: "read" })
+        .neq("status", "read");
 
       if (userId) {
-        query = query.or(`user_id.eq.${userId},user_id.is.null`);
+        query = query.or(`admin_user_id.eq.${userId},admin_user_id.is.null`);
       }
 
       const { error } = await query;
@@ -160,12 +175,12 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     fetchNotifications(0, false);
   }, [typeFilter, readFilter, fetchNotifications]);
 
-  // Fetch unread count on mount and when userId changes
+  // Fetch unread count on mount
   useEffect(() => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  // Real-time subscription for new notifications
+  // Real-time subscription
   useEffect(() => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -175,22 +190,16 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       .channel("notification-log-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notification_log",
-        },
+        { event: "INSERT", schema: "public", table: "notification_log" },
         (payload) => {
-          const newNotification = payload.new as NotificationRecord;
+          const raw = payload.new as Record<string, unknown>;
+          const newNotification = mapRow(raw);
 
-          // Only include if it matches user filter
           if (userId && newNotification.user_id && newNotification.user_id !== userId) {
             return;
           }
 
-          // Only prepend if it matches current filters
-          const matchesType =
-            typeFilter === "all" || newNotification.type === typeFilter;
+          const matchesType = typeFilter === "all" || newNotification.type === typeFilter;
           const matchesRead =
             readFilter === "all" ||
             (readFilter === "unread" && !newNotification.read) ||
@@ -207,17 +216,12 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       )
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "notification_log",
-        },
+        { event: "UPDATE", schema: "public", table: "notification_log" },
         (payload) => {
-          const updated = payload.new as NotificationRecord;
+          const updated = mapRow(payload.new as Record<string, unknown>);
           setNotifications((prev) =>
             prev.map((n) => (n.id === updated.id ? updated : n))
           );
-          // Refresh count on any update
           fetchUnreadCount();
         }
       )
