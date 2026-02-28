@@ -5453,7 +5453,14 @@ export type Database = {
       plan_type: "single" | "couple"
       preferred_language: "en" | "es"
       recipient_type: "member" | "emergency_contact" | "emergency_services"
-      subscription_status: "active" | "cancelled" | "expired" | "paused"
+      subscription_status:
+        | "active"
+        | "cancelled"
+        | "expired"
+        | "paused"
+        | "pending"
+        | "past_due"
+        | "suspended"
       ticket_category:
         | "pendant_help"
         | "technical_issue"
@@ -5685,7 +5692,15 @@ export const Constants = {
       plan_type: ["single", "couple"],
       preferred_language: ["en", "es"],
       recipient_type: ["member", "emergency_contact", "emergency_services"],
-      subscription_status: ["active", "cancelled", "expired", "paused"],
+      subscription_status: [
+        "active",
+        "cancelled",
+        "expired",
+        "paused",
+        "pending",
+        "past_due",
+        "suspended",
+      ],
       ticket_category: [
         "pendant_help",
         "technical_issue",
