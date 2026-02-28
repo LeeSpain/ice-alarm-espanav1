@@ -197,6 +197,7 @@ const RecoveryRedirect = () => {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.includes('type=recovery')) {
+      sessionStorage.setItem('isRecoveryFlow', 'true');
       navigate('/reset-password', { replace: true });
     }
   }, [navigate]);
