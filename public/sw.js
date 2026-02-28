@@ -3,7 +3,7 @@
 /*  Cache-first for statics, network-first for API, offline fallback  */
 /* ================================================================== */
 
-const CACHE_VERSION = "ice-alarm-v1";
+const CACHE_VERSION = "ice-alarm-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
