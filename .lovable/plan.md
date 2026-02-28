@@ -1,45 +1,24 @@
 
 
-## Isabella Operations Upgrade — 31 New Functions
+## Problem
 
-### Step 1: Insert 31 rows into `isabella_settings`
-Run the user's SQL (7 INSERT statements with ON CONFLICT DO NOTHING) using the insert tool to add all 31 new function keys with their enabled defaults and config JSON.
+When you click the password reset link in your email, it redirects through the authentication verification endpoint (`/verify`), which **automatically signs you in** with a recovery session. Because you're now signed in, the app's routing logic sees an authenticated user and redirects you to the homepage/dashboard instead of keeping you on `/reset-password`.
 
-### Step 2: Update `src/pages/admin/IsabellaOperationsPage.tsx`
-- Add 31 new entries to `FUNCTION_KEY_MAP` (name + description keys for each new function)
-- Add 6 new sections to `SECTIONS` array:
-  - "Boss / Owner Intelligence" → 7 keys
-  - "Member Lifecycle Automation" → 6 keys
-  - "Device & Infrastructure Monitoring" → 5 keys
-  - "Partner Network Management" → 5 keys
-  - "Content & Marketing Automation" → 5 keys
-  - "Compliance & Legal" → 5 keys
-- Import icons: `Crown`, `UserCheck`, `Cpu`, `Handshake`, `Megaphone`, `ShieldCheck`, `Info`
-- Add icon + color to each section definition (existing 4 sections get icons too)
-- Render section icon + color accent on each `Card` header
-- Add "X/Y active" `Badge` per section (count enabled vs total in that section)
-- Add `Tooltip` with info icon on each function row showing its `config` JSON
-- Add hover background on function rows (`hover:bg-muted/50`)
+The root cause is in the **Login page and general auth flow**: once Supabase processes the recovery token (via the `/verify` redirect), the `onAuthStateChange` listener fires a `SIGNED_IN` event. The app then treats you as a logged-in user and routes you to your default dashboard — never giving the `/reset-password` page a chance to load.
 
-### Step 3: Update `src/lib/isabella-function-config.ts`
-Add 31 new entries to `ISABELLA_FUNCTION_CONFIG` with appropriate `agent_key`, `triggers`, `description`, and `capabilities`.
+## Fix (2 changes)
 
-### Step 4: Update `src/components/admin/dashboard/IsabellaStatusBanner.tsx`
-Add 31 new entries to `FUNCTION_LABELS` map for the new function keys.
+### 1. Intercept recovery redirects in `App.tsx`
 
-### Step 5: Update `src/i18n/locales/en.json`
-Under `isabella.sections` add 6 new section titles + descriptions. Under `isabella.functions` add 31 pairs (name + desc) for every new function.
+Add a top-level component that checks for `type=recovery` in the URL hash on initial load. If detected, immediately navigate to `/reset-password` before any other routing takes effect. This ensures the recovery flow always lands on the correct page.
 
-### Step 6: Update `src/i18n/locales/es.json`
-Mirror all new keys with Spanish translations.
+### 2. Exempt `/reset-password` from auth redirects
 
-### Files Modified
-| File | Change |
-|------|--------|
-| `isabella_settings` table | +31 rows (data insert) |
-| `IsabellaOperationsPage.tsx` | +31 function mappings, +6 sections, icons, badges, tooltips |
-| `isabella-function-config.ts` | +31 config entries |
-| `IsabellaStatusBanner.tsx` | +31 label entries |
-| `en.json` | +68 translation keys |
-| `es.json` | +68 translation keys |
+In the `AuthContext` or a wrapper, when the current path is `/reset-password`, skip the automatic role-based redirect that sends authenticated users to their dashboard. The `ResetPassword` page should be allowed to render even when a session exists (which is expected — the recovery link creates one).
+
+### Implementation details
+
+- **New `RecoveryRedirect` component** wrapping routes in `App.tsx`: checks `window.location.hash` for `type=recovery` on mount and calls `navigate('/reset-password', { replace: true })` if found.
+- **Login page (`Login.tsx`)**: add a check — if user is already authenticated AND the URL hash contains `type=recovery`, redirect to `/reset-password` instead of the dashboard.
+- No database or edge function changes needed.
 
