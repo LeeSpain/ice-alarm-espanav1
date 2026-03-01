@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { usePublicTestimonials } from "@/hooks/useTestimonials";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +34,9 @@ import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function PendantPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
+  const { data: dbTestimonials } = usePublicTestimonials("pendant");
   
   // Batch fetch all images in a single query
   const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch(["pendant_hero", "pendant_specs"]);
@@ -106,23 +108,19 @@ export default function PendantPage() {
     { labelKey: "pendant.specs.wearing", valueKey: "pendant.specs.wearingValue" }
   ];
 
-  const testimonials = [
-    {
-      quoteKey: "pendant.testimonials.quote1",
-      authorKey: "pendant.testimonials.author1",
-      locationKey: "pendant.testimonials.location1"
-    },
-    {
-      quoteKey: "pendant.testimonials.quote2",
-      authorKey: "pendant.testimonials.author2",
-      locationKey: "pendant.testimonials.location2"
-    },
-    {
-      quoteKey: "pendant.testimonials.quote3",
-      authorKey: "pendant.testimonials.author3",
-      locationKey: "pendant.testimonials.location3"
-    }
-  ];
+  const testimonials = dbTestimonials && dbTestimonials.length > 0
+    ? dbTestimonials.map((item) => ({
+        id: item.id,
+        quote: i18n.language === "es" ? item.quote_es : item.quote_en,
+        author: item.author_name,
+        location: i18n.language === "es" ? item.location_es : item.location_en,
+        rating: item.rating,
+      }))
+    : [
+        { id: "fb-1", quote: t("pendant.testimonials.quote1"), author: t("pendant.testimonials.author1"), location: t("pendant.testimonials.location1"), rating: 5 },
+        { id: "fb-2", quote: t("pendant.testimonials.quote2"), author: t("pendant.testimonials.author2"), location: t("pendant.testimonials.location2"), rating: 5 },
+        { id: "fb-3", quote: t("pendant.testimonials.quote3"), author: t("pendant.testimonials.author3"), location: t("pendant.testimonials.location3"), rating: 5 },
+      ];
 
   const faqs = [
     { questionKey: "pendant.faq.q1", answerKey: "pendant.faq.a1" },
@@ -469,28 +467,28 @@ export default function PendantPage() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial) => (
-              <Card 
-                key={testimonial.authorKey} 
+              <Card
+                key={testimonial.id}
                 className="bg-card border shadow-sm hover:shadow-md transition-shadow duration-300"
               >
                 <CardContent className="p-8">
                   <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
                   <blockquote className="text-foreground leading-relaxed mb-6">
-                    "{t(testimonial.quoteKey)}"
+                    "{testimonial.quote}"
                   </blockquote>
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-primary font-semibold text-sm">
-                        {t(testimonial.authorKey).charAt(0)}
+                        {testimonial.author.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{t(testimonial.authorKey)}</p>
-                      <p className="text-sm text-muted-foreground">{t(testimonial.locationKey)}</p>
+                      <p className="font-medium text-foreground">{testimonial.author}</p>
+                      <p className="text-sm text-muted-foreground">{testimonial.location}</p>
                     </div>
                   </div>
                 </CardContent>

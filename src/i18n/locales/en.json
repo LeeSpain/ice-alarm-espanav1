@@ -1908,7 +1908,31 @@
     "isabellaOperations": "Isabella Operations",
     "mediaManager": "Media Manager",
     "aiOutreach": "AI Outreach",
-    "videoHub": "Video Hub"
+    "videoHub": "Video Hub",
+    "testimonials": "Testimonials"
+  },
+  "adminTestimonials": {
+    "title": "Testimonials",
+    "subtitle": "Manage customer testimonials displayed on the website.",
+    "addTestimonial": "Add Testimonial",
+    "editTestimonial": "Edit Testimonial",
+    "totalTestimonials": "Total Testimonials",
+    "loading": "Loading testimonials...",
+    "noTestimonials": "No testimonials found",
+    "authorName": "Author",
+    "locationEn": "Location (EN)",
+    "locationEs": "Location (ES)",
+    "quoteEn": "Quote (English)",
+    "quoteEs": "Quote (Spanish)",
+    "page": "Page",
+    "pageLanding": "Landing Page",
+    "pagePendant": "Pendant Page",
+    "pageBoth": "Both Pages",
+    "rating": "Rating",
+    "displayOrder": "Display Order",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deleteConfirm": "Are you sure you want to delete this testimonial? This action cannot be undone."
   },
   "ai": {
     "commandCentre": "AI Command Centre",

@@ -14,6 +14,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
+import { usePublicTestimonials } from "@/hooks/useTestimonials";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +23,9 @@ import {
 } from "@/components/ui/dialog";
 
 export default function LandingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
+  const { data: dbTestimonials } = usePublicTestimonials("landing");
   
   // Batch fetch all images in a single query
   const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch(["homepage_hero", "homepage_pendant_promo"]);
@@ -468,74 +470,39 @@ export default function LandingPage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Testimonial 1 */}
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <blockquote className="text-foreground mb-6 leading-relaxed">
-                  "{t("landing.testimonials.quote1", "The peace of mind this service gives our family is priceless. When Mum had a fall last month, help arrived within minutes. I can't recommend ICE Alarm enough.")}"
-                </blockquote>
-                <div className="flex items-center gap-3 pt-4 border-t">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-semibold text-primary">MT</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Margaret Thompson</p>
-                    <p className="text-sm text-muted-foreground">British Expat, Alicante</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 2 */}
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <blockquote className="text-foreground mb-6 leading-relaxed">
-                  "{t("landing.testimonials.quote2", "Living alone at 78, I was worried about emergencies. The GPS pendant gives me independence while keeping my children reassured. The bilingual support is excellent.")}"
-                </blockquote>
-                <div className="flex items-center gap-3 pt-4 border-t">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-semibold text-primary">RH</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Robert Harrison</p>
-                    <p className="text-sm text-muted-foreground">Retired Teacher, Málaga</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 3 */}
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <blockquote className="text-foreground mb-6 leading-relaxed">
-                  "{t("landing.testimonials.quote3", "After my husband's stroke, we needed reliable emergency support. ICE Alarm responded in under 30 seconds during a real emergency. They truly saved his life.")}"
-                </blockquote>
-                <div className="flex items-center gap-3 pt-4 border-t">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-semibold text-primary">SP</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Susan & Peter Williams</p>
-                    <p className="text-sm text-muted-foreground">Couple, Costa Blanca</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {(dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : [
+              { id: "fallback-1", quote_en: t("landing.testimonials.quote1", "The peace of mind this service gives our family is priceless. When Mum had a fall last month, help arrived within minutes. I can't recommend ICE Alarm enough."), quote_es: t("landing.testimonials.quote1"), author_name: "Margaret Thompson", location_en: "British Expat, Alicante", location_es: "Expatriada Británica, Alicante", rating: 5 },
+              { id: "fallback-2", quote_en: t("landing.testimonials.quote2", "Living alone at 78, I was worried about emergencies. The GPS pendant gives me independence while keeping my children reassured. The bilingual support is excellent."), quote_es: t("landing.testimonials.quote2"), author_name: "Robert Harrison", location_en: "Retired Teacher, Málaga", location_es: "Profesor Jubilado, Málaga", rating: 5 },
+              { id: "fallback-3", quote_en: t("landing.testimonials.quote3", "After my husband's stroke, we needed reliable emergency support. ICE Alarm responded in under 30 seconds during a real emergency. They truly saved his life."), quote_es: t("landing.testimonials.quote3"), author_name: "Susan & Peter Williams", location_en: "Couple, Costa Blanca", location_es: "Pareja, Costa Blanca", rating: 5 },
+            ]).map((item) => {
+              const isEs = i18n.language === "es";
+              const quote = isEs ? item.quote_es : item.quote_en;
+              const location = isEs ? item.location_es : item.location_en;
+              const initials = item.author_name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+              return (
+                <Card key={item.id} className="border-0 shadow-lg bg-card">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-1 mb-4">
+                      {[...Array(item.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    <blockquote className="text-foreground mb-6 leading-relaxed">
+                      "{quote}"
+                    </blockquote>
+                    <div className="flex items-center gap-3 pt-4 border-t">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-lg font-semibold text-primary">{initials}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{item.author_name}</p>
+                        <p className="text-sm text-muted-foreground">{location}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Trust Badge */}

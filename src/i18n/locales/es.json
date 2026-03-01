@@ -1884,7 +1884,31 @@
     "isabellaOperations": "Operaciones Isabella",
     "mediaManager": "Gestor de Medios",
     "aiOutreach": "AI Outreach",
-    "videoHub": "Centro de Video"
+    "videoHub": "Centro de Video",
+    "testimonials": "Testimonios"
+  },
+  "adminTestimonials": {
+    "title": "Testimonios",
+    "subtitle": "Gestiona los testimonios de clientes mostrados en el sitio web.",
+    "addTestimonial": "Añadir Testimonio",
+    "editTestimonial": "Editar Testimonio",
+    "totalTestimonials": "Total de Testimonios",
+    "loading": "Cargando testimonios...",
+    "noTestimonials": "No se encontraron testimonios",
+    "authorName": "Autor",
+    "locationEn": "Ubicación (EN)",
+    "locationEs": "Ubicación (ES)",
+    "quoteEn": "Cita (Inglés)",
+    "quoteEs": "Cita (Español)",
+    "page": "Página",
+    "pageLanding": "Página Principal",
+    "pagePendant": "Página del Colgante",
+    "pageBoth": "Ambas Páginas",
+    "rating": "Valoración",
+    "displayOrder": "Orden de Visualización",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este testimonio? Esta acción no se puede deshacer."
   },
   "ai": {
     "commandCentre": "Centro de Mando IA",

@@ -93,6 +93,7 @@ const BlogManagerPage = lazy(() => import("./pages/admin/BlogManagerPage"));
 const AuditLogPage = lazy(() => import("./pages/admin/AuditLogPage"));
 const SLADashboardPage = lazy(() => import("./pages/admin/SLADashboardPage"));
 const FeedbackDashboardPage = lazy(() => import("./pages/admin/FeedbackDashboardPage"));
+const TestimonialsPage = lazy(() => import("./pages/admin/TestimonialsPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazy(() => import("./pages/partner/PartnerOnboarding"));
@@ -356,6 +357,7 @@ const App = () => {
                   <Route path="audit-log" element={<AuditLogPage />} />
                   <Route path="sla" element={<SLADashboardPage />} />
                   <Route path="feedback" element={<FeedbackDashboardPage />} />
+                  <Route path="testimonials" element={<TestimonialsPage />} />
                 </Route>
 
                 {/* Partner Public Routes */}
