@@ -1,31 +1,35 @@
 
 
-## Problem
+## Hide Phone Numbers Across All Public Pages
 
-The Stripe keys are **never found** because of a key name mismatch:
+The phone number is currently displayed as visible text in many places. The fix is to replace every visible `{companySettings.emergency_phone}` with a label like "Call Now" or "Call Us", while keeping the `tel:` link functional behind the scenes.
 
-- **Save path**: Settings page calls `save-api-keys` with `service: "settings"` and key `stripe_secret_key` → edge function stores it as `settings_stripe_secret_key`
-- **Read path**: `create-checkout` and `stripe-webhook` query for `stripe_secret_key` (no prefix) → no match → "not configured"
+### Files to Change
 
-The `system_settings` table has zero rows matching `stripe_secret_key`. If Stripe keys were ever saved through the UI, they'd be under `settings_stripe_secret_key`.
+**1. `src/pages/LandingPage.tsx`** (5 locations)
+- **Line 132** — Hero button: `{companySettings.emergency_phone}` → `{t("common.callNow")}`
+- **Line 595** — CTA section: `<strong>{companySettings.emergency_phone}</strong>` → a clickable "Call Now" link with `tel:` href
+- **Line 613** — Footer contact list: `{companySettings.emergency_phone}` → clickable "Call Now" link
+- **Line 649** — Contact dialog: remove the large phone number display `<p className="text-2xl ...">` entirely
+- Lines 660-664 stay as-is (the "Phone Call" button already has a label, just links via `tel:`)
 
-## Fix (2 edge functions)
+**2. `src/pages/PendantPage.tsx`** (4 locations)
+- **Line 244** — Hero button: replace phone number text with "Call Now"
+- **Line 542** — CTA button: same replacement
+- **Line 565** — Footer: replace with clickable "Call Now" link
 
-### 1. `supabase/functions/create-checkout/index.ts`
-Change the query from:
-```
-.eq("key", "stripe_secret_key")
-```
-to:
-```
-.eq("key", "settings_stripe_secret_key")
-```
+**3. `src/pages/ContactPage.tsx`** (2 locations)
+- **Line 183** — Contact info card: replace visible phone with "Call Now" link
+- Lines 109-111 already show "Call Now" label — no change needed
 
-### 2. `supabase/functions/stripe-webhook/index.ts`
-Same change — update both the secret key and webhook secret lookups:
-- `stripe_secret_key` → `settings_stripe_secret_key`
-- `stripe_webhook_secret` → `settings_stripe_webhook_secret`
+**4. `src/pages/client/DevicePage.tsx`** (1 location)
+- **Line 95** — Large emergency number display: replace with "Call Now" text (keep `tel:` link)
 
-### 3. Verify data exists
-After fixing the key names, you'll still need to enter your Stripe keys through the admin Settings page (API Keys section) since no Stripe keys currently exist in the database at all.
+**5. `src/pages/join/JoinWizard.tsx`** (1 location)
+- **Line 452** — Footer help text: remove `{companySettings.emergency_phone}`, keep just "Call Us" as the link text
+
+**6. `src/components/join/steps/JoinConfirmationStep.tsx`** (1 location)
+- **Line 104** — Replace `{companySettings.emergency_phone}` with "Call Us" as link text
+
+All `tel:` href links will continue to use `companySettings.emergency_phone` internally so calls still route correctly — only the visible text changes.
 
