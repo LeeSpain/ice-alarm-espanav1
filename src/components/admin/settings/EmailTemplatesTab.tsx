@@ -22,6 +22,7 @@ import {
   Save,
   Eye,
 } from "lucide-react";
+import DOMPurify from "dompurify";
 import { useEmailTemplates, type EmailTemplate, type EmailTemplateUpdate } from "@/hooks/useEmailTemplates";
 
 const MODULE_COLORS: Record<string, string> = {
@@ -264,7 +265,13 @@ export function EmailTemplatesTab() {
           <div className="border rounded-lg p-4 bg-white">
             <div
               dangerouslySetInnerHTML={{
-                __html: previewLanguage === "en" ? editState.body_html_en || "" : editState.body_html_es || "",
+                __html: DOMPurify.sanitize(
+                  previewLanguage === "en" ? editState.body_html_en || "" : editState.body_html_es || "",
+                  {
+                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'div', 'span', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'img', 'thead', 'tbody', 'hr'],
+                    ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class', 'width', 'height', 'target', 'rel'],
+                  }
+                ),
               }}
             />
           </div>
