@@ -129,14 +129,18 @@ serve(async (req) => {
             console.log(`Created offline alert for device ${device.imei} (offline ${offlineMinutes} min)`);
             alertsCreatedCount++;
 
-            // Notify partner if subscribed
+            // Notify partner and admin
             if (newAlert?.id) {
+              const baseUrl = Deno.env.get("SUPABASE_URL")!;
+              const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+              // Notify partner
               try {
-                await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/partner-alert-notify`, {
+                await fetch(`${baseUrl}/functions/v1/partner-alert-notify`, {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
+                    "Authorization": `Bearer ${serviceKey}`
                   },
                   body: JSON.stringify({
                     alert_id: newAlert.id,
@@ -145,6 +149,45 @@ serve(async (req) => {
                 });
               } catch (notifyErr) {
                 console.error("Partner notification error:", notifyErr);
+              }
+
+              // Fetch member name for admin notification
+              let memberName = "Unknown";
+              try {
+                const { data: member } = await supabase
+                  .from("members")
+                  .select("first_name, last_name")
+                  .eq("id", device.member_id)
+                  .maybeSingle();
+                if (member) {
+                  memberName = `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Unknown";
+                }
+              } catch (_) { /* non-critical */ }
+
+              // Notify admin via WhatsApp
+              try {
+                await fetch(`${baseUrl}/functions/v1/notify-admin`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${serviceKey}`
+                  },
+                  body: JSON.stringify({
+                    event_type: "ev07b.alert",
+                    entity_type: "alert",
+                    entity_id: newAlert.id,
+                    payload: {
+                      alert_id: newAlert.id,
+                      alert_type: "device_offline",
+                      member_id: device.member_id,
+                      member_name: memberName,
+                      imei: device.imei,
+                      message: `EV-07B device (IMEI: ${device.imei}) has been offline for ${offlineMinutes} minutes`,
+                    },
+                  })
+                });
+              } catch (notifyErr) {
+                console.error("Admin notification error:", notifyErr);
               }
             }
           }

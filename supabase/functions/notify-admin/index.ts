@@ -5,7 +5,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 
 
 interface NotifyPayload {
-  event_type: "sale.paid" | "partner.joined" | "hot.sales" | "test";
+  event_type: "sale.paid" | "partner.joined" | "hot.sales" | "test" | "ev07b.alert";
   entity_type?: string;
   entity_id?: string;
   payload: {
@@ -19,6 +19,15 @@ interface NotifyPayload {
     partner_id?: string;
     contact_name?: string;
     company_name?: string;
+    // EV-07B alert fields
+    alert_id?: string;
+    alert_type?: string;
+    member_id?: string;
+    member_name?: string;
+    imei?: string;
+    message?: string;
+    lat?: number;
+    lng?: number;
   };
 }
 
@@ -62,6 +71,33 @@ function formatTestMessage(): string {
   return `✅ TEST NOTIFICATION
 WhatsApp notifications are working correctly!
 🕒 ${new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" })}`;
+}
+
+const ALERT_TYPE_LABELS: Record<string, { emoji: string; label: string }> = {
+  sos_button: { emoji: "🚨", label: "SOS BUTTON PRESSED" },
+  fall_detected: { emoji: "⚠️", label: "FALL DETECTED" },
+  low_battery: { emoji: "🔋", label: "LOW BATTERY" },
+  geo_fence: { emoji: "📍", label: "GEOFENCE BREACH" },
+  device_offline: { emoji: "📡", label: "DEVICE OFFLINE" },
+};
+
+function formatEV07BAlertMessage(payload: NotifyPayload["payload"], timestamp: string): string {
+  const alertInfo = ALERT_TYPE_LABELS[payload.alert_type || ""] || { emoji: "🔔", label: "DEVICE ALERT" };
+  const memberName = payload.member_name || "Unknown member";
+  const imei = payload.imei || "Unknown";
+  const message = payload.message || "";
+  const location = (payload.lat && payload.lng)
+    ? `📍 https://www.google.com/maps?q=${payload.lat},${payload.lng}`
+    : "📍 Location unavailable";
+
+  return `${alertInfo.emoji} ${alertInfo.label}
+👤 ${memberName}
+📟 Pendant IMEI: ${imei}
+💬 ${message}
+${location}
+🕒 ${timestamp}
+➡️ Admin: /admin/alerts
+✅ Action: Check member safety immediately`;
 }
 
 serve(async (req) => {
@@ -143,6 +179,10 @@ serve(async (req) => {
         case "hot.sales":
           shouldSend = settings.whatsapp_hot_sales === true;
           message = formatHotSalesMessage(payload, timestamp);
+          break;
+        case "ev07b.alert":
+          shouldSend = settings.whatsapp_ev07b_alerts === true || settings.whatsapp_paid_sales === true;
+          message = formatEV07BAlertMessage(payload, timestamp);
           break;
         case "test":
           shouldSend = true;

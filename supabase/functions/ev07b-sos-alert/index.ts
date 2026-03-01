@@ -194,6 +194,19 @@ serve(async (req) => {
       console.error("Partner notification error:", err);
     }
 
+    // Fetch member name for admin notification
+    let memberName = "Unknown";
+    try {
+      const { data: member } = await supabase
+        .from("members")
+        .select("first_name, last_name")
+        .eq("id", device.member_id)
+        .maybeSingle();
+      if (member) {
+        memberName = `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Unknown";
+      }
+    } catch (_) { /* non-critical */ }
+
     // Notify admin via WhatsApp (non-blocking)
     try {
       await fetch(`${baseUrl}/functions/v1/notify-admin`, {
@@ -203,9 +216,19 @@ serve(async (req) => {
           Authorization: `Bearer ${serviceKey}`,
         },
         body: JSON.stringify({
-          alert_id: newAlert.id,
-          member_id: device.member_id,
-          message: `${message}${lat && lng ? ` — Location: ${lat}, ${lng}` : ""}`,
+          event_type: "ev07b.alert",
+          entity_type: "alert",
+          entity_id: newAlert.id,
+          payload: {
+            alert_id: newAlert.id,
+            alert_type: alertType,
+            member_id: device.member_id,
+            member_name: memberName,
+            imei: body.imei,
+            message,
+            lat: lat || null,
+            lng: lng || null,
+          },
         }),
       });
     } catch (err) {
