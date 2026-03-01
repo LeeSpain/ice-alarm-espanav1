@@ -31,7 +31,7 @@ export function useStaffMembers(
       }
 
       if (filters.role && filters.role !== "all") {
-        query = query.eq("role", filters.role);
+        query = query.eq("role", filters.role as "admin" | "call_centre" | "call_centre_supervisor" | "super_admin");
       }
 
       if (filters.department && filters.department !== "all") {

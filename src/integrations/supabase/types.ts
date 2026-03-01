@@ -4509,51 +4509,207 @@ export type Database = {
       }
       staff: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          avatar_url: string | null
+          city: string | null
+          contract_type: string | null
+          country: string | null
           created_at: string | null
+          date_of_birth: string | null
+          department: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           first_name: string
+          hire_date: string | null
           id: string
           is_active: boolean | null
           last_login_at: string | null
           last_name: string
+          nationality: string | null
+          nie_number: string | null
+          notes: string | null
           phone: string | null
+          position: string | null
+          postal_code: string | null
           preferred_language:
             | Database["public"]["Enums"]["preferred_language"]
             | null
+          province: string | null
           role: Database["public"]["Enums"]["app_role"]
+          social_security_number: string | null
+          status: string
+          termination_date: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          contract_type?: string | null
+          country?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
+          department?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           first_name: string
+          hire_date?: string | null
           id?: string
           is_active?: boolean | null
           last_login_at?: string | null
           last_name: string
+          nationality?: string | null
+          nie_number?: string | null
+          notes?: string | null
           phone?: string | null
+          position?: string | null
+          postal_code?: string | null
           preferred_language?:
             | Database["public"]["Enums"]["preferred_language"]
             | null
+          province?: string | null
           role: Database["public"]["Enums"]["app_role"]
+          social_security_number?: string | null
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          contract_type?: string | null
+          country?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
+          department?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           first_name?: string
+          hire_date?: string | null
           id?: string
           is_active?: boolean | null
           last_login_at?: string | null
           last_name?: string
+          nationality?: string | null
+          nie_number?: string | null
+          notes?: string | null
           phone?: string | null
+          position?: string | null
+          postal_code?: string | null
           preferred_language?:
             | Database["public"]["Enums"]["preferred_language"]
             | null
+          province?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          social_security_number?: string | null
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
+      }
+      staff_activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          performed_by: string | null
+          staff_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          staff_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_activity_log_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_activity_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          file_name: string
+          file_url: string
+          id: string
+          notes: string | null
+          staff_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          file_name: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          staff_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          staff_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_documents_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {

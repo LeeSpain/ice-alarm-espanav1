@@ -40,7 +40,6 @@ export function useUploadStaffDocument() {
       notes?: string;
     }) => {
       // Upload file to storage
-      const fileExt = file.name.split(".").pop();
       const filePath = `${staffId}/${Date.now()}_${file.name}`;
 
       const { error: uploadError } = await supabase.storage
