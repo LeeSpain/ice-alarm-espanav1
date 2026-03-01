@@ -193,7 +193,7 @@ interface QuickProvisionButtonProps {
   onStepComplete: (stepKey: string) => void;
 }
 
-function QuickProvisionButton({ deviceId, simPhoneNumber, onStepComplete }: QuickProvisionButtonProps) {
+function QuickProvisionButton({ deviceId: _deviceId, simPhoneNumber, onStepComplete }: QuickProvisionButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isProvisioning, setIsProvisioning] = useState(false);
   const [currentStep, setCurrentStep] = useState("");
