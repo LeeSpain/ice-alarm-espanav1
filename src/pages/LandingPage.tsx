@@ -8,9 +8,7 @@ import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import { Link, useSearchParams } from "react-router-dom";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
-import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,52 +59,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Logo size="sm" />
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#how-it-works" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.howItWorks")}
-            </a>
-            <Link to="/pendant" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.pendant")}
-            </Link>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.pricing")}
-            </a>
-            <Link to="/partner" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.partners")}
-            </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.contact")}
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-            <PublicMobileNav
-              navItems={[
-                { to: "#how-it-works", label: t("navigation.howItWorks"), isAnchor: true },
-                { to: "/pendant", label: t("navigation.pendant") },
-                { to: "#pricing", label: t("navigation.pricing"), isAnchor: true },
-                { to: "/partner", label: t("navigation.partners") },
-                { to: "/contact", label: t("navigation.contact") },
-              ]}
-              loginLabel={t("auth.memberLogin", { defaultValue: t("common.signIn") })}
-              ctaLabel={t("landing.startProtection", { defaultValue: t("common.getStarted") })}
-            />
-            <div className="hidden md:flex items-center gap-2">
-              <HeaderChatButton />
-              <Button variant="ghost" asChild>
-                <Link to="/login">{t("auth.memberLogin", { defaultValue: t("common.signIn") })}</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/join">{t("landing.startProtection", { defaultValue: t("common.getStarted") })}</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="pt-24 pb-12 relative overflow-hidden">
@@ -749,6 +702,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
                 <li><Link to="/terms" className="hover:text-sidebar-foreground transition-colors">{t("landing.termsOfService")}</Link></li>
                 <li><Link to="/privacy" className="hover:text-sidebar-foreground transition-colors">{t("landing.privacyPolicy")}</Link></li>
+                <li><Link to="/help" className="hover:text-sidebar-foreground transition-colors">{t("help.title", "Help Center")}</Link></li>
               </ul>
             </div>
           </div>

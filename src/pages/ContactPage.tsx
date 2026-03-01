@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { Logo } from "@/components/ui/logo";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
-import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -74,20 +72,7 @@ export default function ContactPage() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Link to="/">
-              <Logo size="sm" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <LanguageSelector />
-              <Button variant="ghost" asChild>
-                <Link to="/login">{t("common.signIn")}</Link>
-              </Button>
-            </div>
-          </div>
-        </header>
+        <PublicHeader />
 
         <div className="pt-24 pb-16 flex items-center justify-center min-h-[80vh]">
           <Card className="max-w-md w-full mx-4 text-center">
@@ -122,46 +107,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/">
-            <Logo size="sm" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/#features" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.features")}
-            </Link>
-            <Link to="/#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.pricing")}
-            </Link>
-            <Link to="/contact" className="text-sm font-medium text-primary">
-              {t("navigation.contact")}
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-            <PublicMobileNav
-              navItems={[
-                { to: "/#features", label: t("navigation.features") },
-                { to: "/#pricing", label: t("navigation.pricing") },
-                { to: "/contact", label: t("navigation.contact") },
-              ]}
-              loginLabel={t("common.signIn")}
-              ctaLabel={t("common.getStarted")}
-            />
-            <div className="hidden md:flex items-center gap-2">
-              <HeaderChatButton />
-              <Button variant="ghost" asChild>
-                <Link to="/login">{t("common.signIn")}</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/join">{t("common.getStarted")}</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="pt-24 pb-12 bg-gradient-to-b from-primary/5 to-background">

@@ -9,18 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Logo } from "@/components/ui/logo";
-import { LanguageSelector } from "@/components/LanguageSelector";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import {
   Search,
   BookOpen,
   HelpCircle,
   FileText,
   Wrench,
-  ArrowLeft,
+  
   ChevronDown,
   ChevronUp,
   Calendar,
@@ -152,32 +151,10 @@ export default function KnowledgeBasePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Logo className="h-8" />
-            </Link>
-            <Separator orientation="vertical" className="h-6" />
-            <h1 className="text-lg font-semibold">
-              {t("help.title", "Help Center")}
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSelector />
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                {t("help.backToHome", "Back to Home")}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero / Search Section */}
-      <section className="bg-primary/5 border-b">
+      <section className="bg-primary/5 border-b pt-16">
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-3xl font-bold mb-2">
             {t("help.heading", "How can we help you?")}
