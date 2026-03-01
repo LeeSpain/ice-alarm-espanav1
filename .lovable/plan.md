@@ -1,32 +1,44 @@
 
 
-## Plan: Hero Text Trim + "Why Families Choose" Visual Upgrade
+## Unified Header + Footer Links for Terms, Privacy, Knowledge Base
 
-### 1. Hero section — remove the sentence
-**Files**: `src/i18n/locales/en.json` (line 644) and `es.json` (line 644)
+### Current State
+- The landing page has a full header (logo, nav links, language selector, chat button, login, CTA) and a footer with a "Legal" section linking to Terms and Privacy.
+- Terms, Privacy, and Knowledge Base pages each have their own different, simpler headers.
+- Knowledge Base link is not in the footer.
 
-Remove "She knows your name, your location, and exactly how to get you help." from `heroDescription` in both languages. The description will end at "…responds in seconds — in English or Spanish."
+### Plan
 
-### 2. "Why Families Choose ICE Alarm" — visual upgrade
+**1. Create shared `PublicHeader` component**
+**New file**: `src/components/layout/PublicHeader.tsx`
 
-**File**: `src/pages/LandingPage.tsx` (lines 230-290)
+Extract the landing page header (lines 65-109) into a reusable component. It will contain:
+- Logo, desktop nav (How It Works, Pendant, Pricing, Partners, Contact), language selector, mobile nav, chat button, Member Login, Start Your Protection
+- Anchor links use `/#how-it-works` and `/#pricing` format so they work from any page
 
-Replace the current 4-column grid of plain Cards with a more visually engaging layout:
+**2. Replace inline headers in 5 pages**
 
-- **Layout**: Keep the 4-column grid on desktop but make each card more dynamic
-- **Card style**: Replace flat bordered cards with gradient-accented cards — each gets a subtle top-border gradient in the brand coral color, a larger icon area with a soft glowing background circle, and a hover lift effect (`hover:-translate-y-1 transition-transform`)
-- **Icon treatment**: Increase icon container to 16×16 with a double-ring effect (outer ring faded, inner solid) to give depth
-- **Typography**: Make the feature title slightly larger (`text-xl`) and add a small decorative divider line between title and description
-- **Description text**: Keep ALL existing text — no content removed, just styled with slightly more line-height for readability
-- **Subtle numbering**: Add a faded large number (01-04) in the background corner of each card for visual interest
-- **Section header**: Add a small coral pill/badge above the "Why Families Choose" heading (e.g. "Our Difference") for visual hierarchy, matching the hero badge pattern
+| Page | Current header | Change |
+|------|---------------|--------|
+| `LandingPage.tsx` | Full nav (lines 65-109) | Replace with `<PublicHeader />` |
+| `PendantPage.tsx` | Different nav links | Replace with `<PublicHeader />` |
+| `ContactPage.tsx` | Different nav links | Replace with `<PublicHeader />` |
+| `TermsPage.tsx` | Minimal (logo + sign in) | Replace with `<PublicHeader />` |
+| `PrivacyPage.tsx` | Minimal (logo + sign in) | Replace with `<PublicHeader />` |
+| `KnowledgeBasePage.tsx` | Different sticky style | Replace with `<PublicHeader />` |
 
-All existing translation keys and content remain untouched — this is purely a visual/structural upgrade to the card rendering.
+**3. Add Knowledge Base to the landing page footer**
 
-### Files to change
-| File | Change |
+In the footer's "Legal" column (line 747-753), add a Knowledge Base / Help Center link (`/help`) alongside Terms and Privacy.
+
+### Files changed
+| File | Action |
 |------|--------|
-| `src/i18n/locales/en.json` | Trim `heroDescription` |
-| `src/i18n/locales/es.json` | Trim `heroDescription` |
-| `src/pages/LandingPage.tsx` | Redesign features section cards |
+| `src/components/layout/PublicHeader.tsx` | **Create** |
+| `src/pages/LandingPage.tsx` | Replace header, add help link to footer |
+| `src/pages/PendantPage.tsx` | Replace header |
+| `src/pages/ContactPage.tsx` | Replace header |
+| `src/pages/TermsPage.tsx` | Replace header |
+| `src/pages/PrivacyPage.tsx` | Replace header |
+| `src/pages/KnowledgeBasePage.tsx` | Replace header |
 
