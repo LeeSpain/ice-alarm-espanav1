@@ -1,22 +1,32 @@
 
 
-## Fix: Input Focus Lost After Each Keystroke on /join Personal Details
+## Plan: Hero Text Trim + "Why Families Choose" Visual Upgrade
 
-### Root Cause
+### 1. Hero section — remove the sentence
+**Files**: `src/i18n/locales/en.json` (line 644) and `es.json` (line 644)
 
-`PersonForm` is defined as a **component inside** `JoinPersonalStep`'s function body (lines 44-144). Every keystroke triggers `onUpdate` → parent re-renders → `JoinPersonalStep` re-renders → a **new** `PersonForm` function reference is created → React treats it as a different component and **unmounts/remounts** the entire form, destroying input focus.
+Remove "She knows your name, your location, and exactly how to get you help." from `heroDescription` in both languages. The description will end at "…responds in seconds — in English or Spanish."
 
-Notice that `JoinAddressStep` does **not** have this bug because its `AddressForm` is defined **outside** the parent component (line 34).
+### 2. "Why Families Choose ICE Alarm" — visual upgrade
 
-### Fix
+**File**: `src/pages/LandingPage.tsx` (lines 230-290)
 
-**File: `src/components/join/steps/JoinPersonalStep.tsx`**
+Replace the current 4-column grid of plain Cards with a more visually engaging layout:
 
-Move `PersonForm` from inside `JoinPersonalStep` (line 44) to a standalone function defined **outside** and above the parent component — exactly matching the pattern in `JoinAddressStep`. It will accept the same props plus `t` (the translation function) so it can still access translations.
+- **Layout**: Keep the 4-column grid on desktop but make each card more dynamic
+- **Card style**: Replace flat bordered cards with gradient-accented cards — each gets a subtle top-border gradient in the brand coral color, a larger icon area with a soft glowing background circle, and a hover lift effect (`hover:-translate-y-1 transition-transform`)
+- **Icon treatment**: Increase icon container to 16×16 with a double-ring effect (outer ring faded, inner solid) to give depth
+- **Typography**: Make the feature title slightly larger (`text-xl`) and add a small decorative divider line between title and description
+- **Description text**: Keep ALL existing text — no content removed, just styled with slightly more line-height for readability
+- **Subtle numbering**: Add a faded large number (01-04) in the background corner of each card for visual interest
+- **Section header**: Add a small coral pill/badge above the "Why Families Choose" heading (e.g. "Our Difference") for visual hierarchy, matching the hero badge pattern
 
-This is a single-file, structural-only change. No new dependencies, no logic changes, no translation changes needed.
+All existing translation keys and content remain untouched — this is purely a visual/structural upgrade to the card rendering.
 
-### Other Steps
-
-Reviewed all other step components — `JoinAddressStep`, `JoinContactsStep`, `JoinPendantStep` — none have this issue. Only `JoinPersonalStep` needs fixing.
+### Files to change
+| File | Change |
+|------|--------|
+| `src/i18n/locales/en.json` | Trim `heroDescription` |
+| `src/i18n/locales/es.json` | Trim `heroDescription` |
+| `src/pages/LandingPage.tsx` | Redesign features section cards |
 
