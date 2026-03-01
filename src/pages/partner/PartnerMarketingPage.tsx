@@ -150,18 +150,14 @@ export default function PartnerMarketingPage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("partner-presentations")
-        .getPublicUrl(filePath);
-
+      // Store the file path (not public URL) for signed URL generation
       // Save metadata to database
       const { error: dbError } = await supabase
         .from("partner_presentations")
         .insert({
           partner_id: partner.id,
           file_name: file.name,
-          file_url: urlData.publicUrl,
+          file_url: filePath,
           file_type: file.type,
           file_size: file.size,
         });
@@ -185,13 +181,10 @@ export default function PartnerMarketingPage() {
     if (!user?.id) return;
 
     try {
-      // Extract file path from URL
-      const urlParts = fileUrl.split("/partner-presentations/");
-      if (urlParts[1]) {
-        await supabase.storage
-          .from("partner-presentations")
-          .remove([decodeURIComponent(urlParts[1])]);
-      }
+      // file_url now stores the file path directly
+      await supabase.storage
+        .from("partner-presentations")
+        .remove([fileUrl]);
 
       // Delete from database
       const { error } = await supabase
@@ -209,9 +202,34 @@ export default function PartnerMarketingPage() {
     }
   };
 
-  const copyFileLink = (url: string) => {
-    navigator.clipboard.writeText(url);
-    toast.success(t("partner.linkCopied"));
+  const getSignedUrl = async (filePath: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from("partner-presentations")
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+    if (error) {
+      console.error("Signed URL error:", error);
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  const copyFileLink = async (filePath: string) => {
+    const url = await getSignedUrl(filePath);
+    if (url) {
+      navigator.clipboard.writeText(url);
+      toast.success(t("partner.linkCopied"));
+    } else {
+      toast.error(t("common.error"));
+    }
+  };
+
+  const openFile = async (filePath: string) => {
+    const url = await getSignedUrl(filePath);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error(t("common.error"));
+    }
   };
 
   if (partnerLoading) {
@@ -360,12 +378,10 @@ export default function PartnerMarketingPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        asChild
+                        onClick={() => openFile(file.file_url)}
                         title={t("partner.openFile")}
                       >
-                        <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                        <ExternalLink className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"

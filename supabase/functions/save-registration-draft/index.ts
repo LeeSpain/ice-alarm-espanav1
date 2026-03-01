@@ -1,8 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { saveDraftSchema, validateRequest } from "../_shared/validation.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 
-
+const MAX_WIZARD_DATA_SIZE = 50_000; // ~50KB
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -12,6 +13,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limit: 20 requests per 15 minutes per IP
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(clientIp, 20, 15 * 60_000);
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -21,6 +32,15 @@ Deno.serve(async (req) => {
     const validated = validateRequest(saveDraftSchema, rawBody, corsHeaders);
     if (validated.error) return validated.error;
     const { sessionId, currentStep, wizardData } = validated.data;
+
+    // Validate payload size to prevent storage abuse
+    const wizardDataStr = JSON.stringify(wizardData);
+    if (wizardDataStr.length > MAX_WIZARD_DATA_SIZE) {
+      return new Response(
+        JSON.stringify({ error: "Draft data too large" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Extract key identifiable info from wizard data for quick access
     const email = wizardData?.primaryMember?.email || null;
