@@ -4767,45 +4767,45 @@ export type Database = {
       }
       testimonials: {
         Row: {
-          id: string
-          quote_en: string
-          quote_es: string
           author_name: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
           location_en: string
           location_es: string
-          rating: number
           page: string
-          display_order: number
-          is_active: boolean
-          created_at: string
+          quote_en: string
+          quote_es: string
+          rating: number
           updated_at: string
         }
         Insert: {
-          id?: string
-          quote_en: string
-          quote_es: string
           author_name: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
           location_en: string
           location_es: string
-          rating?: number
           page?: string
-          display_order?: number
-          is_active?: boolean
-          created_at?: string
+          quote_en: string
+          quote_es: string
+          rating?: number
           updated_at?: string
         }
         Update: {
-          id?: string
-          quote_en?: string
-          quote_es?: string
           author_name?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
           location_en?: string
           location_es?: string
-          rating?: number
           page?: string
-          display_order?: number
-          is_active?: boolean
-          created_at?: string
+          quote_en?: string
+          quote_es?: string
+          rating?: number
           updated_at?: string
         }
         Relationships: []
