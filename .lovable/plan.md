@@ -1,44 +1,23 @@
 
 
-## Unified Header + Footer Links for Terms, Privacy, Knowledge Base
+## Run Staff Schema Migration
 
-### Current State
-- The landing page has a full header (logo, nav links, language selector, chat button, login, CTA) and a footer with a "Legal" section linking to Terms and Privacy.
-- Terms, Privacy, and Knowledge Base pages each have their own different, simpler headers.
-- Knowledge Base link is not in the footer.
+### Overview
+You've provided a comprehensive SQL migration to expand the `staff` table with HR fields, create `staff_documents` and `staff_activity_log` tables, add RLS policies, and set up a private storage bucket.
 
-### Plan
+### One Concern: CHECK Constraints
+The SQL uses CHECK constraints on `status`, `document_type`, and `action` columns. Per best practices, **validation triggers** are more reliable than CHECK constraints (which must be immutable and can cause restoration failures). However, since these are simple enum-like checks (not time-based), they should work fine in practice.
 
-**1. Create shared `PublicHeader` component**
-**New file**: `src/components/layout/PublicHeader.tsx`
+### What Will Be Executed
+1. **Expand `staff` table** — add ~20 new columns (status, personal info, address, emergency contact, HR fields, avatar)
+2. **Replace `is_active`** — convert from a regular column to a generated column based on `status = 'active'`
+3. **Create `staff_documents` table** — with RLS (admin full access, staff read own)
+4. **Create `staff_activity_log` table** — with RLS (admin full access, staff read own)
+5. **Create `staff-documents` storage bucket** — private, with RLS for admin upload/delete and staff read-own
+6. **Add trigger** — `update_staff_updated_at` for automatic timestamp updates
 
-Extract the landing page header (lines 65-109) into a reusable component. It will contain:
-- Logo, desktop nav (How It Works, Pendant, Pricing, Partners, Contact), language selector, mobile nav, chat button, Member Login, Start Your Protection
-- Anchor links use `/#how-it-works` and `/#pricing` format so they work from any page
+### Important Note
+The `DROP COLUMN is_active` + re-add as generated column will fail if existing RLS policies or functions reference `is_active`. The existing `is_staff()` function uses `is_active = true` — this should still work with the generated column, but worth verifying after migration.
 
-**2. Replace inline headers in 5 pages**
-
-| Page | Current header | Change |
-|------|---------------|--------|
-| `LandingPage.tsx` | Full nav (lines 65-109) | Replace with `<PublicHeader />` |
-| `PendantPage.tsx` | Different nav links | Replace with `<PublicHeader />` |
-| `ContactPage.tsx` | Different nav links | Replace with `<PublicHeader />` |
-| `TermsPage.tsx` | Minimal (logo + sign in) | Replace with `<PublicHeader />` |
-| `PrivacyPage.tsx` | Minimal (logo + sign in) | Replace with `<PublicHeader />` |
-| `KnowledgeBasePage.tsx` | Different sticky style | Replace with `<PublicHeader />` |
-
-**3. Add Knowledge Base to the landing page footer**
-
-In the footer's "Legal" column (line 747-753), add a Knowledge Base / Help Center link (`/help`) alongside Terms and Privacy.
-
-### Files changed
-| File | Action |
-|------|--------|
-| `src/components/layout/PublicHeader.tsx` | **Create** |
-| `src/pages/LandingPage.tsx` | Replace header, add help link to footer |
-| `src/pages/PendantPage.tsx` | Replace header |
-| `src/pages/ContactPage.tsx` | Replace header |
-| `src/pages/TermsPage.tsx` | Replace header |
-| `src/pages/PrivacyPage.tsx` | Replace header |
-| `src/pages/KnowledgeBasePage.tsx` | Replace header |
+I'll run this migration now using the migration tool.
 
