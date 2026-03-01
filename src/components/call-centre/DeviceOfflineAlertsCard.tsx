@@ -167,7 +167,7 @@ export function DeviceOfflineAlertsCard() {
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>{t("callCentre.offlineAlerts.subtitle", "EV-07B devices that have gone offline")}</CardDescription>
+            <CardDescription className="truncate">{t("callCentre.offlineAlerts.subtitle", "EV-07B devices that have gone offline")}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/ev07b">

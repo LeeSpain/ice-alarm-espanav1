@@ -1382,7 +1382,11 @@
     "pendingCovers": "Solicitudes de Cobertura Pendientes",
     "noUpcomingShifts": "Sin turnos próximos",
     "noHolidayRequests": "Sin solicitudes de vacaciones",
-    "next14Days": "Próximos 14 días"
+    "next14Days": "Próximos 14 días",
+    "viewAll": "Ver todo",
+    "courtesyCalls": "Llamadas de cortesía",
+    "noCourtesyCallsDue": "No hay llamadas de cortesía pendientes",
+    "fetchError": "Error al cargar los datos del panel"
   },
   "leadsWidget": {
     "newLeads": "Nuevos leads",

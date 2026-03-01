@@ -287,7 +287,7 @@ export default function StaffDashboard() {
       .eq('sender_type', 'member')
       .eq('is_read', false)
       .order('created_at', { ascending: false })
-      .limit(3);
+      .limit(5);
 
     setRecentMessages((data as any[]) || []);
   };
@@ -311,7 +311,7 @@ export default function StaffDashboard() {
       .neq('status', 'completed')
       .lte('due_date', today.toISOString())
       .order('due_date', { ascending: true })
-      .limit(4);
+      .limit(5);
 
     setMyTasks((data as any[]) || []);
     setMyTasksCount(count || 0);
@@ -359,7 +359,7 @@ export default function StaffDashboard() {
       .eq('task_type', 'courtesy_call')
       .neq('status', 'completed')
       .order('due_date', { ascending: true })
-      .limit(10);
+      .limit(5);
 
     if (!error && data) {
       setCourtesyCalls((data as any[]) || []);
@@ -427,10 +427,10 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
+    <div className="p-4 md:p-6 space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">
             {t('staffDashboard.welcomeBack')}, {staffName || t('common.staff')}
           </h1>
@@ -442,116 +442,65 @@ export default function StaffDashboard() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="bg-gradient-to-r from-primary/5 via-background to-accent/5 p-4 rounded-lg border">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/alerts')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${stats.incoming > 0 ? 'bg-destructive/20' : 'bg-muted'}`}>
-                  <AlertTriangle className={`h-5 w-5 ${stats.incoming > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.incoming}</p>}
-                  <p className="text-xs text-muted-foreground">{t('staffDashboard.incomingAlerts')}</p>
-                </div>
+      {/* Stats Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        {[
+          { label: t('staffDashboard.incomingAlerts'), value: stats.incoming, icon: AlertTriangle, active: stats.incoming > 0, activeColor: 'text-destructive', activeBg: 'bg-destructive/10', to: '/call-centre/alerts' },
+          { label: t('staffDashboard.inProgress'), value: stats.inProgress, icon: Clock, active: stats.inProgress > 0, activeColor: 'text-orange-500', activeBg: 'bg-orange-500/10', to: '/call-centre/alerts' },
+          { label: t('staffDashboard.unreadMessages'), value: unreadMessages, icon: MessageSquare, active: unreadMessages > 0, activeColor: 'text-primary', activeBg: 'bg-primary/10', to: '/call-centre/messages' },
+          { label: t('staffDashboard.resolvedToday'), value: stats.resolvedToday, icon: CheckCircle, active: false, activeColor: 'text-emerald-600', activeBg: 'bg-emerald-500/10', to: undefined },
+          { label: t('staffDashboard.myTasksDue'), value: myTasksCount, icon: ClipboardList, active: myTasksCount > 0, activeColor: 'text-blue-500', activeBg: 'bg-blue-500/10', to: '/call-centre/tasks' },
+        ].map((stat, i) => (
+          <Card
+            key={i}
+            className={`shadow-sm transition-all ${stat.to ? 'cursor-pointer hover:shadow-md' : ''}`}
+            onClick={() => stat.to && navigate(stat.to)}
+          >
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className={`p-2 rounded-lg shrink-0 ${stat.active ? stat.activeBg : 'bg-muted'}`}>
+                <stat.icon className={`h-4 w-4 ${stat.active ? stat.activeColor : 'text-muted-foreground'}`} />
+              </div>
+              <div className="min-w-0">
+                {dashboardLoading ? (
+                  <Skeleton className="h-7 w-8 mb-0.5" />
+                ) : (
+                  <p className={`text-xl font-bold leading-none ${stat.active ? stat.activeColor : ''}`}>{stat.value}</p>
+                )}
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/alerts')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-orange-500/20">
-                  <Clock className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.inProgress}</p>}
-                  <p className="text-xs text-muted-foreground">{t('staffDashboard.inProgress')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/messages')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${unreadMessages > 0 ? 'bg-primary/20' : 'bg-muted'}`}>
-                  <MessageSquare className={`h-5 w-5 ${unreadMessages > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{unreadMessages}</p>}
-                  <p className="text-xs text-muted-foreground">{t('staffDashboard.unreadMessages')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm bg-background/80 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-status-active/20">
-                  <CheckCircle className="h-5 w-5 text-status-active" />
-                </div>
-                <div>
-                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{stats.resolvedToday}</p>}
-                  <p className="text-xs text-muted-foreground">{t('staffDashboard.resolvedToday')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow shadow-sm bg-background/80 backdrop-blur-sm" onClick={() => navigate('/call-centre/tasks')}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${myTasksCount > 0 ? 'bg-blue-500/20' : 'bg-muted'}`}>
-                  <ClipboardList className={`h-5 w-5 ${myTasksCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  {dashboardLoading ? <Skeleton className="h-8 w-8 mb-1" /> : <p className="text-2xl font-bold">{myTasksCount}</p>}
-                  <p className="text-xs text-muted-foreground">{t('staffDashboard.myTasksDue')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        ))}
       </div>
 
-      {/* EV-07B Status Row */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <EV07BLiveStatusCard />
-        <DeviceOfflineAlertsCard />
-        <DeviceIssuesQueue />
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Priority Row: Active Alerts + EV-07B Fleet */}
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Active Alerts */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        <Card className={`shadow-sm ${activeAlerts.length > 0 ? 'border-destructive/30' : ''}`}>
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.activeAlerts')}</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <CardTitle className="text-base font-semibold">{t('staffDashboard.activeAlerts')}</CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                 <Link to="/call-centre/alerts">
-                  {t('staffDashboard.viewQueue')} <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewQueue')} <ArrowRight className="h-3 w-3 ml-1" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-4 space-y-2">
             {activeAlerts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
-                <p>{t('staffDashboard.noActiveAlerts')}</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <CheckCircle className="h-6 w-6 mx-auto mb-1.5 text-emerald-500" />
+                <p className="text-sm">{t('staffDashboard.noActiveAlerts')}</p>
               </div>
             ) : (
               activeAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div key={alert.id} className="flex items-center justify-between p-2.5 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     {getAlertIcon(alert.alert_type)}
-                    <div>
-                      <p className="font-medium">
-                        {getAlertLabel(alert.alert_type)} - {alert.member?.first_name} {alert.member?.last_name}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {getAlertLabel(alert.alert_type)} — {alert.member?.first_name} {alert.member?.last_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(alert.received_at), 'HH:mm')} • {alert.status === 'incoming' ? t('common.incoming') : t('common.inProgress')}
@@ -559,7 +508,7 @@ export default function StaffDashboard() {
                     </div>
                   </div>
                   {alert.status === 'incoming' && (
-                    <Button size="sm" onClick={() => handleClaimAlert(alert.id)}>
+                    <Button size="sm" className="h-7 text-xs shrink-0 ml-2" onClick={() => handleClaimAlert(alert.id)}>
                       {t('staffDashboard.claim')}
                     </Button>
                   )}
@@ -569,115 +518,129 @@ export default function StaffDashboard() {
           </CardContent>
         </Card>
 
+        {/* EV-07B Fleet — Compact combined view */}
+        <div className="space-y-4">
+          <EV07BLiveStatusCard />
+          <div className="grid grid-cols-2 gap-4">
+            <DeviceOfflineAlertsCard />
+            <DeviceIssuesQueue />
+          </div>
+        </div>
+      </div>
+
+      {/* Action Row: Courtesy Calls + Tasks */}
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Courtesy Calls */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Phone className="h-5 w-5 text-primary" />
-                {t('staffDashboard.courtesyCalls', 'Courtesy Calls')}
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Phone className="h-4 w-4 text-primary" />
+                {t('staffDashboard.courtesyCalls')}
                 {courtesyCalls.length > 0 && (
-                  <Badge variant="secondary">{courtesyCalls.length}</Badge>
+                  <Badge variant="secondary" className="text-xs">{courtesyCalls.length}</Badge>
                 )}
               </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                 <Link to="/call-centre/tasks?filter=courtesy_call">
-                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-3 w-3 ml-1" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-4 space-y-2">
             {courtesyCalls.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
-                <p>{t('staffDashboard.noCourtesyCallsDue', 'No courtesy calls pending')}</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <CheckCircle className="h-6 w-6 mx-auto mb-1.5 text-emerald-500" />
+                <p className="text-sm">{t('staffDashboard.noCourtesyCallsDue')}</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {courtesyCalls.map((call) => (
-                  <div 
-                    key={call.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+              courtesyCalls.map((call) => (
+                <div
+                  key={call.id}
+                  className="flex items-center justify-between p-2.5 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div
+                    className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
+                    onClick={() => navigate(`/call-centre/members/${call.member_id}`)}
                   >
-                    <div 
-                      className="flex items-center gap-3 flex-1 cursor-pointer"
-                      onClick={() => navigate(`/call-centre/members/${call.member_id}`)}
-                    >
-                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Phone className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{call.member?.first_name} {call.member?.last_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {call.member?.phone} • {call.due_date ? format(new Date(call.due_date), 'MMM d') : 'No date'}
-                        </p>
-                      </div>
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Phone className="h-3.5 w-3.5 text-primary" />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${call.member?.phone}`; }}
-                        title={t('common.call', 'Call')}
-                      >
-                        <Phone className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleCompleteCourtesyCall(call.id)}
-                        disabled={isCompletingCall === call.id}
-                        title={t('common.markComplete', 'Mark Complete')}
-                        className="text-status-active hover:text-status-active"
-                      >
-                        {isCompletingCall === call.id ? (
-                          <Clock className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4" />
-                        )}
-                      </Button>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{call.member?.first_name} {call.member?.last_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {call.member?.phone} • {call.due_date ? format(new Date(call.due_date), 'MMM d') : '—'}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-0.5 shrink-0 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${call.member?.phone}`; }}
+                      title={t('common.call')}
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
+                      onClick={() => handleCompleteCourtesyCall(call.id)}
+                      disabled={isCompletingCall === call.id}
+                      title={t('common.markComplete')}
+                    >
+                      {isCompletingCall === call.id ? (
+                        <Clock className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
 
-        {/* My Tasks Due Today */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        {/* My Tasks */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.myTasksDue')}</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <CardTitle className="text-base font-semibold">{t('staffDashboard.myTasksDue')}</CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                 <Link to="/call-centre/tasks">
-                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-3 w-3 ml-1" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-4 space-y-2">
             {myTasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-status-active" />
-                <p>{t('staffDashboard.noTasksDueToday')}</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <CheckCircle className="h-6 w-6 mx-auto mb-1.5 text-emerald-500" />
+                <p className="text-sm">{t('staffDashboard.noTasksDueToday')}</p>
               </div>
             ) : (
               myTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{task.title}</p>
+                <div key={task.id} className="flex items-center justify-between p-2.5 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <ClipboardList className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{task.title}</p>
                       {task.member && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           {task.member.first_name} {task.member.last_name}
                         </p>
                       )}
                     </div>
                   </div>
-                  <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'urgent' ? 'destructive' : 'secondary'}>
+                  <Badge
+                    className="shrink-0 ml-2 text-xs"
+                    variant={task.priority === 'high' || task.priority === 'urgent' ? 'destructive' : 'secondary'}
+                  >
                     {task.priority}
                   </Badge>
                 </div>
@@ -685,109 +648,118 @@ export default function StaffDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
 
+      {/* Comms Row: Messages + Leads */}
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Recent Messages */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.recentMessages')}</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <CardTitle className="text-base font-semibold">{t('staffDashboard.recentMessages')}</CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                 <Link to="/call-centre/messages">
-                  {t('staffDashboard.viewAll')} <ArrowRight className="h-4 w-4 ml-1" />
+                  {t('staffDashboard.viewAll')} <ArrowRight className="h-3 w-3 ml-1" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="px-4 pb-4 space-y-2">
             {recentMessages.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                <p>{t('staffDashboard.noUnreadMessages')}</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <MessageSquare className="h-6 w-6 mx-auto mb-1.5" />
+                <p className="text-sm">{t('staffDashboard.noUnreadMessages')}</p>
               </div>
             ) : (
               recentMessages.map((message) => (
-                <div key={message.id} className="p-3 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                    <span className="font-medium">
+                <Link
+                  key={message.id}
+                  to="/call-centre/messages"
+                  className="block p-2.5 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-sm font-medium truncate">
                       {message.conversation?.member?.first_name} {message.conversation?.member?.last_name}
                     </span>
                     {message.conversation?.subject && (
-                      <span className="text-xs text-muted-foreground">- {message.conversation.subject}</span>
+                      <span className="text-xs text-muted-foreground truncate">— {message.conversation.subject}</span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-1">{message.content}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground line-clamp-1 pl-[22px]">{message.content}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 pl-[22px]">
                     {format(new Date(message.created_at), 'MMM d, HH:mm')}
                   </p>
-                </div>
+                </Link>
               ))
             )}
           </CardContent>
         </Card>
+
+        {/* Leads Widget */}
+        <LeadsWidget variant="staff" />
       </div>
 
       {/* Rota & Holidays Row */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4">
         <MyShiftsWidget staffId={staffId || undefined} />
         <MyHolidaysWidget staffId={staffId || undefined} />
         <PendingCoversWidget staffId={staffId || undefined} />
       </div>
 
-      {/* Bottom Row: Leads, Birthdays and Shift Notes */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Leads Widget */}
-        <LeadsWidget variant="staff" />
+      {/* Info Row: Birthdays + Shift Notes */}
+      <div className="grid md:grid-cols-3 gap-4">
         {/* Today's Birthdays */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Cake className="h-5 w-5 text-pink-500" />
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Cake className="h-4 w-4 text-pink-500" />
                 {t('staffDashboard.todaysBirthdays')}
               </CardTitle>
               {birthdays.length > 0 && (
-                <Badge className="bg-pink-500/20 text-pink-600 border-pink-500/30">
-                  {birthdays.length} {birthdays.length === 1 ? t('staffDashboard.birthday') : t('staffDashboard.birthdays')}
+                <Badge className="bg-pink-500/10 text-pink-600 border-pink-500/20 text-xs">
+                  {birthdays.length}
                 </Badge>
               )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             {birthdays.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
-                <Cake className="h-8 w-8 mx-auto mb-2" />
-                <p>{t('staffDashboard.noBirthdaysToday')}</p>
+                <Cake className="h-6 w-6 mx-auto mb-1.5 opacity-30" />
+                <p className="text-sm">{t('staffDashboard.noBirthdaysToday')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {birthdays.map((member) => {
+              <div className="space-y-2">
+                {birthdays.slice(0, 5).map((member) => {
                   const dob = new Date(member.date_of_birth);
                   const age = new Date().getFullYear() - dob.getFullYear();
                   return (
-                    <div 
-                      key={member.id} 
-                      className="flex items-center justify-between p-3 border rounded-lg bg-pink-500/5 border-pink-500/20 cursor-pointer hover:bg-pink-500/10"
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-2.5 border rounded-lg bg-pink-500/5 border-pink-500/15 cursor-pointer hover:bg-pink-500/10 transition-colors"
                       onClick={() => navigate(`/call-centre/members/${member.id}`)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-pink-500/20 flex items-center justify-center">
-                          <Cake className="h-5 w-5 text-pink-500" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-7 w-7 rounded-full bg-pink-500/15 flex items-center justify-center shrink-0">
+                          <Cake className="h-3.5 w-3.5 text-pink-500" />
                         </div>
-                        <div>
-                          <p className="font-medium">{member.first_name} {member.last_name}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{member.first_name} {member.last_name}</p>
                           <p className="text-xs text-muted-foreground">
                             {t('staffDashboard.turningXToday', { age })}
                           </p>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
+                        className="h-7 w-7 shrink-0"
                         onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}
                         title={t('staffDashboard.callToWishHappyBirthday')}
                       >
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   );
@@ -797,36 +769,36 @@ export default function StaffDashboard() {
           </CardContent>
         </Card>
 
-        {/* Shift Notes */}
-        <Card className="shadow-sm bg-background/80">
-          <CardHeader className="pb-3">
+        {/* Shift Notes — spans 2 columns */}
+        <Card className="shadow-sm md:col-span-2">
+          <CardHeader className="pb-2 pt-4 px-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('staffDashboard.todaysShiftNotes')}</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <CardTitle className="text-base font-semibold">{t('staffDashboard.todaysShiftNotes')}</CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                 <Link to="/call-centre/shift-notes">
-                  <Plus className="h-4 w-4 mr-1" /> {t('staffDashboard.addNote')}
+                  <Plus className="h-3 w-3 mr-1" /> {t('staffDashboard.addNote')}
                 </Link>
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4">
             {shiftNotes.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
-                <FileText className="h-8 w-8 mx-auto mb-2" />
-                <p>{t('staffDashboard.noShiftNotesYetToday')}</p>
+                <FileText className="h-6 w-6 mx-auto mb-1.5 opacity-30" />
+                <p className="text-sm">{t('staffDashboard.noShiftNotesYetToday')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {shiftNotes.map((note) => (
-                  <div key={note.id} className="flex gap-3 p-3 border rounded-lg">
-                    <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  <div key={note.id} className="flex gap-3 p-2.5 border rounded-lg">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap pt-0.5">
                       {format(new Date(note.created_at), 'HH:mm')}
                     </p>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">
                         {note.staff?.first_name} {note.staff?.last_name}
                       </p>
-                      <p className="text-sm text-muted-foreground">{note.note_content}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{note.note_content}</p>
                     </div>
                   </div>
                 ))}

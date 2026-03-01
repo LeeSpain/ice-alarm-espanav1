@@ -143,7 +143,7 @@ export function DeviceIssuesQueue() {
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>{t("callCentre.deviceIssues.subtitle", "Faulty or extended offline devices")}</CardDescription>
+            <CardDescription className="truncate">{t("callCentre.deviceIssues.subtitle", "Faulty or extended offline devices")}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/ev07b">

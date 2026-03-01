@@ -1390,7 +1390,11 @@
     "pendingCovers": "Pending Cover Requests",
     "noUpcomingShifts": "No upcoming shifts",
     "noHolidayRequests": "No holiday requests",
-    "next14Days": "Next 14 days"
+    "next14Days": "Next 14 days",
+    "viewAll": "View All",
+    "courtesyCalls": "Courtesy Calls",
+    "noCourtesyCallsDue": "No courtesy calls pending",
+    "fetchError": "Failed to load dashboard data"
   },
   "leadsWidget": {
     "newLeads": "New Leads",
