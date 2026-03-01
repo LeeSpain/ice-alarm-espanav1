@@ -21,9 +21,35 @@ export default function ReferralRedirect() {
 
   useEffect(() => {
     const handleRedirect = async () => {
-      if (!partnerCode || !postSlug) {
+      if (!partnerCode) {
         setError("Invalid referral link");
         setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
+        return;
+      }
+
+      // Simple referral link: /r/CODE (no post slug)
+      if (!postSlug) {
+        try {
+          const { data: partner } = await supabase
+            .from("partners")
+            .select("id, referral_code")
+            .eq("referral_code", partnerCode)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (partner) {
+            setReferralCookie(partner.id, null, partnerCode);
+            navigate("/");
+            return;
+          }
+
+          setError("Referral link not found");
+          setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
+        } catch (err) {
+          console.error("Referral redirect error:", err);
+          setError("Error processing referral");
+          setTimeout(() => navigate("/"), TIMEOUTS.REDIRECT_DELAY);
+        }
         return;
       }
 

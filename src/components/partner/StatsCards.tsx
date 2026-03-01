@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, UserCheck, Package, Clock, CheckCircle, Wallet } from "lucide-react";
 
@@ -14,41 +15,43 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ stats, isLoading }: StatsCardsProps) {
+  const { t } = useTranslation();
+
   const cards = [
     {
-      title: "Invites Sent",
+      title: t("partner.stats.invitesSent", "Invites Sent"),
       value: stats?.totalInvitesSent || 0,
       icon: Send,
       format: "number",
     },
     {
-      title: "Registrations",
+      title: t("partner.stats.registrations", "Registrations"),
       value: stats?.totalRegistrations || 0,
       icon: UserCheck,
       format: "number",
     },
     {
-      title: "Pendants Delivered",
+      title: t("partner.stats.delivered", "Pendants Delivered"),
       value: stats?.totalDelivered || 0,
       icon: Package,
       format: "number",
     },
     {
-      title: "Pending Commission",
+      title: t("partner.stats.pendingCommission", "Pending Commission"),
       value: stats?.pendingCommission || 0,
       icon: Clock,
       format: "currency",
       className: "text-yellow-600",
     },
     {
-      title: "Approved Commission",
+      title: t("partner.stats.approvedCommission", "Approved Commission"),
       value: stats?.approvedCommission || 0,
       icon: CheckCircle,
       format: "currency",
       className: "text-blue-600",
     },
     {
-      title: "Paid Commission",
+      title: t("partner.stats.paidCommission", "Paid Commission"),
       value: stats?.paidCommission || 0,
       icon: Wallet,
       format: "currency",

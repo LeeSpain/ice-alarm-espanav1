@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,7 @@ interface EV07BStats {
 export function EV07BLiveStatusCard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Subscribe to realtime device updates
   useEffect(() => {
@@ -111,7 +113,7 @@ export function EV07BLiveStatusCard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            EV-07B Live Status
+            {t("callCentre.ev07b.title", "EV-07B Live Status")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -164,12 +166,12 @@ export function EV07BLiveStatusCard() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              EV-07B Live Status
+              {t("callCentre.ev07b.title", "EV-07B Live Status")}
             </CardTitle>
-            <CardDescription>Real-time device fleet</CardDescription>
+            <CardDescription>{t("callCentre.ev07b.subtitle", "Real-time device fleet")}</CardDescription>
           </div>
           <Badge variant="outline" className="font-bold">
-            {stats?.total || 0} total
+            {stats?.total || 0} {t("callCentre.ev07b.total", "total")}
           </Badge>
         </div>
       </CardHeader>
@@ -178,7 +180,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={Package}
             value={stats?.in_stock || 0}
-            label="In Stock"
+            label={t("callCentre.ev07b.inStock", "In Stock")}
             className="bg-muted/50"
             iconClassName="text-muted-foreground"
             onClick={() => navigate("/admin/devices?status=in_stock")}
@@ -186,7 +188,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={Users}
             value={(stats?.allocated || 0) + (stats?.with_staff || 0)}
-            label="Allocated"
+            label={t("callCentre.ev07b.allocated", "Allocated")}
             className="bg-blue-500/10"
             iconClassName="text-blue-500"
             onClick={() => navigate("/admin/devices?status=allocated")}
@@ -194,7 +196,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={CheckCircle}
             value={stats?.live || 0}
-            label="Live"
+            label={t("callCentre.ev07b.live", "Live")}
             className="bg-green-500/10"
             iconClassName="text-green-500"
             onClick={() => navigate("/admin/devices?status=live")}
@@ -202,7 +204,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={Wifi}
             value={stats?.online || 0}
-            label="Online"
+            label={t("callCentre.ev07b.online", "Online")}
             className="bg-green-500/10"
             iconClassName="text-green-500"
           />
@@ -213,7 +215,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={WifiOff}
             value={stats?.offline || 0}
-            label="Offline"
+            label={t("callCentre.ev07b.offline", "Offline")}
             className={cn(
               (stats?.offline || 0) > 0 ? "bg-destructive/10" : "bg-muted/50"
             )}
@@ -225,7 +227,7 @@ export function EV07BLiveStatusCard() {
           <StatBox
             icon={AlertTriangle}
             value={stats?.open_alerts || 0}
-            label="Open Alerts"
+            label={t("callCentre.ev07b.openAlerts", "Open Alerts")}
             className={cn(
               (stats?.open_alerts || 0) > 0 ? "bg-destructive/10" : "bg-muted/50"
             )}

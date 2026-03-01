@@ -102,7 +102,7 @@ export default function CallCentreLeadsPage() {
     const { data, error } = await query.limit(100);
     if (error) {
       console.error('Error fetching leads:', error);
-      toast.error("Failed to load leads");
+      toast.error(t("leads.failedToLoad", "Failed to load leads"));
     } else {
       setLeads(data as Lead[] || []);
     }
@@ -124,9 +124,9 @@ export default function CallCentreLeadsPage() {
       .eq('id', leadId);
 
     if (error) {
-      toast.error("Failed to update lead status");
+      toast.error(t("leads.failedToUpdate", "Failed to update lead status"));
     } else {
-      toast.success(`Lead marked as ${status}`);
+      toast.success(t("leads.markedAs", "Lead marked as {{status}}", { status }));
       fetchLeads();
     }
   };
@@ -140,9 +140,9 @@ export default function CallCentreLeadsPage() {
       .eq('id', selectedLead.id);
 
     if (error) {
-      toast.error("Failed to save notes");
+      toast.error(t("leads.failedToSaveNotes", "Failed to save notes"));
     } else {
-      toast.success("Notes saved");
+      toast.success(t("leads.notesSaved", "Notes saved"));
       fetchLeads();
     }
   };
@@ -150,15 +150,15 @@ export default function CallCentreLeadsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'new':
-        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">New</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">{t("leads.status.new", "New")}</Badge>;
       case 'contacted':
-        return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">Contacted</Badge>;
+        return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">{t("leads.status.contacted", "Contacted")}</Badge>;
       case 'qualified':
-        return <Badge className="bg-purple-500/20 text-purple-700 border-purple-500/30">Qualified</Badge>;
+        return <Badge className="bg-purple-500/20 text-purple-700 border-purple-500/30">{t("leads.status.qualified", "Qualified")}</Badge>;
       case 'converted':
-        return <Badge className="bg-status-active/20 text-status-active border-status-active/30">Converted</Badge>;
+        return <Badge className="bg-status-active/20 text-status-active border-status-active/30">{t("leads.status.converted", "Converted")}</Badge>;
       case 'lost':
-        return <Badge variant="secondary">Lost</Badge>;
+        return <Badge variant="secondary">{t("leads.status.lost", "Lost")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -166,11 +166,11 @@ export default function CallCentreLeadsPage() {
 
   const getEnquiryLabel = (type: string) => {
     const labels: Record<string, string> = {
-      general: 'General Enquiry',
-      pricing: 'Pricing Info',
-      demo: 'Demo Request',
-      partnership: 'Partnership',
-      support: 'Support'
+      general: t("leads.enquiry.general", "General Enquiry"),
+      pricing: t("leads.enquiry.pricing", "Pricing Info"),
+      demo: t("leads.enquiry.demo", "Demo Request"),
+      partnership: t("leads.enquiry.partnership", "Partnership"),
+      support: t("leads.enquiry.support", "Support"),
     };
     return labels[type] || type;
   };
@@ -217,7 +217,7 @@ export default function CallCentreLeadsPage() {
               </div>
               <div>
                 <p className="text-xl font-bold">{stats.new}</p>
-                <p className="text-xs text-muted-foreground">New Leads</p>
+                <p className="text-xs text-muted-foreground">{t("leads.newLeads", "New Leads")}</p>
               </div>
             </CardContent>
           </Card>
@@ -228,7 +228,7 @@ export default function CallCentreLeadsPage() {
               </div>
               <div>
                 <p className="text-xl font-bold">{stats.contacted}</p>
-                <p className="text-xs text-muted-foreground">Contacted</p>
+                <p className="text-xs text-muted-foreground">{t("leads.status.contacted", "Contacted")}</p>
               </div>
             </CardContent>
           </Card>
@@ -239,7 +239,7 @@ export default function CallCentreLeadsPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, phone..."
+              placeholder={t("leads.searchPlaceholder", "Search by name, email, phone...")}
               className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -250,10 +250,10 @@ export default function CallCentreLeadsPage() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="contacted">Contacted</SelectItem>
-              <SelectItem value="qualified">Qualified</SelectItem>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="new">{t("leads.status.new", "New")}</SelectItem>
+              <SelectItem value="contacted">{t("leads.status.contacted", "Contacted")}</SelectItem>
+              <SelectItem value="qualified">{t("leads.status.qualified", "Qualified")}</SelectItem>
+              <SelectItem value="all">{t("common.all", "All")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -262,11 +262,11 @@ export default function CallCentreLeadsPage() {
       {/* Leads List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading leads...</div>
+          <div className="text-center py-8 text-muted-foreground">{t("leads.loading", "Loading leads...")}</div>
         ) : filteredLeads.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <UserPlus className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>No leads found</p>
+            <p>{t("leads.noLeads", "No leads found")}</p>
           </div>
         ) : (
           filteredLeads.map((lead) => (
@@ -303,7 +303,7 @@ export default function CallCentreLeadsPage() {
                       <Clock className="h-3 w-3" />
                       {format(new Date(lead.created_at), 'dd MMM yyyy HH:mm')}
                       <span className="capitalize">
-                        • {lead.preferred_language === 'es' ? '🇪🇸 Spanish' : '🇬🇧 English'}
+                        • {lead.preferred_language === 'es' ? `🇪🇸 ${t("common.spanish", "Spanish")}` : `🇬🇧 ${t("common.english", "English")}`}
                       </span>
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function CallCentreLeadsPage() {
                         size="sm"
                         onClick={() => updateLeadStatus(lead.id, 'contacted')}
                       >
-                        Mark Contacted
+                        {t("leads.markContacted", "Mark Contacted")}
                       </Button>
                     )}
                   </div>
@@ -347,9 +347,9 @@ export default function CallCentreLeadsPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Lead Details</DialogTitle>
+            <DialogTitle>{t("leads.details", "Lead Details")}</DialogTitle>
             <DialogDescription>
-              Review and follow up with this lead
+              {t("leads.detailsDesc", "Review and follow up with this lead")}
             </DialogDescription>
           </DialogHeader>
           {selectedLead && (
@@ -357,41 +357,41 @@ export default function CallCentreLeadsPage() {
               {/* Lead Info */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Name</Label>
+                  <Label className="text-xs text-muted-foreground">{t("common.name", "Name")}</Label>
                   <p className="font-medium">{selectedLead.first_name} {selectedLead.last_name}</p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Label className="text-xs text-muted-foreground">{t("common.status", "Status")}</Label>
                   <div className="mt-1">{getStatusBadge(selectedLead.status)}</div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Email</Label>
+                  <Label className="text-xs text-muted-foreground">{t("common.email", "Email")}</Label>
                   <a href={`mailto:${selectedLead.email}`} className="text-primary hover:underline flex items-center gap-1 text-sm">
                     {selectedLead.email}
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Phone</Label>
+                  <Label className="text-xs text-muted-foreground">{t("common.phone", "Phone")}</Label>
                   <a href={`tel:${selectedLead.phone}`} className="text-primary hover:underline flex items-center gap-1 text-sm">
                     {selectedLead.phone}
                     <Phone className="h-3 w-3" />
                   </a>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Enquiry Type</Label>
+                  <Label className="text-xs text-muted-foreground">{t("leads.enquiryType", "Enquiry Type")}</Label>
                   <p className="text-sm">{getEnquiryLabel(selectedLead.enquiry_type)}</p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Language</Label>
-                  <p className="text-sm">{selectedLead.preferred_language === 'es' ? '🇪🇸 Spanish' : '🇬🇧 English'}</p>
+                  <Label className="text-xs text-muted-foreground">{t("leads.language", "Language")}</Label>
+                  <p className="text-sm">{selectedLead.preferred_language === 'es' ? `🇪🇸 ${t("common.spanish", "Spanish")}` : `🇬🇧 ${t("common.english", "English")}`}</p>
                 </div>
               </div>
 
               {/* Message */}
               {selectedLead.message && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Message</Label>
+                  <Label className="text-xs text-muted-foreground">{t("leads.message", "Message")}</Label>
                   <div className="mt-1 p-3 bg-muted rounded-lg text-sm">
                     {selectedLead.message}
                   </div>
@@ -400,13 +400,13 @@ export default function CallCentreLeadsPage() {
 
               {/* Notes */}
               <div>
-                <Label className="text-xs text-muted-foreground">Notes</Label>
+                <Label className="text-xs text-muted-foreground">{t("leads.notes", "Notes")}</Label>
                 <Textarea
                   className="mt-1"
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes about this lead..."
+                  placeholder={t("leads.notesPlaceholder", "Add notes about this lead...")}
                 />
                 <Button 
                   size="sm" 
@@ -414,7 +414,7 @@ export default function CallCentreLeadsPage() {
                   className="mt-2"
                   onClick={saveNotes}
                 >
-                  Save Notes
+                  {t("leads.saveNotes", "Save Notes")}
                 </Button>
               </div>
 
@@ -427,7 +427,7 @@ export default function CallCentreLeadsPage() {
                   }}
                 >
                   <Phone className="h-4 w-4 mr-2" />
-                  Call Now
+                  {t("leads.callNow", "Call Now")}
                 </Button>
                 {selectedLead.status === 'new' && (
                   <Button 

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,7 @@ interface DeviceOfflineAlert {
 export function DeviceOfflineAlertsCard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Subscribe to realtime alert updates
   useEffect(() => {
@@ -104,12 +106,12 @@ export function DeviceOfflineAlertsCard() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Alert closed");
+      toast.success(t("callCentre.offlineAlerts.alertClosed", "Alert closed"));
       queryClient.invalidateQueries({ queryKey: ["staff-device-offline-alerts"] });
       queryClient.invalidateQueries({ queryKey: ["staff-ev07b-stats"] });
     },
     onError: (error) => {
-      toast.error("Failed to close alert");
+      toast.error(t("callCentre.offlineAlerts.failedToClose", "Failed to close alert"));
       console.error("Close alert error:", error);
     },
   });
@@ -120,7 +122,7 @@ export function DeviceOfflineAlertsCard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <WifiOff className="h-5 w-5" />
-            Device Offline Alerts
+            {t("callCentre.offlineAlerts.title", "Device Offline Alerts")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -138,11 +140,11 @@ export function DeviceOfflineAlertsCard() {
     const minutesSinceAlert = differenceInMinutes(new Date(), new Date(alert.received_at));
     
     if (minutesSinceAlert > 30) {
-      return <Badge variant="destructive">Critical</Badge>;
+      return <Badge variant="destructive">{t("callCentre.offlineAlerts.critical", "Critical")}</Badge>;
     } else if (minutesSinceAlert > 10) {
-      return <Badge className="bg-orange-500">High</Badge>;
+      return <Badge className="bg-orange-500">{t("callCentre.offlineAlerts.high", "High")}</Badge>;
     }
-    return <Badge variant="secondary">Normal</Badge>;
+    return <Badge variant="secondary">{t("callCentre.offlineAlerts.normal", "Normal")}</Badge>;
   };
 
   return (
@@ -158,18 +160,18 @@ export function DeviceOfflineAlertsCard() {
                 "h-5 w-5",
                 hasAlerts ? "text-destructive" : "text-muted-foreground"
               )} />
-              Device Offline Alerts
+              {t("callCentre.offlineAlerts.title", "Device Offline Alerts")}
               {hasAlerts && (
                 <Badge variant="destructive" className="ml-1">
                   {alertCount}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>EV-07B devices that have gone offline</CardDescription>
+            <CardDescription>{t("callCentre.offlineAlerts.subtitle", "EV-07B devices that have gone offline")}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/ev07b">
-              View All <ArrowRight className="h-4 w-4 ml-1" />
+              {t("callCentre.offlineAlerts.viewAll", "View All")} <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
@@ -178,7 +180,7 @@ export function DeviceOfflineAlertsCard() {
         {!hasAlerts ? (
           <div className="text-center py-6 text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <p>No offline alerts</p>
+            <p>{t("callCentre.offlineAlerts.noAlerts", "No offline alerts")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -209,7 +211,7 @@ export function DeviceOfflineAlertsCard() {
                             </a>
                           </div>
                         ) : (
-                          <p className="font-medium text-muted-foreground">Unassigned Device</p>
+                          <p className="font-medium text-muted-foreground">{t("callCentre.offlineAlerts.unassigned", "Unassigned Device")}</p>
                         )}
                         <p className="text-xs font-mono text-muted-foreground truncate">
                           IMEI: {device?.imei || "Unknown"}

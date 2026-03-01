@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,6 +69,7 @@ interface StaffData {
 
 export default function StaffPreferencesPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [staffData, setStaffData] = useState<StaffData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -132,7 +134,7 @@ export default function StaffPreferencesPage() {
       });
     } catch (error) {
       console.error("Error fetching staff data:", error);
-      toast.error("Failed to load profile");
+      toast.error(t("staffPreferences.failedToLoad"));
     } finally {
       setIsLoading(false);
     }
@@ -156,11 +158,11 @@ export default function StaffPreferencesPage() {
 
       if (error) throw error;
 
-      toast.success("Profile updated successfully");
+      toast.success(t("staffPreferences.profileUpdated"));
       fetchStaffData();
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast.error(t("staffPreferences.failedToUpdate"));
     } finally {
       setIsSaving(false);
     }
@@ -169,11 +171,11 @@ export default function StaffPreferencesPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "super_admin":
-        return <Badge className="bg-purple-500 text-white">Super Admin</Badge>;
+        return <Badge className="bg-purple-500 text-white">{t("staffPreferences.roles.superAdmin")}</Badge>;
       case "admin":
-        return <Badge className="bg-primary text-primary-foreground">Admin</Badge>;
+        return <Badge className="bg-primary text-primary-foreground">{t("staffPreferences.roles.admin")}</Badge>;
       case "call_centre":
-        return <Badge variant="secondary">Call Centre Operator</Badge>;
+        return <Badge variant="secondary">{t("staffPreferences.roles.callCentre")}</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -195,10 +197,10 @@ export default function StaffPreferencesPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <User className="w-6 h-6" />
-              My Profile & Preferences
+              {t("staffPreferences.title")}
             </h1>
             <p className="text-muted-foreground">
-              Manage your personal information and settings
+              {t("staffPreferences.subtitle")}
             </p>
           </div>
           {staffData && (
@@ -207,10 +209,10 @@ export default function StaffPreferencesPage() {
               {staffData.isActive ? (
                 <Badge className="bg-alert-resolved text-alert-resolved-foreground">
                   <CheckCircle className="w-3 h-3 mr-1" />
-                  Active
+                  {t("staffPreferences.active")}
                 </Badge>
               ) : (
-                <Badge variant="secondary">Inactive</Badge>
+                <Badge variant="secondary">{t("staffPreferences.inactive")}</Badge>
               )}
             </div>
           )}
@@ -224,10 +226,10 @@ export default function StaffPreferencesPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Personal Information
+                {t("staffPreferences.personalInfo")}
               </CardTitle>
               <CardDescription>
-                Update your personal details and contact information
+                {t("staffPreferences.personalInfoDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -239,7 +241,7 @@ export default function StaffPreferencesPage() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>{t("staffPreferences.firstName")}</FormLabel>
                           <FormControl>
                             <Input placeholder="John" {...field} />
                           </FormControl>
@@ -252,7 +254,7 @@ export default function StaffPreferencesPage() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>{t("staffPreferences.lastName")}</FormLabel>
                           <FormControl>
                             <Input placeholder="Doe" {...field} />
                           </FormControl>
@@ -268,7 +270,7 @@ export default function StaffPreferencesPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email Address</FormLabel>
+                          <FormLabel>{t("staffPreferences.email")}</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -284,14 +286,14 @@ export default function StaffPreferencesPage() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>{t("staffPreferences.phone")}</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input className="pl-10" placeholder="+34 600 000 000" {...field} />
                             </div>
                           </FormControl>
-                          <FormDescription>Optional - for internal contact</FormDescription>
+                          <FormDescription>{t("staffPreferences.phoneDesc")}</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -303,12 +305,12 @@ export default function StaffPreferencesPage() {
                     name="preferredLanguage"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preferred Language</FormLabel>
+                        <FormLabel>{t("staffPreferences.preferredLanguage")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="w-[200px]">
                               <Globe className="w-4 h-4 mr-2" />
-                              <SelectValue placeholder="Select language" />
+                              <SelectValue placeholder={t("staffPreferences.selectLanguage")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -317,7 +319,7 @@ export default function StaffPreferencesPage() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          The interface will be displayed in your preferred language
+                          {t("staffPreferences.languageDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -331,7 +333,7 @@ export default function StaffPreferencesPage() {
                       ) : (
                         <Save className="w-4 h-4 mr-2" />
                       )}
-                      Save Changes
+                      {t("staffPreferences.saveChanges")}
                     </Button>
                   </div>
                 </form>
@@ -344,18 +346,18 @@ export default function StaffPreferencesPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                Notification Preferences
+                {t("staffPreferences.notifications")}
               </CardTitle>
               <CardDescription>
-                Configure how you receive alerts and notifications
+                {t("staffPreferences.notificationsDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Alert Sounds</Label>
+                  <Label>{t("staffPreferences.alertSounds")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Play sound when new alerts arrive
+                    {t("staffPreferences.alertSoundsDesc")}
                   </p>
                 </div>
                 <Switch
@@ -368,9 +370,9 @@ export default function StaffPreferencesPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Desktop Notifications</Label>
+                  <Label>{t("staffPreferences.desktopNotifications")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Show browser notifications for urgent alerts
+                    {t("staffPreferences.desktopNotificationsDesc")}
                   </p>
                 </div>
                 <Switch
@@ -383,9 +385,9 @@ export default function StaffPreferencesPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Email Summary</Label>
+                  <Label>{t("staffPreferences.emailSummary")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive daily email summary of your shift activity
+                    {t("staffPreferences.emailSummaryDesc")}
                   </p>
                 </div>
                 <Switch
@@ -403,36 +405,36 @@ export default function StaffPreferencesPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                Account Information
+                {t("staffPreferences.accountInfo")}
               </CardTitle>
               <CardDescription>
-                Your account details and security information
+                {t("staffPreferences.accountInfoDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Staff ID</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.staffId")}</Label>
                   <p className="font-mono text-sm">{staffData?.id.slice(0, 8)}...</p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Role</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.role")}</Label>
                   <div>{staffData && getRoleBadge(staffData.role)}</div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Account Created</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.accountCreated")}</Label>
                   <p className="text-sm flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     {staffData?.createdAt ? format(staffData.createdAt, "dd MMMM yyyy") : "-"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Last Login</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.lastLogin")}</Label>
                   <p className="text-sm flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     {staffData?.lastLoginAt
                       ? format(staffData.lastLoginAt, "dd MMM yyyy, HH:mm")
-                      : "Never"}
+                      : t("staffPreferences.never")}
                   </p>
                 </div>
               </div>
@@ -441,17 +443,17 @@ export default function StaffPreferencesPage() {
 
               <div className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground">Login Email</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.loginEmail")}</Label>
                   <p className="text-sm">{user?.email}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Contact an administrator to change your login email
+                    {t("staffPreferences.loginEmailDesc")}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Password</Label>
+                  <Label className="text-muted-foreground">{t("staffPreferences.password")}</Label>
                   <p className="text-sm">••••••••••••</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Use the password reset option on the login page to change your password
+                    {t("staffPreferences.passwordDesc")}
                   </p>
                 </div>
               </div>

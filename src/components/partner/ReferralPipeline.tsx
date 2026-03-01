@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,10 +41,11 @@ const commissionColors: Record<CommissionStatus, string> = {
 };
 
 export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
+  const { t } = useTranslation();
+
   const { data: pipeline, isLoading } = useQuery({
     queryKey: ["partner-pipeline", partnerId],
     queryFn: async () => {
-      // Get invites
       const { data: invites, error: invitesError } = await supabase
         .from("partner_invites")
         .select("id, invitee_name, status, created_at, sent_at, converted_member_id")
@@ -53,7 +55,6 @@ export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
 
       if (invitesError) throw invitesError;
 
-      // Get commissions for converted members
       const memberIds = invites
         ?.filter((i) => i.converted_member_id)
         .map((i) => i.converted_member_id)
@@ -98,8 +99,8 @@ export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Referral Pipeline</CardTitle>
-        <CardDescription>Recent invites and their progress</CardDescription>
+        <CardTitle>{t("partner.pipeline.title", "Referral Pipeline")}</CardTitle>
+        <CardDescription>{t("partner.pipeline.subtitle", "Recent invites and their progress")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -110,16 +111,16 @@ export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
           </div>
         ) : pipeline?.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No invites yet. Start inviting people to earn commissions!</p>
+            <p>{t("partner.pipeline.empty", "No invites yet. Start inviting people to earn commissions!")}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Sent</TableHead>
-                <TableHead>Commission</TableHead>
+                <TableHead>{t("common.name", "Name")}</TableHead>
+                <TableHead>{t("partner.pipeline.stage", "Stage")}</TableHead>
+                <TableHead>{t("partner.pipeline.sent", "Sent")}</TableHead>
+                <TableHead>{t("partner.pipeline.commission", "Commission")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,7 +144,7 @@ export function ReferralPipeline({ partnerId }: ReferralPipelineProps) {
                           {item.commissionStatus.replace("_", " ")}
                         </Badge>
                         <span className="text-sm">
-                          €{item.commissionAmount?.toFixed(2)}
+                          &euro;{item.commissionAmount?.toFixed(2)}
                         </span>
                       </div>
                     ) : (

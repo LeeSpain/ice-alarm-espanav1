@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { format, subDays } from "date-fns";
 import {
   Clock,
@@ -61,6 +62,7 @@ interface StaffStats {
 
 export default function ShiftHistoryPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [staffId, setStaffId] = useState<string | null>(null);
   const [staffInfo, setStaffInfo] = useState<{ firstName: string; lastName: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,7 +128,7 @@ export default function ShiftHistoryPage() {
       ]);
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast({ title: "Error", description: "Failed to load shift history", variant: "destructive" });
+      toast({ title: t("common.error", "Error"), description: t("shiftHistory.failedToLoad", "Failed to load shift history"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -258,12 +260,12 @@ export default function ShiftHistoryPage() {
 
   const getAlertTypeBadge = (type: string) => {
     const labels: Record<string, string> = {
-      sos_button: "SOS",
-      fall_detected: "Fall",
-      low_battery: "Battery",
-      geo_fence: "Geo-fence",
-      check_in: "Check-in",
-      manual: "Manual",
+      sos_button: t("callCentre.alertTypes.sos", "SOS"),
+      fall_detected: t("callCentre.alertTypes.fall", "Fall"),
+      low_battery: t("callCentre.alertTypes.lowBattery", "Battery"),
+      geo_fence: t("callCentre.alertTypes.geoFence", "Geo-fence"),
+      check_in: t("callCentre.alertTypes.checkIn", "Check-in"),
+      manual: t("callCentre.alertTypes.manual", "Manual"),
     };
     return labels[type] || type;
   };
@@ -276,10 +278,10 @@ export default function ShiftHistoryPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Clock className="w-6 h-6" />
-              My Shift History
+              {t("shiftHistory.title", "My Shift History")}
             </h1>
             <p className="text-muted-foreground">
-              {staffInfo ? `${staffInfo.firstName} ${staffInfo.lastName}` : "Loading..."} • Activity log and performance
+              {staffInfo ? `${staffInfo.firstName} ${staffInfo.lastName}` : t("shiftHistory.loading", "Loading history...")} • {t("shiftHistory.subtitle", "Activity log and performance")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -289,9 +291,9 @@ export default function ShiftHistoryPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7days">Last 7 Days</SelectItem>
-                <SelectItem value="30days">Last 30 Days</SelectItem>
-                <SelectItem value="90days">Last 90 Days</SelectItem>
+                <SelectItem value="7days">{t("shiftHistory.last7Days", "Last 7 Days")}</SelectItem>
+                <SelectItem value="30days">{t("shiftHistory.last30Days", "Last 30 Days")}</SelectItem>
+                <SelectItem value="90days">{t("shiftHistory.last90Days", "Last 90 Days")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -303,7 +305,7 @@ export default function ShiftHistoryPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Shift Notes</p>
+                  <p className="text-sm text-muted-foreground">{t("shiftHistory.shiftNotes", "Shift Notes")}</p>
                   <p className="text-2xl font-bold">{stats.totalShiftNotes}</p>
                 </div>
                 <FileText className="w-8 h-8 text-muted-foreground/30" />
@@ -314,7 +316,7 @@ export default function ShiftHistoryPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Alerts Handled</p>
+                  <p className="text-sm text-muted-foreground">{t("shiftHistory.alertsHandled", "Alerts Handled")}</p>
                   <p className="text-2xl font-bold">{stats.alertsHandled}</p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-muted-foreground/30" />
@@ -325,7 +327,7 @@ export default function ShiftHistoryPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Conversations</p>
+                  <p className="text-sm text-muted-foreground">{t("shiftHistory.conversations", "Conversations")}</p>
                   <p className="text-2xl font-bold">{messageThreads.length}</p>
                 </div>
                 <MessageSquare className="w-8 h-8 text-muted-foreground/30" />
@@ -336,7 +338,7 @@ export default function ShiftHistoryPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Follow-ups Done</p>
+                  <p className="text-sm text-muted-foreground">{t("shiftHistory.followupsDone", "Follow-ups Done")}</p>
                   <p className="text-2xl font-bold">{stats.followupsCompleted}</p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-muted-foreground/30" />
@@ -352,21 +354,21 @@ export default function ShiftHistoryPage() {
           <TabsList className="h-12">
             <TabsTrigger value="overview" className="gap-2">
               <Activity className="w-4 h-4" />
-              Overview
+              {t("shiftHistory.overview", "Overview")}
             </TabsTrigger>
             <TabsTrigger value="notes" className="gap-2">
               <FileText className="w-4 h-4" />
-              Shift Notes
+              {t("shiftHistory.shiftNotes", "Shift Notes")}
               <Badge variant="secondary" className="ml-1">{shiftNotes.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="alerts" className="gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Alerts Handled
+              {t("shiftHistory.alertsHandled", "Alerts Handled")}
               <Badge variant="secondary" className="ml-1">{alertsHandled.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="messages" className="gap-2">
               <MessageSquare className="w-4 h-4" />
-              Conversations
+              {t("shiftHistory.conversations", "Conversations")}
               <Badge variant="secondary" className="ml-1">{messageThreads.length}</Badge>
             </TabsTrigger>
           </TabsList>
@@ -375,7 +377,7 @@ export default function ShiftHistoryPage() {
         <ScrollArea className="flex-1">
           <div className="p-4">
             {isLoading ? (
-              <div className="text-center py-12 text-muted-foreground">Loading history...</div>
+              <div className="text-center py-12 text-muted-foreground">{t("shiftHistory.loading", "Loading history...")}</div>
             ) : (
               <>
                 {/* Overview Tab */}
@@ -386,7 +388,7 @@ export default function ShiftHistoryPage() {
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <AlertTriangle className="w-5 h-5" />
-                          Recent Alerts
+                          {t("shiftHistory.recentAlerts", "Recent Alerts")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -407,7 +409,7 @@ export default function ShiftHistoryPage() {
                           </div>
                         ))}
                         {alertsHandled.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">No alerts in this period</p>
+                          <p className="text-sm text-muted-foreground text-center py-4">{t("shiftHistory.noAlerts", "No alerts in this period")}</p>
                         )}
                       </CardContent>
                     </Card>
@@ -417,7 +419,7 @@ export default function ShiftHistoryPage() {
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <FileText className="w-5 h-5" />
-                          Recent Shift Notes
+                          {t("shiftHistory.recentNotes", "Recent Shift Notes")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -440,7 +442,7 @@ export default function ShiftHistoryPage() {
                                   ) : (
                                     <Flag className="w-3 h-3 mr-1" />
                                   )}
-                                  {note.followupCompleted ? "Done" : "Follow-up"}
+                                  {note.followupCompleted ? t("shiftHistory.done", "Done") : t("shiftHistory.followup", "Follow-up")}
                                 </Badge>
                               )}
                             </div>
@@ -451,7 +453,7 @@ export default function ShiftHistoryPage() {
                           </div>
                         ))}
                         {shiftNotes.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">No notes in this period</p>
+                          <p className="text-sm text-muted-foreground text-center py-4">{t("shiftHistory.noNotes", "No notes in this period")}</p>
                         )}
                       </CardContent>
                     </Card>
@@ -487,12 +489,12 @@ export default function ShiftHistoryPage() {
                               {note.followupCompleted ? (
                                 <>
                                   <CheckCircle className="w-3 h-3 mr-1" />
-                                  Completed
+                                  {t("shiftHistory.completed", "Completed")}
                                 </>
                               ) : (
                                 <>
                                   <Flag className="w-3 h-3 mr-1" />
-                                  Needs Follow-up
+                                  {t("shiftHistory.needsFollowup", "Needs Follow-up")}
                                 </>
                               )}
                             </Badge>
@@ -504,7 +506,7 @@ export default function ShiftHistoryPage() {
                   {shiftNotes.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
                       <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p>No shift notes found in this period</p>
+                      <p>{t("shiftHistory.noNotesFound", "No shift notes found in this period")}</p>
                     </div>
                   )}
                 </TabsContent>
@@ -528,7 +530,7 @@ export default function ShiftHistoryPage() {
                                   <>
                                     <span>•</span>
                                     <span>
-                                      Resolved in {Math.round((alert.resolvedAt.getTime() - alert.receivedAt.getTime()) / 60000)} min
+                                      {t("shiftHistory.resolvedIn", "Resolved in {{minutes}} min", { minutes: Math.round((alert.resolvedAt.getTime() - alert.receivedAt.getTime()) / 60000) })}
                                     </span>
                                   </>
                                 )}
@@ -556,7 +558,7 @@ export default function ShiftHistoryPage() {
                   {alertsHandled.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
                       <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p>No alerts handled in this period</p>
+                      <p>{t("shiftHistory.noAlertsFound", "No alerts handled in this period")}</p>
                     </div>
                   )}
                 </TabsContent>
@@ -574,7 +576,7 @@ export default function ShiftHistoryPage() {
                             <div>
                               <p className="font-medium">{thread.subject}</p>
                               <p className="text-sm text-muted-foreground">
-                                {thread.memberName} • {thread.messageCount} messages
+                                {thread.memberName} • {thread.messageCount} {t("shiftHistory.messages", "messages")}
                               </p>
                             </div>
                           </div>
@@ -589,7 +591,7 @@ export default function ShiftHistoryPage() {
                   {messageThreads.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
                       <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p>No conversations in this period</p>
+                      <p>{t("shiftHistory.noConversations", "No conversations in this period")}</p>
                     </div>
                   )}
                 </TabsContent>

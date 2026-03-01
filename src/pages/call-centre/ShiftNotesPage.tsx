@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { 
+import { useTranslation } from "react-i18next";
+import {
   Plus, 
   CheckCircle, 
   AlertTriangle, 
@@ -45,6 +46,7 @@ interface ShiftNote {
 
 export default function ShiftNotesPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [notes, setNotes] = useState<ShiftNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -98,7 +100,7 @@ export default function ShiftNotesPage() {
       setNotes(formattedNotes);
     } catch (error) {
       console.error("Error fetching notes:", error);
-      toast({ title: "Error", description: "Failed to load shift notes", variant: "destructive" });
+      toast({ title: t("common.error", "Error"), description: t("shiftNotes.failedToLoad", "Failed to load shift notes"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +127,7 @@ export default function ShiftNotesPage() {
 
   const handleAddNote = async () => {
     if (!newNote.trim()) {
-      toast({ title: "Error", description: "Note content is required", variant: "destructive" });
+      toast({ title: t("common.error", "Error"), description: t("shiftNotes.noteRequired", "Note content is required"), variant: "destructive" });
       return;
     }
 
@@ -148,7 +150,7 @@ export default function ShiftNotesPage() {
 
       if (error) throw error;
 
-      toast({ title: "Note added", description: "Shift note has been saved" });
+      toast({ title: t("shiftNotes.noteAdded", "Note added"), description: t("shiftNotes.noteSaved", "Shift note has been saved") });
       setNewNote("");
       setRequiresFollowup(false);
       setSelectedMemberId("");
@@ -156,7 +158,7 @@ export default function ShiftNotesPage() {
       fetchNotes();
     } catch (error) {
       console.error("Error adding note:", error);
-      toast({ title: "Error", description: "Failed to add note", variant: "destructive" });
+      toast({ title: t("common.error", "Error"), description: t("shiftNotes.failedToAdd", "Failed to add note"), variant: "destructive" });
     }
   };
 
@@ -173,10 +175,10 @@ export default function ShiftNotesPage() {
         note.id === noteId ? { ...note, followupCompleted: completed } : note
       ));
 
-      toast({ title: completed ? "Marked as completed" : "Marked as pending" });
+      toast({ title: completed ? t("shiftNotes.markedCompleted", "Marked as completed") : t("shiftNotes.markedPending", "Marked as pending") });
     } catch (error) {
       console.error("Error updating note:", error);
-      toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
+      toast({ title: t("common.error", "Error"), description: t("shiftNotes.failedToUpdate", "Failed to update note"), variant: "destructive" });
     }
   };
 
@@ -194,25 +196,25 @@ export default function ShiftNotesPage() {
       <div className="border-b p-4 bg-background/50">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">Shift Notes</h1>
-            <p className="text-muted-foreground">View and manage shift handover notes</p>
+            <h1 className="text-2xl font-bold">{t("shiftNotes.title", "Shift Notes")}</h1>
+            <p className="text-muted-foreground">{t("shiftNotes.subtitle", "View and manage shift handover notes")}</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Note
+                {t("shiftNotes.addNote", "Add Note")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Shift Note</DialogTitle>
+                <DialogTitle>{t("shiftNotes.addShiftNote", "Add Shift Note")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
-                  <Label>Note</Label>
-                  <Textarea 
-                    placeholder="Enter shift note..."
+                  <Label>{t("shiftNotes.note", "Note")}</Label>
+                  <Textarea
+                    placeholder={t("shiftNotes.notePlaceholder", "Enter shift note...")}
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     className="min-h-[120px]"
@@ -220,13 +222,13 @@ export default function ShiftNotesPage() {
                 </div>
 
                 <div>
-                  <Label>Related Member (Optional)</Label>
+                  <Label>{t("shiftNotes.relatedMember", "Related Member (Optional)")}</Label>
                   <Select value={selectedMemberId} onValueChange={(val) => setSelectedMemberId(val === "none" ? "" : val)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a member..." />
+                      <SelectValue placeholder={t("shiftNotes.selectMember", "Select a member...")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="none">{t("shiftNotes.none", "None")}</SelectItem>
                       {members.map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name}
@@ -244,12 +246,12 @@ export default function ShiftNotesPage() {
                   />
                   <Label htmlFor="followup" className="flex items-center gap-1 cursor-pointer">
                     <Flag className="w-4 h-4 text-alert-battery" />
-                    Requires follow-up
+                    {t("shiftNotes.requiresFollowup", "Requires follow-up")}
                   </Label>
                 </div>
 
                 <Button onClick={handleAddNote} className="w-full">
-                  Save Note
+                  {t("shiftNotes.saveNote", "Save Note")}
                 </Button>
               </div>
             </DialogContent>
@@ -263,7 +265,7 @@ export default function ShiftNotesPage() {
             size="sm"
             onClick={() => setFilter("all")}
           >
-            All Notes
+            {t("shiftNotes.allNotes", "All Notes")}
             <Badge variant="secondary" className="ml-2">{notes.length}</Badge>
           </Button>
           <Button 
@@ -272,7 +274,7 @@ export default function ShiftNotesPage() {
             onClick={() => setFilter("followup")}
           >
             <Flag className="w-3 h-3 mr-1 text-alert-battery" />
-            Needs Follow-up
+            {t("shiftNotes.needsFollowup", "Needs Follow-up")}
             {pendingFollowups > 0 && (
               <Badge className="ml-2 bg-alert-battery">{pendingFollowups}</Badge>
             )}
@@ -283,7 +285,7 @@ export default function ShiftNotesPage() {
             onClick={() => setFilter("completed")}
           >
             <CheckCircle className="w-3 h-3 mr-1 text-status-active" />
-            Completed
+            {t("shiftNotes.completed", "Completed")}
           </Button>
         </div>
       </div>
@@ -293,13 +295,13 @@ export default function ShiftNotesPage() {
         <div className="p-4 space-y-4">
           {isLoading ? (
             <div className="text-center py-12 text-muted-foreground">
-              Loading notes...
+              {t("shiftNotes.loading", "Loading notes...")}
             </div>
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium">No notes found</p>
-              <p className="text-sm">Add a note to start documenting your shift</p>
+              <p className="text-lg font-medium">{t("shiftNotes.noNotes", "No notes found")}</p>
+              <p className="text-sm">{t("shiftNotes.startDocumenting", "Add a note to start documenting your shift")}</p>
             </div>
           ) : (
             filteredNotes.map(note => (
@@ -324,13 +326,13 @@ export default function ShiftNotesPage() {
                         {note.requiresFollowup && !note.followupCompleted && (
                           <Badge className="bg-alert-battery text-white text-xs">
                             <Flag className="w-3 h-3 mr-1" />
-                            Needs Follow-up
+                            {t("shiftNotes.needsFollowup", "Needs Follow-up")}
                           </Badge>
                         )}
                         {note.followupCompleted && (
                           <Badge className="bg-status-active text-white text-xs">
                             <CheckCircle className="w-3 h-3 mr-1" />
-                            Completed
+                            {t("shiftNotes.completed", "Completed")}
                           </Badge>
                         )}
                       </div>
@@ -343,7 +345,7 @@ export default function ShiftNotesPage() {
                           checked={note.followupCompleted}
                           onCheckedChange={(checked) => handleToggleFollowup(note.id, checked as boolean)}
                         />
-                        <Label className="text-xs text-muted-foreground">Done</Label>
+                        <Label className="text-xs text-muted-foreground">{t("shiftNotes.done", "Done")}</Label>
                       </div>
                     )}
                   </div>

@@ -13,10 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { ShareContentSection } from "@/components/partner/ShareContentSection";
-
-const generateReferralLink = (code: string) => {
-  return `${window.location.origin}/join?ref=${code}`;
-};
+import { generateReferralLink } from "@/lib/crmEvents";
 
 const getFileIcon = (fileType: string | null) => {
   if (!fileType) return File;

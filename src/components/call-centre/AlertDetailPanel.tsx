@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { 
+import { useTranslation } from "react-i18next";
+import {
   MapPin, 
   Phone, 
   Clock, 
@@ -104,20 +105,14 @@ interface AlertDetailPanelProps {
 }
 
 const alertTypeConfig = {
-  sos_button: { label: "SOS Alert", color: "bg-alert-sos", icon: AlertTriangle },
-  fall_detected: { label: "Fall Detected", color: "bg-alert-fall", icon: Activity },
-  low_battery: { label: "Low Battery", color: "bg-alert-battery", icon: Battery },
-  geo_fence: { label: "Geo-Fence Alert", color: "bg-yellow-500", icon: Navigation },
-  check_in: { label: "Check-in", color: "bg-alert-checkin", icon: CheckCircle },
-  manual: { label: "Manual Alert", color: "bg-gray-500", icon: AlertTriangle },
-  device_offline: { label: "Device Offline", color: "bg-destructive", icon: AlertTriangle },
+  sos_button: { labelKey: "callCentre.alertTypes.sos", label: "SOS Alert", color: "bg-alert-sos", icon: AlertTriangle },
+  fall_detected: { labelKey: "callCentre.alertTypes.fall", label: "Fall Detected", color: "bg-alert-fall", icon: Activity },
+  low_battery: { labelKey: "callCentre.alertTypes.lowBattery", label: "Low Battery", color: "bg-alert-battery", icon: Battery },
+  geo_fence: { labelKey: "callCentre.alertTypes.geoFence", label: "Geo-Fence Alert", color: "bg-yellow-500", icon: Navigation },
+  check_in: { labelKey: "callCentre.alertTypes.checkIn", label: "Check-in", color: "bg-alert-checkin", icon: CheckCircle },
+  manual: { labelKey: "callCentre.alertTypes.manual", label: "Manual Alert", color: "bg-gray-500", icon: AlertTriangle },
+  device_offline: { labelKey: "callCentre.alertTypes.deviceOffline", label: "Device Offline", color: "bg-destructive", icon: AlertTriangle },
 };
-
-const smsTemplates = [
-  "We received your alert. Are you okay?",
-  "Help is on the way",
-  "Please call us back when you can",
-];
 
 export function AlertDetailPanel({ 
   isOpen, 
@@ -126,6 +121,7 @@ export function AlertDetailPanel({
   onResolve,
   onEscalate 
 }: AlertDetailPanelProps) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState("");
   const [emergencyServicesCalled, setEmergencyServicesCalled] = useState(false);
   const [nextOfKinNotified, setNextOfKinNotified] = useState(false);
@@ -149,29 +145,24 @@ export function AlertDetailPanel({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "Copied to clipboard" });
+    toast({ title: t("callCentre.alert.copiedToClipboard", "Copied to clipboard") });
   };
 
   const handleCallMember = () => {
     if (alert.member?.phone) {
-      // In real implementation, this would trigger Twilio call
-      toast({ title: "Initiating call...", description: `Calling ${alert.member.phone}` });
+      window.location.href = `tel:${alert.member.phone}`;
     }
   };
 
   const handleCall112 = () => {
-    toast({ 
-      title: "Calling 112", 
-      description: "Connecting to emergency services",
-      variant: "destructive"
-    });
+    window.location.href = "tel:112";
     setEmergencyServicesCalled(true);
   };
 
   const handleSendSms = async (message: string, toPhone?: string, recipientType: 'member' | 'emergency_contact' = 'member', contactId?: string) => {
     const phone = toPhone || alert.member?.phone;
     if (!phone) {
-      toast({ title: "No phone number", description: "Cannot send SMS without a phone number", variant: "destructive" });
+      toast({ title: t("callCentre.alert.noPhone", "No phone number"), description: t("callCentre.alert.noPhoneSms", "Cannot send SMS without a phone number"), variant: "destructive" });
       return;
     }
 
@@ -184,7 +175,7 @@ export function AlertDetailPanel({
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.access_token) {
-        toast({ title: "Not authenticated", variant: "destructive" });
+        toast({ title: t("common.notAuthenticated", "Not authenticated"), variant: "destructive" });
         return;
       }
 
@@ -201,7 +192,7 @@ export function AlertDetailPanel({
         throw new Error(response.error.message || "Failed to send SMS");
       }
 
-      toast({ title: "SMS Sent", description: `Message sent to ${phone}` });
+      toast({ title: t("callCentre.alert.smsSent", "SMS Sent"), description: t("callCentre.alert.messageSentTo", "Message sent to {{phone}}", { phone }) });
       
       // Log to member_interactions
       if (alert.member?.id) {
@@ -231,10 +222,10 @@ export function AlertDetailPanel({
       }
     } catch (error) {
       console.error("SMS error:", error);
-      toast({ 
-        title: "Failed to send SMS", 
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive" 
+      toast({
+        title: t("callCentre.alert.smsFailed", "Failed to send SMS"),
+        description: error instanceof Error ? error.message : t("common.unknownError", "Unknown error"),
+        variant: "destructive"
       });
     } finally {
       setIsSendingSms(false);
@@ -245,7 +236,7 @@ export function AlertDetailPanel({
   const handleSendWhatsApp = async (message: string, toPhone?: string, recipientType: 'member' | 'emergency_contact' = 'member') => {
     const phone = toPhone || alert.member?.phone;
     if (!phone) {
-      toast({ title: "No phone number", description: "Cannot send WhatsApp without a phone number", variant: "destructive" });
+      toast({ title: t("callCentre.alert.noPhone", "No phone number"), description: t("callCentre.alert.noPhoneWhatsApp", "Cannot send WhatsApp without a phone number"), variant: "destructive" });
       return;
     }
 
@@ -264,13 +255,13 @@ export function AlertDetailPanel({
         throw new Error(response.error.message || "Failed to send WhatsApp");
       }
 
-      toast({ title: "WhatsApp Sent", description: `Message sent to ${phone}` });
+      toast({ title: t("callCentre.alert.whatsAppSent", "WhatsApp Sent"), description: t("callCentre.alert.messageSentTo", "Message sent to {{phone}}", { phone }) });
     } catch (error) {
       console.error("WhatsApp error:", error);
-      toast({ 
-        title: "Failed to send WhatsApp", 
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive" 
+      toast({
+        title: t("callCentre.alert.whatsAppFailed", "Failed to send WhatsApp"),
+        description: error instanceof Error ? error.message : t("common.unknownError", "Unknown error"),
+        variant: "destructive"
       });
     } finally {
       setIsSendingSms(false);
@@ -279,7 +270,7 @@ export function AlertDetailPanel({
 
   const handleResolve = () => {
     if (!notes.trim()) {
-      toast({ title: "Notes required", description: "Please add resolution notes", variant: "destructive" });
+      toast({ title: t("callCentre.alert.notesRequired", "Notes required"), description: t("callCentre.alert.addResolutionNotes", "Please add resolution notes"), variant: "destructive" });
       return;
     }
     onResolve(alert.id, notes);
@@ -297,7 +288,7 @@ export function AlertDetailPanel({
                 <div className="flex items-center gap-2">
                   <Badge className={cn(config.color, "text-white")}>
                     <Icon className="w-3 h-3 mr-1" />
-                    {config.label}
+                    {t(config.labelKey, config.label)}
                   </Badge>
                   <Badge variant="outline" className="animate-pulse">
                     <Clock className="w-3 h-3 mr-1" />
@@ -311,23 +302,23 @@ export function AlertDetailPanel({
                   {alert.member?.preferredLanguage && (
                     <Badge variant="outline">
                       <Globe className="w-3 h-3 mr-1" />
-                      {alert.member.preferredLanguage === 'es' ? 'Español' : 'English'}
+                      {alert.member.preferredLanguage === 'es' ? t("common.spanish", "Español") : t("common.english", "English")}
                     </Badge>
                   )}
                   {alert.subscription?.planType && (
                     <Badge variant="outline">
-                      {alert.subscription.planType === 'couple' ? '👫 Couple' : '👤 Single'}
+                      {alert.subscription.planType === 'couple' ? `👫 ${t("common.couple", "Couple")}` : `👤 ${t("common.single", "Single")}`}
                     </Badge>
                   )}
                   {alert.subscription?.hasPendant ? (
                     <Badge className="bg-status-active text-white">
                       <Shield className="w-3 h-3 mr-1" />
-                      Has Pendant
+                      {t("callCentre.alert.hasPendant", "Has Pendant")}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="bg-alert-battery/10 text-alert-battery border-alert-battery/30">
                       <Phone className="w-3 h-3 mr-1" />
-                      Phone Only
+                      {t("callCentre.alert.phoneOnly", "Phone Only")}
                     </Badge>
                   )}
                 </div>
@@ -344,11 +335,11 @@ export function AlertDetailPanel({
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-alert-battery shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-alert-battery">PHONE-ONLY MEMBER</h4>
+                      <h4 className="font-semibold text-alert-battery">{t("callCentre.alert.phoneOnlyWarning", "PHONE-ONLY MEMBER")}</h4>
                       <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                        <li>• No GPS tracking available</li>
-                        <li>• No automatic location - ask member for their location</li>
-                        <li>• No fall detection active</li>
+                        <li>• {t("callCentre.alert.noGps", "No GPS tracking available")}</li>
+                        <li>• {t("callCentre.alert.noAutoLocation", "No automatic location - ask member for their location")}</li>
+                        <li>• {t("callCentre.alert.noFallDetection", "No fall detection active")}</li>
                       </ul>
                     </div>
                   </div>
@@ -360,7 +351,7 @@ export function AlertDetailPanel({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    Location
+                    {t("callCentre.alert.location", "Location")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -374,22 +365,22 @@ export function AlertDetailPanel({
                       )}
                       <div className="bg-muted h-40 rounded-lg flex items-center justify-center">
                         <span className="text-muted-foreground text-sm">
-                          [Google Maps Integration]
+                          {t("callCentre.alert.mapsIntegration", "[Google Maps Integration]")}
                         </span>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="flex-1">
                           <ExternalLink className="w-3 h-3 mr-1" />
-                          Open in Maps
+                          {t("callCentre.alert.openInMaps", "Open in Maps")}
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1">
                           <Navigation className="w-3 h-3 mr-1" />
-                          Get Directions
+                          {t("callCentre.alert.getDirections", "Get Directions")}
                         </Button>
                       </div>
                     </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No location data available</p>
+                    <p className="text-sm text-muted-foreground">{t("callCentre.alert.noLocation", "No location data available")}</p>
                   )}
                 </CardContent>
               </Card>
@@ -399,12 +390,12 @@ export function AlertDetailPanel({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <User className="w-4 h-4" />
-                    Member Information
+                    {t("callCentre.alert.memberInfo", "Member Information")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Phone</span>
+                    <span className="text-sm text-muted-foreground">{t("common.phone", "Phone")}</span>
                     <div className="flex items-center gap-1">
                       <span className="font-medium">{alert.member?.phone || "N/A"}</span>
                       {alert.member?.phone && (
@@ -416,17 +407,17 @@ export function AlertDetailPanel({
                   </div>
                   {age && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Age</span>
-                      <span className="font-medium">{age} years</span>
+                      <span className="text-sm text-muted-foreground">{t("callCentre.alert.age", "Age")}</span>
+                      <span className="font-medium">{t("callCentre.alert.years", "{{count}} years", { count: age })}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Address</span>
+                    <span className="text-sm text-muted-foreground">{t("common.address", "Address")}</span>
                     <span className="font-medium text-right text-sm max-w-[60%]">{alert.member?.address || "N/A"}</span>
                   </div>
                   {alert.member?.specialInstructions && (
                     <div className="mt-2 p-3 bg-accent rounded-lg border-l-4 border-primary">
-                      <p className="text-sm font-medium">Special Instructions</p>
+                      <p className="text-sm font-medium">{t("callCentre.alert.specialInstructions", "Special Instructions")}</p>
                       <p className="text-sm text-muted-foreground">{alert.member.specialInstructions}</p>
                     </div>
                   )}
@@ -438,13 +429,13 @@ export function AlertDetailPanel({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-alert-sos">
                     <Heart className="w-4 h-4" />
-                    Medical Information
+                    {t("callCentre.alert.medicalInfo", "Medical Information")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {alert.medicalInfo?.conditions && alert.medicalInfo.conditions.length > 0 && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Conditions</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t("callCentre.alert.conditions", "Conditions")}</p>
                       <div className="flex flex-wrap gap-1">
                         {alert.medicalInfo.conditions.map((condition, i) => (
                           <Badge key={i} variant="outline">{condition}</Badge>
@@ -456,7 +447,7 @@ export function AlertDetailPanel({
                   {alert.medicalInfo?.medications && alert.medicalInfo.medications.length > 0 && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                        <Pill className="w-3 h-3" /> Medications
+                        <Pill className="w-3 h-3" /> {t("callCentre.alert.medications", "Medications")}
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {alert.medicalInfo.medications.map((med, i) => (
@@ -469,7 +460,7 @@ export function AlertDetailPanel({
                   {alert.medicalInfo?.allergies && alert.medicalInfo.allergies.length > 0 && (
                     <div className="p-3 bg-alert-sos/10 border border-alert-sos/30 rounded-lg">
                       <p className="text-xs text-alert-sos font-semibold mb-1 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> ALLERGIES
+                        <AlertTriangle className="w-3 h-3" /> {t("callCentre.alert.allergies", "ALLERGIES")}
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {alert.medicalInfo.allergies.map((allergy, i) => (
@@ -495,7 +486,7 @@ export function AlertDetailPanel({
                   </div>
 
                   {alert.medicalInfo?.doctorPhone && (
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => { window.location.href = `tel:${alert.medicalInfo!.doctorPhone}`; }}>
                       <Phone className="w-3 h-3 mr-1" />
                       Call Doctor: {alert.medicalInfo.doctorPhone}
                     </Button>
@@ -516,18 +507,18 @@ export function AlertDetailPanel({
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Shield className="w-4 h-4" />
-                      Pendant Status
+                      {t("callCentre.alert.pendantStatus", "Pendant Status")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Status</span>
+                      <span className="text-sm text-muted-foreground">{t("common.status", "Status")}</span>
                       <Badge className={alert.device.status === 'active' ? 'bg-status-active' : 'bg-status-inactive'}>
                         {alert.device.status}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Battery</span>
+                      <span className="text-sm text-muted-foreground">{t("callCentre.alert.battery", "Battery")}</span>
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                           <div 
@@ -544,7 +535,7 @@ export function AlertDetailPanel({
                     </div>
                     {alert.device.lastCheckin && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Last Check-in</span>
+                        <span className="text-sm text-muted-foreground">{t("callCentre.alert.lastCheckin", "Last Check-in")}</span>
                         <span className="text-sm">{new Date(alert.device.lastCheckin).toLocaleString()}</span>
                       </div>
                     )}
@@ -557,7 +548,7 @@ export function AlertDetailPanel({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    Emergency Contacts
+                    {t("callCentre.alert.emergencyContacts", "Emergency Contacts")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -575,11 +566,11 @@ export function AlertDetailPanel({
                             </p>
                           </div>
                           {contact.speaksSpanish && (
-                            <Badge variant="outline">🇪🇸 Speaks Spanish</Badge>
+                            <Badge variant="outline">🇪🇸 {t("callCentre.alert.speaksSpanish", "Speaks Spanish")}</Badge>
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button size="sm" variant="outline" className="flex-1" onClick={() => { window.location.href = `tel:${contact.phone}`; }}>
                             <PhoneCall className="w-3 h-3 mr-1" />
                             Call
                           </Button>
@@ -620,7 +611,7 @@ export function AlertDetailPanel({
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground">No emergency contacts on file</p>
+                    <p className="text-sm text-muted-foreground">{t("callCentre.alert.noEmergencyContacts", "No emergency contacts on file")}</p>
                   )}
                 </CardContent>
               </Card>
@@ -630,7 +621,7 @@ export function AlertDetailPanel({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
-                    Quick Messages
+                    {t("callCentre.alert.quickMessages", "Quick Messages")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -649,7 +640,7 @@ export function AlertDetailPanel({
                   </div>
                   <div className="flex gap-2">
                     <Textarea 
-                      placeholder="Custom message..."
+                      placeholder={t("callCentre.alert.customMessage", "Custom message...")}
                       value={customMessage}
                       onChange={(e) => setCustomMessage(e.target.value)}
                       className="min-h-[60px]"
@@ -686,7 +677,7 @@ export function AlertDetailPanel({
                 <Collapsible open={showPreviousAlerts} onOpenChange={setShowPreviousAlerts}>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between">
-                      Previous Alerts ({alert.previousAlerts.length})
+                      {t("callCentre.alert.previousAlerts", "Previous Alerts")} ({alert.previousAlerts.length})
                       {showPreviousAlerts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </Button>
                   </CollapsibleTrigger>
@@ -695,7 +686,7 @@ export function AlertDetailPanel({
                       <div key={prevAlert.id} className="p-2 bg-muted rounded text-sm flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {alertTypeConfig[prevAlert.type].label}
+                            {t(alertTypeConfig[prevAlert.type].labelKey, alertTypeConfig[prevAlert.type].label)}
                           </Badge>
                           <span className="text-muted-foreground">
                             {new Date(prevAlert.receivedAt).toLocaleDateString()}
@@ -703,7 +694,7 @@ export function AlertDetailPanel({
                         </div>
                         {prevAlert.resolvedAt && (
                           <Badge variant="outline" className="text-xs bg-status-active/10 text-status-active">
-                            Resolved
+                            {t("common.resolved", "Resolved")}
                           </Badge>
                         )}
                       </div>
@@ -720,17 +711,17 @@ export function AlertDetailPanel({
             <div className="grid grid-cols-2 gap-2">
               <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={handleCallMember}>
                 <PhoneCall className="w-4 h-4 mr-2" />
-                Call Member
+                {t("callCentre.alert.callMember", "Call Member")}
               </Button>
               <Button size="lg" variant="destructive" onClick={handleCall112}>
                 <Phone className="w-4 h-4 mr-2" />
-                Call 112
+                {t("callCentre.alert.call112", "Call 112")}
               </Button>
             </div>
 
             {/* Notes */}
             <Textarea 
-              placeholder="Resolution notes..."
+              placeholder={t("callCentre.alert.resolutionNotes", "Resolution notes...")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="min-h-[80px]"
@@ -744,7 +735,7 @@ export function AlertDetailPanel({
                   checked={emergencyServicesCalled}
                   onCheckedChange={(checked) => setEmergencyServicesCalled(checked as boolean)}
                 />
-                <Label htmlFor="emergency" className="text-sm">Emergency services (112) called</Label>
+                <Label htmlFor="emergency" className="text-sm">{t("callCentre.alert.emergencyServicesCalled", "Emergency services (112) called")}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox 
@@ -752,7 +743,7 @@ export function AlertDetailPanel({
                   checked={nextOfKinNotified}
                   onCheckedChange={(checked) => setNextOfKinNotified(checked as boolean)}
                 />
-                <Label htmlFor="kin" className="text-sm">Next of kin notified</Label>
+                <Label htmlFor="kin" className="text-sm">{t("callCentre.alert.nextOfKinNotified", "Next of kin notified")}</Label>
               </div>
             </div>
 
@@ -763,14 +754,14 @@ export function AlertDetailPanel({
                 className="flex-1"
                 onClick={() => onEscalate(alert.id)}
               >
-                Escalate
+                {t("callCentre.alert.escalate", "Escalate")}
               </Button>
               <Button 
                 className="flex-1 bg-status-active hover:bg-status-active/90"
                 onClick={handleResolve}
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Resolve Alert
+                {t("callCentre.alert.resolveAlert", "Resolve Alert")}
               </Button>
             </div>
           </div>

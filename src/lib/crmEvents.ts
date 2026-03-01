@@ -72,20 +72,17 @@ export async function logCrmEvents(
 }
 
 /**
- * Generate a referral link with UTM parameters
+ * Generate a clean referral link for a partner.
+ * Format: https://icealarm.es/r/CODE
+ *
+ * This produces a short, professional link that partners can share.
+ * UTM tracking is handled server-side by the ReferralRedirect component.
  */
-export function generateReferralLink(
-  referralCode: string,
-  baseUrl?: string
-): string {
-  const base = baseUrl || window.location.origin;
-  const params = new URLSearchParams({
-    ref: referralCode,
-    utm_source: "partner",
-    utm_campaign: referralCode,
-    utm_medium: "referral",
-  });
-  return `${base}/?${params.toString()}`;
+export function generateReferralLink(referralCode: string): string {
+  const siteUrl = typeof window !== "undefined"
+    ? window.location.origin
+    : "https://icealarm.es";
+  return `${siteUrl}/r/${referralCode}`;
 }
 
 /**

@@ -30,13 +30,13 @@ const categoryIcons: Record<DocumentCategory, React.ElementType> = {
   partner: Briefcase,
 };
 
-const categoryLabels: Record<DocumentCategory, string> = {
-  general: "General",
-  member_guide: "Member Guides",
-  staff: "Staff Instructions",
-  device: "Device Guides",
-  emergency: "Emergency Protocols",
-  partner: "Partner Info",
+const categoryLabelKeys: Record<DocumentCategory, { key: string; fallback: string }> = {
+  general: { key: "staffDocuments.categories.general", fallback: "General" },
+  member_guide: { key: "staffDocuments.categories.memberGuide", fallback: "Member Guides" },
+  staff: { key: "staffDocuments.categories.staff", fallback: "Staff Instructions" },
+  device: { key: "staffDocuments.categories.device", fallback: "Device Guides" },
+  emergency: { key: "staffDocuments.categories.emergency", fallback: "Emergency Protocols" },
+  partner: { key: "staffDocuments.categories.partner", fallback: "Partner Info" },
 };
 
 export default function DocumentsPage() {
@@ -93,7 +93,7 @@ export default function DocumentsPage() {
             return (
               <TabsTrigger key={cat} value={cat} className="text-xs flex items-center gap-1">
                 <Icon className="h-3 w-3" />
-                {categoryLabels[cat as DocumentCategory]}
+                {t(categoryLabelKeys[cat as DocumentCategory].key, categoryLabelKeys[cat as DocumentCategory].fallback)}
               </TabsTrigger>
             );
           })}
@@ -131,7 +131,7 @@ export default function DocumentsPage() {
                             </CardTitle>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <Badge variant="outline" className="text-xs">
-                                {categoryLabels[doc.category]}
+                                {t(categoryLabelKeys[doc.category].key, categoryLabelKeys[doc.category].fallback)}
                               </Badge>
                               <Badge 
                                 variant="secondary" 

@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface Conversation {
   id: string;
@@ -51,6 +52,7 @@ export function MessagesPanel() {
   const [replyMessage, setReplyMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchCurrentStaff();
@@ -236,7 +238,7 @@ export function MessagesPanel() {
       fetchConversations();
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      toast.error(t("callCentre.messages.failedToSend", "Failed to send message"));
     } finally {
       setIsSending(false);
     }
@@ -266,7 +268,7 @@ export function MessagesPanel() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-            Messages
+            {t("callCentre.messages.title", "Messages")}
             {totalUnread > 0 && (
               <Badge variant="destructive" className="h-5 px-1.5">
                 {totalUnread}
@@ -280,7 +282,7 @@ export function MessagesPanel() {
           </Link>
         </div>
         <Input
-          placeholder="Search..."
+          placeholder={t("callCentre.messages.searchPlaceholder", "Search...")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="h-8"
@@ -296,7 +298,7 @@ export function MessagesPanel() {
         )}>
           {filteredConversations.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
-              No open conversations
+              {t("callCentre.messages.noConversations", "No open conversations")}
             </div>
           ) : (
             filteredConversations.map((conv) => (
@@ -321,10 +323,10 @@ export function MessagesPanel() {
                       {conv.member?.first_name} {conv.member?.last_name}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {conv.subject || "No subject"}
+                      {conv.subject || t("callCentre.messages.noSubject", "No subject")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : "No messages"}
+                      {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : t("callCentre.messages.noMessages", "No messages")}
                     </p>
                   </div>
                 </div>
@@ -376,7 +378,7 @@ export function MessagesPanel() {
             <div className="p-2 border-t">
               <div className="flex gap-2">
                 <Textarea
-                  placeholder="Reply..."
+                  placeholder={t("callCentre.messages.replyPlaceholder", "Reply...")}
                   className="min-h-[60px] text-xs resize-none"
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
@@ -399,7 +401,7 @@ export function MessagesPanel() {
                 ) : (
                   <Send className="mr-1 h-3 w-3" />
                 )}
-                Send
+                {t("callCentre.messages.send", "Send")}
               </Button>
             </div>
           </div>

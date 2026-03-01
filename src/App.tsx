@@ -451,8 +451,9 @@ const App = () => {
                   <Route path="messages" element={<ClientMessagesPage />} />
                 </Route>
 
-                {/* Referral Tracking Route */}
+                {/* Referral Tracking Routes */}
                 <Route path="/r/:partnerCode/:postSlug" element={<ReferralRedirect />} />
+                <Route path="/r/:partnerCode" element={<ReferralRedirect />} />
 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />

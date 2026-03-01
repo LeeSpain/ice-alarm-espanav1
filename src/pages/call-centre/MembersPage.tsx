@@ -100,11 +100,11 @@ export default function MembersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-status-active/20 text-status-active border-status-active/30">Active</Badge>;
+        return <Badge className="bg-status-active/20 text-status-active border-status-active/30">{t("common.active", "Active")}</Badge>;
       case 'inactive':
-        return <Badge variant="secondary">Inactive</Badge>;
+        return <Badge variant="secondary">{t("common.inactive", "Inactive")}</Badge>;
       case 'suspended':
-        return <Badge variant="destructive">Suspended</Badge>;
+        return <Badge variant="destructive">{t("common.suspended", "Suspended")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -125,7 +125,7 @@ export default function MembersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t("navigation.members")}</h1>
-          <p className="text-muted-foreground">Browse and manage member profiles</p>
+          <p className="text-muted-foreground">{t("callCentre.members.subtitle", "Browse and manage member profiles")}</p>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function MembersPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, phone, or email..."
+                placeholder={t("callCentre.members.searchPlaceholder", "Search by name, phone, or email...")}
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -147,10 +147,10 @@ export default function MembersPage() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="all">{t("callCentre.members.allStatus", "All Status")}</SelectItem>
+                  <SelectItem value="active">{t("common.active", "Active")}</SelectItem>
+                  <SelectItem value="inactive">{t("common.inactive", "Inactive")}</SelectItem>
+                  <SelectItem value="suspended">{t("common.suspended", "Suspended")}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={planFilter} onValueChange={setPlanFilter}>
@@ -158,9 +158,9 @@ export default function MembersPage() {
                   <SelectValue placeholder="Plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Plans</SelectItem>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="couple">Couple</SelectItem>
+                  <SelectItem value="all">{t("callCentre.members.allPlans", "All Plans")}</SelectItem>
+                  <SelectItem value="single">{t("common.single", "Single")}</SelectItem>
+                  <SelectItem value="couple">{t("common.couple", "Couple")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -168,22 +168,22 @@ export default function MembersPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading members...</div>
+            <div className="text-center py-8 text-muted-foreground">{t("callCentre.members.loading", "Loading members...")}</div>
           ) : filteredMembers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <User className="h-12 w-12 mx-auto mb-2" />
-              <p>No members found</p>
+              <p>{t("callCentre.members.noMembers", "No members found")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Device</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("common.name", "Name")}</TableHead>
+                  <TableHead>{t("common.phone", "Phone")}</TableHead>
+                  <TableHead>{t("callCentre.members.plan", "Plan")}</TableHead>
+                  <TableHead>{t("common.status", "Status")}</TableHead>
+                  <TableHead>{t("callCentre.members.device", "Device")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions", "Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -222,11 +222,11 @@ export default function MembersPage() {
                             variant={member.device.is_online ? 'default' : 'secondary'}
                             className="capitalize"
                           >
-                            {member.device.is_online ? 'Online' : 'Offline'}
+                            {member.device.is_online ? t("common.online", "Online") : t("common.offline", "Offline")}
                           </Badge>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">No device</span>
+                        <span className="text-muted-foreground">{t("callCentre.members.noDevice", "No device")}</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ interface DeviceIssue {
 export function DeviceIssuesQueue() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Subscribe to realtime device updates
   useEffect(() => {
@@ -88,7 +90,7 @@ export function DeviceIssuesQueue() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5" />
-            Device Issues
+            {t("callCentre.deviceIssues.title", "Device Issues")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -113,11 +115,11 @@ export function DeviceIssuesQueue() {
   const getIssueBadge = (issueType: string) => {
     switch (issueType) {
       case "faulty":
-        return <Badge variant="destructive">Faulty</Badge>;
+        return <Badge variant="destructive">{t("callCentre.deviceIssues.faulty", "Faulty")}</Badge>;
       case "offline_extended":
-        return <Badge className="bg-orange-500">Offline &gt;30m</Badge>;
+        return <Badge className="bg-orange-500">{t("callCentre.deviceIssues.offlineExtended", "Offline >30m")}</Badge>;
       default:
-        return <Badge variant="secondary">Issue</Badge>;
+        return <Badge variant="secondary">{t("callCentre.deviceIssues.issue", "Issue")}</Badge>;
     }
   };
 
@@ -134,18 +136,18 @@ export function DeviceIssuesQueue() {
                 "h-5 w-5",
                 hasIssues ? "text-orange-500" : "text-muted-foreground"
               )} />
-              Device Issues
+              {t("callCentre.deviceIssues.title", "Device Issues")}
               {hasIssues && (
                 <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/30 ml-1">
                   {issueCount}
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>Faulty or extended offline devices</CardDescription>
+            <CardDescription>{t("callCentre.deviceIssues.subtitle", "Faulty or extended offline devices")}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/ev07b">
-              View All <ArrowRight className="h-4 w-4 ml-1" />
+              {t("callCentre.deviceIssues.viewAll", "View All")} <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
@@ -154,7 +156,7 @@ export function DeviceIssuesQueue() {
         {!hasIssues ? (
           <div className="text-center py-6 text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <p>No device issues</p>
+            <p>{t("callCentre.deviceIssues.noIssues", "No device issues")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -182,7 +184,7 @@ export function DeviceIssuesQueue() {
                           {member.first_name} {member.last_name}
                         </p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Unassigned</p>
+                        <p className="text-xs text-muted-foreground">{t("callCentre.deviceIssues.unassigned", "Unassigned")}</p>
                       )}
                     </div>
                   </div>

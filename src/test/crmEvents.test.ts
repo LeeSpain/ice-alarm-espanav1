@@ -12,21 +12,17 @@ import {
 // ============================================================
 
 describe("generateReferralLink", () => {
-  it("generates a link with ref and UTM parameters", () => {
-    const link = generateReferralLink("PARTNER123", "https://ice.es");
+  it("generates a clean /r/ path link with referral code", () => {
+    const link = generateReferralLink("PARTNER123");
     const url = new URL(link);
 
-    expect(url.origin).toBe("https://ice.es");
-    expect(url.searchParams.get("ref")).toBe("PARTNER123");
-    expect(url.searchParams.get("utm_source")).toBe("partner");
-    expect(url.searchParams.get("utm_campaign")).toBe("PARTNER123");
-    expect(url.searchParams.get("utm_medium")).toBe("referral");
+    expect(url.pathname).toBe("/r/PARTNER123");
   });
 
   it("uses window.location.origin as default base URL", () => {
     const link = generateReferralLink("CODE1");
-    expect(link).toContain("ref=CODE1");
-    expect(link).toContain("utm_source=partner");
+    expect(link).toContain("/r/CODE1");
+    expect(link).toBe(`${window.location.origin}/r/CODE1`);
   });
 });
 
