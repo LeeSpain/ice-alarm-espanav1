@@ -1,23 +1,26 @@
 
 
-## Run Staff Schema Migration
+## Staff Rota, Holidays & Shift Cover Migration
 
-### Overview
-You've provided a comprehensive SQL migration to expand the `staff` table with HR fields, create `staff_documents` and `staff_activity_log` tables, add RLS policies, and set up a private storage bucket.
+### What exists
+- The `staff_shifts`, `staff_holidays`, and `staff_shift_covers` tables do **not** exist yet
+- The `annual_holiday_days` and `contracted_hours_per_week` columns are **not** on the `staff` table yet
+- Both `pg_cron` and `pg_net` extensions are enabled
 
-### One Concern: CHECK Constraints
-The SQL uses CHECK constraints on `status`, `document_type`, and `action` columns. Per best practices, **validation triggers** are more reliable than CHECK constraints (which must be immutable and can cause restoration failures). However, since these are simple enum-like checks (not time-based), they should work fine in practice.
+### Plan
 
-### What Will Be Executed
-1. **Expand `staff` table** — add ~20 new columns (status, personal info, address, emergency contact, HR fields, avatar)
-2. **Replace `is_active`** — convert from a regular column to a generated column based on `status = 'active'`
-3. **Create `staff_documents` table** — with RLS (admin full access, staff read own)
-4. **Create `staff_activity_log` table** — with RLS (admin full access, staff read own)
-5. **Create `staff-documents` storage bucket** — private, with RLS for admin upload/delete and staff read-own
-6. **Add trigger** — `update_staff_updated_at` for automatic timestamp updates
+**Step 1: Run sections 1–12 as a single migration**
+Execute the full SQL (staff table columns, 3 new tables, triggers, indexes, views, functions, RLS policies, realtime) via the migration tool.
 
-### Important Note
-The `DROP COLUMN is_active` + re-add as generated column will fail if existing RLS policies or functions reference `is_active`. The existing `is_staff()` function uses `is_active = true` — this should still work with the generated column, but worth verifying after migration.
+**Step 2: Run the cron job separately via the insert tool**
+The cron section (13) uses `current_setting()` which won't resolve. I'll use the actual project URL and anon key directly in the `net.http_post` call, run via the insert tool (not migration) since it contains project-specific data.
 
-I'll run this migration now using the migration tool.
+**Step 3: Verify**
+Query the new tables and views to confirm everything was created successfully.
+
+### One concern
+The SQL uses CHECK constraints on `shift_type`, `status`, and `end_date >= start_date`. These are simple enum/range checks and should work fine, though validation triggers would be more robust for future flexibility.
+
+### No code changes needed
+The existing hooks (`useStaffShifts.ts`, `useShiftCovers.ts`, `useStaffHolidays`) and components already reference these tables — they were built in anticipation of this schema. The `types.ts` file will auto-update after migration.
 
