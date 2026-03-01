@@ -270,6 +270,7 @@ export default function StaffPage() {
                 <TableHead>{t("adminStaff.role", "Role")}</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>{t("common.status", "Status")}</TableHead>
+                <TableHead>{t("holidays.days", "Holiday Days")}</TableHead>
                 <TableHead>Hire Date</TableHead>
                 <TableHead className="w-[70px]">{t("common.actions", "Actions")}</TableHead>
               </TableRow>
@@ -277,7 +278,7 @@ export default function StaffPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     {t("adminStaff.loading", "Loading staff...")}
                   </TableCell>
                 </TableRow>
@@ -317,6 +318,9 @@ export default function StaffPage() {
                       )}
                     </TableCell>
                     <TableCell>{getStatusBadge(member.status)}</TableCell>
+                    <TableCell>
+                      {(member as any).annual_holiday_days ?? 22}
+                    </TableCell>
                     <TableCell>
                       {member.hire_date
                         ? format(new Date(member.hire_date), "dd MMM yyyy")
@@ -389,7 +393,7 @@ export default function StaffPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     {t("adminStaff.noStaff", "No staff members found")}
                   </TableCell>
                 </TableRow>

@@ -8,6 +8,7 @@
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
   ADMIN: "admin",
+  CALL_CENTRE_SUPERVISOR: "call_centre_supervisor",
   CALL_CENTRE: "call_centre",
   PARTNER: "partner",
   MEMBER: "member",

@@ -30,6 +30,9 @@ import { PendantLiveStatusModal } from "@/components/call-centre/PendantLiveStat
 import { EV07BLiveStatusCard } from "@/components/call-centre/EV07BLiveStatusCard";
 import { DeviceIssuesQueue } from "@/components/call-centre/DeviceIssuesQueue";
 import { DeviceOfflineAlertsCard } from "@/components/call-centre/DeviceOfflineAlertsCard";
+import { MyShiftsWidget } from "@/components/call-centre/MyShiftsWidget";
+import { MyHolidaysWidget } from "@/components/call-centre/MyHolidaysWidget";
+import { PendingCoversWidget } from "@/components/call-centre/PendingCoversWidget";
 import { useOpsRealtime } from "@/hooks/useOpsRealtime";
 
 interface AlertStats {
@@ -722,6 +725,13 @@ export default function StaffDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Rota & Holidays Row */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <MyShiftsWidget staffId={staffId || undefined} />
+        <MyHolidaysWidget staffId={staffId || undefined} />
+        <PendingCoversWidget staffId={staffId || undefined} />
       </div>
 
       {/* Bottom Row: Leads, Birthdays and Shift Notes */}

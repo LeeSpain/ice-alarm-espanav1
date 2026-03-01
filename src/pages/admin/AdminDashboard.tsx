@@ -29,6 +29,9 @@ import { EV07BStatusWidget } from "@/components/admin/dashboard/EV07BStatusWidge
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { IsabellaStatusBanner } from "@/components/admin/dashboard/IsabellaStatusBanner";
+import { useOnShiftNow } from "@/hooks/useStaffShifts";
+import { SHIFT_TYPES } from "@/config/shifts";
+import type { ShiftType } from "@/config/shifts";
 
 interface DashboardStats {
   active_members: number;
@@ -47,6 +50,8 @@ export default function AdminDashboard() {
   // Subscribe to realtime updates for devices and alerts
   useDeviceRealtime();
   useAlertsRealtime();
+
+  const { data: onShiftNow = [] } = useOnShiftNow();
 
   // Single RPC call replaces 7 separate queries
   const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
@@ -228,6 +233,44 @@ export default function AdminDashboard() {
 
       {/* EV-07B Status Widget */}
       <EV07BStatusWidget />
+
+      {/* On Shift Now Widget */}
+      <Card className={onShiftNow.length > 0 ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"}>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <span className={`relative flex h-3 w-3`}>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${onShiftNow.length > 0 ? "bg-green-400" : "bg-red-400"}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${onShiftNow.length > 0 ? "bg-green-500" : "bg-red-500"}`}></span>
+            </span>
+            {t("rota.onShiftNow", "On Shift Now")}
+          </CardTitle>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/admin/rota">{t("common.viewAll", "View All")}</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {onShiftNow.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {onShiftNow.map((s) => {
+                const config = SHIFT_TYPES[s.shift_type as ShiftType];
+                return (
+                  <Badge key={s.id} variant="secondary" className="gap-1.5 py-1">
+                    {s.first_name} {s.last_name}
+                    <span className={`inline-flex items-center rounded px-1 text-xs font-bold ${config?.bgClass} ${config?.textClass}`}>
+                      {config?.badgeLetter}
+                    </span>
+                  </Badge>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-red-600">
+              <AlertTriangle className="h-4 w-4" />
+              {t("rota.nobodyOnShift", "Nobody is currently on shift")}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-3">

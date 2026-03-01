@@ -59,6 +59,7 @@ const staffFormSchema = z.object({
   position: z.string().optional(),
   contract_type: z.string().optional(),
   notes: z.string().optional(),
+  annual_holiday_days: z.coerce.number().min(0).max(60).optional(),
 });
 
 type StaffFormValues = z.infer<typeof staffFormSchema>;
@@ -102,6 +103,7 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
       position: "",
       contract_type: "",
       notes: "",
+      annual_holiday_days: 22,
     },
   });
 
@@ -132,6 +134,7 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
         position: staffMember.position || "",
         contract_type: staffMember.contract_type || "",
         notes: staffMember.notes || "",
+        annual_holiday_days: (staffMember as any).annual_holiday_days ?? 22,
       });
     } else if (mode === "create") {
       form.reset();
@@ -156,7 +159,7 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
         "nie_number", "social_security_number", "date_of_birth", "nationality",
         "address_line1", "address_line2", "city", "province", "postal_code", "country",
         "emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship",
-        "hire_date", "department", "position", "contract_type", "notes",
+        "hire_date", "department", "position", "contract_type", "notes", "annual_holiday_days",
       ] as const;
 
       for (const field of editableFields) {
@@ -535,6 +538,20 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="annual_holiday_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Annual Holiday Days</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} max={60} placeholder="22" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Emergency Contact */}

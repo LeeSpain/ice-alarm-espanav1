@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import { TIMEOUTS } from "@/config/constants";
 
-type StaffRole = "super_admin" | "admin" | "call_centre" | null;
+type StaffRole = "super_admin" | "admin" | "call_centre_supervisor" | "call_centre" | null;
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   isStaff: boolean;
   staffRole: StaffRole;
+  isSupervisor: boolean;
   memberId: string | null;
   partnerId: string | null;
   isPartner: boolean;
@@ -272,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isStaff,
         staffRole,
+        isSupervisor: staffRole === "call_centre_supervisor" || staffRole === "admin" || staffRole === "super_admin",
         memberId,
         partnerId,
         isPartner,

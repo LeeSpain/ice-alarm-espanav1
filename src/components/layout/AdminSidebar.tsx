@@ -29,6 +29,8 @@ import {
   Video,
   Headphones,
   MessageSquareQuote,
+  CalendarDays,
+  Palmtree,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -106,6 +108,8 @@ const menuGroups: MenuGroup[] = [
     labelKey: "sidebar.staffOperations",
     items: [
       { icon: UserCog, labelKey: "sidebar.staff", path: "/admin/staff", superAdminOnly: true },
+      { icon: CalendarDays, labelKey: "sidebar.rota", path: "/admin/rota" },
+      { icon: Palmtree, labelKey: "sidebar.holidays", path: "/admin/holidays" },
       { icon: Ticket, labelKey: "sidebar.staffTickets", path: "/admin/tickets" },
       { icon: CheckSquare, labelKey: "sidebar.tasks", path: "/admin/tasks" }
     ]

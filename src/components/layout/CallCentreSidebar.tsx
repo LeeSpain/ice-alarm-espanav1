@@ -9,6 +9,7 @@ import {
   CheckSquare, 
   Ticket,
   FileText,
+  Palmtree,
   LogOut,
   ChevronLeft,
   Menu,
@@ -49,6 +50,7 @@ const menuItems: MenuItem[] = [
   { icon: CheckSquare, labelKey: "sidebar.tasks", path: "/call-centre/tasks" },
   { icon: Ticket, labelKey: "sidebar.staffTickets", path: "/call-centre/tickets" },
   { icon: FileText, labelKey: "sidebar.shiftNotes", path: "/call-centre/shift-notes" },
+  { icon: Palmtree, labelKey: "sidebar.holidays", path: "/call-centre/holidays" },
   { icon: BookOpen, labelKey: "sidebar.documents", path: "/call-centre/documents" },
 ];
 

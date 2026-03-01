@@ -108,6 +108,8 @@ const AuditLogPage = lazyWithRetry(() => import("./pages/admin/AuditLogPage"));
 const SLADashboardPage = lazyWithRetry(() => import("./pages/admin/SLADashboardPage"));
 const FeedbackDashboardPage = lazyWithRetry(() => import("./pages/admin/FeedbackDashboardPage"));
 const TestimonialsPage = lazyWithRetry(() => import("./pages/admin/TestimonialsPage"));
+const RotaPage = lazyWithRetry(() => import("./pages/admin/RotaPage"));
+const AdminHolidaysPage = lazyWithRetry(() => import("./pages/admin/HolidaysPage"));
 
 // Partner Pages - Lazy loaded
 const PartnerOnboarding = lazyWithRetry(() => import("./pages/partner/PartnerOnboarding"));
@@ -136,6 +138,7 @@ const CallCentreMessagesPage = lazyWithRetry(() => import("./pages/call-centre/M
 const CallCentreTicketsPage = lazyWithRetry(() => import("./pages/call-centre/TicketsPage"));
 const CallCentreLeadsPage = lazyWithRetry(() => import("./pages/call-centre/LeadsPage"));
 const CallCentreDocumentsPage = lazyWithRetry(() => import("./pages/call-centre/DocumentsPage"));
+const CallCentreHolidaysPage = lazyWithRetry(() => import("./pages/call-centre/HolidaysPage"));
 
 // Client Pages - Lazy loaded
 const ClientDashboard = lazyWithRetry(() => import("./pages/client/ClientDashboard"));
@@ -374,6 +377,8 @@ const App = () => {
                   <Route path="sla" element={<SLADashboardPage />} />
                   <Route path="feedback" element={<FeedbackDashboardPage />} />
                   <Route path="testimonials" element={<TestimonialsPage />} />
+                  <Route path="rota" element={<RotaPage />} />
+                  <Route path="holidays" element={<AdminHolidaysPage />} />
                 </Route>
 
                 {/* Partner Public Routes */}
@@ -423,6 +428,7 @@ const App = () => {
                   <Route path="tickets" element={<CallCentreTicketsPage />} />
                   <Route path="leads" element={<CallCentreLeadsPage />} />
                   <Route path="documents" element={<CallCentreDocumentsPage />} />
+                  <Route path="holidays" element={<CallCentreHolidaysPage />} />
                 </Route>
 
                 {/* Client Dashboard Routes - Require Member */}

@@ -369,6 +369,29 @@ export const ISABELLA_FUNCTION_CONFIG: Record<string, IsabellaFunctionConfig> = 
     capabilities: ["in_app", "email"],
     notify_roles: ["admin"],
   },
+
+  // --- Staff Rota & Scheduling (3) ---
+  shift_notifications: {
+    agent_key: "main_brain",
+    triggers: ["shift.assigned", "shift.daily_reminder"],
+    description: "Notify staff of shift assignments and daily reminders",
+    capabilities: ["in_app", "sms"],
+    notify_roles: ["call_centre"],
+  },
+  holiday_management: {
+    agent_key: "main_brain",
+    triggers: ["holiday.requested", "holiday.approved", "holiday.rejected"],
+    description: "Manage holiday request notifications and approvals",
+    capabilities: ["in_app", "sms", "email"],
+    notify_roles: ["admin", "call_centre"],
+  },
+  shift_cover_workflow: {
+    agent_key: "main_brain",
+    triggers: ["shift_cover.requested", "shift_cover.accepted", "shift_cover.declined"],
+    description: "Manage shift cover request workflow and notifications",
+    capabilities: ["in_app", "sms"],
+    notify_roles: ["call_centre"],
+  },
 };
 
 /** Check if a specific Isabella function is enabled */

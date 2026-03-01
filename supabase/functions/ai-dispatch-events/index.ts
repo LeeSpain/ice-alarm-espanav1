@@ -32,6 +32,16 @@ const EVENT_AGENT_MAP: Record<string, string[]> = {
   // Media Manager - content creation
   "social.content_needed": ["media_manager"],
   "marketing.campaign_start": ["media_manager"],
+
+  // Staff Rota & Scheduling
+  "shift.assigned": ["main_brain"],
+  "shift.daily_reminder": ["main_brain"],
+  "holiday.requested": ["main_brain"],
+  "holiday.approved": ["main_brain"],
+  "holiday.rejected": ["main_brain"],
+  "shift_cover.requested": ["main_brain"],
+  "shift_cover.accepted": ["main_brain"],
+  "shift_cover.declined": ["main_brain"],
 };
 
 serve(async (req) => {
