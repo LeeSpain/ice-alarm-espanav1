@@ -621,22 +621,22 @@ export default function PartnerDetailPage() {
                   <Globe className="h-4 w-4 text-muted-foreground" />
                   <span>{partner.preferred_language === "es" ? "Spanish" : "English"}</span>
                 </div>
-                {(partner as Record<string, unknown>).region && (
+                {Boolean((partner as unknown as Record<string, unknown>).region) && (
                   <div className="flex items-center gap-3">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{getRegionLabel((partner as Record<string, unknown>).region as string)}</span>
+                    <span>{getRegionLabel((partner as unknown as Record<string, unknown>).region as string)}</span>
                   </div>
                 )}
-                {(partner as Record<string, unknown>).how_heard_about_us && (
+                {Boolean((partner as unknown as Record<string, unknown>).how_heard_about_us) && (
                   <div>
                     <p className="text-sm text-muted-foreground">How Heard</p>
-                    <p className="capitalize">{((partner as Record<string, unknown>).how_heard_about_us as string).replace(/_/g, " ")}</p>
+                    <p className="capitalize">{((partner as unknown as Record<string, unknown>).how_heard_about_us as string).replace(/_/g, " ")}</p>
                   </div>
                 )}
-                {(partner as Record<string, unknown>).last_name && (
+                {Boolean((partner as unknown as Record<string, unknown>).last_name) && (
                   <div>
                     <p className="text-sm text-muted-foreground">Last Name</p>
-                    <p>{(partner as Record<string, unknown>).last_name as string}</p>
+                    <p>{(partner as unknown as Record<string, unknown>).last_name as string}</p>
                   </div>
                 )}
                 <div className="pt-2 border-t">

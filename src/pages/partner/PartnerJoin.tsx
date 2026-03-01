@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { toast } from "sonner";
 import { Users, DollarSign, Send, ArrowRight, Loader2, Mail, Home, ArrowLeft, Heart, Pill, Shield, Stethoscope, Building, Globe, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PARTNER_TYPES, REGIONS, HOW_HEARD_OPTIONS, isB2BPartnerType } from "@/config/partnerTypes";
+import { REGIONS, HOW_HEARD_OPTIONS, isB2BPartnerType } from "@/config/partnerTypes";
 
 // Partner type for selection
 type PartnerType = "referral" | "care" | "residential" | "pharmacy" | "insurance" | "healthcare_provider" | "real_estate" | "expat_community" | "corporate_other";

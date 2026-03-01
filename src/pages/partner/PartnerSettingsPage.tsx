@@ -19,7 +19,7 @@ import { REGIONS, isB2BPartnerType, getPartnerTypeLabel } from "@/config/partner
 import { useTranslation } from "react-i18next";
 
 export default function PartnerSettingsPage() {
-  const { t } = useTranslation();
+  useTranslation();
   const queryClient = useQueryClient();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
@@ -215,7 +215,7 @@ export default function PartnerSettingsPage() {
 
   // Get partner type display name
   const getPartnerTypeDisplay = (type: string) => {
-    return getPartnerTypeLabel(type, t);
+    return getPartnerTypeLabel(type);
   };
 
   // Get organization type options
@@ -445,7 +445,7 @@ export default function PartnerSettingsPage() {
                   <SelectContent>
                     {REGIONS.map((region) => (
                       <SelectItem key={region.value} value={region.value}>
-                        {region.label}
+                        {region.labelKey}
                       </SelectItem>
                     ))}
                   </SelectContent>
