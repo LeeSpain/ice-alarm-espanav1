@@ -10,6 +10,113 @@ interface PersonalDetailsStepProps {
   onUpdate: (data: Partial<WizardData>) => void;
 }
 
+const PersonForm = ({
+  title,
+  icon: Icon,
+  values,
+  onChange,
+}: {
+  title: string;
+  icon: React.ElementType;
+  values: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    nieDni: string;
+    preferredLanguage: "en" | "es";
+  };
+  onChange: (field: string, value: string) => void;
+}) => (
+  <div className="space-y-4">
+    <div className="flex items-center gap-2 mb-4">
+      <Icon className="h-5 w-5 text-muted-foreground" />
+      <h3 className="font-medium">{title}</h3>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-firstName`}>First Name *</Label>
+        <Input
+          id={`${title}-firstName`}
+          value={values.firstName}
+          onChange={(e) => onChange("firstName", e.target.value)}
+          placeholder="Enter first name"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-lastName`}>Last Name *</Label>
+        <Input
+          id={`${title}-lastName`}
+          value={values.lastName}
+          onChange={(e) => onChange("lastName", e.target.value)}
+          placeholder="Enter last name"
+        />
+      </div>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-email`}>Email *</Label>
+        <Input
+          id={`${title}-email`}
+          type="email"
+          value={values.email}
+          onChange={(e) => onChange("email", e.target.value)}
+          placeholder="email@example.com"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-phone`}>Phone *</Label>
+        <Input
+          id={`${title}-phone`}
+          type="tel"
+          value={values.phone}
+          onChange={(e) => onChange("phone", e.target.value)}
+          placeholder="+34 600 000 000"
+        />
+      </div>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-dob`}>Date of Birth *</Label>
+        <Input
+          id={`${title}-dob`}
+          type="date"
+          value={values.dateOfBirth}
+          onChange={(e) => onChange("dateOfBirth", e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-nieDni`}>NIE/DNI</Label>
+        <Input
+          id={`${title}-nieDni`}
+          value={values.nieDni}
+          onChange={(e) => onChange("nieDni", e.target.value)}
+          placeholder="X0000000X"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${title}-language`}>Preferred Language</Label>
+        <Select
+          value={values.preferredLanguage}
+          onValueChange={(value) => onChange("preferredLanguage", value)}
+        >
+          <SelectTrigger id={`${title}-language`}>
+            <SelectValue placeholder="Select language" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="es">Español</SelectItem>
+            <SelectItem value="en">English</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  </div>
+);
+
 export function PersonalDetailsStep({ data, onUpdate }: PersonalDetailsStepProps) {
   const updatePrimaryMember = (field: string, value: string) => {
     onUpdate({
@@ -35,113 +142,6 @@ export function PersonalDetailsStep({ data, onUpdate }: PersonalDetailsStepProps
       },
     });
   };
-
-  const PersonForm = ({
-    title,
-    icon: Icon,
-    values,
-    onChange,
-  }: {
-    title: string;
-    icon: React.ElementType;
-    values: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      dateOfBirth: string;
-      nieDni: string;
-      preferredLanguage: "en" | "es";
-    };
-    onChange: (field: string, value: string) => void;
-  }) => (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-        <h3 className="font-medium">{title}</h3>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-firstName`}>First Name *</Label>
-          <Input
-            id={`${title}-firstName`}
-            value={values.firstName}
-            onChange={(e) => onChange("firstName", e.target.value)}
-            placeholder="Enter first name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-lastName`}>Last Name *</Label>
-          <Input
-            id={`${title}-lastName`}
-            value={values.lastName}
-            onChange={(e) => onChange("lastName", e.target.value)}
-            placeholder="Enter last name"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-email`}>Email *</Label>
-          <Input
-            id={`${title}-email`}
-            type="email"
-            value={values.email}
-            onChange={(e) => onChange("email", e.target.value)}
-            placeholder="email@example.com"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-phone`}>Phone *</Label>
-          <Input
-            id={`${title}-phone`}
-            type="tel"
-            value={values.phone}
-            onChange={(e) => onChange("phone", e.target.value)}
-            placeholder="+34 600 000 000"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-dob`}>Date of Birth *</Label>
-          <Input
-            id={`${title}-dob`}
-            type="date"
-            value={values.dateOfBirth}
-            onChange={(e) => onChange("dateOfBirth", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-nieDni`}>NIE/DNI</Label>
-          <Input
-            id={`${title}-nieDni`}
-            value={values.nieDni}
-            onChange={(e) => onChange("nieDni", e.target.value)}
-            placeholder="X0000000X"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${title}-language`}>Preferred Language</Label>
-          <Select
-            value={values.preferredLanguage}
-            onValueChange={(value) => onChange("preferredLanguage", value)}
-          >
-            <SelectTrigger id={`${title}-language`}>
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="es">Español</SelectItem>
-              <SelectItem value="en">English</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  );
 
   if (data.membershipType === "single") {
     return (
