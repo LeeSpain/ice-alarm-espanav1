@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Clock, CheckCircle, Zap, Mail, Star, Search, Users } from "lucide-react";
+import { AlertCircle, Clock, CheckCircle, Zap, Mail, Star, Search, Users, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +61,7 @@ export function OutreachCapsWidget() {
     { key: "ratings", used: usage.ai_ratings, cap: settings.max_ai_ratings_per_day, label: t("outreach.caps.ratingsLabel") },
     { key: "research", used: usage.ai_research, cap: settings.max_ai_research_per_day, label: t("outreach.caps.researchLabel") },
     { key: "emails", used: usage.ai_emails, cap: settings.max_ai_emails_per_day, label: t("outreach.caps.emailsLabel") },
+    { key: "sent", used: usage.emails_sent, cap: settings.max_emails_per_inbox_per_day, label: t("outreach.caps.emailsSentLabel") },
   ];
 
   const reachedCaps = capsStatus.filter(
@@ -127,6 +128,13 @@ export function OutreachCapsWidget() {
             used={usage.ai_emails}
             max={settings.max_ai_emails_per_day.value}
             enabled={settings.max_ai_emails_per_day.enabled}
+          />
+          <UsageBar
+            icon={<Send className="h-4 w-4 text-emerald-500" />}
+            label={t("outreach.caps.emailsSentLabel")}
+            used={usage.emails_sent}
+            max={settings.max_emails_per_inbox_per_day.value}
+            enabled={settings.max_emails_per_inbox_per_day.enabled}
           />
 
           {/* Status indicator */}

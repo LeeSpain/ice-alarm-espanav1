@@ -74,27 +74,31 @@ export function useOutreachRawLeads(filters?: Filters) {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["outreach-raw-leads", filters],
     queryFn: async (): Promise<OutreachRawLead[]> => {
-      // Build the query with filters
-      const { data, error } = await supabase
+      // Build the query with server-side filters
+      let query = supabase
         .from("outreach_raw_leads")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (filters?.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+      if (filters?.pipeline && filters.pipeline !== "all") {
+        query = query.eq("pipeline_type", filters.pipeline);
+      }
+      if (filters?.source && filters.source !== "all") {
+        query = query.eq("source", filters.source);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       if (!data) return [];
 
-      // Apply client-side filters for campaign (since column may not be in types yet)
+      // Campaign filter stays client-side (column may not be in generated types)
       let filtered = data as unknown as Record<string, unknown>[];
-      
-      if (filters?.status && filters.status !== "all") {
-        filtered = filtered.filter(l => l.status === filters.status);
-      }
-      if (filters?.pipeline && filters.pipeline !== "all") {
-        filtered = filtered.filter(l => l.pipeline_type === filters.pipeline);
-      }
-      if (filters?.source && filters.source !== "all") {
-        filtered = filtered.filter(l => l.source === filters.source);
-      }
+
       if (filters?.campaign && filters.campaign !== "all") {
         if (filters.campaign === "none") {
           filtered = filtered.filter(l => getCampaignId(l) === null);

@@ -22,18 +22,20 @@ export function OutreachAnalyticsTab() {
     const loadAnalytics = async () => {
       try {
         // Load metrics
-        const { data: rawLeads } = await supabase.from("outreach_raw_leads").select("id");
-        const { data: crmLeads } = await supabase.from("outreach_crm_leads").select("id, status");
-        const { data: sentDrafts } = await supabase.from("outreach_email_drafts").select("id").eq("status", "sent");
-        const { data: threads } = await supabase.from("outreach_email_threads").select("id").eq("direction", "inbound");
-        const convertedLeads = crmLeads?.filter(l => l.status === "converted") || [];
+        const [rawCount, crmCount, sentCount, repliesCount, convertedCount] = await Promise.all([
+          supabase.from("outreach_raw_leads").select("id", { count: "exact", head: true }),
+          supabase.from("outreach_crm_leads").select("id", { count: "exact", head: true }),
+          supabase.from("outreach_email_drafts").select("id", { count: "exact", head: true }).eq("status", "sent"),
+          supabase.from("outreach_email_threads").select("id", { count: "exact", head: true }).eq("direction", "inbound"),
+          supabase.from("outreach_crm_leads").select("id", { count: "exact", head: true }).eq("status", "converted"),
+        ]);
 
         setStats({
-          leadsDiscovered: rawLeads?.length || 0,
-          leadsQualified: crmLeads?.length || 0,
-          emailsSent: sentDrafts?.length || 0,
-          repliesReceived: threads?.length || 0,
-          conversions: convertedLeads.length,
+          leadsDiscovered: rawCount.count || 0,
+          leadsQualified: crmCount.count || 0,
+          emailsSent: sentCount.count || 0,
+          repliesReceived: repliesCount.count || 0,
+          conversions: convertedCount.count || 0,
         });
 
         // Load recent run logs

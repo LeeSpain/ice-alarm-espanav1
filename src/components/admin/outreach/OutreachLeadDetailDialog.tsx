@@ -1,9 +1,10 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { Globe, Mail, Phone, MapPin, Star, Send, XCircle, RefreshCw } from "lucide-react";
+import { Globe, Mail, Phone, MapPin, Star, Send, XCircle, RefreshCw, FileText } from "lucide-react";
 import { useOutreachPipeline } from "@/hooks/useOutreachPipeline";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +19,17 @@ interface LeadDetailDialogProps {
 export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetailDialogProps) {
   const { generateDrafts, isDrafting, sendEmails, isSending } = useOutreachPipeline();
   const queryClient = useQueryClient();
+  const [drafts, setDrafts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!lead?.id || !open) { setDrafts([]); return; }
+    supabase.from("outreach_email_drafts")
+      .select("id, subject, body_text, status, draft_type, sequence_number, created_at")
+      .eq("crm_lead_id", lead.id)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setDrafts(data || []));
+  }, [lead?.id, open]);
 
   if (!lead) return null;
 
@@ -63,7 +75,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
             {lead.company_name}
             {lead.ai_score && (
               <Badge variant="outline" className="ml-2">
-                <Star className="mr-1 h-3 w-3" /> {Number(lead.ai_score).toFixed(0)}
+                <Star className="mr-1 h-3 w-3" /> {Number(lead.ai_score).toFixed(1)}
               </Badge>
             )}
             <Badge variant={lead.do_not_contact ? "destructive" : "secondary"}>
@@ -114,7 +126,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
               <div>
                 <h4 className="text-sm font-medium mb-2">AI Score & Reasoning</h4>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-lg px-3 py-1">{Number(lead.ai_score).toFixed(0)}/100</Badge>
+                  <Badge variant="secondary" className="text-lg px-3 py-1">{Number(lead.ai_score).toFixed(1)} / 5.0</Badge>
                 </div>
                 {lead.personalization_hooks && typeof lead.personalization_hooks === "object" && (
                   <div className="mt-2 text-sm text-muted-foreground">
@@ -136,6 +148,33 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
                 <p>Follow-ups sent: {lead.followup_count || 0}</p>
                 {lead.next_followup_at && <p>Next follow-up: {new Date(lead.next_followup_at).toLocaleDateString()}</p>}
                 {lead.last_contacted_at && <p>Last contacted: {new Date(lead.last_contacted_at).toLocaleDateString()}</p>}
+              </div>
+            </>
+          )}
+
+          {/* Email Drafts */}
+          {drafts.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4" /> Email Drafts ({drafts.length})
+                </h4>
+                <div className="space-y-2">
+                  {drafts.map((draft) => (
+                    <Card key={draft.id}>
+                      <CardContent className="pt-3 pb-3 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{draft.subject}</p>
+                          <Badge variant={draft.status === "sent" ? "default" : draft.status === "approved" ? "secondary" : "outline"} className="text-xs">
+                            {draft.draft_type === "followup" ? `Follow-up #${draft.sequence_number}` : draft.status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{draft.body_text}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </>
           )}

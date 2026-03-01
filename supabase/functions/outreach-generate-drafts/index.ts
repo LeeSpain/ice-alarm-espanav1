@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     const senderName = (typeof settingsMap.sender_name === "string" ? settingsMap.sender_name : "ICE Alarm España") || "ICE Alarm España";
     const autoApprove = !settingsMap.auto_sending_enabled ? false : settingsMap.auto_sending_enabled === true;
-    const minScore = (typeof settingsMap.min_score_to_send === "number" ? settingsMap.min_score_to_send : 60) || 60;
+    const minScore = (typeof settingsMap.min_score_to_send === "number" ? settingsMap.min_score_to_send : 3.5) || 3.5;
 
     // Get CRM leads that need drafts
     let query = supabase.from("outreach_crm_leads").select("*");

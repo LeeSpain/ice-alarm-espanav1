@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Zap, Search, Star, FileText, Send, RefreshCw, Play,
@@ -20,6 +21,7 @@ interface SettingRow {
 }
 
 export function OutreachControlPanel() {
+  const { t } = useTranslation();
   const { runPipeline, isRunningPipeline, enrichLeads, isEnriching, generateDrafts, isDrafting, sendEmails, isSending } = useOutreachPipeline();
 
   const { data: settings, isLoading, refetch } = useQuery({
@@ -34,13 +36,10 @@ export function OutreachControlPanel() {
   });
 
   const updateSetting = async (key: string, value: any) => {
-    const { error } = await supabase.from("outreach_settings")
-      .update({ setting_value: JSON.parse(JSON.stringify(value)), updated_at: new Date().toISOString() })
-      .eq("setting_key", key);
-    if (error) {
-      // Key might not exist yet, try insert
-      await supabase.from("outreach_settings").insert({ setting_key: key, setting_value: JSON.parse(JSON.stringify(value)) });
-    }
+    await supabase.from("outreach_settings").upsert(
+      { setting_key: key, setting_value: JSON.parse(JSON.stringify(value)), updated_at: new Date().toISOString() },
+      { onConflict: "setting_key" }
+    );
     refetch();
   };
 
@@ -72,11 +71,11 @@ export function OutreachControlPanel() {
   }
 
   const automationToggles = [
-    { key: "auto_enrichment_enabled", icon: Search, label: "Auto-Enrichment", desc: "Automatically enrich new leads with website data" },
-    { key: "auto_rating_enabled", icon: Star, label: "Auto-Rating", desc: "Automatically score enriched leads with AI" },
-    { key: "auto_drafting_enabled", icon: FileText, label: "Auto-Drafting", desc: "Automatically generate email drafts for qualified leads" },
-    { key: "auto_sending_enabled", icon: Send, label: "Auto-Sending", desc: "Automatically send approved drafts" },
-    { key: "auto_followup_enabled", icon: RefreshCw, label: "Auto-Follow-up", desc: "Automatically send follow-up emails" },
+    { key: "auto_enrichment_enabled", icon: Search, label: t("outreach.control.autoEnrich"), desc: t("outreach.control.autoEnrichDesc") },
+    { key: "auto_rating_enabled", icon: Star, label: t("outreach.control.autoRate"), desc: t("outreach.control.autoRateDesc") },
+    { key: "auto_drafting_enabled", icon: FileText, label: t("outreach.control.autoDraft"), desc: t("outreach.control.autoDraftDesc") },
+    { key: "auto_sending_enabled", icon: Send, label: t("outreach.control.autoSend"), desc: t("outreach.control.autoSendDesc") },
+    { key: "auto_followup_enabled", icon: RefreshCw, label: t("outreach.control.autoFollowup"), desc: t("outreach.control.autoFollowupDesc") },
   ];
 
   return (
@@ -87,34 +86,34 @@ export function OutreachControlPanel() {
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Pipeline Actions</CardTitle>
-              <CardDescription>Run pipeline steps manually</CardDescription>
+              <CardTitle className="text-lg">{t("outreach.control.pipelineActions")}</CardTitle>
+              <CardDescription>{t("outreach.control.pipelineActionsDesc")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" size="sm" onClick={() => handleRunStep("enrich")} disabled={isEnriching}>
-              <Search className="mr-2 h-4 w-4" />{isEnriching ? "Enriching..." : "Enrich Leads Now"}
+              <Search className="mr-2 h-4 w-4" />{isEnriching ? t("outreach.control.enriching") : t("outreach.control.enrichNow")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleRunStep("rate")}>
-              <Star className="mr-2 h-4 w-4" />Rate Leads Now
+              <Star className="mr-2 h-4 w-4" />{t("outreach.control.rateNow")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleRunStep("draft")} disabled={isDrafting}>
-              <FileText className="mr-2 h-4 w-4" />{isDrafting ? "Drafting..." : "Generate Drafts Now"}
+              <FileText className="mr-2 h-4 w-4" />{isDrafting ? t("outreach.control.drafting") : t("outreach.control.draftNow")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleRunStep("send")} disabled={isSending}>
-              <Send className="mr-2 h-4 w-4" />{isSending ? "Sending..." : "Send Approved Drafts"}
+              <Send className="mr-2 h-4 w-4" />{isSending ? t("outreach.control.sending") : t("outreach.control.sendNow")}
             </Button>
             <Separator orientation="vertical" className="h-8" />
             <Button onClick={() => handleRunStep("pipeline")} disabled={isRunningPipeline}>
-              <Play className="mr-2 h-4 w-4" />{isRunningPipeline ? "Running Pipeline..." : "Run Full Pipeline Now"}
+              <Play className="mr-2 h-4 w-4" />{isRunningPipeline ? t("outreach.runningPipeline") : t("outreach.control.runPipelineNow")}
             </Button>
           </div>
           {settings.dry_run_mode === true && (
             <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <span>Dry run mode is ON — emails will be simulated, not actually sent</span>
+              <span>{t("outreach.control.dryRunWarning")}</span>
             </div>
           )}
         </CardContent>
@@ -126,8 +125,8 @@ export function OutreachControlPanel() {
           <div className="flex items-center gap-2">
             <ToggleLeft className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Automation Toggles</CardTitle>
-              <CardDescription>Enable or disable automatic pipeline steps</CardDescription>
+              <CardTitle className="text-lg">{t("outreach.control.automationToggles")}</CardTitle>
+              <CardDescription>{t("outreach.control.automationTogglesDesc")}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -153,38 +152,38 @@ export function OutreachControlPanel() {
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Send & Safety Settings</CardTitle>
-              <CardDescription>Control send limits, warmup, and test mode</CardDescription>
+              <CardTitle className="text-lg">{t("outreach.control.sendSettings")}</CardTitle>
+              <CardDescription>{t("outreach.control.sendSettingsDesc")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Daily Send Limit</Label>
+              <Label>{t("outreach.control.dailySendLimit")}</Label>
               <Input type="number" value={settings.daily_send_limit || 20} onChange={(e) => updateSetting("daily_send_limit", parseInt(e.target.value) || 20)} />
             </div>
             <div className="space-y-2">
-              <Label>Min Score to Send (0-100)</Label>
-              <Input type="number" value={settings.min_score_to_send || 60} onChange={(e) => updateSetting("min_score_to_send", parseInt(e.target.value) || 60)} />
+              <Label>{t("outreach.control.minScoreToSend", "Min AI Score to Send (1.0–5.0)")}</Label>
+              <Input type="number" step="0.1" min={1} max={5} value={settings.min_score_to_send || 3.5} onChange={(e) => updateSetting("min_score_to_send", parseFloat(e.target.value) || 3.5)} />
             </div>
           </div>
           <div className="flex items-center justify-between py-2">
             <div>
-              <Label>Warmup Mode</Label>
-              <p className="text-xs text-muted-foreground">Limit to 5 sends/day while building sender reputation</p>
+              <Label>{t("outreach.control.warmupMode")}</Label>
+              <p className="text-xs text-muted-foreground">{t("outreach.control.warmupModeDesc")}</p>
             </div>
             <Switch checked={settings.warmup_mode === true} onCheckedChange={(v) => updateSetting("warmup_mode", v)} />
           </div>
           <div className="flex items-center justify-between py-2">
             <div>
-              <Label>Dry Run Mode</Label>
-              <p className="text-xs text-muted-foreground">Simulate sends without actually sending emails</p>
+              <Label>{t("outreach.control.dryRunMode")}</Label>
+              <p className="text-xs text-muted-foreground">{t("outreach.control.dryRunModeDesc")}</p>
             </div>
             <Switch checked={settings.dry_run_mode === true} onCheckedChange={(v) => updateSetting("dry_run_mode", v)} />
           </div>
           <div className="space-y-2">
-            <Label>Follow-up Schedule (days)</Label>
+            <Label>{t("outreach.control.followupSchedule")}</Label>
             <Input
               value={Array.isArray(settings.followup_schedule) ? settings.followup_schedule.join(", ") : "2, 5, 10"}
               onChange={(e) => {
@@ -193,7 +192,7 @@ export function OutreachControlPanel() {
               }}
               placeholder="2, 5, 10"
             />
-            <p className="text-xs text-muted-foreground">Comma-separated days between follow-ups</p>
+            <p className="text-xs text-muted-foreground">{t("outreach.control.followupScheduleDesc")}</p>
           </div>
         </CardContent>
       </Card>
@@ -204,14 +203,14 @@ export function OutreachControlPanel() {
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Targeting</CardTitle>
-              <CardDescription>Configure lead discovery parameters</CardDescription>
+              <CardTitle className="text-lg">{t("outreach.control.targeting")}</CardTitle>
+              <CardDescription>{t("outreach.control.targetingDesc")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Target Industries</Label>
+            <Label>{t("outreach.control.targetIndustries")}</Label>
             <Input
               value={Array.isArray(settings.target_industries) ? settings.target_industries.join(", ") : ""}
               onChange={(e) => updateSetting("target_industries", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
@@ -219,7 +218,7 @@ export function OutreachControlPanel() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Target Locations</Label>
+            <Label>{t("outreach.control.targetLocations")}</Label>
             <Input
               value={Array.isArray(settings.target_locations) ? settings.target_locations.join(", ") : "Spain"}
               onChange={(e) => updateSetting("target_locations", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
@@ -227,7 +226,7 @@ export function OutreachControlPanel() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Keywords</Label>
+            <Label>{t("outreach.control.keywords")}</Label>
             <Input
               value={Array.isArray(settings.target_keywords) ? settings.target_keywords.join(", ") : ""}
               onChange={(e) => updateSetting("target_keywords", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
@@ -243,22 +242,22 @@ export function OutreachControlPanel() {
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Sender Identity</CardTitle>
-              <CardDescription>Configure outreach email sender details</CardDescription>
+              <CardTitle className="text-lg">{t("outreach.control.senderIdentity")}</CardTitle>
+              <CardDescription>{t("outreach.control.senderIdentityDesc")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Sender Name</Label>
+              <Label>{t("outreach.control.senderName")}</Label>
               <Input
                 value={typeof settings.sender_name === "string" ? settings.sender_name : "ICE Alarm España"}
                 onChange={(e) => updateSetting("sender_name", e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Sender Email</Label>
+              <Label>{t("outreach.control.senderEmail")}</Label>
               <Input
                 type="email"
                 value={typeof settings.sender_email === "string" ? settings.sender_email : ""}
@@ -268,7 +267,7 @@ export function OutreachControlPanel() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Email Signature (HTML)</Label>
+            <Label>{t("outreach.control.emailSignature")}</Label>
             <Textarea
               value={typeof settings.sender_signature === "string" ? settings.sender_signature : ""}
               onChange={(e) => updateSetting("sender_signature", e.target.value)}

@@ -86,7 +86,7 @@ Respond with JSON: {"subject": "...", "body_text": "...", "body_html": "<p>...</
         const unsubFooter = `<br/><hr style="margin-top:30px;border:none;border-top:1px solid #eee"/><p style="font-size:11px;color:#999;"><a href="${unsubscribeUrl}">Unsubscribe</a></p>`;
 
         // Insert draft
-        await supabase.from("outreach_email_drafts").insert({
+        const { data: insertedDraft, error: insertError } = await supabase.from("outreach_email_drafts").insert({
           crm_lead_id: lead.id,
           campaign_id: lead.campaign_id,
           subject: draft.subject,
@@ -98,7 +98,26 @@ Respond with JSON: {"subject": "...", "body_text": "...", "body_html": "<p>...</
           auto_approved: true,
           approval_required: false,
           sent_at: dryRun ? new Date().toISOString() : null,
-        });
+        }).select("id").single();
+
+        // If not dry run and draft was created, send it immediately
+        if (!dryRun && insertedDraft && !insertError) {
+          try {
+            const sendResp = await fetch(`${supabaseUrl}/functions/v1/outreach-send-email`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ draft_ids: [insertedDraft.id] }),
+            });
+            if (!sendResp.ok) {
+              errors.push(`Follow-up send failed for ${lead.company_name}`);
+            }
+          } catch (sendErr) {
+            errors.push(`Follow-up send error: ${sendErr instanceof Error ? sendErr.message : "Unknown"}`);
+          }
+        }
 
         // Calculate next follow-up
         const nextIdx = followupNum < followupSchedule.length ? followupNum : null;

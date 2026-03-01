@@ -1,11 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
-async function callFunction(supabaseUrl: string, anonKey: string, fnName: string, body: any): Promise<any> {
+async function callFunction(supabaseUrl: string, authKey: string, fnName: string, body: any): Promise<any> {
   const resp = await fetch(`${supabaseUrl}/functions/v1/${fnName}`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${authKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   try {
     const { steps_override } = await req.json().catch(() => ({}));
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Get automation settings
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const runEnrich = steps_override?.enrich ?? settingsMap.auto_enrichment_enabled === true;
     if (runEnrich) {
       try {
-        const result = await callFunction(supabaseUrl, anonKey, "outreach-enrich-lead", { enrich_all_unenriched: true });
+        const result = await callFunction(supabaseUrl, serviceKey, "outreach-enrich-lead", { enrich_all_unenriched: true });
         stepsResult.enrich = result;
       } catch (e) {
         stepsResult.enrich = { error: e instanceof Error ? e.message : "Failed" };
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const runRate = steps_override?.rate ?? settingsMap.auto_rating_enabled === true;
     if (runRate) {
       try {
-        const result = await callFunction(supabaseUrl, anonKey, "rate-outreach-leads", { rate_all_new: true });
+        const result = await callFunction(supabaseUrl, serviceKey, "rate-outreach-leads", { rate_all_new: true });
         stepsResult.rate = result;
       } catch (e) {
         stepsResult.rate = { error: e instanceof Error ? e.message : "Failed" };
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     const runDraft = steps_override?.draft ?? settingsMap.auto_drafting_enabled === true;
     if (runDraft) {
       try {
-        const result = await callFunction(supabaseUrl, anonKey, "outreach-generate-drafts", { draft_all_qualified: true });
+        const result = await callFunction(supabaseUrl, serviceKey, "outreach-generate-drafts", { draft_all_qualified: true });
         stepsResult.draft = result;
       } catch (e) {
         stepsResult.draft = { error: e instanceof Error ? e.message : "Failed" };
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     const runSend = steps_override?.send ?? settingsMap.auto_sending_enabled === true;
     if (runSend) {
       try {
-        const result = await callFunction(supabaseUrl, anonKey, "outreach-send-email", { send_all_approved: true });
+        const result = await callFunction(supabaseUrl, serviceKey, "outreach-send-email", { send_all_approved: true });
         stepsResult.send = result;
       } catch (e) {
         stepsResult.send = { error: e instanceof Error ? e.message : "Failed" };
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     const runFollowup = steps_override?.followup ?? settingsMap.auto_followup_enabled === true;
     if (runFollowup) {
       try {
-        const result = await callFunction(supabaseUrl, anonKey, "outreach-followup-runner", {});
+        const result = await callFunction(supabaseUrl, serviceKey, "outreach-followup-runner", {});
         stepsResult.followup = result;
       } catch (e) {
         stepsResult.followup = { error: e instanceof Error ? e.message : "Failed" };
