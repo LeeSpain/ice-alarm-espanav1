@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Link, ArrowLeft, Eye, Share2, Users } from "lucide-react";
+import { Copy, Link, ArrowLeft, Eye, Share2, Users, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { usePartnerMonthlyStats } from "@/hooks/usePartnerMonthlyStats";
 import { generateReferralLink } from "@/lib/crmEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -61,6 +63,10 @@ export default function PartnerDashboard() {
     isAdminRole ? partnerIdParam : undefined
   );
   const { data: stats, isLoading: statsLoading } = usePartnerStats(
+    isTemplatePreview ? undefined : partner?.id
+  );
+
+  const { data: monthlyStats } = usePartnerMonthlyStats(
     isTemplatePreview ? undefined : partner?.id
   );
 
@@ -261,6 +267,44 @@ export default function PartnerDashboard() {
 
       {/* Stats Cards */}
       <StatsCards stats={displayStats} isLoading={!isTemplatePreview && statsLoading} />
+
+      {/* Monthly Performance Chart */}
+      {!isTemplatePreview && monthlyStats && monthlyStats.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              {t("partner.dashboard.monthlyPerformance", "Monthly Performance")}
+            </CardTitle>
+            <CardDescription>
+              {t("partner.dashboard.monthlyPerformanceDesc", "Your referral activity over the last 6 months")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={monthlyStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="invites_sent"
+                  name={t("partner.dashboard.invitesSent", "Invites Sent")}
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="registrations"
+                  name={t("partner.dashboard.registrations", "Registrations")}
+                  fill="hsl(142, 76%, 36%)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs for Overview and Share Content */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "share")}>

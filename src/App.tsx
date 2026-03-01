@@ -122,6 +122,7 @@ const PartnerAgreementPage = lazyWithRetry(() => import("./pages/partner/Partner
 const PartnerSettingsPage = lazyWithRetry(() => import("./pages/partner/PartnerSettingsPage"));
 const PartnerMembersPage = lazyWithRetry(() => import("./pages/partner/PartnerMembersPage"));
 const PartnerAlertsPage = lazyWithRetry(() => import("./pages/partner/PartnerAlertsPage"));
+const PartnerSupportPage = lazyWithRetry(() => import("./pages/partner/PartnerSupportPage"));
 
 // Call Centre Pages - Lazy loaded
 const StaffDashboard = lazyWithRetry(() => import("./pages/call-centre/StaffDashboard"));
@@ -398,6 +399,7 @@ const App = () => {
                   <Route path="settings" element={<PartnerSettingsPage />} />
                   <Route path="members" element={<PartnerMembersPage />} />
                   <Route path="alerts" element={<PartnerAlertsPage />} />
+                  <Route path="support" element={<PartnerSupportPage />} />
                 </Route>
 
                 {/* Call Centre Dashboard Routes - Require Staff Role */}

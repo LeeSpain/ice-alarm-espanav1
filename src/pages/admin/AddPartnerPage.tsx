@@ -14,9 +14,11 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, UserPlus, Building2, MapPin, Bell, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { PARTNER_TYPES, REGIONS, HOW_HEARD_OPTIONS, isB2BPartnerType, getPartnerTypeLabel } from "@/config/partnerTypes";
 
 const partnerFormSchema = z.object({
   contact_name: z.string().min(2, "Contact name is required"),
+  last_name: z.string().optional(),
   company_name: z.string().optional(),
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
@@ -25,7 +27,7 @@ const partnerFormSchema = z.object({
   payout_iban: z.string().optional(),
   notes_internal: z.string().optional(),
   // B2B fields
-  partner_type: z.enum(["referral", "care", "residential"]),
+  partner_type: z.enum(["referral", "care", "residential", "pharmacy", "insurance", "healthcare_provider", "real_estate", "expat_community", "corporate_other"]),
   organization_type: z.string().optional(),
   organization_registration: z.string().optional(),
   organization_website: z.string().optional(),
@@ -35,6 +37,10 @@ const partnerFormSchema = z.object({
   alert_visibility_enabled: z.boolean(),
   billing_model: z.enum(["commission", "per_resident", "custom"]),
   custom_rate_monthly: z.number().optional(),
+  // New fields
+  region: z.string().optional(),
+  how_heard_about_us: z.string().optional(),
+  position_title: z.string().optional(),
 });
 
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
@@ -48,6 +54,7 @@ export default function AddPartnerPage() {
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
       contact_name: "",
+      last_name: "",
       company_name: "",
       email: "",
       phone: "",
@@ -65,12 +72,15 @@ export default function AddPartnerPage() {
       alert_visibility_enabled: false,
       billing_model: "commission",
       custom_rate_monthly: undefined,
+      region: "",
+      how_heard_about_us: "",
+      position_title: "",
     },
   });
 
   const partnerType = form.watch("partner_type");
   const billingModel = form.watch("billing_model");
-  const isCareOrResidential = partnerType === "care" || partnerType === "residential";
+  const isCareOrResidential = isB2BPartnerType(partnerType);
   const isResidential = partnerType === "residential";
 
   const onSubmit = async (data: PartnerFormValues) => {
@@ -86,6 +96,7 @@ export default function AddPartnerPage() {
       const response = await supabase.functions.invoke("partner-admin-create", {
         body: {
           contact_name: data.contact_name,
+          last_name: data.last_name || null,
           company_name: data.company_name || null,
           email: data.email,
           phone: data.phone || null,
@@ -104,6 +115,10 @@ export default function AddPartnerPage() {
           alert_visibility_enabled: data.alert_visibility_enabled,
           billing_model: data.billing_model,
           custom_rate_monthly: data.custom_rate_monthly || null,
+          // New fields
+          region: data.region || null,
+          how_heard_about_us: data.how_heard_about_us || null,
+          position_title: data.position_title || null,
         },
       });
 
@@ -164,7 +179,7 @@ export default function AddPartnerPage() {
                 <Label>Partner Type *</Label>
                 <Select
                   value={form.watch("partner_type")}
-                  onValueChange={(value: "referral" | "care" | "residential") =>
+                  onValueChange={(value: PartnerFormValues["partner_type"]) =>
                     form.setValue("partner_type", value)
                   }
                 >
@@ -172,9 +187,11 @@ export default function AddPartnerPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="referral">Referral Partner (Individual Affiliate)</SelectItem>
-                    <SelectItem value="care">Care Partner (Agency / Charity)</SelectItem>
-                    <SelectItem value="residential">Residential Partner (Care Home / Urbanization)</SelectItem>
+                    {PARTNER_TYPES.map((pt) => (
+                      <SelectItem key={pt.value} value={pt.value}>
+                        {getPartnerTypeLabel(pt.value)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -232,12 +249,59 @@ export default function AddPartnerPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input
+                  id="last_name"
+                  {...form.register("last_name")}
+                  placeholder="Last name"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   {...form.register("phone")}
                   placeholder="+34 600 000 000"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Region</Label>
+                <Select
+                  value={form.watch("region") || ""}
+                  onValueChange={(value) => form.setValue("region", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REGIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.value.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>How Heard About Us</Label>
+                <Select
+                  value={form.watch("how_heard_about_us") || ""}
+                  onValueChange={(value) => form.setValue("how_heard_about_us", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HOW_HEARD_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.value.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

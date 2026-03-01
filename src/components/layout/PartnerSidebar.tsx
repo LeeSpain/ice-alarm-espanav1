@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  Send, 
-  DollarSign, 
+import {
+  LayoutDashboard,
+  Send,
+  DollarSign,
   Settings,
   LogOut,
   ArrowLeft,
@@ -16,7 +16,8 @@ import {
   Megaphone,
   FileSignature,
   Users,
-  Bell
+  Bell,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePartnerData } from "@/hooks/usePartnerData";
@@ -74,6 +75,7 @@ const b2bNavItems: MenuItem[] = [
 // Items available to all
 const footerNavItems: MenuItem[] = [
   { labelKey: "sidebar.agreement", icon: FileSignature, path: "/partner-dashboard/agreement" },
+  { labelKey: "sidebar.support", icon: HelpCircle, path: "/partner-dashboard/support" },
   { labelKey: "sidebar.settings", icon: Settings, path: "/partner-dashboard/settings" },
 ];
 

@@ -110,6 +110,7 @@ export const checkoutSchema = z.object({
 
 export const partnerRegisterSchema = z.object({
   contact_name: name,
+  last_name: z.string().max(100).optional().or(z.literal("")),
   company_name: z.string().max(200).optional().or(z.literal("")),
   email,
   phone: phone.optional().or(z.literal("")),
@@ -117,13 +118,23 @@ export const partnerRegisterSchema = z.object({
   payout_beneficiary_name: z.string().trim().min(1).max(200),
   payout_iban: z.string().trim().min(1).max(50),
   password,
-  partner_type: z.enum(["referral", "care", "residential"]).optional(),
+  partner_type: z.enum([
+    "referral", "care", "residential", "pharmacy",
+    "insurance", "healthcare_provider", "real_estate",
+    "expat_community", "corporate_other",
+  ]).optional(),
   organization_type: z.string().max(100).optional(),
   organization_registration: z.string().max(100).optional(),
   organization_website: z.string().max(500).optional(),
   estimated_monthly_referrals: z.string().max(50).optional(),
   facility_address: z.string().max(500).optional(),
   facility_resident_count: z.number().int().min(0).max(10000).optional(),
+  region: z.string().max(100).optional(),
+  how_heard_about_us: z.string().max(100).optional(),
+  motivation: z.string().max(1000).optional(),
+  additional_notes: z.string().max(2000).optional(),
+  current_client_base: z.string().max(500).optional(),
+  position_title: z.string().max(200).optional(),
 });
 
 export const staffRegisterSchema = z.object({

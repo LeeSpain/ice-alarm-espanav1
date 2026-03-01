@@ -13,10 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Save, Eye, Building2, User, CreditCard, Languages, Home, Bell } from "lucide-react";
+import { Save, Eye, Building2, User, CreditCard, Languages, Home, Bell, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { REGIONS, isB2BPartnerType, getPartnerTypeLabel } from "@/config/partnerTypes";
+import { useTranslation } from "react-i18next";
 
 export default function PartnerSettingsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { isStaff, staffRole } = useAuth();
   const [searchParams] = useSearchParams();
@@ -32,7 +35,7 @@ export default function PartnerSettingsPage() {
 
   // Determine partner type
   const partnerType = partner?.partner_type || "referral";
-  const isB2B = partnerType === "care" || partnerType === "residential";
+  const isB2B = isB2BPartnerType(partnerType);
   const isResidential = partnerType === "residential";
 
   // Profile form data
@@ -42,6 +45,8 @@ export default function PartnerSettingsPage() {
     cif: "",
     email: "",
     phone: "",
+    region: "",
+    positionTitle: "",
   });
 
   // Organization form data
@@ -75,6 +80,8 @@ export default function PartnerSettingsPage() {
         cif: (partner as Record<string, unknown>).cif as string || "",
         email: partner.email || "",
         phone: partner.phone || "",
+        region: (partner as Record<string, unknown>).region as string || "",
+        positionTitle: (partner as Record<string, unknown>).position_title as string || "",
       });
       setOrgData({
         organizationType: partner.organization_type || "",
@@ -106,6 +113,8 @@ export default function PartnerSettingsPage() {
           cif: profileData.cif || null,
           email: profileData.email,
           phone: profileData.phone || null,
+          region: profileData.region || null,
+          position_title: profileData.positionTitle || null,
         } as Record<string, unknown>)
         .eq("id", partner!.id);
 
@@ -206,11 +215,7 @@ export default function PartnerSettingsPage() {
 
   // Get partner type display name
   const getPartnerTypeDisplay = (type: string) => {
-    switch (type) {
-      case "care": return "Care Partner";
-      case "residential": return "Residential Partner";
-      default: return "Referral Partner";
-    }
+    return getPartnerTypeLabel(type, t);
   };
 
   // Get organization type options
@@ -422,6 +427,44 @@ export default function PartnerSettingsPage() {
                   Spanish tax identification number (required for companies)
                 </p>
               </div>
+
+              <div>
+                <Label htmlFor="region">
+                  <MapPin className="h-3.5 w-3.5 inline mr-1" />
+                  Region
+                </Label>
+                <Select
+                  value={profileData.region}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, region: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REGIONS.map((region) => (
+                      <SelectItem key={region.value} value={region.value}>
+                        {region.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {isB2B && (
+                <div>
+                  <Label htmlFor="positionTitle">Position / Title</Label>
+                  <Input
+                    id="positionTitle"
+                    value={profileData.positionTitle}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, positionTitle: e.target.value })
+                    }
+                    placeholder="e.g. Director, Manager"
+                  />
+                </div>
+              )}
             </div>
 
             <Button

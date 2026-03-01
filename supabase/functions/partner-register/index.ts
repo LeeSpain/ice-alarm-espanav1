@@ -8,6 +8,7 @@ import { partnerRegisterSchema, validateRequest } from "../_shared/validation.ts
 
 interface PartnerRegistrationRequest {
   contact_name: string;
+  last_name?: string;
   company_name?: string;
   email: string;
   phone?: string;
@@ -16,22 +17,46 @@ interface PartnerRegistrationRequest {
   payout_iban: string;
   password: string;
   // B2B fields
-  partner_type?: "referral" | "care" | "residential";
+  partner_type?: "referral" | "care" | "residential" | "pharmacy" | "insurance" | "healthcare_provider" | "real_estate" | "expat_community" | "corporate_other";
   organization_type?: string;
   organization_registration?: string;
   organization_website?: string;
   estimated_monthly_referrals?: string;
   facility_address?: string;
   facility_resident_count?: number;
+  // New fields
+  region?: string;
+  how_heard_about_us?: string;
+  motivation?: string;
+  additional_notes?: string;
+  current_client_base?: string;
+  position_title?: string;
 }
 
-function generateReferralCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "ICE-";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+const PARTNER_TYPE_SUFFIXES: Record<string, string> = {
+  referral: "REF",
+  care: "CARE",
+  residential: "RES",
+  pharmacy: "PHARM",
+  insurance: "INS",
+  healthcare_provider: "HEALTH",
+  real_estate: "PROP",
+  expat_community: "EXPAT",
+  corporate_other: "CORP",
+};
+
+function generateMeaningfulReferralCode(
+  contactName: string,
+  companyName: string | undefined,
+  partnerType: string
+): string {
+  // Use company name if available, otherwise contact name (last name or first name)
+  const baseName = (companyName || contactName)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase()
+    .slice(0, 8);
+  const suffix = PARTNER_TYPE_SUFFIXES[partnerType] || "REF";
+  return `${baseName}-${suffix}`;
 }
 
 function generateVerificationToken(): string {
@@ -97,8 +122,13 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate unique referral code
-    let referralCode = generateReferralCode();
+    // Generate unique meaningful referral code
+    const baseCode = generateMeaningfulReferralCode(
+      data.contact_name,
+      data.company_name || undefined,
+      data.partner_type || "referral"
+    );
+    let referralCode = baseCode;
     let attempts = 0;
     while (attempts < 10) {
       const { data: existing } = await supabase
@@ -106,18 +136,19 @@ serve(async (req: Request): Promise<Response> => {
         .select("id")
         .eq("referral_code", referralCode)
         .maybeSingle();
-      
+
       if (!existing) break;
-      referralCode = generateReferralCode();
       attempts++;
+      referralCode = `${baseCode}-${attempts + 1}`;
     }
 
-    // Create partner record with B2B fields
+    // Create partner record with B2B fields and new fields
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
       .insert({
         user_id: authData.user.id,
         contact_name: data.contact_name,
+        last_name: data.last_name || null,
         company_name: data.company_name || null,
         email: data.email,
         phone: data.phone || null,
@@ -134,6 +165,13 @@ serve(async (req: Request): Promise<Response> => {
         estimated_monthly_referrals: data.estimated_monthly_referrals || null,
         facility_address: data.facility_address || null,
         facility_resident_count: data.facility_resident_count || null,
+        // New fields
+        region: data.region || null,
+        how_heard_about_us: data.how_heard_about_us || null,
+        motivation: data.motivation || null,
+        additional_notes: data.additional_notes || null,
+        current_client_base: data.current_client_base || null,
+        position_title: data.position_title || null,
       })
       .select()
       .single();
@@ -184,6 +222,24 @@ serve(async (req: Request): Promise<Response> => {
         referral_code: referralCode,
       },
     });
+
+    // Notify admin via WhatsApp
+    try {
+      await supabase.functions.invoke("notify-admin", {
+        body: {
+          event_type: "partner.joined",
+          entity_type: "partner",
+          entity_id: partner.id,
+          payload: {
+            contact_name: data.contact_name,
+            company_name: data.company_name || null,
+            partner_id: partner.id,
+          },
+        },
+      });
+    } catch (notifyError) {
+      console.error("Admin notification failed (non-blocking):", notifyError);
+    }
 
     // Get base URL from request origin or use fallback
     const origin = req.headers.get("origin") || "https://shelter-span.lovable.app";

@@ -61,6 +61,41 @@ export function useOrderActions() {
   return { updateOrderStatus };
 }
 
+/**
+ * Calculate commission amount based on volume bonus tiers:
+ * - Base: €50
+ * - 10+ deliveries this month: €55
+ * - 20+ deliveries this month: €60
+ */
+async function calculateCommissionAmount(partnerId: string): Promise<number> {
+  const BASE = 50;
+  const TIER_10 = 55;
+  const TIER_20 = 60;
+
+  try {
+    // Count deliveries this calendar month for this partner
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { count, error } = await supabase
+      .from("partner_commissions")
+      .select("id", { count: "exact", head: true })
+      .eq("partner_id", partnerId)
+      .gte("trigger_at", monthStart);
+
+    if (error || count === null) return BASE;
+
+    // count is the number of commissions already created this month (before this one)
+    const totalThisMonth = count + 1; // include the current one being created
+
+    if (totalThisMonth >= 20) return TIER_20;
+    if (totalThisMonth >= 10) return TIER_10;
+    return BASE;
+  } catch {
+    return BASE;
+  }
+}
+
 async function createCommissionIfAttributed(
   orderId: string,
   memberId: string,
@@ -101,6 +136,9 @@ async function createCommissionIfAttributed(
       return;
     }
 
+    // Calculate volume-based commission amount
+    const amountEur = await calculateCommissionAmount(attribution.partner_id);
+
     // Calculate release date (7 days from delivery)
     const releaseAt = new Date(deliveredAt);
     releaseAt.setDate(releaseAt.getDate() + 7);
@@ -112,7 +150,7 @@ async function createCommissionIfAttributed(
         partner_id: attribution.partner_id,
         member_id: memberId,
         order_id: orderId,
-        amount_eur: 50.0,
+        amount_eur: amountEur,
         status: "pending_release",
         trigger_event: "device_delivered",
         trigger_at: deliveredAt,
@@ -139,7 +177,7 @@ async function createCommissionIfAttributed(
       partner_id: attribution.partner_id,
       member_id: memberId,
       order_id: orderId,
-      amount_eur: 50.0,
+      amount_eur: amountEur,
       trigger_event: "device_delivered",
     });
 
@@ -149,12 +187,12 @@ async function createCommissionIfAttributed(
       partner_id: attribution.partner_id,
       member_id: memberId,
       order_id: orderId,
-      amount_eur: 50.0,
+      amount_eur: amountEur,
       trigger_event: "device_delivered",
       release_at: releaseAt.toISOString(),
     });
 
-    toast.success("Partner commission created (€50)");
+    toast.success(`Partner commission created (€${amountEur})`);
   } catch (error) {
     console.error("Error in commission creation:", error);
   }

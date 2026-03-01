@@ -15,6 +15,7 @@ import { format, subDays, isAfter } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
+import { PARTNER_TYPES, REGIONS, getPartnerTypeLabel, getRegionLabel } from "@/config/partnerTypes";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 
@@ -311,14 +312,16 @@ export default function PartnersPage() {
                </SelectContent>
              </Select>
              <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
-               <SelectTrigger className="w-[150px]">
+               <SelectTrigger className="w-[180px]">
                  <SelectValue placeholder={t("common.type", "Type")} />
                </SelectTrigger>
                <SelectContent>
                  <SelectItem value="all">{t("adminPartners.allTypes", "All Types")}</SelectItem>
-                 <SelectItem value="referral">{t("adminPartners.referral", "Referral")}</SelectItem>
-                 <SelectItem value="care">{t("adminPartners.care", "Care")}</SelectItem>
-                 <SelectItem value="residential">{t("adminPartners.residential", "Residential")}</SelectItem>
+                 {PARTNER_TYPES.map((pt) => (
+                   <SelectItem key={pt.value} value={pt.value}>
+                     {getPartnerTypeLabel(pt.value)}
+                   </SelectItem>
+                 ))}
                </SelectContent>
              </Select>
              <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -391,15 +394,21 @@ export default function PartnersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant="outline"
                           className={
                             partner.partner_type === "care" ? "border-blue-500 text-blue-600" :
                             partner.partner_type === "residential" ? "border-purple-500 text-purple-600" :
+                            partner.partner_type === "pharmacy" ? "border-green-500 text-green-600" :
+                            partner.partner_type === "insurance" ? "border-amber-500 text-amber-600" :
+                            partner.partner_type === "healthcare_provider" ? "border-teal-500 text-teal-600" :
+                            partner.partner_type === "real_estate" ? "border-orange-500 text-orange-600" :
+                            partner.partner_type === "expat_community" ? "border-cyan-500 text-cyan-600" :
+                            partner.partner_type === "corporate_other" ? "border-slate-500 text-slate-600" :
                             "border-muted-foreground"
                           }
                         >
-                          {partner.partner_type?.charAt(0).toUpperCase() + partner.partner_type?.slice(1) || "Referral"}
+                          {getPartnerTypeLabel(partner.partner_type || "referral")}
                         </Badge>
                       </TableCell>
                       <TableCell>

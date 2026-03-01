@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, Filter } from "lucide-react";
+import { DollarSign, Filter, Info } from "lucide-react";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 
@@ -116,6 +116,27 @@ export default function PartnerCommissionsPage() {
           }
         </p>
       </div>
+
+      {/* Commission Structure Banner */}
+      <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+                {t("partner.commissionStructure", "Commission Structure")}
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm text-blue-800 dark:text-blue-300">
+                <span>{t("partner.commissionBase", "Base: €50/device")}</span>
+                <span className="text-blue-400">|</span>
+                <span>{t("partner.commissionTier10", "10+ /month: €55/device")}</span>
+                <span className="text-blue-400">|</span>
+                <span>{t("partner.commissionTier20", "20+ /month: €60/device")}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">

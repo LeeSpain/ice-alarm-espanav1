@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users,
+  ArrowLeft, Mail, Phone, Building, Globe, CreditCard, Users, MapPin,
   DollarSign, Check, Pause, Play, Save, Package, FileText, FileSignature, AlertTriangle, Calendar, Building2, Bell, Eye
 } from "lucide-react";
 import { PartnerOrganizationTab } from "@/components/admin/partner/PartnerOrganizationTab";
@@ -39,6 +39,7 @@ import { logPartnerActivity, logCommissionActivity } from "@/lib/auditLog";
 import { useTranslation } from "react-i18next";
 import { logCrmEvent } from "@/lib/crmEvents";
 import { Database } from "@/integrations/supabase/types";
+import { getPartnerTypeLabel, getRegionLabel } from "@/config/partnerTypes";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 type InviteStatus = Database["public"]["Enums"]["invite_status"];
@@ -361,15 +362,21 @@ export default function PartnerDetailPage() {
             <Badge className={statusColors[partner.status]}>
               {partner.status.charAt(0).toUpperCase() + partner.status.slice(1)}
             </Badge>
-            <Badge 
+            <Badge
               variant="outline"
               className={
                 partner.partner_type === "care" ? "border-blue-500 text-blue-600" :
                 partner.partner_type === "residential" ? "border-purple-500 text-purple-600" :
+                partner.partner_type === "pharmacy" ? "border-green-500 text-green-600" :
+                partner.partner_type === "insurance" ? "border-amber-500 text-amber-600" :
+                partner.partner_type === "healthcare_provider" ? "border-teal-500 text-teal-600" :
+                partner.partner_type === "real_estate" ? "border-orange-500 text-orange-600" :
+                partner.partner_type === "expat_community" ? "border-cyan-500 text-cyan-600" :
+                partner.partner_type === "corporate_other" ? "border-slate-500 text-slate-600" :
                 "border-muted-foreground"
               }
             >
-              {partner.partner_type?.charAt(0).toUpperCase() + partner.partner_type?.slice(1) || "Referral"}
+              {getPartnerTypeLabel(partner.partner_type || "referral")}
             </Badge>
           </div>
           {partner.company_name && (
@@ -614,6 +621,24 @@ export default function PartnerDetailPage() {
                   <Globe className="h-4 w-4 text-muted-foreground" />
                   <span>{partner.preferred_language === "es" ? "Spanish" : "English"}</span>
                 </div>
+                {(partner as Record<string, unknown>).region && (
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{getRegionLabel((partner as Record<string, unknown>).region as string)}</span>
+                  </div>
+                )}
+                {(partner as Record<string, unknown>).how_heard_about_us && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">How Heard</p>
+                    <p className="capitalize">{((partner as Record<string, unknown>).how_heard_about_us as string).replace(/_/g, " ")}</p>
+                  </div>
+                )}
+                {(partner as Record<string, unknown>).last_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Last Name</p>
+                    <p>{(partner as Record<string, unknown>).last_name as string}</p>
+                  </div>
+                )}
                 <div className="pt-2 border-t">
                   <p className="text-sm text-muted-foreground">Referral Code</p>
                   <code className="text-lg font-mono font-bold">{partner.referral_code}</code>

@@ -6,6 +6,7 @@ import { sendEmail } from "../_shared/email.ts";
 
 interface PartnerCreateRequest {
   contact_name: string;
+  last_name?: string;
   company_name?: string;
   email: string;
   phone?: string;
@@ -15,7 +16,7 @@ interface PartnerCreateRequest {
   notes_internal?: string;
   cif_nif?: string;
   // B2B fields
-  partner_type?: "referral" | "care" | "residential";
+  partner_type?: "referral" | "care" | "residential" | "pharmacy" | "insurance" | "healthcare_provider" | "real_estate" | "expat_community" | "corporate_other";
   organization_type?: string;
   organization_registration?: string;
   organization_website?: string;
@@ -25,6 +26,13 @@ interface PartnerCreateRequest {
   alert_visibility_enabled?: boolean;
   billing_model?: "commission" | "per_resident" | "custom";
   custom_rate_monthly?: number;
+  // New fields
+  region?: string;
+  how_heard_about_us?: string;
+  motivation?: string;
+  additional_notes?: string;
+  current_client_base?: string;
+  position_title?: string;
 }
 
 // Generate a secure temporary password
@@ -37,14 +45,30 @@ function generateTempPassword(): string {
   return password;
 }
 
-// Generate a unique referral code
-function generateReferralCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+// Generate a meaningful referral code based on name and partner type
+const PARTNER_TYPE_SUFFIXES: Record<string, string> = {
+  referral: "REF",
+  care: "CARE",
+  residential: "RES",
+  pharmacy: "PHARM",
+  insurance: "INS",
+  healthcare_provider: "HEALTH",
+  real_estate: "PROP",
+  expat_community: "EXPAT",
+  corporate_other: "CORP",
+};
+
+function generateMeaningfulReferralCode(
+  contactName: string,
+  companyName: string | undefined,
+  partnerType: string
+): string {
+  const baseName = (companyName || contactName)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase()
+    .slice(0, 8);
+  const suffix = PARTNER_TYPE_SUFFIXES[partnerType] || "REF";
+  return `${baseName}-${suffix}`;
 }
 
 // Build welcome email HTML
@@ -224,7 +248,23 @@ Deno.serve(async (req) => {
 
     // Generate credentials
     const tempPassword = generateTempPassword();
-    const referralCode = generateReferralCode();
+    const baseCode = generateMeaningfulReferralCode(
+      body.contact_name,
+      body.company_name,
+      body.partner_type || "referral"
+    );
+    let referralCode = baseCode;
+    let codeAttempts = 0;
+    while (codeAttempts < 10) {
+      const { data: existingCode } = await supabaseAdmin
+        .from("partners")
+        .select("id")
+        .eq("referral_code", referralCode)
+        .maybeSingle();
+      if (!existingCode) break;
+      codeAttempts++;
+      referralCode = `${baseCode}-${codeAttempts + 1}`;
+    }
 
     // Try to create auth user, or reuse existing orphaned user
     let authUserId: string | undefined;
@@ -309,12 +349,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create partner record with B2B fields
+    // Create partner record with B2B fields and new fields
     const { data: partnerData, error: partnerError } = await supabaseAdmin
       .from("partners")
       .insert({
         user_id: authUserId,
         contact_name: body.contact_name,
+        last_name: body.last_name || null,
         company_name: body.company_name || null,
         email: email,
         phone: body.phone || null,
@@ -336,6 +377,13 @@ Deno.serve(async (req) => {
         alert_visibility_enabled: body.alert_visibility_enabled || false,
         billing_model: body.billing_model || "commission",
         custom_rate_monthly: body.custom_rate_monthly || null,
+        // New fields
+        region: body.region || null,
+        how_heard_about_us: body.how_heard_about_us || null,
+        motivation: body.motivation || null,
+        additional_notes: body.additional_notes || null,
+        current_client_base: body.current_client_base || null,
+        position_title: body.position_title || null,
       })
       .select()
       .single();
