@@ -44,7 +44,7 @@ export function useMyPendingCovers(staffId: string | undefined) {
         .eq("status", "pending")
         .order("expires_at");
       if (error) throw error;
-      return (data || []) as ShiftCover[];
+      return (data || []) as unknown as ShiftCover[];
     },
     enabled: !!staffId,
     staleTime: STALE_TIMES.SHORT,
@@ -66,7 +66,7 @@ export function useCoversForHoliday(holidayId: string | undefined) {
         .eq("holiday_id", holidayId!)
         .order("created_at");
       if (error) throw error;
-      return (data || []) as ShiftCover[];
+      return (data || []) as unknown as ShiftCover[];
     },
     enabled: !!holidayId,
     staleTime: STALE_TIMES.SHORT,
@@ -92,7 +92,7 @@ export function useAllCovers(statusFilter?: CoverStatus) {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as ShiftCover[];
+      return (data || []) as unknown as ShiftCover[];
     },
     staleTime: STALE_TIMES.SHORT,
   });

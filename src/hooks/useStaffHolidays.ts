@@ -82,7 +82,7 @@ export function useAllHolidays(statusFilter?: HolidayStatus) {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as StaffHoliday[];
+      return (data || []) as unknown as StaffHoliday[];
     },
     staleTime: STALE_TIMES.SHORT,
   });

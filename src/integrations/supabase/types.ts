@@ -56,6 +56,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "activity_logs_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       admin_ideas: {
@@ -105,6 +112,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_ideas_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -442,6 +456,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "alert_communications_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       alerts: {
@@ -506,6 +527,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "alerts_device_id_fkey"
@@ -737,6 +765,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "conversations_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
@@ -828,6 +863,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_assigned_to_staff_id_fkey"
+            columns: ["assigned_to_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "crm_contacts_linked_member_id_fkey"
@@ -1063,6 +1105,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "crm_profiles_assigned_to_staff_id_fkey"
+            columns: ["assigned_to_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "crm_profiles_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: true
@@ -1171,6 +1220,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "devices_collected_by_staff_id_fkey"
+            columns: ["collected_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "devices_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
@@ -1247,11 +1303,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documentation_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "documentation_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentation_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -1625,11 +1695,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "internal_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "internal_tickets_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "internal_tickets_member_id_fkey"
@@ -1678,6 +1762,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "isabella_settings_enabled_by_fkey"
+            columns: ["enabled_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -1752,6 +1843,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "leads_converted_member_id_fkey"
@@ -2292,6 +2390,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "member_interactions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       member_notes: {
@@ -2349,6 +2454,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "member_notes_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       member_update_tokens: {
@@ -2389,6 +2501,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_update_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "member_update_tokens_member_id_fkey"
@@ -4167,6 +4286,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "partners_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       payments: {
@@ -4383,6 +4509,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shift_notes_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
       social_post_metrics: {
@@ -4549,9 +4682,11 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          annual_holiday_days: number | null
           avatar_url: string | null
           city: string | null
           contract_type: string | null
+          contracted_hours_per_week: number | null
           country: string | null
           created_at: string | null
           date_of_birth: string | null
@@ -4586,9 +4721,11 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          annual_holiday_days?: number | null
           avatar_url?: string | null
           city?: string | null
           contract_type?: string | null
+          contracted_hours_per_week?: number | null
           country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
@@ -4623,9 +4760,11 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          annual_holiday_days?: number | null
           avatar_url?: string | null
           city?: string | null
           contract_type?: string | null
+          contracted_hours_per_week?: number | null
           country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
@@ -4693,11 +4832,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "staff_activity_log_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "staff_activity_log_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_activity_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -4741,11 +4894,275 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "staff_documents_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "staff_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
+      staff_holidays: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_id: string
+          start_date: string
+          status: string
+          total_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_id: string
+          start_date: string
+          status?: string
+          total_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_id?: string
+          start_date?: string
+          status?: string
+          total_days?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_holidays_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_holidays_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "staff_holidays_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_holidays_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
+      staff_shift_covers: {
+        Row: {
+          cover_staff_id: string
+          created_at: string | null
+          expires_at: string | null
+          holiday_id: string | null
+          id: string
+          original_staff_id: string
+          requested_at: string | null
+          requested_by: string | null
+          responded_at: string | null
+          response_note: string | null
+          shift_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          cover_staff_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          holiday_id?: string | null
+          id?: string
+          original_staff_id: string
+          requested_at?: string | null
+          requested_by?: string | null
+          responded_at?: string | null
+          response_note?: string | null
+          shift_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          cover_staff_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          holiday_id?: string | null
+          id?: string
+          original_staff_id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          responded_at?: string | null
+          response_note?: string | null
+          shift_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shift_covers_cover_staff_id_fkey"
+            columns: ["cover_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_cover_staff_id_fkey"
+            columns: ["cover_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_holiday_id_fkey"
+            columns: ["holiday_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holidays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_original_staff_id_fkey"
+            columns: ["original_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_original_staff_id_fkey"
+            columns: ["original_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "staff_shift_covers_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "staff_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_shifts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_time: string
+          id: string
+          is_confirmed: boolean | null
+          notes: string | null
+          shift_date: string
+          shift_type: string
+          staff_id: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time: string
+          id?: string
+          is_confirmed?: boolean | null
+          notes?: string | null
+          shift_date: string
+          shift_type: string
+          staff_id: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          is_confirmed?: boolean | null
+          notes?: string | null
+          shift_date?: string
+          shift_type?: string
+          staff_id?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shifts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shifts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "staff_shifts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shifts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
         ]
       }
@@ -4944,11 +5361,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "tasks_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "tasks_member_id_fkey"
@@ -5036,6 +5467,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
           },
           {
             foreignKeyName: "ticket_comments_ticket_id_fkey"
@@ -5541,6 +5979,13 @@ export type Database = {
             referencedRelation: "staff"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "website_images_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
         ]
       }
     }
@@ -5562,8 +6007,44 @@ export type Database = {
           },
         ]
       }
+      staff_holiday_balance: {
+        Row: {
+          annual_holiday_days: number | null
+          days_approved: number | null
+          days_pending: number | null
+          days_remaining: number | null
+          days_used_or_pending: number | null
+          first_name: string | null
+          last_name: string | null
+          staff_id: string | null
+        }
+        Relationships: []
+      }
+      staff_on_shift_now: {
+        Row: {
+          end_time: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          shift_date: string | null
+          shift_type: string | null
+          staff_id: string | null
+          start_time: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_shift_coverage: {
+        Args: { p_end: string; p_start: string }
+        Returns: {
+          check_date: string
+          check_shift_type: string
+          is_covered: boolean
+          staff_name: string
+        }[]
+      }
+      expire_pending_covers: { Args: never; Returns: number }
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_member_id: { Args: { _user_id: string }; Returns: string }
       get_partner_id: { Args: { _user_id: string }; Returns: string }
