@@ -13,12 +13,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useOutreachInbox, type InboundEmail } from "@/hooks/useInboundEmails";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import DOMPurify from "dompurify";
+
 export function OutreachInboxTab() {
   const { t } = useTranslation();
   const { data: emails, isLoading, refetch, isRefetching } = useOutreachInbox();
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
+
+  // Fetch linked CRM lead names for inbox emails
+  const linkedIds = emails?.filter(e => e.linked_entity_id).map(e => e.linked_entity_id!) || [];
+  const { data: linkedLeads } = useQuery({
+    queryKey: ["outreach-linked-leads", linkedIds],
+    queryFn: async () => {
+      if (linkedIds.length === 0) return {};
+      const { data } = await supabase.from("outreach_crm_leads").select("id, company_name").in("id", linkedIds);
+      const map: Record<string, string> = {};
+      data?.forEach(l => { map[l.id] = l.company_name; });
+      return map;
+    },
+    enabled: linkedIds.length > 0,
+  });
 
   return (
     <Card>
@@ -82,7 +99,7 @@ export function OutreachInboxTab() {
                       </span>
                       {email.linked_entity_id && (
                         <Badge variant="outline" className="text-xs">
-                          Linked
+                          {linkedLeads?.[email.linked_entity_id] || t("outreach.inbox.linked")}
                         </Badge>
                       )}
                     </div>
@@ -109,10 +126,20 @@ export function OutreachInboxTab() {
 
           <div className="space-y-4">
             {selectedEmail?.is_reply && selectedEmail?.linked_entity_id && (
-              <div className="p-3 bg-muted rounded-lg text-sm">
+              <div className="p-3 bg-muted rounded-lg text-sm flex items-center justify-between">
                 <p className="text-muted-foreground">
-                  This is a reply to an outreach email. Lead ID: {selectedEmail.linked_entity_id}
+                  {t("outreach.inbox.replyToOutreach")}
+                  {linkedLeads?.[selectedEmail.linked_entity_id] && (
+                    <span className="font-medium ml-1">— {linkedLeads[selectedEmail.linked_entity_id]}</span>
+                  )}
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedEmail(null)}
+                >
+                  {t("outreach.inbox.viewLead")}
+                </Button>
               </div>
             )}
 

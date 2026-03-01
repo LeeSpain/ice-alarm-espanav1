@@ -133,11 +133,11 @@ export function OutreachAnalyticsTab() {
                     <TableCell>
                       {log.dry_run ? (
                         <Badge variant="outline" className="text-xs">
-                          Dry Run
+                          {t("outreach.analytics.dryRun")}
                         </Badge>
                       ) : (
                         <Badge variant="default" className="text-xs">
-                          Live
+                          {t("outreach.analytics.live")}
                         </Badge>
                       )}
                     </TableCell>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ interface LeadDetailDialogProps {
 }
 
 export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetailDialogProps) {
+  const { t } = useTranslation();
   const { generateDrafts, isDrafting, sendEmails, isSending } = useOutreachPipeline();
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<any[]>([]);
@@ -46,7 +48,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
       }, { onConflict: "email" });
     }
     queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
-    toast({ title: "Marked as Do Not Contact" });
+    toast({ title: t("outreach.leadDetail.markedDNC") });
     onOpenChange(false);
   };
 
@@ -63,7 +65,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
       await supabase.from("outreach_email_drafts").update({ status: "approved" }).in("id", drafts.map((d: any) => d.id));
       await sendEmails(drafts.map((d: any) => d.id));
     } else {
-      toast({ title: "No drafts to send", description: "Generate a draft first", variant: "destructive" });
+      toast({ title: t("outreach.leadDetail.noDraftsToSend"), description: t("outreach.leadDetail.generateFirst"), variant: "destructive" });
     }
   };
 
@@ -88,12 +90,12 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
           {/* Contact Info */}
           <Card>
             <CardContent className="pt-4 space-y-2">
-              {lead.contact_name && <p className="text-sm"><strong>Contact:</strong> {lead.contact_name}</p>}
+              {lead.contact_name && <p className="text-sm"><strong>{t("outreach.leadDetail.contact")}:</strong> {lead.contact_name}</p>}
               {lead.email && <p className="text-sm flex items-center gap-2"><Mail className="h-3 w-3" /> {lead.email}</p>}
               {lead.phone && <p className="text-sm flex items-center gap-2"><Phone className="h-3 w-3" /> {lead.phone}</p>}
               {lead.website_url && <p className="text-sm flex items-center gap-2"><Globe className="h-3 w-3" /> <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">{lead.website_url}</a></p>}
               {lead.location && <p className="text-sm flex items-center gap-2"><MapPin className="h-3 w-3" /> {lead.location}</p>}
-              {lead.category && <p className="text-sm"><strong>Industry:</strong> {lead.category}</p>}
+              {lead.category && <p className="text-sm"><strong>{t("outreach.leadDetail.industry")}:</strong> {lead.category}</p>}
             </CardContent>
           </Card>
 
@@ -102,14 +104,14 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
             <>
               <Separator />
               <div>
-                <h4 className="text-sm font-medium mb-2">Enrichment & Research</h4>
+                <h4 className="text-sm font-medium mb-2">{t("outreach.leadDetail.enrichment")}</h4>
                 {typeof enrichment === "object" ? (
                   <Card>
                     <CardContent className="pt-4 text-sm space-y-1">
-                      {enrichment.description && <p><strong>Description:</strong> {enrichment.description}</p>}
-                      {enrichment.services && <p><strong>Services:</strong> {Array.isArray(enrichment.services) ? enrichment.services.join(", ") : enrichment.services}</p>}
-                      {enrichment.why_fit && <p><strong>Why fit:</strong> {enrichment.why_fit}</p>}
-                      {enrichment.recommended_approach && <p><strong>Approach:</strong> {enrichment.recommended_approach}</p>}
+                      {enrichment.description && <p><strong>{t("outreach.leadDetail.description")}:</strong> {enrichment.description}</p>}
+                      {enrichment.services && <p><strong>{t("outreach.leadDetail.services")}:</strong> {Array.isArray(enrichment.services) ? enrichment.services.join(", ") : enrichment.services}</p>}
+                      {enrichment.why_fit && <p><strong>{t("outreach.leadDetail.whyFit")}:</strong> {enrichment.why_fit}</p>}
+                      {enrichment.recommended_approach && <p><strong>{t("outreach.leadDetail.approach")}:</strong> {enrichment.recommended_approach}</p>}
                     </CardContent>
                   </Card>
                 ) : (
@@ -124,7 +126,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
             <>
               <Separator />
               <div>
-                <h4 className="text-sm font-medium mb-2">AI Score & Reasoning</h4>
+                <h4 className="text-sm font-medium mb-2">{t("outreach.leadDetail.aiScore")}</h4>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-lg px-3 py-1">{Number(lead.ai_score).toFixed(1)} / 5.0</Badge>
                 </div>
@@ -144,10 +146,10 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
             <>
               <Separator />
               <div className="text-sm space-y-1">
-                <h4 className="font-medium">Follow-up Status</h4>
-                <p>Follow-ups sent: {lead.followup_count || 0}</p>
-                {lead.next_followup_at && <p>Next follow-up: {new Date(lead.next_followup_at).toLocaleDateString()}</p>}
-                {lead.last_contacted_at && <p>Last contacted: {new Date(lead.last_contacted_at).toLocaleDateString()}</p>}
+                <h4 className="font-medium">{t("outreach.leadDetail.followupStatus")}</h4>
+                <p>{t("outreach.leadDetail.followupsSent")}: {lead.followup_count || 0}</p>
+                {lead.next_followup_at && <p>{t("outreach.leadDetail.nextFollowup")}: {new Date(lead.next_followup_at).toLocaleDateString()}</p>}
+                {lead.last_contacted_at && <p>{t("outreach.leadDetail.lastContacted")}: {new Date(lead.last_contacted_at).toLocaleDateString()}</p>}
               </div>
             </>
           )}
@@ -158,7 +160,7 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
               <Separator />
               <div>
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <FileText className="h-4 w-4" /> Email Drafts ({drafts.length})
+                  <FileText className="h-4 w-4" /> {t("outreach.leadDetail.emailDrafts")} ({drafts.length})
                 </h4>
                 <div className="space-y-2">
                   {drafts.map((draft) => (
@@ -184,13 +186,13 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={handleApproveSend} disabled={isSending || lead.do_not_contact}>
-              <Send className="mr-2 h-4 w-4" />{isSending ? "Sending..." : "Approve & Send"}
+              <Send className="mr-2 h-4 w-4" />{isSending ? t("outreach.leadDetail.sending") : t("outreach.leadDetail.approveSend")}
             </Button>
             <Button size="sm" variant="outline" onClick={handleRegenerateDraft} disabled={isDrafting}>
-              <RefreshCw className="mr-2 h-4 w-4" />{isDrafting ? "Generating..." : "Regenerate Draft"}
+              <RefreshCw className="mr-2 h-4 w-4" />{isDrafting ? t("outreach.leadDetail.generating") : t("outreach.leadDetail.regenerateDraft")}
             </Button>
             <Button size="sm" variant="destructive" onClick={handleMarkDNC} disabled={lead.do_not_contact}>
-              <XCircle className="mr-2 h-4 w-4" />Mark DNC
+              <XCircle className="mr-2 h-4 w-4" />{t("outreach.leadDetail.markDNC")}
             </Button>
           </div>
         </div>

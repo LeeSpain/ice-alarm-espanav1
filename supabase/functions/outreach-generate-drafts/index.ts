@@ -70,6 +70,19 @@ Deno.serve(async (req) => {
       if (rawLeads) rawLeads.forEach((r: any) => { enrichmentMap[r.id] = r.enrichment_data; });
     }
 
+    // Get campaign settings for each lead
+    const campaignIds = [...new Set(
+      leadsNeedingDrafts.filter((l: any) => l.campaign_id).map((l: any) => l.campaign_id)
+    )];
+    let campaignsMap: Record<string, any> = {};
+    if (campaignIds.length > 0) {
+      const { data: campaigns } = await supabase
+        .from("outreach_campaigns")
+        .select("id, name, default_language, email_tone, outreach_goal, target_description, messaging_tone, max_emails_per_lead")
+        .in("id", campaignIds);
+      if (campaigns) campaigns.forEach((c: any) => { campaignsMap[c.id] = c; });
+    }
+
     // Get unsubscribe base URL
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 
@@ -81,15 +94,43 @@ Deno.serve(async (req) => {
       try {
         const enrichment = lead.raw_lead_id ? enrichmentMap[lead.raw_lead_id] : null;
         const unsubscribeUrl = `${supabaseUrl}/functions/v1/outreach-unsubscribe?token=${lead.unsubscribe_token}`;
+        const campaign = lead.campaign_id ? campaignsMap[lead.campaign_id] : null;
 
-        const prompt = `Write a professional B2B outreach email from ICE Alarm España to ${lead.company_name}.
+        // Skip if lead has exceeded campaign's max emails
+        if (campaign?.max_emails_per_lead && (lead.email_count || 0) >= campaign.max_emails_per_lead) {
+          continue;
+        }
 
-About ICE Alarm España:
+        const language = campaign?.default_language || "en";
+        const tone = campaign?.messaging_tone || campaign?.email_tone || "professional";
+        const goal = campaign?.outreach_goal || "partnership";
+        const targetDesc = campaign?.target_description || "";
+
+        const languageInstruction = language === "es"
+          ? "Write the email IN SPANISH. The recipient is Spanish-speaking."
+          : "Write the email in English.";
+
+        const toneInstruction = tone === "friendly"
+          ? "Tone: Friendly and conversational, as if from one colleague to another."
+          : tone === "neutral"
+            ? "Tone: Neutral and informative, focused on facts and benefits."
+            : "Tone: Professional but warm, Spanish business culture aware.";
+
+        const goalInstruction = goal === "intro"
+          ? "Goal: Introduce ICE Alarm España and its services. No hard sell."
+          : goal === "meeting"
+            ? "Goal: Secure a meeting or call. Be direct about wanting to schedule a conversation."
+            : "Goal: Propose a partnership opportunity. Emphasise mutual benefit.";
+
+        const prompt = `Write a B2B outreach email from ${senderName} to ${lead.company_name}.
+
+About ${senderName}:
 - Personal emergency response service for elderly and vulnerable people in Spain
 - 24/7 call centre monitoring
 - GPS pendant devices with SOS button, fall detection
 - Monthly subscription service (from €24.99/month)
 - Looking for partners: care homes, insurance companies, healthcare providers, pharmacies, residential complexes
+${targetDesc ? `\nCampaign focus: ${targetDesc}` : ""}
 
 About the prospect:
 - Company: ${lead.company_name}
@@ -97,16 +138,18 @@ About the prospect:
 - Industry: ${lead.category || "Unknown"}
 - Location: ${lead.location || "Spain"}
 - Website: ${lead.website_url || "N/A"}
-${enrichment ? `- Enrichment: ${JSON.stringify(enrichment)}` : ""}
-${lead.research_summary ? `- Research: ${lead.research_summary}` : ""}
+${enrichment ? `- Research: ${JSON.stringify(enrichment)}` : ""}
+${lead.research_summary ? `- Summary: ${lead.research_summary}` : ""}
 
 Requirements:
 - Subject line: Compelling, personalized, under 60 characters
 - Body: 3-4 short paragraphs
-- Tone: Professional but warm, Spanish business culture aware
+- ${toneInstruction}
+- ${goalInstruction}
+- ${languageInstruction}
 - Include a specific value proposition for their business type
-- End with a clear call-to-action (meeting/call)
-- Write in English (will be translated if needed)
+- End with a clear call-to-action
+- Sign off as "${senderName}"
 - Do NOT include unsubscribe text (added automatically)
 
 Respond with JSON:

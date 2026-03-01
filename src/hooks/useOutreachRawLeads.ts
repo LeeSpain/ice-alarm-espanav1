@@ -392,6 +392,26 @@ export function useOutreachRawLeads(filters?: Filters) {
 
       if (updateError) throw updateError;
 
+      // Update campaign leads_count
+      const campaignCounts: Record<string, number> = {};
+      for (const lead of leadsToProcess) {
+        if (lead.campaign_id) {
+          campaignCounts[lead.campaign_id] = (campaignCounts[lead.campaign_id] || 0) + 1;
+        }
+      }
+      for (const [campaignId, count] of Object.entries(campaignCounts)) {
+        const { data: campaign } = await supabase
+          .from("outreach_campaigns")
+          .select("leads_count")
+          .eq("id", campaignId)
+          .single();
+        if (campaign) {
+          await supabase.from("outreach_campaigns")
+            .update({ leads_count: (campaign.leads_count || 0) + count })
+            .eq("id", campaignId);
+        }
+      }
+
       // Track usage
       if (leadsToProcess.length > 0) {
         const today = new Date().toISOString().split("T")[0];
@@ -428,6 +448,7 @@ export function useOutreachRawLeads(filters?: Filters) {
       queryClient.invalidateQueries({ queryKey: ["outreach-raw-leads"] });
       queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
       queryClient.invalidateQueries({ queryKey: ["outreach-daily-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["outreach-campaigns"] });
 
       if (data.capReached && data.queued > 0) {
         toast({

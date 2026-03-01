@@ -3808,7 +3808,9 @@
       "loading": "Cargando leads...",
       "ratingComplete": "{{count}} leads calificados correctamente",
       "noLeadsToRate": "No hay leads sin calificar para procesar",
-      "skippedBelowThreshold": "{{count}} leads omitidos (bajo umbral)"
+      "skippedBelowThreshold": "{{count}} leads omitidos (bajo umbral)",
+      "showingFirst": "Mostrando los primeros {{count}}",
+      "leadsFound": "leads"
     },
     "crm": {
       "title": "CRM Outreach",
@@ -3943,7 +3945,10 @@
       },
       "suggestedReply": "Respuesta Sugerida",
       "sendReply": "Enviar Respuesta",
-      "editReply": "Editar"
+      "editReply": "Editar",
+      "linked": "Vinculado",
+      "replyToOutreach": "Respuesta a email de outreach",
+      "viewLead": "Ver Lead"
     },
     "analytics": {
       "title": "Analítica",
@@ -3960,7 +3965,39 @@
       "startedAt": "Iniciado",
       "totals": "Totales",
       "status": "Estado",
-      "noRuns": "Sin ejecuciones del pipeline aún"
+      "noRuns": "Sin ejecuciones del pipeline aún",
+      "dryRun": "Simulación",
+      "live": "En vivo"
+    },
+    "pipeline": {
+      "enriched": "Enriquecidos",
+      "rated": "Puntuados",
+      "drafted": "Borradores",
+      "sent": "Enviados",
+      "followups": "Seguimientos"
+    },
+    "leadDetail": {
+      "contact": "Contacto",
+      "industry": "Industria",
+      "enrichment": "Enriquecimiento e Investigación",
+      "description": "Descripción",
+      "services": "Servicios",
+      "whyFit": "Por qué encaja",
+      "approach": "Enfoque",
+      "aiScore": "Puntuación IA y Razonamiento",
+      "followupStatus": "Estado de Seguimiento",
+      "followupsSent": "Seguimientos enviados",
+      "nextFollowup": "Próximo seguimiento",
+      "lastContacted": "Último contacto",
+      "emailDrafts": "Borradores de Email",
+      "approveSend": "Aprobar y Enviar",
+      "regenerateDraft": "Regenerar Borrador",
+      "markDNC": "Marcar No Contactar",
+      "sending": "Enviando...",
+      "generating": "Generando...",
+      "markedDNC": "Marcado como No Contactar",
+      "noDraftsToSend": "No hay borradores para enviar",
+      "generateFirst": "Genere un borrador primero"
     },
     "runFullPipeline": "Ejecutar Pipeline Completo",
     "runningPipeline": "Ejecutando Pipeline...",

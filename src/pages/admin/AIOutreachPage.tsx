@@ -73,11 +73,11 @@ const AIOutreachPage = () => {
           </DialogHeader>
           {lastRun && (
             <div className="space-y-2 text-sm">
-              <p><strong>Enriched:</strong> {lastRun.totals?.enriched || 0}</p>
-              <p><strong>Rated:</strong> {lastRun.totals?.rated || 0}</p>
-              <p><strong>Drafted:</strong> {lastRun.totals?.drafted || 0}</p>
-              <p><strong>Sent:</strong> {lastRun.totals?.sent || 0}</p>
-              <p><strong>Follow-ups:</strong> {lastRun.totals?.followups || 0}</p>
+              <p><strong>{t("outreach.pipeline.enriched")}:</strong> {lastRun.totals?.enriched || 0}</p>
+              <p><strong>{t("outreach.pipeline.rated")}:</strong> {lastRun.totals?.rated || 0}</p>
+              <p><strong>{t("outreach.pipeline.drafted")}:</strong> {lastRun.totals?.drafted || 0}</p>
+              <p><strong>{t("outreach.pipeline.sent")}:</strong> {lastRun.totals?.sent || 0}</p>
+              <p><strong>{t("outreach.pipeline.followups")}:</strong> {lastRun.totals?.followups || 0}</p>
             </div>
           )}
         </DialogContent>

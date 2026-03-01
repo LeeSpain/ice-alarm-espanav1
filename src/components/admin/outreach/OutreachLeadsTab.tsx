@@ -164,7 +164,19 @@ export function OutreachLeadsTab() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>{t("outreach.leads.title")}</CardTitle>
-              <CardDescription>{t("outreach.leads.subtitle")}</CardDescription>
+              <CardDescription>
+                {t("outreach.leads.subtitle")}
+                {leads && leads.length >= 200 && (
+                  <span className="ml-2 text-yellow-600">
+                    ({t("outreach.leads.showingFirst", { count: 200 })})
+                  </span>
+                )}
+                {leads && leads.length > 0 && leads.length < 200 && (
+                  <span className="ml-2">
+                    ({leads.length} {t("outreach.leads.leadsFound")})
+                  </span>
+                )}
+              </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button

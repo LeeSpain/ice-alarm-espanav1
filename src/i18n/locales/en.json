@@ -3832,7 +3832,9 @@
       "loading": "Loading leads...",
       "ratingComplete": "Successfully rated {{count}} leads",
       "noLeadsToRate": "No unrated leads to process",
-      "skippedBelowThreshold": "{{count}} leads skipped (below threshold)"
+      "skippedBelowThreshold": "{{count}} leads skipped (below threshold)",
+      "showingFirst": "Showing first {{count}}",
+      "leadsFound": "leads"
     },
     "crm": {
       "title": "Outreach CRM",
@@ -3967,7 +3969,10 @@
       },
       "suggestedReply": "Suggested Reply",
       "sendReply": "Send Reply",
-      "editReply": "Edit"
+      "editReply": "Edit",
+      "linked": "Linked",
+      "replyToOutreach": "Reply to outreach email",
+      "viewLead": "View Lead"
     },
     "analytics": {
       "title": "Analytics",
@@ -3984,7 +3989,39 @@
       "startedAt": "Started At",
       "totals": "Totals",
       "status": "Status",
-      "noRuns": "No pipeline runs yet"
+      "noRuns": "No pipeline runs yet",
+      "dryRun": "Dry Run",
+      "live": "Live"
+    },
+    "pipeline": {
+      "enriched": "Enriched",
+      "rated": "Rated",
+      "drafted": "Drafted",
+      "sent": "Sent",
+      "followups": "Follow-ups"
+    },
+    "leadDetail": {
+      "contact": "Contact",
+      "industry": "Industry",
+      "enrichment": "Enrichment & Research",
+      "description": "Description",
+      "services": "Services",
+      "whyFit": "Why fit",
+      "approach": "Approach",
+      "aiScore": "AI Score & Reasoning",
+      "followupStatus": "Follow-up Status",
+      "followupsSent": "Follow-ups sent",
+      "nextFollowup": "Next follow-up",
+      "lastContacted": "Last contacted",
+      "emailDrafts": "Email Drafts",
+      "approveSend": "Approve & Send",
+      "regenerateDraft": "Regenerate Draft",
+      "markDNC": "Mark DNC",
+      "sending": "Sending...",
+      "generating": "Generating...",
+      "markedDNC": "Marked as Do Not Contact",
+      "noDraftsToSend": "No drafts to send",
+      "generateFirst": "Generate a draft first"
     },
     "runFullPipeline": "Run Full Pipeline",
     "runningPipeline": "Running Pipeline...",
