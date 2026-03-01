@@ -27,13 +27,13 @@ export function LogoUploadSection({
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error(t("videoHub.logo.selectImage"));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error(t("videoHub.logo.maxSize"));
       return;
     }
 
@@ -56,11 +56,19 @@ export function LogoUploadSection({
         .from("website-images")
         .getPublicUrl(filePath);
 
+      // Delete old logo file if replacing
+      if (currentLogoUrl) {
+        const oldPath = currentLogoUrl.split("/website-images/").pop();
+        if (oldPath) {
+          await supabase.storage.from("website-images").remove([oldPath]);
+        }
+      }
+
       onLogoChange(urlData.publicUrl);
-      toast.success("Logo uploaded successfully");
+      toast.success(t("videoHub.logo.uploaded"));
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error(error.message || "Failed to upload logo");
+      toast.error(error.message || t("videoHub.logo.uploadFailed"));
     } finally {
       setIsUploading(false);
       // Reset input
@@ -70,9 +78,16 @@ export function LogoUploadSection({
     }
   };
 
-  const handleRemoveLogo = () => {
+  const handleRemoveLogo = async () => {
+    // Delete file from storage
+    if (currentLogoUrl) {
+      const oldPath = currentLogoUrl.split("/website-images/").pop();
+      if (oldPath) {
+        await supabase.storage.from("website-images").remove([oldPath]);
+      }
+    }
     onLogoChange(null);
-    toast.success("Logo removed");
+    toast.success(t("videoHub.logo.removed"));
   };
 
   const isLoading = isUploading || isUpdating;
@@ -102,7 +117,7 @@ export function LogoUploadSection({
                 ) : (
                   <Upload className="mr-2 h-4 w-4" />
                 )}
-                Change
+                {t("videoHub.logo.change")}
               </Button>
               <Button
                 variant="outline"
@@ -112,7 +127,7 @@ export function LogoUploadSection({
                 className="text-destructive hover:text-destructive"
               >
                 <X className="mr-2 h-4 w-4" />
-                Remove
+                {t("videoHub.logo.remove")}
               </Button>
             </div>
           </div>
@@ -129,7 +144,7 @@ export function LogoUploadSection({
               <>
                 <ImageIcon className="h-8 w-8 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  Click to upload logo
+                  {t("videoHub.logo.clickToUpload")}
                 </span>
               </>
             )}
@@ -143,7 +158,7 @@ export function LogoUploadSection({
           className="hidden"
         />
         <p className="mt-2 text-xs text-muted-foreground">
-          Recommended: PNG or JPG, max 5MB
+          {t("videoHub.logo.recommended")}
         </p>
       </div>
     </div>

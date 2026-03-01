@@ -70,6 +70,8 @@ export function useVideoRenders(projectId?: string) {
 
       if (projectId) {
         query = query.eq("project_id", projectId);
+      } else {
+        query = query.limit(200);
       }
 
       const { data, error } = await query;

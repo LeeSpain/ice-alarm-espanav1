@@ -4399,7 +4399,10 @@
     "variants": {
       "title": "Render Variants",
       "queued": "{{format}} variant queued",
-      "alreadyRendered": "Already rendered"
+      "alreadyRendered": "Already rendered",
+      "portraitTooltip": "Portrait (Shorts/Reels)",
+      "landscapeTooltip": "Landscape (YouTube)",
+      "squareTooltip": "Square (Instagram/LinkedIn)"
     },
     "gallery": {
       "title": "Video Gallery",
@@ -4471,7 +4474,36 @@
       "disclaimersEs": "Spanish Disclaimer",
       "videoDefaults": "Video Defaults",
       "videoDefaultsDesc": "Configure default settings for new videos",
-      "saved": "Settings saved successfully"
+      "saved": "Settings saved successfully",
+      "iceRed": "ICE Red",
+      "trustBlue": "Trust Blue"
+    },
+    "logo": {
+      "selectImage": "Please select an image file",
+      "maxSize": "Image must be less than 5MB",
+      "uploaded": "Logo uploaded successfully",
+      "uploadFailed": "Failed to upload logo",
+      "removed": "Logo removed",
+      "updated": "Logo updated",
+      "change": "Change",
+      "remove": "Remove",
+      "clickToUpload": "Click to upload logo",
+      "recommended": "Recommended: PNG or JPG, max 5MB"
+    },
+    "youtube": {
+      "connected": "Connected",
+      "notConnected": "YouTube Not Connected",
+      "notConnectedDesc": "Connect your YouTube channel to publish videos directly.",
+      "connectInSettings": "Connect in Admin Settings",
+      "mustBeApproved": "Project must be approved before publishing to YouTube",
+      "published": "Published",
+      "publishButton": "Publish",
+      "statuses": {
+        "published": "Published",
+        "uploading": "Uploading...",
+        "queued": "Queued",
+        "failed": "Failed"
+      }
     },
     "formats": {
       "portrait": "Portrait (9:16)",
@@ -4519,7 +4551,13 @@
       "backgroundUrl": "Background Image/Video URL",
       "backgroundHint": "Optional: Enter a URL for a background image or video",
       "productIcons": "Product Icons",
-      "noIcons": "No product icons selected"
+      "noIcons": "No product icons selected",
+      "products": {
+        "sosPendant": "SOS Pendant",
+        "dosell": "Dosell",
+        "vivago": "Vivago",
+        "fallDetector": "Fall Detector"
+      }
     },
     "help": {
       "title": "Video Hub Guide",

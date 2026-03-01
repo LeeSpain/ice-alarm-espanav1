@@ -4375,7 +4375,10 @@
     "variants": {
       "title": "Variantes",
       "queued": "Variante {{format}} en cola",
-      "alreadyRendered": "Ya renderizado"
+      "alreadyRendered": "Ya renderizado",
+      "portraitTooltip": "Vertical (Shorts/Reels)",
+      "landscapeTooltip": "Horizontal (YouTube)",
+      "squareTooltip": "Cuadrado (Instagram/LinkedIn)"
     },
     "gallery": {
       "title": "Galería de Videos",
@@ -4447,7 +4450,36 @@
       "disclaimersEs": "Aviso Legal en Español",
       "videoDefaults": "Valores Predeterminados de Video",
       "videoDefaultsDesc": "Configurar ajustes predeterminados para nuevos videos",
-      "saved": "Configuración guardada correctamente"
+      "saved": "Configuración guardada correctamente",
+      "iceRed": "Rojo ICE",
+      "trustBlue": "Azul Confianza"
+    },
+    "logo": {
+      "selectImage": "Por favor, selecciona un archivo de imagen",
+      "maxSize": "La imagen debe ser menor de 5MB",
+      "uploaded": "Logo subido correctamente",
+      "uploadFailed": "Error al subir el logo",
+      "removed": "Logo eliminado",
+      "updated": "Logo actualizado",
+      "change": "Cambiar",
+      "remove": "Eliminar",
+      "clickToUpload": "Haz clic para subir logo",
+      "recommended": "Recomendado: PNG o JPG, máx 5MB"
+    },
+    "youtube": {
+      "connected": "Conectado",
+      "notConnected": "YouTube No Conectado",
+      "notConnectedDesc": "Conecta tu canal de YouTube para publicar videos directamente.",
+      "connectInSettings": "Conectar en Configuración",
+      "mustBeApproved": "El proyecto debe estar aprobado antes de publicar en YouTube",
+      "published": "Publicado",
+      "publishButton": "Publicar",
+      "statuses": {
+        "published": "Publicado",
+        "uploading": "Subiendo...",
+        "queued": "En Cola",
+        "failed": "Fallido"
+      }
     },
     "formats": {
       "portrait": "Vertical (9:16)",
@@ -4495,7 +4527,13 @@
       "backgroundUrl": "URL de Imagen/Video de Fondo",
       "backgroundHint": "Opcional: Introduce una URL para una imagen o video de fondo",
       "productIcons": "Iconos de Productos",
-      "noIcons": "No se han seleccionado iconos de productos"
+      "noIcons": "No se han seleccionado iconos de productos",
+      "products": {
+        "sosPendant": "Colgante SOS",
+        "dosell": "Dosell",
+        "vivago": "Vivago",
+        "fallDetector": "Detector de Caídas"
+      }
     },
     "help": {
       "title": "Guía del Centro de Video",

@@ -70,8 +70,17 @@ export function useVideoBrandSettings() {
 
   const updateMutation = useMutation({
     mutationFn: async (updates: UpdateSettingsData) => {
-      if (!settings?.id) throw new Error("No settings found");
-      
+      if (!settings?.id) {
+        // No settings exist yet — insert new row
+        const { data, error } = await supabase
+          .from("video_brand_settings")
+          .insert(updates)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+
       const { data, error } = await supabase
         .from("video_brand_settings")
         .update(updates)

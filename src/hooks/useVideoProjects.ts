@@ -39,7 +39,8 @@ export function useVideoProjects() {
       const { data, error } = await supabase
         .from("video_projects")
         .select("*")
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return data as VideoProject[];

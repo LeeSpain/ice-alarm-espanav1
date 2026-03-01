@@ -70,7 +70,8 @@ export function useVideoExports() {
       const { data, error } = await supabase
         .from("video_exports")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return data as VideoExport[];

@@ -68,7 +68,7 @@ export function VideoSettingsTab() {
   const handleLogoChange = async (url: string | null) => {
     setFormData(prev => ({ ...prev, logo_url: url }));
     await updateSettings({ logo_url: url });
-    toast.success(url ? "Logo updated" : "Logo removed");
+    toast.success(url ? t("videoHub.logo.updated") : t("videoHub.logo.removed"));
   };
 
   const handleSave = async () => {
@@ -134,14 +134,14 @@ export function VideoSettingsTab() {
                     className="h-8 w-8 rounded-md border shadow-sm"
                     style={{ backgroundColor: settings?.primary_color || "#B91C1C" }}
                   />
-                  <span className="text-sm">ICE Red</span>
+                  <span className="text-sm">{t("videoHub.settings.iceRed")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div 
                     className="h-8 w-8 rounded-md border shadow-sm"
                     style={{ backgroundColor: settings?.secondary_color || "#1E3A8A" }}
                   />
-                  <span className="text-sm">Trust Blue</span>
+                  <span className="text-sm">{t("videoHub.settings.trustBlue")}</span>
                 </div>
               </div>
             </div>

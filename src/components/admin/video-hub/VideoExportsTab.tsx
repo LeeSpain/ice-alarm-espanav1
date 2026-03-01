@@ -25,6 +25,7 @@ import { useVideoRenders } from "@/hooks/useVideoRenders";
 import { useYouTubeIntegration } from "@/hooks/useYouTubeIntegration";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { toast } from "sonner";
 import { LanguageBadge, FormatBadge } from "./VideoBadges";
 import { YouTubePublishDialog } from "./YouTubePublishDialog";
@@ -46,7 +47,7 @@ interface VideoExportsTabProps {
 }
 
 export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { exports, isLoading } = useVideoExports();
   const { projects } = useVideoProjects();
   const { latestRenderByProject } = useVideoRenders();
@@ -164,13 +165,13 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
   const getYouTubeStatusBadge = (status: string | null) => {
     switch (status) {
       case "published":
-        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Published</Badge>;
+        return <Badge className="bg-alert-resolved text-alert-resolved-foreground">{t("videoHub.youtube.statuses.published")}</Badge>;
       case "uploading":
-        return <Badge variant="secondary">Uploading...</Badge>;
+        return <Badge variant="secondary">{t("videoHub.youtube.statuses.uploading")}</Badge>;
       case "queued":
-        return <Badge variant="outline">Queued</Badge>;
+        return <Badge variant="outline">{t("videoHub.youtube.statuses.queued")}</Badge>;
       case "failed":
-        return <Badge variant="destructive">Failed</Badge>;
+        return <Badge variant="destructive">{t("videoHub.youtube.statuses.failed")}</Badge>;
       default:
         return null;
     }
@@ -291,7 +292,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                       {project ? <LanguageBadge language={project.language} /> : "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(new Date(exp.created_at), "MMM d, yyyy")}
+                      {format(new Date(exp.created_at), "MMM d, yyyy", { locale: i18n.language === "es" ? es : enGB })}
                     </TableCell>
                     <TableCell>
                       {getRenderStatusBadge(renderStatus)}

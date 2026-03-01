@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -955,7 +956,12 @@ function AssetsStep({ projectData, setProjectData, settings, t }: any) {
       <div>
         <Label className="text-base">{t("videoHub.assets.productIcons")}</Label>
         <div className="mt-3 grid gap-3 md:grid-cols-4">
-          {["SOS Pendant", "Dosell", "Vivago", "Fall Detector"].map((product) => {
+          {[
+            { key: "SOS Pendant", labelKey: "videoHub.assets.products.sosPendant" },
+            { key: "Dosell", labelKey: "videoHub.assets.products.dosell" },
+            { key: "Vivago", labelKey: "videoHub.assets.products.vivago" },
+            { key: "Fall Detector", labelKey: "videoHub.assets.products.fallDetector" },
+          ].map(({ key: product, labelKey }) => {
             const isSelected = projectData.productIcons.includes(product);
             return (
               <Card
@@ -981,7 +987,7 @@ function AssetsStep({ projectData, setProjectData, settings, t }: any) {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                     <Wand2 className="h-6 w-6" />
                   </div>
-                  <span className="mt-2 text-sm font-medium">{product}</span>
+                  <span className="mt-2 text-sm font-medium">{t(labelKey)}</span>
                 </CardContent>
               </Card>
             );
@@ -1125,16 +1131,17 @@ function QuickSetupStep({ projectData, setProjectData, settings, templates, temp
         </div>
         <div>
           <Label>{t("videoHub.projects.template")}</Label>
-          <select
-            value={projectData.template_id}
-            onChange={(e) => setProjectData({ ...projectData, template_id: e.target.value })}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">{t("videoHub.create.selectTemplate", "Select template (optional)")}</option>
-            {templates?.map((template: any) => (
-              <option key={template.id} value={template.id}>{template.name}</option>
-            ))}
-          </select>
+          <Select value={projectData.template_id || "_none"} onValueChange={(v) => setProjectData({ ...projectData, template_id: v === "_none" ? "" : v })}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder={t("videoHub.create.selectTemplate", "Select template (optional)")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">{t("videoHub.create.selectTemplate", "Select template (optional)")}</SelectItem>
+              {templates?.map((template: any) => (
+                <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -1142,39 +1149,42 @@ function QuickSetupStep({ projectData, setProjectData, settings, templates, temp
       <div className="grid gap-4 md:grid-cols-3">
         <div>
           <Label>{t("videoHub.projects.format")} *</Label>
-          <select
-            value={projectData.format}
-            onChange={(e) => setProjectData({ ...projectData, format: e.target.value })}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="16:9">{t("videoHub.formats.landscape")} (16:9)</option>
-            <option value="9:16">{t("videoHub.formats.portrait")} (9:16)</option>
-            <option value="1:1">{t("videoHub.formats.square")} (1:1)</option>
-          </select>
+          <Select value={projectData.format} onValueChange={(v) => setProjectData({ ...projectData, format: v })}>
+            <SelectTrigger className="mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="16:9">{t("videoHub.formats.landscape")}</SelectItem>
+              <SelectItem value="9:16">{t("videoHub.formats.portrait")}</SelectItem>
+              <SelectItem value="1:1">{t("videoHub.formats.square")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label>{t("videoHub.projects.duration")} *</Label>
-          <select
-            value={projectData.duration}
-            onChange={(e) => setProjectData({ ...projectData, duration: parseInt(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value={10}>10s</option>
-            <option value={15}>15s</option>
-            <option value={30}>30s</option>
-            <option value={60}>60s</option>
-          </select>
+          <Select value={String(projectData.duration)} onValueChange={(v) => setProjectData({ ...projectData, duration: parseInt(v) })}>
+            <SelectTrigger className="mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10s</SelectItem>
+              <SelectItem value="15">15s</SelectItem>
+              <SelectItem value="30">30s</SelectItem>
+              <SelectItem value="60">60s</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label>{t("videoHub.projects.language")} *</Label>
-          <select
-            value={projectData.language}
-            onChange={(e) => setProjectData({ ...projectData, language: e.target.value })}
-            className={`mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${validationErrors.language ? "border-destructive" : ""}`}
-          >
-            <option value="en">English</option>
-            <option value="es">Español</option>
-          </select>
+          <Select value={projectData.language} onValueChange={(v) => setProjectData({ ...projectData, language: v })}>
+            <SelectTrigger className={`mt-1 ${validationErrors.language ? "border-destructive" : ""}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="es">Español</SelectItem>
+            </SelectContent>
+          </Select>
           {validationErrors.language && (
             <p className="text-sm text-destructive mt-1">{validationErrors.language}</p>
           )}

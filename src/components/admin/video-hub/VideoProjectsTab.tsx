@@ -34,6 +34,7 @@ import { useVideoRenders } from "@/hooks/useVideoRenders";
 import { useVideoExports } from "@/hooks/useVideoExports";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, LanguageBadge, FormatBadge, RenderProgressBadge } from "./VideoBadges";
@@ -54,7 +55,7 @@ interface VideoProjectsTabProps {
 }
 
 export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProject }: VideoProjectsTabProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { projects, isLoading, duplicateProject, updateProjectStatus, deleteProject, isDeleting } = useVideoProjects();
   const { templates } = useVideoTemplates();
   const { latestRenderByProject } = useVideoRenders();
@@ -152,13 +153,18 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
 
   // Memoized template lookup map
   const templateMap = useMemo(() => {
-    if (!templates) return new Map<string, string>();
-    return new Map(templates.map(t => [t.id, t.name]));
+    if (!templates) return new Map<string, { name: string; allowed_formats?: string[] }>();
+    return new Map(templates.map(t => [t.id, { name: t.name, allowed_formats: t.allowed_formats }]));
   }, [templates]);
 
   const getTemplateName = (templateId: string | null) => {
     if (!templateId) return "-";
-    return templateMap.get(templateId) || "-";
+    return templateMap.get(templateId)?.name || "-";
+  };
+
+  const getTemplateAllowedFormats = (templateId: string | null) => {
+    if (!templateId) return null;
+    return templateMap.get(templateId)?.allowed_formats || null;
   };
 
   // Memoized filtered projects
@@ -297,17 +303,18 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                       <RenderProgressBadge render={latestRender} />
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <RenderVariantButtons 
+                      <RenderVariantButtons
                         projectId={project.id}
                         projectStatus={project.status}
                         existingExports={projectExports}
+                        allowedFormats={getTemplateAllowedFormats(project.template_id)}
                         onRenderQueued={() => {
                           toast.success(t("videoHub.variants.queued", { format: project.format }));
                         }}
                       />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(new Date(project.updated_at), "MMM d, yyyy")}
+                      {format(new Date(project.updated_at), "MMM d, yyyy", { locale: i18n.language === "es" ? es : enGB })}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>

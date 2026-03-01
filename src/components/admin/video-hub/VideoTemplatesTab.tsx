@@ -77,7 +77,7 @@ export function VideoTemplatesTab({ onSelectTemplate }: VideoTemplatesTabProps) 
                   <div className="flex flex-wrap gap-1">
                     {template.allowed_formats?.map((format: string) => (
                       <Badge key={format} variant="outline" className="text-xs">
-                        {format === "9:16" ? "Portrait" : format === "16:9" ? "Landscape" : "Square"}
+                        {format === "9:16" ? t("videoHub.formats.portrait") : format === "16:9" ? t("videoHub.formats.landscape") : t("videoHub.formats.square")}
                       </Badge>
                     ))}
                   </div>

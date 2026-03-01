@@ -17,20 +17,22 @@ interface RenderVariantButtonsProps {
   projectId: string;
   projectStatus: string;
   existingExports: Map<string, VideoExport> | undefined;
+  allowedFormats?: string[] | null;
   onRenderQueued?: () => void;
 }
 
-const FORMATS = [
-  { key: "9:16", label: "9:16", tooltip: "Portrait (Shorts/Reels)" },
-  { key: "16:9", label: "16:9", tooltip: "Landscape (YouTube)" },
-  { key: "1:1", label: "1:1", tooltip: "Square (Instagram/LinkedIn)" },
+const FORMAT_KEYS = [
+  { key: "9:16", label: "9:16", tooltipKey: "videoHub.variants.portraitTooltip" },
+  { key: "16:9", label: "16:9", tooltipKey: "videoHub.variants.landscapeTooltip" },
+  { key: "1:1", label: "1:1", tooltipKey: "videoHub.variants.squareTooltip" },
 ];
 
-export function RenderVariantButtons({ 
-  projectId, 
+export function RenderVariantButtons({
+  projectId,
   projectStatus,
   existingExports,
-  onRenderQueued 
+  allowedFormats,
+  onRenderQueued
 }: RenderVariantButtonsProps) {
   const { t } = useTranslation();
   const [renderingFormat, setRenderingFormat] = useState<string | null>(null);
@@ -60,10 +62,11 @@ export function RenderVariantButtons({
   return (
     <TooltipProvider>
       <div className="flex flex-wrap gap-2">
-        {FORMATS.map((format) => {
+        {FORMAT_KEYS.map((format) => {
           const hasExport = existingExports?.has(format.key);
           const isRendering = renderingFormat === format.key;
-          
+          const isFormatAllowed = !allowedFormats || allowedFormats.includes(format.key);
+
           return (
             <Tooltip key={format.key}>
               <TooltipTrigger asChild>
@@ -71,7 +74,7 @@ export function RenderVariantButtons({
                   variant={hasExport ? "outline" : "secondary"}
                   size="sm"
                   onClick={() => handleRenderVariant(format.key)}
-                  disabled={isRendering || projectStatus === "rendering"}
+                  disabled={isRendering || projectStatus === "rendering" || !isFormatAllowed}
                   className="gap-1"
                 >
                   {isRendering ? (
@@ -88,10 +91,15 @@ export function RenderVariantButtons({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{format.tooltip}</p>
+                <p>{t(format.tooltipKey)}</p>
                 {hasExport && (
                   <p className="text-xs text-muted-foreground">
                     {t("videoHub.variants.alreadyRendered")}
+                  </p>
+                )}
+                {!isFormatAllowed && (
+                  <p className="text-xs text-destructive">
+                    {t("videoHub.validation.formatNotAllowed")}
                   </p>
                 )}
               </TooltipContent>

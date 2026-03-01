@@ -60,10 +60,11 @@ interface FormatBadgeProps {
 }
 
 export function FormatBadge({ format }: FormatBadgeProps) {
+  const { t } = useTranslation();
   const formatLabels: Record<string, string> = {
-    "9:16": "Portrait",
-    "16:9": "Landscape",
-    "1:1": "Square"
+    "9:16": t("videoHub.formats.portrait"),
+    "16:9": t("videoHub.formats.landscape"),
+    "1:1": t("videoHub.formats.square"),
   };
   if (!format) return <Badge variant="outline">-</Badge>;
   return <Badge variant="secondary">{formatLabels[format] || format}</Badge>;

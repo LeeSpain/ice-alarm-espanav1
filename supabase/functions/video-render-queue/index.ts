@@ -31,7 +31,7 @@ serve(async (req) => {
     // Verify project exists and get data
     const { data: project, error: projectError } = await supabase
       .from("video_projects")
-      .select("id, name, status, format")
+      .select("id, name, status, format, duration, language, template_id, data_json")
       .eq("id", project_id)
       .single();
 
@@ -42,8 +42,34 @@ serve(async (req) => {
       );
     }
 
+    // Fetch template settings if project references a template
+    let template = null;
+    if (project.template_id) {
+      const { data: tpl } = await supabase
+        .from("video_templates")
+        .select("id, name, allowed_formats, allowed_durations, remotion_id")
+        .eq("id", project.template_id)
+        .single();
+      template = tpl;
+    }
+
+    // Fetch brand settings
+    const { data: brandSettings } = await supabase
+      .from("video_brand_settings")
+      .select("logo_url, primary_color, secondary_color, font_family, watermark_enabled, disclaimers_en, disclaimers_es, default_cta_en, default_cta_es")
+      .limit(1)
+      .maybeSingle();
+
     // Determine format: use override if provided, otherwise use project default
     const renderFormat = format_override || project.format;
+
+    // Validate format against template allowed_formats
+    if (template?.allowed_formats && !template.allowed_formats.includes(renderFormat)) {
+      return new Response(
+        JSON.stringify({ error: `Format ${renderFormat} is not allowed by template ${template.name}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Update project status to "rendering" (only if not already rendering)
     if (project.status !== "rendering") {
@@ -89,7 +115,13 @@ serve(async (req) => {
           body: JSON.stringify({
             render_id: render.id,
             project_id,
-            format: renderFormat, // Pass the format to render
+            format: renderFormat,
+            project_name: project.name,
+            duration: project.duration,
+            language: project.language,
+            data_json: project.data_json,
+            template: template ? { id: template.id, name: template.name, remotion_id: template.remotion_id } : null,
+            brand: brandSettings || null,
             token: WEBHOOK_SECRET,
           }),
         });

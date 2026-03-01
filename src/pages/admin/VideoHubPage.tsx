@@ -30,13 +30,13 @@ export default function VideoHubPage() {
   
   // Persist active tab
   const [activeTab, setActiveTab] = useState(() => {
-    const stored = localStorage.getItem(TAB_STORAGE_KEY);
+    const stored = sessionStorage.getItem(TAB_STORAGE_KEY);
     return stored || "projects";
   });
   
   // Persist filters
   const [filters, setFilters] = useState<Filters>(() => {
-    const stored = localStorage.getItem(FILTERS_STORAGE_KEY);
+    const stored = sessionStorage.getItem(FILTERS_STORAGE_KEY);
     if (stored) {
       try {
         return JSON.parse(stored);
@@ -55,12 +55,12 @@ export default function VideoHubPage() {
 
   // Persist tab changes
   useEffect(() => {
-    localStorage.setItem(TAB_STORAGE_KEY, activeTab);
+    sessionStorage.setItem(TAB_STORAGE_KEY, activeTab);
   }, [activeTab]);
 
   // Persist filter changes
   useEffect(() => {
-    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
   }, [filters]);
 
   const handleFilterChange = useCallback((key: keyof Filters, value: string) => {
