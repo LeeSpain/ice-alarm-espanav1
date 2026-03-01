@@ -3,7 +3,7 @@
 /*  Cache-first for statics, network-first for API, offline fallback  */
 /* ================================================================== */
 
-const CACHE_VERSION = "ice-alarm-v2";
+const CACHE_VERSION = "ice-alarm-v3";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -72,7 +72,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // --- Static assets: cache-first ---
+  // --- Hashed JS/CSS chunks: network-first (ensures fresh after deploys) ---
+  if (/\/assets\/.*-[a-zA-Z0-9]{8,}\.(js|css)$/i.test(url.pathname)) {
+    event.respondWith(networkFirst(request, STATIC_CACHE));
+    return;
+  }
+
+  // --- Other static assets (images, fonts): cache-first ---
   if (STATIC_EXTENSIONS.test(url.pathname)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
