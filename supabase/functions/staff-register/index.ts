@@ -153,7 +153,7 @@ serve(async (req: Request) => {
         role,
         phone: phone || null,
         preferred_language: preferred_language || "en",
-        is_active: true,
+        status: "active",
       })
       .select("id")
       .single();

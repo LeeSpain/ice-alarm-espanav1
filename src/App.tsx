@@ -73,6 +73,7 @@ const SubscriptionsPage = lazyWithRetry(() => import("./pages/admin/Subscription
 const PaymentsPage = lazyWithRetry(() => import("./pages/admin/PaymentsPage"));
 const AlertsPage = lazyWithRetry(() => import("./pages/admin/AlertsPage"));
 const StaffPage = lazyWithRetry(() => import("./pages/admin/StaffPage"));
+const StaffDetailPage = lazyWithRetry(() => import("./pages/admin/StaffDetailPage"));
 const ReportsPage = lazyWithRetry(() => import("./pages/admin/ReportsPage"));
 const SettingsPage = lazyWithRetry(() => import("./pages/admin/SettingsPage"));
 const MessagesPage = lazyWithRetry(() => import("./pages/admin/MessagesPage"));
@@ -337,6 +338,7 @@ const App = () => {
                   <Route path="payments" element={<PaymentsPage />} />
                   <Route path="alerts" element={<AlertsPage />} />
                   <Route path="staff" element={<StaffPage />} />
+                  <Route path="staff/:staffId" element={<StaffDetailPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="ev07b" element={<EV07BPage />} />
