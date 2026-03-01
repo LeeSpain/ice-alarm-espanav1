@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Phone, Shield, Clock, Heart, Users, Check, Star, ShieldCheck, MapPin, Zap, Radio, Battery, AlertCircle, MessageCircle } from "lucide-react";
+import { ArrowRight, Phone, Shield, Heart, Users, Check, Star, MapPin, Zap, Radio, Battery, AlertCircle, MessageCircle, Bot, ShieldCheck, Monitor, DollarSign, Headphones, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { usePublicTestimonials } from "@/hooks/useTestimonials";
+import { useAIAgent } from "@/hooks/useAIAgents";
 import {
   Dialog,
   DialogContent,
@@ -26,15 +27,16 @@ export default function LandingPage() {
   const { t, i18n } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
   const { data: dbTestimonials } = usePublicTestimonials("landing");
-  
+  const { data: isabellaAgent } = useAIAgent("customer_service_expert");
+
   // Batch fetch all images in a single query
   const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch(["homepage_hero", "homepage_pendant_promo"]);
   const heroImage = getImage("homepage_hero");
   const pendantPromoImage = getImage("homepage_pendant_promo");
-  
+
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  
+
   // Fetch latest blog posts for homepage section
   const { data: latestPosts } = useBlogPosts(3);
 
@@ -44,7 +46,7 @@ export default function LandingPage() {
     if (refCode) {
       const utmParams = extractUtmParams(searchParams);
       storeReferralData(refCode, utmParams);
-      
+
       // Fire and forget - track that the referral link was viewed
       supabase.functions.invoke("track-invite-view", {
         body: { referralCode: refCode }
@@ -62,18 +64,18 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Logo size="sm" />
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("navigation.features")}
+            <a href="#how-it-works" className="text-sm font-medium hover:text-primary transition-colors">
+              {t("navigation.howItWorks")}
             </a>
             <Link to="/pendant" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pendant")}
             </Link>
-            <Link to="/blog" className="text-sm font-medium hover:text-primary transition-colors">
-              {t("blog.title")}
-            </Link>
             <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.pricing")}
             </a>
+            <Link to="/partner" className="text-sm font-medium hover:text-primary transition-colors">
+              {t("navigation.partners")}
+            </Link>
             <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
               {t("navigation.contact")}
             </Link>
@@ -95,7 +97,7 @@ export default function LandingPage() {
       <section className="pt-24 pb-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/30 -z-10" />
         <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
-        
+
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
@@ -105,14 +107,14 @@ export default function LandingPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-alert-resolved"></span>
                 </span>
-                <span className="text-sm font-medium text-primary">{t("landing.emergencyResponse")}</span>
+                <span className="text-sm font-medium text-primary">{t("landing.badge")}</span>
               </div>
-              
+
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
                 {t("landing.heroTitle")}
                 <span className="text-gradient block mt-2">{t("landing.heroTitleHighlight")}</span>
               </h1>
-              
+
               <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
                 {t("landing.heroDescription")}
               </p>
@@ -124,9 +126,9 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
+                <Button
+                  size="lg"
+                  variant="outline"
                   className="h-14 px-8 text-lg group"
                   onClick={() => setContactDialogOpen(true)}
                 >
@@ -174,7 +176,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
               </div>
 
-              {/* Floating stats card */}
+              {/* Floating 24/7 card */}
               <div className="absolute -bottom-6 -left-6 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-xl bg-alert-resolved/20 flex items-center justify-center">
@@ -182,20 +184,24 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">24/7</p>
-                    <p className="text-sm text-muted-foreground">{t("landing.alwaysProtected")}</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.floatingMonitored")}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Floating response time card */}
+              {/* Floating Isabella card */}
               <div className="absolute -top-4 -right-4 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block" style={{ animationDelay: '0.2s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-primary" />
+                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden">
+                    {isabellaAgent?.avatar_url ? (
+                      <img src={isabellaAgent.avatar_url} alt="Isabella" className="h-full w-full object-cover" />
+                    ) : (
+                      <Bot className="h-6 w-6 text-primary" />
+                    )}
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">&lt;30 sec</p>
-                    <p className="text-sm text-muted-foreground">{t("landing.responseTime")}</p>
+                    <p className="text-2xl font-bold">Isabella</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.floatingIsabella")}</p>
                   </div>
                 </div>
               </div>
@@ -208,7 +214,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-muted/30">
+      <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">{t("landing.whyChoose")}</h2>
@@ -221,11 +227,11 @@ export default function LandingPage() {
             <Card className="border-0 shadow-lg">
               <CardContent className="pt-6">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Clock className="h-6 w-6 text-primary" />
+                  <Bot className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.feature24_7")}</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureIsabella")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  {t("landing.feature24_7Desc")}
+                  {t("landing.featureIsabellaDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -235,9 +241,9 @@ export default function LandingPage() {
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureBilingual")}</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureTeam")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  {t("landing.featureBilingualDesc")}
+                  {t("landing.featureTeamDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -245,7 +251,7 @@ export default function LandingPage() {
             <Card className="border-0 shadow-lg">
               <CardContent className="pt-6">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-primary" />
+                  <MapPin className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{t("landing.featureGps")}</h3>
                 <p className="text-muted-foreground text-sm">
@@ -257,11 +263,11 @@ export default function LandingPage() {
             <Card className="border-0 shadow-lg">
               <CardContent className="pt-6">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Heart className="h-6 w-6 text-primary" />
+                  <Monitor className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureMedical")}</h3>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.featureDashboard")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  {t("landing.featureMedicalDesc")}
+                  {t("landing.featureDashboardDesc")}
                 </p>
               </CardContent>
             </Card>
@@ -269,8 +275,42 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">{t("landing.howItWorks.title")}</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {t("landing.howItWorks.description")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            {[
+              { step: 1, icon: AlertCircle, titleKey: "landing.howItWorks.step1Title", descKey: "landing.howItWorks.step1Desc" },
+              { step: 2, icon: MessageCircle, titleKey: "landing.howItWorks.step2Title", descKey: "landing.howItWorks.step2Desc" },
+              { step: 3, icon: Shield, titleKey: "landing.howItWorks.step3Title", descKey: "landing.howItWorks.step3Desc" },
+              { step: 4, icon: Heart, titleKey: "landing.howItWorks.step4Title", descKey: "landing.howItWorks.step4Desc" },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="relative inline-block mb-6">
+                  <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <item.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="absolute -top-2 -left-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                    {item.step}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{t(item.titleKey)}</h3>
+                <p className="text-muted-foreground text-sm">{t(item.descKey)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4">
+      <section id="pricing" className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">{t("landing.simplePricing")}</h2>
@@ -296,19 +336,19 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.emergencyMonitoring")}
+                    {t("landing.singleBullet1")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.bilingualSupport")}
+                    {t("landing.singleBullet2")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.worksAnywhere")}
+                    {t("landing.singleBullet3")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.phoneOrPendant")}
+                    {t("landing.singleBullet4")}
                   </li>
                 </ul>
                 <Button className="w-full" variant="outline" asChild>
@@ -337,23 +377,19 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.emergencyMonitoring")}
+                    {t("landing.coupleBullet1")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.bilingualSupport")}
+                    {t("landing.coupleBullet2")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.worksAnywhere")}
+                    {t("landing.coupleBullet3")}
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.bothProtected")}
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-alert-resolved" />
-                    {t("landing.sharePendant")}
+                    {t("landing.coupleBullet4")}
                   </li>
                 </ul>
                 <Button className="w-full" asChild>
@@ -368,10 +404,10 @@ export default function LandingPage() {
             {/* Recommended Badge */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
               <span className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-1.5 rounded-full shadow-lg">
-                {t('landing.pricing.pendant.recommended', 'Highly Recommended')}
+                {t('landing.pricing.pendant.recommended')}
               </span>
             </div>
-            
+
             <Card className="border-2 border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 shadow-xl overflow-hidden">
               <CardContent className="p-0">
                 <div className="grid md:grid-cols-5 gap-0">
@@ -380,8 +416,8 @@ export default function LandingPage() {
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl scale-75"></div>
                       {pendantPromoImage.imageUrl ? (
-                        <img 
-                          src={pendantPromoImage.imageUrl} 
+                        <img
+                          src={pendantPromoImage.imageUrl}
                           alt={pendantPromoImage.altText || "ICE Alarm GPS Pendant"}
                           className="relative w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-2xl"
                           loading="lazy"
@@ -396,7 +432,7 @@ export default function LandingPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Content */}
                   <div className="md:col-span-3 p-8 flex flex-col justify-center">
                     <div className="mb-6">
@@ -404,51 +440,51 @@ export default function LandingPage() {
                         {t('landing.pricing.pendant.title')}
                       </h3>
                       <p className="text-muted-foreground">
-                        {t('landing.pricing.pendant.subtitle', 'Your personal safety companion - worn as a pendant or wristband')}
+                        {t('landing.pricing.pendant.subtitle')}
                       </p>
                     </div>
-                    
+
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-baseline gap-2 mb-1">
                         <span className="text-3xl md:text-4xl font-bold text-primary">€151.25</span>
-                        <span className="text-sm text-muted-foreground">{t('landing.inclIva', '(incl. 21% IVA)')}</span>
+                        <span className="text-sm text-muted-foreground">{t('landing.inclIva')}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">+ €14.99 {t('landing.shipping', 'shipping & handling')}</p>
+                      <p className="text-sm text-muted-foreground">+ €14.99 {t('landing.shipping')}</p>
                     </div>
-                    
+
                     {/* Feature Badges */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <AlertCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.sosButton', 'One-touch SOS')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.sosButton')}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.gpsTracking', 'GPS Tracking')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.gpsTracking')}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <Zap className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.fallDetection', 'Fall Detection')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.fallDetection')}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <Radio className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.twoWayAudio', '2-Way Audio')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.twoWayAudio')}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <Battery className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.longBattery', '7-Day Battery')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.longBattery')}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
                         <Shield className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">{t('landing.waterproof', 'Waterproof')}</span>
+                        <span className="text-sm font-medium text-foreground">{t('landing.waterproof')}</span>
                       </div>
                     </div>
-                    
+
                     {/* CTA */}
                     <Link to="/pendant">
                       <Button variant="outline" className="w-full md:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                        {t('landing.learnMore', 'Learn More About Our Pendant')}
+                        {t('landing.learnMore')}
                       </Button>
                     </Link>
                   </div>
@@ -459,22 +495,69 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Your Personal Dashboard Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">{t("landing.dashboard.title")}</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {t("landing.dashboard.description")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Radio className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.dashboard.deviceTitle")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.dashboard.deviceDesc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.dashboard.chatTitle")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.dashboard.chatDesc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Monitor className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.dashboard.accountTitle")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.dashboard.accountDesc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Heart className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.dashboard.familyTitle")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.dashboard.familyDesc")}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section className="py-20 px-4 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("landing.testimonials.title", "What Our Members Say")}</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t("landing.testimonials.subtitle", "Trusted by thousands of families across Spain")}
-            </p>
+            <h2 className="text-3xl font-bold mb-4">{t("landing.testimonials.title")}</h2>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {(dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : [
-              { id: "fallback-1", quote_en: t("landing.testimonials.quote1", "The peace of mind this service gives our family is priceless. When Mum had a fall last month, help arrived within minutes. I can't recommend ICE Alarm enough."), quote_es: t("landing.testimonials.quote1"), author_name: "Margaret Thompson", location_en: "British Expat, Alicante", location_es: "Expatriada Británica, Alicante", rating: 5 },
-              { id: "fallback-2", quote_en: t("landing.testimonials.quote2", "Living alone at 78, I was worried about emergencies. The GPS pendant gives me independence while keeping my children reassured. The bilingual support is excellent."), quote_es: t("landing.testimonials.quote2"), author_name: "Robert Harrison", location_en: "Retired Teacher, Málaga", location_es: "Profesor Jubilado, Málaga", rating: 5 },
-              { id: "fallback-3", quote_en: t("landing.testimonials.quote3", "After my husband's stroke, we needed reliable emergency support. ICE Alarm responded in under 30 seconds during a real emergency. They truly saved his life."), quote_es: t("landing.testimonials.quote3"), author_name: "Susan & Peter Williams", location_en: "Couple, Costa Blanca", location_es: "Pareja, Costa Blanca", rating: 5 },
-            ]).map((item) => {
+            {(dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : []).map((item) => {
               const isEs = i18n.language === "es";
               const quote = isEs ? item.quote_es : item.quote_en;
               const location = isEs ? item.location_es : item.location_en;
@@ -505,21 +588,87 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* Trust Badge */}
+          {/* Geographic Trust Line */}
           <div className="mt-12 text-center">
             <div className="inline-flex items-center gap-3 bg-primary/10 rounded-full px-6 py-3">
-              <ShieldCheck className="h-5 w-5 text-primary" />
+              <MapPin className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-foreground">
-                {t("landing.testimonials.trustBadge", "Rated 4.9/5 by over 2,000 verified members")}
+                {t("landing.testimonials.trustLine")}
               </span>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Partner Programme Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">{t("landing.partners.title")}</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {t("landing.partners.description")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.partners.benefit1Title")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.partners.benefit1Desc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.partners.benefit2Title")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.partners.benefit2Desc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Headphones className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.partners.benefit3Title")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.partners.benefit3Desc")}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Send className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{t("landing.partners.benefit4Title")}</h3>
+                <p className="text-muted-foreground text-sm">{t("landing.partners.benefit4Desc")}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-10">
+            <Button size="lg" className="h-14 px-8 text-lg" asChild>
+              <Link to="/partner">
+                {t("landing.partners.cta")}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <p className="text-sm text-muted-foreground mt-4 max-w-2xl mx-auto">
+              {t("landing.partners.idealFor")}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Latest from ICE Alarm - Blog Section */}
       {latestPosts && latestPosts.length > 0 && (
-        <section className="py-20 px-4 bg-muted/30">
+        <section className="py-20 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">{t("blog.latestFrom")}</h2>
@@ -544,7 +693,7 @@ export default function LandingPage() {
       )}
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto text-center max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">{t("landing.readyToJoin")}</h2>
           <p className="text-muted-foreground mb-8">
@@ -559,7 +708,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
-            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} className="text-primary font-semibold hover:underline">{t("common.callNow")}</a>
+            {t("landing.haveQuestions")} {t("landing.callUsAnytime")}
           </p>
         </div>
       </section>
@@ -585,9 +734,9 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">{t("landing.footer.links")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li><a href="#features" className="hover:text-sidebar-foreground transition-colors">{t("navigation.features")}</a></li>
+                <li><a href="#how-it-works" className="hover:text-sidebar-foreground transition-colors">{t("navigation.howItWorks")}</a></li>
                 <li><a href="#pricing" className="hover:text-sidebar-foreground transition-colors">{t("navigation.pricing")}</a></li>
-                <li><a href="#" className="hover:text-sidebar-foreground transition-colors">{t("support.faq")}</a></li>
+                <li><Link to="/partner" className="hover:text-sidebar-foreground transition-colors">{t("navigation.partners")}</Link></li>
               </ul>
             </div>
             <div>
@@ -599,7 +748,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-sidebar-border pt-8 text-center text-sm text-sidebar-foreground/60">
-            <p>© {new Date().getFullYear()} ICE Alarm España. {t("landing.allRightsReserved")}</p>
+            <p>&copy; {new Date().getFullYear()} ICE Alarm Espa&ntilde;a. {t("landing.allRightsReserved")}</p>
           </div>
         </div>
       </footer>
@@ -609,47 +758,47 @@ export default function LandingPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center text-xl">
-              {t("landing.contactDialog.title", "How would you like to contact us?")}
+              {t("landing.contactDialog.title")}
             </DialogTitle>
           </DialogHeader>
           <div className="text-center mb-6">
             <p className="text-sm text-muted-foreground">
-              {t("landing.contactDialog.available", "Available 24/7")}
+              {t("landing.contactDialog.available")}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="h-20 flex-col gap-2"
               asChild
             >
               <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`}>
                 <Phone className="h-6 w-6" />
                 <span className="text-sm font-medium">
-                  {t("landing.contactDialog.phoneCall", "Phone Call")}
+                  {t("landing.contactDialog.phoneCall")}
                 </span>
               </a>
             </Button>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="outline"
               className="h-20 flex-col gap-2 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
               asChild
             >
-              <a 
-                href={`https://wa.me/${whatsappNumber}`} 
-                target="_blank" 
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 <MessageCircle className="h-6 w-6" />
                 <span className="text-sm font-medium">
-                  {t("landing.contactDialog.whatsapp", "WhatsApp")}
+                  {t("landing.contactDialog.whatsapp")}
                 </span>
               </a>
             </Button>
           </div>
           <p className="text-xs text-center text-muted-foreground mt-4">
-            {t("landing.contactDialog.voiceOnly", "Voice calls only - no video")}
+            {t("landing.contactDialog.voiceOnly")}
           </p>
         </DialogContent>
       </Dialog>
