@@ -17,7 +17,7 @@ import {
   CheckCircle,
   XCircle,
   Key,
-  Server,
+  
   Smartphone,
   BookOpen,
   Copy,
