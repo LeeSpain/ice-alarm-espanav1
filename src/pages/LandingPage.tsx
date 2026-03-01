@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Phone, Shield, Heart, Users, Check, Star, MapPin, Zap, Radio, Battery, AlertCircle, MessageCircle, Bot, ShieldCheck, Monitor, Headphones, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import { Link, useSearchParams } from "react-router-dom";
@@ -230,7 +231,10 @@ export default function LandingPage() {
       {/* Features Section */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-14">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary bg-primary/5 px-4 py-1.5 text-sm font-medium">
+              {t("landing.badge").includes("Protecting") ? "Our Difference" : "Nuestra Diferencia"}
+            </Badge>
             <h2 className="text-3xl font-bold mb-4">{t("landing.whyChoose")}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               {t("landing.whyChooseDesc")}
@@ -238,53 +242,40 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Bot className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureIsabella")}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {t("landing.featureIsabellaDesc")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureTeam")}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {t("landing.featureTeamDesc")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <MapPin className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureGps")}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {t("landing.featureGpsDesc")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Monitor className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{t("landing.featureDashboard")}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {t("landing.featureDashboardDesc")}
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              { icon: Bot, titleKey: "landing.featureIsabella", descKey: "landing.featureIsabellaDesc", num: "01" },
+              { icon: Users, titleKey: "landing.featureTeam", descKey: "landing.featureTeamDesc", num: "02" },
+              { icon: MapPin, titleKey: "landing.featureGps", descKey: "landing.featureGpsDesc", num: "03" },
+              { icon: Monitor, titleKey: "landing.featureDashboard", descKey: "landing.featureDashboardDesc", num: "04" },
+            ].map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={feature.num} className="relative overflow-hidden border-0 shadow-lg bg-card hover:-translate-y-1 transition-transform duration-300 group">
+                  {/* Gradient top border */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/60" />
+                  {/* Background number */}
+                  <span className="absolute top-3 right-4 text-6xl font-bold text-primary/[0.06] select-none leading-none">
+                    {feature.num}
+                  </span>
+                  <CardContent className="pt-8 pb-6 relative">
+                    {/* Double-ring icon */}
+                    <div className="relative h-16 w-16 mb-5">
+                      <div className="absolute inset-0 rounded-2xl bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                      <div className="absolute inset-1.5 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Icon className="h-7 w-7 text-primary" />
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-xl mb-2">{t(feature.titleKey)}</h3>
+                    {/* Decorative divider */}
+                    <div className="w-8 h-0.5 bg-primary/30 rounded-full mb-3" />
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {t(feature.descKey)}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
