@@ -40,11 +40,16 @@ import {
   Clock,
   Shield,
   Heart,
-  Users
+  Users,
+  Search,
+  CreditCard,
+  User,
+  BookOpen
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { InlineAIChat } from "@/components/chat/InlineAIChat";
+import { useDocumentation } from "@/hooks/useDocumentation";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -75,40 +80,58 @@ export default function SupportPage() {
   const { memberId, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // FAQ items with translations
-  const FAQ_ITEMS = [
-    {
-      id: "test-pendant",
-      question: t("support.faq.testPendant"),
-      answer: t("support.faq.testPendantAnswer")
-    },
-    {
-      id: "sos-button",
-      question: t("support.faq.sosButton"),
-      answer: t("support.faq.sosButtonAnswer")
-    },
-    {
-      id: "fall-detection",
-      question: t("support.faq.fallDetection"),
-      answer: t("support.faq.fallDetectionAnswer")
-    },
-    {
-      id: "geo-fencing",
-      question: t("support.faq.geoFencing"),
-      answer: t("support.faq.geoFencingAnswer")
-    },
-    {
-      id: "update-medical",
-      question: t("support.faq.updateMedical"),
-      answer: t("support.faq.updateMedicalAnswer")
-    },
-    {
-      id: "add-contacts",
-      question: t("support.faq.addContacts"),
-      answer: t("support.faq.addContactsAnswer")
-    },
-  ];
+  type FaqCategory = 'all' | 'device' | 'account' | 'billing' | 'safety';
   
+  const FAQ_ITEMS: { id: string; category: FaqCategory; question: string; answer: string }[] = [
+    // Device & Pendant
+    { id: "test-pendant", category: "device", question: t("support.faq.testPendant"), answer: t("support.faq.testPendantAnswer") },
+    { id: "sos-button", category: "device", question: t("support.faq.sosButton"), answer: t("support.faq.sosButtonAnswer") },
+    { id: "fall-detection", category: "device", question: t("support.faq.fallDetection"), answer: t("support.faq.fallDetectionAnswer") },
+    { id: "geo-fencing", category: "device", question: t("support.faq.geoFencing"), answer: t("support.faq.geoFencingAnswer") },
+    { id: "charge-pendant", category: "device", question: t("support.faq.chargePendant"), answer: t("support.faq.chargePendantAnswer") },
+    { id: "pendant-wet", category: "device", question: t("support.faq.pendantWet"), answer: t("support.faq.pendantWetAnswer") },
+    // My Account
+    { id: "update-medical", category: "account", question: t("support.faq.updateMedical"), answer: t("support.faq.updateMedicalAnswer") },
+    { id: "add-contacts", category: "account", question: t("support.faq.addContacts"), answer: t("support.faq.addContactsAnswer") },
+    { id: "change-password", category: "account", question: t("support.faq.changePassword"), answer: t("support.faq.changePasswordAnswer") },
+    { id: "update-address", category: "account", question: t("support.faq.updateAddress"), answer: t("support.faq.updateAddressAnswer") },
+    { id: "view-subscription", category: "account", question: t("support.faq.viewSubscription"), answer: t("support.faq.viewSubscriptionAnswer") },
+    // Billing & Payments
+    { id: "update-payment", category: "billing", question: t("support.faq.updatePayment"), answer: t("support.faq.updatePaymentAnswer") },
+    { id: "billing-date", category: "billing", question: t("support.faq.billingDate"), answer: t("support.faq.billingDateAnswer") },
+    { id: "cancel-subscription", category: "billing", question: t("support.faq.cancelSubscription"), answer: t("support.faq.cancelSubscriptionAnswer") },
+    // Safety & Privacy
+    { id: "medical-privacy", category: "safety", question: t("support.faq.medicalPrivacy"), answer: t("support.faq.medicalPrivacyAnswer") },
+    { id: "location-data", category: "safety", question: t("support.faq.locationData"), answer: t("support.faq.locationDataAnswer") },
+  ];
+
+  const [faqSearch, setFaqSearch] = useState("");
+  const [faqCategory, setFaqCategory] = useState<FaqCategory>("all");
+
+  const categoryIcons: Record<FaqCategory, React.ReactNode> = {
+    all: <HelpCircle className="h-4 w-4" />,
+    device: <Smartphone className="h-4 w-4" />,
+    account: <User className="h-4 w-4" />,
+    billing: <CreditCard className="h-4 w-4" />,
+    safety: <Shield className="h-4 w-4" />,
+  };
+
+  const filteredFaqItems = FAQ_ITEMS.filter((item) => {
+    const matchesCategory = faqCategory === "all" || item.category === faqCategory;
+    const matchesSearch = !faqSearch || item.question.toLowerCase().includes(faqSearch.toLowerCase()) || item.answer.toLowerCase().includes(faqSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Knowledge base articles from documentation table
+  const { data: kbArticles } = useDocumentation({
+    status: 'published',
+    visibility: 'member',
+  });
+
+  const memberArticles = kbArticles?.filter(a => a.category === 'member_guide' || a.category === 'general') || [];
+  
+  const [expandedArticle, setExpandedArticle] = useState<string | null>(null);
+
   // Messaging state
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -506,7 +529,7 @@ export default function SupportPage() {
                 className="inline-flex items-center justify-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-full hover:bg-white/90 transition-colors"
               >
                 <Phone className="h-5 w-5" />
-                {companySettings.emergency_phone}
+                {t("common.callNow", "Call Now")}
               </a>
             </div>
           </div>
@@ -701,8 +724,39 @@ export default function SupportPage() {
 
         {/* Help Center Tab */}
         <TabsContent value="help" className="space-y-6">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder={t("support.faqSearchPlaceholder")}
+              value={faqSearch}
+              onChange={(e) => setFaqSearch(e.target.value)}
+              className="pl-12 h-14 text-base rounded-xl"
+            />
+          </div>
+
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-2">
+            {(["all", "device", "account", "billing", "safety"] as FaqCategory[]).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFaqCategory(cat)}
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors min-h-[44px]",
+                  faqCategory === cat
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {categoryIcons[cat]}
+                {t(`support.faqCategories.${cat}`)}
+              </button>
+            ))}
+          </div>
+
           <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
+              {/* FAQ Accordion */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -714,18 +768,81 @@ export default function SupportPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {FAQ_ITEMS.map((item) => (
-                      <AccordionItem key={item.id} value={item.id}>
-                        <AccordionTrigger className="text-left">
-                          {item.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">
-                          {item.answer}
-                        </AccordionContent>
-                      </AccordionItem>
+                  {filteredFaqItems.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8 text-base">
+                      {t("support.faqNoResults")}
+                    </p>
+                  ) : (
+                    <Accordion type="single" collapsible className="w-full">
+                      {filteredFaqItems.map((item) => (
+                        <AccordionItem key={item.id} value={item.id}>
+                          <AccordionTrigger className="text-left text-base min-h-[48px]">
+                            {item.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                            {item.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Knowledge Base section */}
+              {memberArticles.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      {t("support.knowledgeBase")}
+                    </CardTitle>
+                    <CardDescription>
+                      {t("support.knowledgeBaseSubtitle")}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {memberArticles.slice(0, 6).map((article) => (
+                      <div key={article.id} className="border rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setExpandedArticle(expandedArticle === article.id ? null : article.id)}
+                          className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors min-h-[48px]"
+                        >
+                          <span className="font-medium text-base">{article.title}</span>
+                          <Badge variant="secondary" className="ml-2 shrink-0">
+                            {article.category === 'member_guide' ? t("support.faqCategories.device") : t("support.faqCategories.all")}
+                          </Badge>
+                        </button>
+                        {expandedArticle === article.id && (
+                          <div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed border-t pt-3">
+                            <div dangerouslySetInnerHTML={{ __html: article.content.substring(0, 500) + (article.content.length > 500 ? '...' : '') }} />
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </Accordion>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Still need help card */}
+              <Card className="bg-muted/30 border-dashed">
+                <CardContent className="p-6 text-center">
+                  <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <h3 className="font-semibold text-lg mb-1">{t("support.stillNeedHelp")}</h3>
+                  <p className="text-muted-foreground text-sm mb-4">{t("support.stillNeedHelpDesc")}</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button variant="outline" onClick={() => {
+                      const tabsList = document.querySelector('[value="chat"]') as HTMLElement;
+                      tabsList?.click();
+                    }}>
+                      <Bot className="mr-2 h-4 w-4" />
+                      {t("support.askAI")}
+                    </Button>
+                    <Button onClick={() => setIsDialogOpen(true)}>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      {t("support.sendUsMessage")}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -738,14 +855,14 @@ export default function SupportPage() {
                 <CardContent className="space-y-3">
                   <a 
                     href={`tel:${phoneForLink}`}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors min-h-[48px]"
                   >
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Phone className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{t("support.callUs")}</p>
-                      <p className="text-primary text-sm">{companySettings.emergency_phone}</p>
+                      <p className="text-primary text-sm">{t("support.tapToCall")}</p>
                     </div>
                   </a>
 
@@ -753,7 +870,7 @@ export default function SupportPage() {
                     href={`https://wa.me/${phoneForLink.replace("+", "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors min-h-[48px]"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#25D366]/20 flex items-center justify-center">
                       <MessageCircle className="h-5 w-5 text-[#25D366]" />
