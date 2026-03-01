@@ -1,30 +1,16 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
 import PrivacyContent from "@/components/legal/PrivacyContent";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 
 export default function PrivacyPage() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/">
-            <Logo size="sm" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-            <Button variant="ghost" asChild>
-              <Link to="/login">{t("common.signIn")}</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Main Content */}
       <main className="pt-24 pb-16 px-4">
