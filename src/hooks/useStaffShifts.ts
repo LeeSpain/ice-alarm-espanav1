@@ -43,7 +43,7 @@ export function useStaffShifts(startDate: string, endDate: string) {
         .order("shift_date")
         .order("start_time");
       if (error) throw error;
-      return (data || []) as StaffShift[];
+      return (data || []) as unknown as StaffShift[];
     },
     staleTime: STALE_TIMES.SHORT,
   });
