@@ -730,8 +730,8 @@
       "description": "We work with residential communities, urbanisations, care providers, and local businesses across Spain to bring safety to their residents and clients.",
       "benefit1Title": "Protect Your Residents",
       "benefit1Desc": "Offer ICE Alarm as an included or optional service for your community. We handle everything — setup, monitoring, support — in English and Spanish.",
-      "benefit2Title": "Earn Commission on Referrals",
-      "benefit2Desc": "Receive a commission for every resident or client who joins ICE Alarm through your community. Track everything through your own partner dashboard.",
+      "benefit2Title": "Make a Difference in Your Community",
+      "benefit2Desc": "Help the people around you feel safer and more independent. When your residents or clients join ICE Alarm, you know they're protected 24/7.",
       "benefit3Title": "Dedicated Partner Support",
       "benefit3Desc": "Your own account manager, co-branded materials, and priority support. We make it easy to offer world-class safety to your community.",
       "benefit4Title": "Simple Invite Tools",
@@ -4605,5 +4605,24 @@
       "s16Content": "ICE Alarm España<br/>Email: privacy@icealarm.es<br/>General enquiries: info@icealarm.es",
       "governedBy": "This Privacy Policy is governed by Spanish law and the General Data Protection Regulation (EU) 2016/679."
     }
+  },
+  "partnerOnboarding": {
+    "title": "Become an ICE Alarm Partner",
+    "subtitle": "Help protect the people in your community — register your interest and Isabella will be in touch with everything you need to know.",
+    "benefit1Title": "Support Your Community",
+    "benefit1Desc": "Help the people you care about stay safe and independent with 24/7 protection.",
+    "benefit2Title": "Easy Referral Tools",
+    "benefit2Desc": "Share your unique link via email, WhatsApp, or on your community noticeboard.",
+    "benefit3Title": "Dedicated Partner Support",
+    "benefit3Desc": "Your own account manager and co-branded materials to help you get started.",
+    "registerInterest": "Register Your Interest",
+    "submitting": "Submitting...",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "preferredLanguage": "Preferred Language",
+    "successTitle": "Thank You for Your Interest!",
+    "successDesc": "Isabella will send you an email shortly with full details about our partner programme, including what you can earn and a link to complete your registration.",
+    "returnHome": "Return to Homepage"
   }
 }

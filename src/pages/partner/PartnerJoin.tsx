@@ -63,7 +63,7 @@ const partnerTypeOptions = [
     icon: Users,
     title: "Individual Referrer",
     tagline: "I want to refer friends & family",
-    description: "Earn €50 commission per signup",
+    description: "Earn commission on every signup",
   },
   {
     type: "care" as PartnerType,

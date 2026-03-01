@@ -624,7 +624,7 @@ export default function LandingPage() {
             <Card className="border-0 shadow-lg">
               <CardContent className="pt-6">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <DollarSign className="h-6 w-6 text-primary" />
+                  <Heart className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{t("landing.partners.benefit2Title")}</h3>
                 <p className="text-muted-foreground text-sm">{t("landing.partners.benefit2Desc")}</p>
