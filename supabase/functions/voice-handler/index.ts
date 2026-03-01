@@ -161,6 +161,49 @@ Deno.serve(async (req) => {
           member = m2;
         }
 
+        // Check if caller is an EV-07B pendant SIM
+        const { data: pendantDevice } = await sb
+          .from("devices")
+          .select("id, imei, member_id, last_location_lat, last_location_lng, model")
+          .eq("sim_phone_number", from)
+          .eq("model", "EV-07B")
+          .not("member_id", "is", null)
+          .maybeSingle();
+
+        if (pendantDevice && pendantDevice.member_id) {
+          console.log(`[${FN} ${VERSION}] Pendant SOS call detected: IMEI=${pendantDevice.imei} from=${from}`);
+
+          // Create SOS alert via edge function (non-blocking)
+          try {
+            fetch(`${baseUrl}/functions/v1/ev07b-sos-alert`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-api-key": Deno.env.get("EV07B_CHECKIN_KEY") || "",
+              },
+              body: JSON.stringify({
+                imei: pendantDevice.imei,
+                alarm_type: "sos",
+                lat: pendantDevice.last_location_lat,
+                lng: pendantDevice.last_location_lng,
+                caller_phone: from,
+              }),
+            }).catch((e) => console.error(`[${FN}] SOS alert error:`, e));
+          } catch {}
+
+          // If no member found by phone, use the pendant's assigned member
+          if (!member) {
+            const { data: pendantMember } = await sb
+              .from("members")
+              .select("id, first_name, last_name, preferred_language")
+              .eq("id", pendantDevice.member_id)
+              .maybeSingle();
+            if (pendantMember) {
+              member = pendantMember;
+            }
+          }
+        }
+
         const lang =
           url.searchParams.get("lang") ||
           member?.preferred_language ||

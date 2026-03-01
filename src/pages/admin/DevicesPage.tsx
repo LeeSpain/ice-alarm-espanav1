@@ -48,6 +48,7 @@ import { format } from "date-fns";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useDeviceStockStats } from "@/hooks/useDeviceStock";
+import { AddDeviceModal } from "@/components/admin/products/AddDeviceModal";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -57,6 +58,7 @@ export default function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Subscribe to realtime updates
@@ -149,11 +151,9 @@ export default function DevicesPage() {
             {t("admin.devices.subtitle")}
           </p>
         </div>
-        <Button asChild>
-          <Link to="/admin/devices/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t("admin.devices.addDevice")}
-          </Link>
+        <Button onClick={() => setAddModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t("admin.devices.addDevice")}
         </Button>
       </div>
 
@@ -398,6 +398,8 @@ export default function DevicesPage() {
           </div>
         </div>
       )}
+
+      <AddDeviceModal open={addModalOpen} onOpenChange={setAddModalOpen} />
     </div>
   );
 }

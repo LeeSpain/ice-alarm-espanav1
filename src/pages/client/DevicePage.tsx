@@ -4,17 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Loader2, 
-  Smartphone, 
-  Battery, 
-  Clock, 
-  CheckCircle, 
+import {
+  Loader2,
+  Smartphone,
+  Battery,
+  Clock,
+  CheckCircle,
   XCircle,
   AlertTriangle,
   Phone,
   MessageCircle,
-  ShoppingCart,
+  MapPin,
   Wrench,
   RefreshCw
 } from "lucide-react";
@@ -205,9 +205,15 @@ export default function DevicePage() {
               </div>
             </div>
 
-            <Button size="lg" className="w-full touch-target" onClick={() => navigate("/pendant")}>
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              {t('device.purchasePendant', 'Purchase Pendant')}
+            <Button size="lg" className="w-full touch-target" asChild>
+              <a
+                href={`https://wa.me/${phoneForLink.replace("+", "")}?text=${encodeURIComponent(t('device.pendantWhatsAppMessage', 'Hello, I would like to upgrade my membership to include a GPS pendant. Can you help me?'))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                {t('device.purchasePendant', 'Purchase Pendant')}
+              </a>
             </Button>
           </CardContent>
         </Card>
@@ -324,6 +330,33 @@ export default function DevicePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Location Card */}
+      {device?.last_location_lat && device?.last_location_lng && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              {t('device.lastKnownLocation', 'Last Known Location')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {device.last_location_address && (
+              <p className="text-sm text-muted-foreground">{device.last_location_address}</p>
+            )}
+            <Button variant="outline" className="w-full" asChild>
+              <a
+                href={`https://www.google.com/maps?q=${device.last_location_lat},${device.last_location_lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                {t('device.viewOnMap', 'View on Google Maps')}
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Features */}
       <Card>

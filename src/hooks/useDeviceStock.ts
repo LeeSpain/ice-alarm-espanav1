@@ -90,6 +90,7 @@ export function useAddDeviceStock() {
           sim_iccid: input.sim_iccid || null,
           sim_phone_number: input.sim_phone_number || "",
           model: "EV-07B",
+          device_type: "pendant",
           status: "in_stock",
           member_id: null,
         })

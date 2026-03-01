@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import {
   Loader2, Smartphone, Battery, MapPin, Clock,
-  Send, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench,
+  Terminal, X, AlertTriangle, Wifi, WifiOff, Package, Truck, CheckCircle, Wrench,
   ClipboardList, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -121,6 +121,13 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", selectedDeviceId);
 
       if (error) throw error;
+
+      // Sync has_pendant on subscription
+      await supabase
+        .from("subscriptions")
+        .update({ has_pendant: true })
+        .eq("member_id", memberId);
+
       toast.success(t("admin.devices.deviceAllocated"));
       setIsDialogOpen(false);
       refetch();
@@ -188,6 +195,13 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
         .eq("id", device.id);
 
       if (error) throw error;
+
+      // Sync has_pendant on subscription
+      await supabase
+        .from("subscriptions")
+        .update({ has_pendant: false })
+        .eq("member_id", memberId);
+
       toast.success(t("admin.devices.markedFaulty"));
       queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
@@ -198,49 +212,30 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
   const unassignDevice = async () => {
     if (!device || !confirm(t("admin.devices.confirmUnassign"))) return;
-    
+
     try {
       const { error } = await supabase
         .from("devices")
-        .update({ 
-          member_id: null, 
+        .update({
+          member_id: null,
           status: "in_stock",
           assigned_at: null
         })
         .eq("id", device.id);
 
       if (error) throw error;
+
+      // Sync has_pendant on subscription
+      await supabase
+        .from("subscriptions")
+        .update({ has_pendant: false })
+        .eq("member_id", memberId);
+
       toast.success(t("admin.devices.deviceUnassigned"));
       queryClient.invalidateQueries({ queryKey: ["admin-member-device", memberId] });
     } catch (error) {
       console.error("Error unassigning device:", error);
       toast.error(t("admin.devices.unassignFailed"));
-    }
-  };
-
-  const [isSendingSms, setIsSendingSms] = useState(false);
-
-  const sendConfigSms = async () => {
-    if (!device) return;
-
-    setIsSendingSms(true);
-    toast.info(t("admin.devices.sendingConfigSms"));
-
-    try {
-      const { error } = await supabase.functions.invoke("send-device-sms", {
-        body: { deviceId: device.id, command: "configure" },
-      });
-
-      if (error) throw error;
-
-      toast.success(t("admin.devices.configSmsSent", "Configuration SMS sent successfully"));
-    } catch (error: any) {
-      console.error("Error sending configuration SMS:", error);
-      toast.error(
-        t("admin.devices.configSmsFailed", "Failed to send configuration SMS. Please try again.")
-      );
-    } finally {
-      setIsSendingSms(false);
     }
   };
 
@@ -521,9 +516,11 @@ export function DeviceTab({ memberId }: DeviceTabProps) {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={sendConfigSms} disabled={isSendingSms}>
-              {isSendingSms ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              {isSendingSms ? "Sending..." : "Send Configuration SMS"}
+            <Button variant="outline" asChild>
+              <a href={`/admin/devices/${device.id}?tab=sms`}>
+                <Terminal className="mr-2 h-4 w-4" />
+                SMS Commands
+              </a>
             </Button>
             <Button variant="outline" className="text-destructive" onClick={unassignDevice}>
               <X className="mr-2 h-4 w-4" />

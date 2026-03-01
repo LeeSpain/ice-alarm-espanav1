@@ -15,6 +15,8 @@ project_id = "pduhccavshrhfkfbjgmj"
     verify_jwt = false
   [functions.ev07b-offline-monitor]
     verify_jwt = false
+  [functions.ev07b-sos-alert]
+    verify_jwt = false
   [functions.ev07b-stock-sync]
     verify_jwt = false
   [functions.facebook-metrics]

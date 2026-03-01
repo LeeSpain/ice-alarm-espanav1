@@ -31,6 +31,7 @@ import {
   type SmsCommandDefinition,
   type SmsCommandEntry,
 } from "@/hooks/useDeviceSmsCommands";
+import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
 interface SmsCommandPanelProps {
@@ -54,14 +55,16 @@ function CommandButton({
   deviceId,
   onSend,
   isSending,
+  defaultValue,
 }: {
   cmd: SmsCommandDefinition;
   simPhoneNumber: string;
   deviceId: string;
   onSend: (params: { deviceId: string; simPhoneNumber: string; command: string; label: string }) => void;
   isSending: boolean;
+  defaultValue?: string;
 }) {
-  const [paramValue, setParamValue] = useState("");
+  const [paramValue, setParamValue] = useState(defaultValue || "");
 
   const handleSend = () => {
     const fullCommand = cmd.requiresParam
@@ -154,6 +157,13 @@ function CommandLogEntry({ entry }: { entry: SmsCommandEntry }) {
   );
 }
 
+const DEFAULT_KEY_MAP: Record<string, string> = {
+  apn: "settings_default_apn",
+  ip_port: "settings_default_server_ip_port",
+  sos_a1: "settings_default_sos_number",
+  mode: "settings_default_reporting_mode",
+};
+
 export function SmsCommandPanel({ deviceId, simPhoneNumber }: SmsCommandPanelProps) {
   const {
     commandLog,
@@ -165,8 +175,25 @@ export function SmsCommandPanel({ deviceId, simPhoneNumber }: SmsCommandPanelPro
     SMS_COMMAND_CATEGORIES,
   } = useDeviceSmsCommands(deviceId);
 
+  const [defaults, setDefaults] = useState<Record<string, string>>({});
+
   useEffect(() => {
     loadCommandLog();
+
+    // Fetch default provisioning values
+    const fetchDefaults = async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("key, value")
+        .in("key", Object.values(DEFAULT_KEY_MAP));
+
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach((s) => { map[s.key] = s.value; });
+        setDefaults(map);
+      }
+    };
+    fetchDefaults();
   }, [loadCommandLog]);
 
   if (!simPhoneNumber) {
@@ -228,6 +255,7 @@ export function SmsCommandPanel({ deviceId, simPhoneNumber }: SmsCommandPanelPro
                           deviceId={deviceId}
                           onSend={(params) => sendCommand.mutate(params)}
                           isSending={isSending}
+                          defaultValue={DEFAULT_KEY_MAP[cmd.key] ? defaults[DEFAULT_KEY_MAP[cmd.key]] : undefined}
                         />
                       ))}
                     </div>

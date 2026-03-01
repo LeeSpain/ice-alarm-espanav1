@@ -29,6 +29,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagesSettingsTab } from "@/components/admin/settings/ImagesSettingsTab";
 import { DocumentationSettingsTab } from "@/components/admin/settings/DocumentationSettingsTab";
 import { CommunicationsTab } from "@/components/admin/settings/CommunicationsTab";
+import { DevicesSettingsTab } from "@/components/admin/settings/DevicesSettingsTab";
 import { PRICING } from "@/config/pricing";
 
 interface SystemSetting {
@@ -464,11 +465,12 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="company">{t("adminSettings.company", "Company")}</TabsTrigger>
           <TabsTrigger value="pricing">{t("adminSettings.pricing", "Pricing")}</TabsTrigger>
           <TabsTrigger value="payments">{t("adminSettings.payments", "Payments")}</TabsTrigger>
           <TabsTrigger value="communications">{t("adminSettings.communications", "Communications")}</TabsTrigger>
+          <TabsTrigger value="devices">{t("adminSettings.devices", "Devices")}</TabsTrigger>
           <TabsTrigger value="images">{t("adminSettings.images", "Images")}</TabsTrigger>
           <TabsTrigger value="documentation">{t("adminSettings.documentation", "Docs")}</TabsTrigger>
         </TabsList>
@@ -1063,6 +1065,11 @@ export default function SettingsPage() {
             facebookConfigured={getIntegrationStatus([KEY.FB_PAGE_ID, KEY.FB_PAGE_TOKEN])}
             mapsConfigured={!!settingsMap[KEY.GOOGLE_MAPS]}
           />
+        </TabsContent>
+
+        {/* Devices Tab */}
+        <TabsContent value="devices">
+          <DevicesSettingsTab isSaving={saveMutation.isPending} />
         </TabsContent>
 
         {/* Images Tab */}

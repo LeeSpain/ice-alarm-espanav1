@@ -6,6 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   CheckCircle2,
   Circle,
   ClipboardList,
@@ -17,15 +25,20 @@ import {
   TestTube,
   ChevronDown,
   ChevronUp,
+  Zap,
+  Loader2,
 } from "lucide-react";
 import {
   useDeviceProvisioning,
   type ProvisioningStep,
 } from "@/hooks/useDeviceProvisioning";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { format } from "date-fns";
 
 interface ProvisioningChecklistProps {
   deviceId: string;
+  simPhoneNumber?: string | null;
   onSmsCommandNeeded?: (command: string) => void;
 }
 
@@ -174,7 +187,150 @@ function StepItem({
   );
 }
 
-export function ProvisioningChecklist({ deviceId, onSmsCommandNeeded }: ProvisioningChecklistProps) {
+interface QuickProvisionButtonProps {
+  deviceId: string;
+  simPhoneNumber?: string | null;
+  onStepComplete: (stepKey: string) => void;
+}
+
+function QuickProvisionButton({ deviceId, simPhoneNumber, onStepComplete }: QuickProvisionButtonProps) {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isProvisioning, setIsProvisioning] = useState(false);
+  const [currentStep, setCurrentStep] = useState("");
+  const [progress, setProgress] = useState(0);
+  const [defaults, setDefaults] = useState<Record<string, string>>({});
+
+  const loadDefaults = async () => {
+    const { data } = await supabase
+      .from("system_settings")
+      .select("key, value")
+      .in("key", [
+        "settings_default_apn",
+        "settings_default_server_ip_port",
+        "settings_default_sos_number",
+        "settings_default_reporting_mode",
+      ]);
+
+    const map: Record<string, string> = {};
+    data?.forEach((s) => { map[s.key] = s.value; });
+    setDefaults(map);
+    setShowConfirm(true);
+  };
+
+  const smsSteps = [
+    { key: "status_check", label: "Status Check", command: "STATUS#" },
+    { key: "set_apn", label: "Set APN", command: `APN,${defaults.settings_default_apn || "internet"}#` },
+    { key: "set_server", label: "Set Server IP:Port", command: `IP,${defaults.settings_default_server_ip_port || ""}#` },
+    { key: "set_sos", label: "Set SOS Number", command: `A1,${defaults.settings_default_sos_number || ""}#` },
+    { key: "set_reporting", label: "Set Reporting Mode", command: `MODE,${defaults.settings_default_reporting_mode || "1,300"}#` },
+    { key: "set_volume", label: "Set Volume", command: "VOLUME,5,5#" },
+  ];
+
+  const executeProvision = async () => {
+    if (!simPhoneNumber) {
+      toast.error("No SIM phone number — assign one first");
+      return;
+    }
+
+    setIsProvisioning(true);
+    const total = smsSteps.length;
+
+    for (let i = 0; i < total; i++) {
+      const step = smsSteps[i];
+      setCurrentStep(step.label);
+      setProgress(Math.round(((i + 1) / total) * 100));
+
+      try {
+        // Send SMS command via Twilio
+        const { error } = await supabase.functions.invoke("twilio-sms", {
+          body: {
+            to: simPhoneNumber,
+            message: step.command,
+          },
+        });
+
+        if (error) {
+          console.error(`Quick provision step ${step.key} failed:`, error);
+          toast.error(`Failed at: ${step.label}`);
+        } else {
+          onStepComplete(step.key);
+        }
+      } catch (err) {
+        console.error(`Quick provision step ${step.key} error:`, err);
+      }
+
+      // Wait 3 seconds between commands
+      if (i < total - 1) {
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
+
+    setIsProvisioning(false);
+    setShowConfirm(false);
+    setProgress(0);
+    setCurrentStep("");
+    toast.success("Quick provisioning complete");
+  };
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="text-xs"
+        onClick={loadDefaults}
+        disabled={isProvisioning}
+      >
+        <Zap className="h-3 w-3 mr-1" />
+        Quick Provision
+      </Button>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Quick Provision Device</DialogTitle>
+            <DialogDescription>
+              The following SMS commands will be sent to the device with 3-second delays:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {smsSteps.map((step, i) => (
+              <div key={step.key} className="flex items-center gap-2 p-2 rounded bg-muted text-sm">
+                <span className="font-medium w-6 text-center">{i + 1}.</span>
+                <span className="flex-1">{step.label}</span>
+                <code className="text-xs bg-background px-1.5 py-0.5 rounded font-mono">{step.command}</code>
+              </div>
+            ))}
+          </div>
+          {isProvisioning && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{currentStep}...</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isProvisioning}>
+              Cancel
+            </Button>
+            <Button onClick={executeProvision} disabled={isProvisioning || !simPhoneNumber}>
+              {isProvisioning ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Zap className="mr-2 h-4 w-4" />
+              )}
+              {isProvisioning ? "Provisioning..." : "Start Provisioning"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export function ProvisioningChecklist({ deviceId, simPhoneNumber, onSmsCommandNeeded }: ProvisioningChecklistProps) {
   const {
     checklist,
     completeStep,
@@ -211,17 +367,28 @@ export function ProvisioningChecklist({ deviceId, onSmsCommandNeeded }: Provisio
                 : `${completedCount} of ${totalCount} steps completed`}
             </CardDescription>
           </div>
-          {completedCount > 0 && !isFullyProvisioned && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground"
-              onClick={() => resetChecklist.mutate()}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {!isFullyProvisioned && (
+              <QuickProvisionButton
+                deviceId={deviceId}
+                simPhoneNumber={simPhoneNumber}
+                onStepComplete={(stepKey) =>
+                  completeStep.mutate({ stepKey, notes: "Quick Provision" })
+                }
+              />
+            )}
+            {completedCount > 0 && !isFullyProvisioned && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => resetChecklist.mutate()}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Progress bar */}
