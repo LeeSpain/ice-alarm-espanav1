@@ -101,7 +101,7 @@ export function JoinConfirmationStep({ data }: JoinConfirmationStepProps) {
         <p>{t("joinWizard.confirmation.questionsTitle")}</p>
         <p>
           {t("joinWizard.confirmation.callUsAt")}{" "}
-          <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, "")}`} className="text-primary hover:underline">{companySettings.emergency_phone}</a>{" "}
+          <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, "")}`} className="text-primary hover:underline">{t("joinWizard.callUs")}</a>{" "}
           {t("joinWizard.confirmation.orEmail")}{" "}
           <a href={`mailto:${companySettings.support_email}`} className="text-primary hover:underline">{companySettings.support_email}</a>
         </p>

@@ -180,7 +180,7 @@ export default function ContactPage() {
                         href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} 
                         className="text-primary font-medium hover:underline"
                       >
-                        {companySettings.emergency_phone}
+                        {t("common.callNow")}
                       </a>
                     </div>
                   </div>
