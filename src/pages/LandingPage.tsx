@@ -129,7 +129,7 @@ export default function LandingPage() {
                   onClick={() => setContactDialogOpen(true)}
                 >
                   <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                  {companySettings.emergency_phone}
+                  {t("common.callNow")}
                 </Button>
               </div>
 
@@ -592,7 +592,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
-            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <strong>{companySettings.emergency_phone}</strong>
+            {t("landing.haveQuestions")} {t("landing.callUsAnytime")} <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} className="text-primary font-semibold hover:underline">{t("common.callNow")}</a>
           </p>
         </div>
       </section>
@@ -610,7 +610,7 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">{t("navigation.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li>{companySettings.emergency_phone}</li>
+                <li><a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} className="hover:text-sidebar-foreground">{t("common.callNow")}</a></li>
                 <li>{companySettings.support_email}</li>
                 <li>{companySettings.address}</li>
               </ul>
@@ -646,8 +646,7 @@ export default function LandingPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="text-center mb-6">
-            <p className="text-2xl font-bold text-primary">{companySettings.emergency_phone}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground">
               {t("landing.contactDialog.available", "Available 24/7")}
             </p>
           </div>

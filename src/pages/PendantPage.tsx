@@ -241,7 +241,7 @@ export default function PendantPage() {
                 <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
                   <a href={`tel:${phoneForLink}`}>
                     <Phone className="mr-2 h-5 w-5" />
-                    {companySettings.emergency_phone}
+                    {t("common.callNow")}
                   </a>
                 </Button>
               </div>
@@ -539,7 +539,7 @@ export default function PendantPage() {
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg" asChild>
               <a href={`tel:${phoneForLink}`}>
                 <Phone className="mr-2 h-5 w-5" />
-                {companySettings.emergency_phone}
+                {t("common.callNow")}
               </a>
             </Button>
           </div>
@@ -562,7 +562,7 @@ export default function PendantPage() {
             <div>
               <h4 className="font-semibold mb-4">{t("pendant.footer.contact")}</h4>
               <ul className="space-y-2 text-sm text-sidebar-foreground/70">
-                <li>{companySettings.emergency_phone}</li>
+                <li><a href={`tel:${companySettings.emergency_phone.replace(/\s/g, '')}`} className="hover:text-sidebar-foreground">{t("common.callNow")}</a></li>
                 <li>{companySettings.support_email}</li>
                 <li>{t("pendant.footer.whatsappAvailable")}</li>
               </ul>

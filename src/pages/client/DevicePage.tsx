@@ -92,7 +92,7 @@ export default function DevicePage() {
                 href={`tel:${phoneForLink}`}
                 className="text-3xl md:text-4xl font-bold text-primary hover:underline block"
               >
-                {companySettings.emergency_phone}
+                {t("common.callNow")}
               </a>
               <Button 
                 className="mt-4 bg-[#25D366] hover:bg-[#128C7E] text-white"

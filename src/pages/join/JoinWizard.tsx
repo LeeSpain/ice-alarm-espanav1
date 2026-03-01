@@ -449,7 +449,7 @@ export default function JoinWizard() {
           <p>
             {t("joinWizard.needHelp")}{" "}
             <a href={`tel:${companySettings.emergency_phone.replace(/\s/g, "")}`} className="text-primary hover:underline">
-              {t("joinWizard.callUs")} {companySettings.emergency_phone}
+              {t("joinWizard.callUs")}
             </a>{" "}
             {t("common.or")}{" "}
             <a href={`mailto:${companySettings.support_email}`} className="text-primary hover:underline">
