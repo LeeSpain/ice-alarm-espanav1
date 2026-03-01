@@ -65,9 +65,9 @@ export function useLogStaffActivity() {
         .insert({
           staff_id: staffId,
           action,
-          details: details || {},
+          details: (details || {}) as any,
           performed_by: performerStaffId,
-        })
+        } as any)
         .select()
         .single();
 
