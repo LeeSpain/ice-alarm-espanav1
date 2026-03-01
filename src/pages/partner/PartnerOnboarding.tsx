@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Logo } from "@/components/ui/logo";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { CheckCircle, Heart, Send, Users, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -39,11 +39,9 @@ export default function PartnerOnboarding() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col">
-        <header className="p-6">
-          <Logo />
-        </header>
+        <PublicHeader />
 
-        <main className="flex-1 flex items-center justify-center px-4 pb-16">
+        <main className="flex-1 flex items-center justify-center px-4 pb-16 pt-20">
           <Card className="max-w-md w-full text-center">
             <CardHeader>
               <div className="mx-auto rounded-full bg-green-100 p-4 w-fit dark:bg-green-900">
@@ -69,11 +67,9 @@ export default function PartnerOnboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col">
-      <header className="p-6">
-        <Logo />
-      </header>
+      <PublicHeader />
 
-      <main className="flex-1 flex items-center justify-center px-4 pb-16">
+      <main className="flex-1 flex items-center justify-center px-4 pb-16 pt-20">
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">
