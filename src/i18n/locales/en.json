@@ -1207,7 +1207,12 @@
     "batteryLevel": "Battery",
     "deviceStatus": "Device",
     "serviceAnnouncement": "Service Announcement",
-    "announcementText": "We've upgraded our response system! Your alerts now reach our team 30% faster. Thank you for trusting ICE Alarm España with your safety."
+    "announcementText": "We've upgraded our response system! Your alerts now reach our team 30% faster. Thank you for trusting ICE Alarm España with your safety.",
+    "unread": "unread",
+    "unreadMessages": "{{count}} unread messages",
+    "tapToRead": "Tap to read and reply",
+    "noNewMessages": "No new messages",
+    "viewMessages": "View Messages"
   },
   "phoneOnly": {
     "yourCurrentService": "Your Current Service",

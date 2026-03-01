@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createNotification, getMemberUserId } from "@/utils/notifications";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
@@ -464,6 +465,20 @@ export default function MessagesPage() {
         .from("conversations")
         .update({ last_message_at: new Date().toISOString() })
         .eq("id", selectedConversation.id);
+
+      // Notify the member if this is a member conversation and not an internal note
+      if (!isInternalNote && selectedConversation.member_id) {
+        const memberUserId = await getMemberUserId(selectedConversation.member_id);
+        if (memberUserId) {
+          createNotification({
+            adminUserId: memberUserId,
+            eventType: "message",
+            message: `New reply from support: ${selectedConversation.subject || "Your conversation"}`,
+            entityType: "conversation",
+            entityId: selectedConversation.id,
+          });
+        }
+      }
 
       setReplyMessage("");
       setIsInternalNote(false);

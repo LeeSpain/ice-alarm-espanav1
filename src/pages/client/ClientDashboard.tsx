@@ -1,4 +1,4 @@
-import { Phone, MessageCircle, ArrowRight, Calendar, CreditCard, AlertTriangle, CheckCircle2, Eye, ArrowLeft } from "lucide-react";
+import { Phone, MessageCircle, ArrowRight, Calendar, CreditCard, AlertTriangle, CheckCircle2, Eye, ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { DeviceStatusCard } from "@/components/dashboard/DeviceStatusCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,12 +143,36 @@ export default function ClientDashboard() {
     enabled: !!effectiveMemberId && !isTemplatePreview,
   });
 
+  // Fetch unread message count
+  const { data: unreadMsgCount } = useQuery({
+    queryKey: ["member-unread-messages", effectiveMemberId],
+    queryFn: async () => {
+      if (!effectiveMemberId) return 0;
+      // Get conversations for this member
+      const { data: convs } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("member_id", effectiveMemberId);
+      if (!convs?.length) return 0;
+      const convIds = convs.map(c => c.id);
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .in("conversation_id", convIds)
+        .eq("sender_type", "staff")
+        .eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!effectiveMemberId && !isTemplatePreview,
+  });
+
   // Use mock data in template preview mode
   const displayMember = isTemplatePreview ? MOCK_MEMBER : member;
   const displayDevice = isTemplatePreview ? MOCK_DEVICE : device;
   const displaySubscription = isTemplatePreview ? MOCK_SUBSCRIPTION : subscription;
   const displayContacts = isTemplatePreview ? MOCK_CONTACTS : contacts;
   const displayAlertsCount = isTemplatePreview ? 2 : alertsCount;
+  const displayUnreadMsgs = isTemplatePreview ? 3 : (unreadMsgCount || 0);
 
   const dateLocale = i18n.language === 'es' ? es : enGB;
   const currentDate = format(new Date(), 'EEEE, d MMMM yyyy', { locale: dateLocale });
@@ -268,7 +292,7 @@ export default function ClientDashboard() {
 
 
       {/* Quick Actions Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         {/* Subscription Status */}
         <Card>
           <CardHeader className="pb-3">
@@ -367,6 +391,43 @@ export default function ClientDashboard() {
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link to="/dashboard/contacts">
                 {t("dashboard.updateContacts") || "Update Contacts"}
+                <ArrowRight className="ml-auto h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Messages Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">{t("navigation.messages") || "Messages"}</CardTitle>
+              {displayUnreadMsgs > 0 && (
+                <Badge className="text-xs">{displayUnreadMsgs} {t("dashboard.unread", "unread")}</Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {displayUnreadMsgs > 0 ? (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Inbox className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{t("dashboard.unreadMessages", { count: displayUnreadMsgs, defaultValue: "{{count}} unread messages" })}</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.tapToRead", "Tap to read and reply")}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">{t("dashboard.noNewMessages", "No new messages")}</p>
+              </div>
+            )}
+            <Button variant="outline" size="sm" className="w-full" asChild>
+              <Link to="/dashboard/messages">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                {t("dashboard.viewMessages", "View Messages")}
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Link>
             </Button>

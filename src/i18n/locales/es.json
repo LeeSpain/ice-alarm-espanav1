@@ -1199,7 +1199,12 @@
     "batteryLevel": "Batería",
     "deviceStatus": "Dispositivo",
     "serviceAnnouncement": "Anuncio de servicio",
-    "announcementText": "¡Hemos mejorado nuestro sistema de respuesta! Sus alertas ahora llegan a nuestro equipo un 30% más rápido. Gracias por confiar en ICE Alarm España para su seguridad."
+    "announcementText": "¡Hemos mejorado nuestro sistema de respuesta! Sus alertas ahora llegan a nuestro equipo un 30% más rápido. Gracias por confiar en ICE Alarm España para su seguridad.",
+    "unread": "sin leer",
+    "unreadMessages": "{{count}} mensajes sin leer",
+    "tapToRead": "Toque para leer y responder",
+    "noNewMessages": "Sin mensajes nuevos",
+    "viewMessages": "Ver mensajes"
   },
   "phoneOnly": {
     "yourCurrentService": "Su servicio actual",

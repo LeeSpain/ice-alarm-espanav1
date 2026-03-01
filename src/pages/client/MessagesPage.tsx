@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { createNotification } from "@/utils/notifications";
 import {
   Loader2, Plus, Send, MessageSquare, ArrowLeft,
   CheckCheck, Clock, Inbox, PenLine
@@ -241,6 +242,15 @@ export default function MessagesPage() {
 
       if (msgError) throw msgError;
 
+      // Notify all staff about new member message
+      createNotification({
+        adminUserId: null,
+        eventType: "message",
+        message: `New message from member: ${newSubject}`,
+        entityType: "conversation",
+        entityId: convData.id,
+      });
+
       toast.success(t("messages.messageSent"));
       setIsDialogOpen(false);
       setNewSubject("");
@@ -276,6 +286,15 @@ export default function MessagesPage() {
         .from("conversations")
         .update({ last_message_at: new Date().toISOString() })
         .eq("id", selectedConversation.id);
+
+      // Notify all staff about member reply
+      createNotification({
+        adminUserId: null,
+        eventType: "message",
+        message: `Member replied in: ${selectedConversation.subject || "Conversation"}`,
+        entityType: "conversation",
+        entityId: selectedConversation.id,
+      });
 
       setReplyMessage("");
       fetchMessages(selectedConversation.id);

@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, MoreHorizontal, Pencil, Trash2, Star, ArrowUp, ArrowDown, Loader2, MessageSquareQuote } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, ArrowUp, ArrowDown, Loader2, MessageSquareQuote } from "lucide-react";
 import { useAdminTestimonials, useTestimonialEditor, type Testimonial } from "@/hooks/useTestimonials";
 import { TestimonialForm } from "@/components/admin/testimonials/TestimonialForm";
 

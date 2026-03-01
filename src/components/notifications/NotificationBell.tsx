@@ -48,10 +48,22 @@ function getNotificationIcon(type: NotificationType) {
 
 function getNotificationLink(
   type: NotificationType,
-  metadata: Record<string, unknown> | null
+  metadata: Record<string, unknown> | null,
+  isStaff: boolean
 ): string | null {
   if (metadata?.link && typeof metadata.link === "string") {
     return metadata.link;
+  }
+  if (!isStaff) {
+    // Member-facing links
+    switch (type) {
+      case "message":
+        return "/dashboard/messages";
+      case "alert":
+        return "/dashboard/alerts";
+      default:
+        return "/dashboard";
+    }
   }
   switch (type) {
     case "alert":
@@ -68,6 +80,7 @@ function getNotificationLink(
 }
 
 export function NotificationBell({ staffId }: NotificationBellProps) {
+  const isStaff = !!staffId;
   const [isOpen, setIsOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -101,7 +114,7 @@ export function NotificationBell({ staffId }: NotificationBellProps) {
     if (!notification.read) {
       markAsRead(notification.id);
     }
-    const link = getNotificationLink(notification.type, notification.metadata);
+    const link = getNotificationLink(notification.type, notification.metadata, isStaff);
     if (link) {
       navigate(link);
     }
@@ -109,7 +122,7 @@ export function NotificationBell({ staffId }: NotificationBellProps) {
   };
 
   const handleViewAll = () => {
-    navigate("/admin/notifications");
+    navigate(isStaff ? "/admin/notifications" : "/dashboard");
     setIsOpen(false);
   };
 

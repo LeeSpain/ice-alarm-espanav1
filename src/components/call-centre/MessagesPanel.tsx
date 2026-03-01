@@ -216,6 +216,21 @@ export function MessagesPanel() {
         .update({ last_message_at: new Date().toISOString() })
         .eq("id", selectedConversation.id);
 
+      // Notify the member about the staff reply
+      if (selectedConversation.member_id) {
+        const { getMemberUserId, createNotification } = await import("@/utils/notifications");
+        const memberUserId = await getMemberUserId(selectedConversation.member_id);
+        if (memberUserId) {
+          createNotification({
+            adminUserId: memberUserId,
+            eventType: "message",
+            message: `New reply from support`,
+            entityType: "conversation",
+            entityId: selectedConversation.id,
+          });
+        }
+      }
+
       setReplyMessage("");
       fetchMessages(selectedConversation.id);
       fetchConversations();

@@ -53,6 +53,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { MemberChatButton } from "@/components/chat/MemberChatButton";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -451,6 +452,9 @@ export function ClientLayout() {
           <div className="flex items-center gap-2">
             {/* AI Chat Button */}
             <MemberChatButton memberId={memberId} />
+
+            {/* Notification Bell */}
+            <NotificationBell staffId={null} />
 
             {/* Language Selector */}
             <LanguageSelector variant="icon-only" />
