@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
+import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -139,14 +140,25 @@ export default function ContactPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <HeaderChatButton />
             <LanguageSelector />
-            <Button variant="ghost" asChild>
-              <Link to="/login">{t("common.signIn")}</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/join">{t("common.getStarted")}</Link>
-            </Button>
+            <PublicMobileNav
+              navItems={[
+                { to: "/#features", label: t("navigation.features") },
+                { to: "/#pricing", label: t("navigation.pricing") },
+                { to: "/contact", label: t("navigation.contact") },
+              ]}
+              loginLabel={t("common.signIn")}
+              ctaLabel={t("common.getStarted")}
+            />
+            <div className="hidden md:flex items-center gap-2">
+              <HeaderChatButton />
+              <Button variant="ghost" asChild>
+                <Link to="/login">{t("common.signIn")}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/join">{t("common.getStarted")}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

@@ -178,7 +178,7 @@ export default function CallCentreDashboard() {
               </div>
 
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AlertTabValue)}>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
                   <TabsTrigger value="all" className="gap-1">
                     {t("callCentre.filters.all")}
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">{alertCounts.all}</Badge>

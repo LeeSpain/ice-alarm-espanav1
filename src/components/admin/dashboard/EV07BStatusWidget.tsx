@@ -97,7 +97,7 @@ export function EV07BStatusWidget() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* In Stock */}
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
             <Package className="h-4 w-4 text-muted-foreground" />

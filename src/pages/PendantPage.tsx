@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
+import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
 import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import {
   Accordion,
@@ -152,14 +153,25 @@ export default function PendantPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <HeaderChatButton />
             <LanguageSelector />
-            <Button variant="ghost" asChild>
-              <Link to="/login">{t("pendant.nav.signIn")}</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/join">{t("pendant.nav.joinNow")}</Link>
-            </Button>
+            <PublicMobileNav
+              navItems={[
+                { to: "/", label: t("pendant.nav.home") },
+                { to: "/pendant", label: t("navigation.pendant") },
+                { to: "/contact", label: t("pendant.nav.contact") },
+              ]}
+              loginLabel={t("pendant.nav.signIn")}
+              ctaLabel={t("pendant.nav.joinNow")}
+            />
+            <div className="hidden md:flex items-center gap-2">
+              <HeaderChatButton />
+              <Button variant="ghost" asChild>
+                <Link to="/login">{t("pendant.nav.signIn")}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/join">{t("pendant.nav.joinNow")}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

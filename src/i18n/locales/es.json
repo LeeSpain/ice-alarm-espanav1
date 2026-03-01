@@ -620,7 +620,9 @@
     "tickets": "Tickets",
     "pendant": "Colgante",
     "ev07b": "EV-07B",
-    "howItWorks": "Cómo Funciona"
+    "howItWorks": "Cómo Funciona",
+    "menu": "Menú",
+    "close": "Cerrar"
   },
   "blog": {
     "title": "Blog",

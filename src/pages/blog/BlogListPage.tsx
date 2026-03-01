@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
+import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
@@ -42,14 +43,26 @@ export default function BlogListPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <HeaderChatButton />
             <LanguageSelector />
-            <Button variant="ghost" asChild>
-              <Link to="/login">{t("auth.memberLogin", { defaultValue: "Sign In" })}</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/join">{t("landing.startProtection", { defaultValue: "Get Started" })}</Link>
-            </Button>
+            <PublicMobileNav
+              navItems={[
+                { to: "/", label: t("navigation.home") },
+                { to: "/pendant", label: t("navigation.pendant") },
+                { to: "/blog", label: t("blog.title") },
+                { to: "/contact", label: t("navigation.contact") },
+              ]}
+              loginLabel={t("auth.memberLogin", { defaultValue: "Sign In" })}
+              ctaLabel={t("landing.startProtection", { defaultValue: "Get Started" })}
+            />
+            <div className="hidden md:flex items-center gap-2">
+              <HeaderChatButton />
+              <Button variant="ghost" asChild>
+                <Link to="/login">{t("auth.memberLogin", { defaultValue: "Sign In" })}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/join">{t("landing.startProtection", { defaultValue: "Get Started" })}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>

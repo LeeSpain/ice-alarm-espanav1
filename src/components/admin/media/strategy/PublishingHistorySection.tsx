@@ -63,7 +63,7 @@ export function PublishingHistorySection() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Stats Bar */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-muted rounded-lg">
             <p className="text-2xl font-bold">{stats.total}</p>
             <p className="text-xs text-muted-foreground">{t("mediaStrategy.totalPublished")}</p>

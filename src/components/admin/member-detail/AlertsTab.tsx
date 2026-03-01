@@ -273,7 +273,7 @@ export function AlertsTab({ memberId }: AlertsTabProps) {
               </div>
 
               {/* Timeline */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-3 bg-muted/30 rounded-lg">
                   <p className="text-xs text-muted-foreground">Received</p>
                   <p className="font-medium">{format(new Date(selectedAlert.received_at), "HH:mm:ss")}</p>

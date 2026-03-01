@@ -60,7 +60,7 @@ export function ContentPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
           <div className="text-center p-2 bg-muted rounded-lg">
             <p className="text-xs text-muted-foreground">{t("mediaStrategy.goal")}</p>
             <p className="font-medium text-sm">{item.goal?.name || "-"}</p>
@@ -80,7 +80,7 @@ export function ContentPreviewDialog({
         </div>
 
         <Tabs defaultValue="social" className="flex-1">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="social">{t("mediaStrategy.socialPost")}</TabsTrigger>
             <TabsTrigger value="blog">{t("mediaStrategy.blogContent")}</TabsTrigger>
             <TabsTrigger value="image">{t("mediaStrategy.image")}</TabsTrigger>

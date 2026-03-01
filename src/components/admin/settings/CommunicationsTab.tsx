@@ -128,7 +128,7 @@ export function CommunicationsTab({
       </div>
 
       <Tabs value={subTab} onValueChange={handleSubTabChange}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
           <TabsTrigger value="phone" className="flex items-center gap-1.5">
             <Phone className="h-4 w-4" />
             <span className="hidden sm:inline">Phone & SMS</span>

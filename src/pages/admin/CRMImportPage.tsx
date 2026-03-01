@@ -520,7 +520,7 @@ export default function CRMImportPage() {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
               <h3 className="text-lg font-medium text-green-800">Import Complete</h3>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-white rounded-lg">
                 <p className="text-2xl font-bold text-green-600">{importResults.imported}</p>
                 <p className="text-sm text-muted-foreground">Imported</p>

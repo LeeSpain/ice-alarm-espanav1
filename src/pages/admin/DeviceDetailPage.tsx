@@ -244,7 +244,7 @@ export default function DeviceDetailPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-1.5">
             <Settings className="h-4 w-4" />
             Overview

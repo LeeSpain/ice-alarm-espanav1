@@ -173,7 +173,7 @@ export function CampaignCard({
 
       <CardContent className="space-y-4">
         {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {stats.map((stat) => (
             <div 
               key={stat.label} 

@@ -9,6 +9,7 @@ import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { HeaderChatButton } from "@/components/chat/HeaderChatButton";
+import { PublicMobileNav } from "@/components/layout/PublicMobileNav";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,14 +82,27 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <HeaderChatButton />
             <LanguageSelector />
-            <Button variant="ghost" asChild>
-              <Link to="/login">{t("auth.memberLogin", { defaultValue: t("common.signIn") })}</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/join">{t("landing.startProtection", { defaultValue: t("common.getStarted") })}</Link>
-            </Button>
+            <PublicMobileNav
+              navItems={[
+                { to: "#how-it-works", label: t("navigation.howItWorks"), isAnchor: true },
+                { to: "/pendant", label: t("navigation.pendant") },
+                { to: "#pricing", label: t("navigation.pricing"), isAnchor: true },
+                { to: "/partner", label: t("navigation.partners") },
+                { to: "/contact", label: t("navigation.contact") },
+              ]}
+              loginLabel={t("auth.memberLogin", { defaultValue: t("common.signIn") })}
+              ctaLabel={t("landing.startProtection", { defaultValue: t("common.getStarted") })}
+            />
+            <div className="hidden md:flex items-center gap-2">
+              <HeaderChatButton />
+              <Button variant="ghost" asChild>
+                <Link to="/login">{t("auth.memberLogin", { defaultValue: t("common.signIn") })}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/join">{t("landing.startProtection", { defaultValue: t("common.getStarted") })}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
