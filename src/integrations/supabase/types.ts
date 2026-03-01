@@ -4043,6 +4043,7 @@ export type Database = {
       }
       partners: {
         Row: {
+          additional_notes: string | null
           agreement_signed_at: string | null
           agreement_version: string | null
           alert_visibility_enabled: boolean | null
@@ -4051,12 +4052,16 @@ export type Database = {
           company_name: string | null
           contact_name: string
           created_at: string
+          current_client_base: string | null
           custom_rate_monthly: number | null
           email: string
           estimated_monthly_referrals: string | null
           facility_address: string | null
           facility_resident_count: number | null
+          how_heard_about_us: string | null
           id: string
+          last_name: string | null
+          motivation: string | null
           notes_internal: string | null
           organization_registration: string | null
           organization_type: string | null
@@ -4066,12 +4071,18 @@ export type Database = {
           payout_iban: string | null
           payout_method: string
           phone: string | null
+          position_title: string | null
           preferred_language: string
           referral_code: string
+          region: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: Database["public"]["Enums"]["partner_status"]
           user_id: string | null
         }
         Insert: {
+          additional_notes?: string | null
           agreement_signed_at?: string | null
           agreement_version?: string | null
           alert_visibility_enabled?: boolean | null
@@ -4080,12 +4091,16 @@ export type Database = {
           company_name?: string | null
           contact_name: string
           created_at?: string
+          current_client_base?: string | null
           custom_rate_monthly?: number | null
           email: string
           estimated_monthly_referrals?: string | null
           facility_address?: string | null
           facility_resident_count?: number | null
+          how_heard_about_us?: string | null
           id?: string
+          last_name?: string | null
+          motivation?: string | null
           notes_internal?: string | null
           organization_registration?: string | null
           organization_type?: string | null
@@ -4095,12 +4110,18 @@ export type Database = {
           payout_iban?: string | null
           payout_method?: string
           phone?: string | null
+          position_title?: string | null
           preferred_language?: string
           referral_code: string
+          region?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["partner_status"]
           user_id?: string | null
         }
         Update: {
+          additional_notes?: string | null
           agreement_signed_at?: string | null
           agreement_version?: string | null
           alert_visibility_enabled?: boolean | null
@@ -4109,12 +4130,16 @@ export type Database = {
           company_name?: string | null
           contact_name?: string
           created_at?: string
+          current_client_base?: string | null
           custom_rate_monthly?: number | null
           email?: string
           estimated_monthly_referrals?: string | null
           facility_address?: string | null
           facility_resident_count?: number | null
+          how_heard_about_us?: string | null
           id?: string
+          last_name?: string | null
+          motivation?: string | null
           notes_internal?: string | null
           organization_registration?: string | null
           organization_type?: string | null
@@ -4124,12 +4149,25 @@ export type Database = {
           payout_iban?: string | null
           payout_method?: string
           phone?: string | null
+          position_title?: string | null
           preferred_language?: string
           referral_code?: string
+          region?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["partner_status"]
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "partners_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -5507,7 +5545,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      partner_monthly_referral_counts: {
+        Row: {
+          invites_sent: number | null
+          month: string | null
+          partner_id: string | null
+          registrations: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_invites_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_admin_dashboard_stats: { Args: never; Returns: Json }

@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PublicHeader } from "@/components/layout/PublicHeader";
-import { CheckCircle, Heart, Send, Users, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle, Heart, Send, Users, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { REGIONS, HOW_HEARD_OPTIONS, PARTNER_TYPES } from "@/config/partnerTypes";
+import { REGIONS, HOW_HEARD_OPTIONS } from "@/config/partnerTypes";
 
 export default function PartnerOnboarding() {
   const { t } = useTranslation();

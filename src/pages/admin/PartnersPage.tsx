@@ -15,7 +15,7 @@ import { format, subDays, isAfter } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
-import { PARTNER_TYPES, REGIONS, getPartnerTypeLabel, getRegionLabel } from "@/config/partnerTypes";
+import { PARTNER_TYPES, getPartnerTypeLabel } from "@/config/partnerTypes";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 
