@@ -4840,6 +4840,83 @@
     "configured": "Configured",
     "pending": "Pending"
   },
+  "adminEV07B": {
+    "title": "EV-07B Device Operations",
+    "subtitle": "Manage EV-07B pendant stock, monitor connectivity, and track operational costs",
+    "managePricing": "Manage Pricing",
+    "inStock": "EV-07B In Stock",
+    "liveDevices": "Live Devices",
+    "openAlerts": "Open Alerts",
+    "pendantPrice": "EV-07B Pendant Price",
+    "activeMembers": "active members",
+    "offlineAlerts": "offline alerts",
+    "inclIva": "incl. IVA",
+    "totalSuffix": "total",
+    "tabs": {
+      "stock": "EV-07B Stock",
+      "alerts": "Offline Alerts",
+      "costs": "Operational Costs"
+    },
+    "widget": {
+      "title": "EV-07B Status",
+      "subtitle": "Real-time device fleet summary",
+      "total": "total",
+      "inStock": "In Stock",
+      "allocated": "Allocated",
+      "live": "Live",
+      "withStaff": "With Staff",
+      "offline": "Offline",
+      "alerts": "Alerts"
+    },
+    "alerts": {
+      "title": "Open Device Alerts",
+      "description": "EV-07B devices that have gone offline",
+      "allOnline": "All devices are online",
+      "device": "Device",
+      "member": "Member",
+      "offlineSince": "Offline Since",
+      "lastCheckin": "Last Check-in",
+      "alertCreated": "Alert Created",
+      "actions": "Actions",
+      "close": "Close",
+      "alertClosed": "Alert closed",
+      "failedToClose": "Failed to close alert",
+      "unknown": "Unknown",
+      "unassigned": "Unassigned",
+      "never": "Never"
+    },
+    "apiConfig": {
+      "title": "EV-07B Check-in API",
+      "description": "Configure API key for device telemetry check-ins",
+      "setupRequired": "Setup Required",
+      "setupInstructions": "Setup Instructions",
+      "step1": "Generate a secure API key (sample below)",
+      "step2": "Go to Lovable Cloud → Secrets",
+      "step3Secret": "EV07B_CHECKIN_KEY",
+      "step3": "Add secret named",
+      "step4": "Paste your API key as the value",
+      "sampleKey": "Sample API Key (click to copy)",
+      "endpoint": "Check-in Endpoint",
+      "exampleRequest": "Example Request",
+      "copied": "Copied to clipboard",
+      "endpointCopied": "Endpoint URL copied"
+    },
+    "stock": {
+      "addedSuccess": "Device added to stock successfully",
+      "duplicateImei": "A device with this IMEI already exists",
+      "addFailed": "Failed to add device: {{message}}",
+      "statusUpdated": "Device status updated",
+      "updateFailed": "Failed to update device: {{message}}"
+    },
+    "realtime": {
+      "lowBatteryTitle": "Low Battery Alert",
+      "lowBatteryDesc": "Device battery is at {{level}}%",
+      "deviceOfflineTitle": "Device Offline",
+      "deviceOfflineDesc": "An EV-07B device has gone offline",
+      "deviceAllocatedTitle": "Device Allocated",
+      "deviceAllocatedDesc": "An EV-07B device has been allocated from stock"
+    }
+  },
   "adminSettings": {
     "title": "Settings",
     "subtitle": "Manage system configuration and integrations",

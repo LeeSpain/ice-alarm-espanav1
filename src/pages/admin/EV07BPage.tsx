@@ -20,14 +20,14 @@ export default function EV07BPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("stock");
-  
+
   // Realtime subscriptions for live updates
   useDeviceRealtime();
   useAlertsRealtime();
-  
+
   // Device stats
   const { data: stats } = useDeviceStockStats();
-  
+
   // Open alerts count
   const { data: openAlerts } = useQuery({
     queryKey: ["ev07b-open-alerts-count"],
@@ -37,7 +37,7 @@ export default function EV07BPage() {
         .select("*", { count: "exact", head: true })
         .eq("alert_type", "device_offline")
         .in("status", ["incoming", "in_progress"]);
-      
+
       if (error) throw error;
       return count || 0;
     },
@@ -48,17 +48,17 @@ export default function EV07BPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-             <Smartphone className="h-6 w-6 text-primary" />
-             {t("adminEV07B.title", "EV-07B Device Operations")}
-           </h1>
-           <p className="text-muted-foreground">
-             {t("adminEV07B.subtitle", "Manage EV-07B pendant stock, monitor connectivity, and track operational costs")}
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Smartphone className="h-6 w-6 text-primary" />
+            {t("adminEV07B.title")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("adminEV07B.subtitle")}
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/admin/settings?tab=pricing")}>
           <Settings className="w-4 h-4 mr-2" />
-          Manage Pricing
+          {t("adminEV07B.managePricing")}
           <ExternalLink className="w-3 h-3 ml-2" />
         </Button>
       </div>
@@ -67,35 +67,35 @@ export default function EV07BPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>EV-07B In Stock</CardDescription>
+            <CardDescription>{t("adminEV07B.inStock")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Smartphone className="h-4 w-4 text-muted-foreground" />
               <span className="text-2xl font-bold">{stats?.in_stock ?? 0}</span>
               <span className="text-sm text-muted-foreground">
-                / {stats?.total ?? 0} total
+                / {stats?.total ?? 0} {t("adminEV07B.totalSuffix")}
               </span>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Live Devices</CardDescription>
+            <CardDescription>{t("adminEV07B.liveDevices")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-2xl font-bold text-green-600">{stats?.live ?? 0}</span>
-              <span className="text-sm text-muted-foreground">active members</span>
+              <span className="text-sm text-muted-foreground">{t("adminEV07B.activeMembers")}</span>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Open Alerts</CardDescription>
+            <CardDescription>{t("adminEV07B.openAlerts")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -103,20 +103,20 @@ export default function EV07BPage() {
               <span className={`text-2xl font-bold ${openAlerts && openAlerts > 0 ? "text-destructive" : ""}`}>
                 {openAlerts ?? 0}
               </span>
-              <span className="text-sm text-muted-foreground">offline alerts</span>
+              <span className="text-sm text-muted-foreground">{t("adminEV07B.offlineAlerts")}</span>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>EV-07B Pendant Price</CardDescription>
+            <CardDescription>{t("adminEV07B.pendantPrice")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <span className="text-2xl font-bold">€{getPendantFinalPrice(1).toFixed(2)}</span>
-              <span className="text-xs text-muted-foreground">incl. IVA</span>
+              <span className="text-xs text-muted-foreground">{t("adminEV07B.inclIva")}</span>
             </div>
           </CardContent>
         </Card>
@@ -127,11 +127,11 @@ export default function EV07BPage() {
         <TabsList>
           <TabsTrigger value="stock">
             <Smartphone className="w-4 h-4 mr-2" />
-            EV-07B Stock
+            {t("adminEV07B.tabs.stock")}
           </TabsTrigger>
           <TabsTrigger value="alerts">
             <AlertTriangle className="w-4 h-4 mr-2" />
-            Offline Alerts
+            {t("adminEV07B.tabs.alerts")}
             {openAlerts && openAlerts > 0 && (
               <span className="ml-2 px-1.5 py-0.5 text-xs bg-destructive text-destructive-foreground rounded-full">
                 {openAlerts}
@@ -140,7 +140,7 @@ export default function EV07BPage() {
           </TabsTrigger>
           <TabsTrigger value="costs">
             <DollarSign className="w-4 h-4 mr-2" />
-            Operational Costs
+            {t("adminEV07B.tabs.costs")}
           </TabsTrigger>
         </TabsList>
 

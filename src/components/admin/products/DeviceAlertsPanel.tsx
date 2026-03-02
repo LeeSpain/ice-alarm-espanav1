@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Wifi, WifiOff, User, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ interface DeviceAlert {
 
 export function DeviceAlertsPanel() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Subscribe to realtime alert updates
   useAlertsRealtime();
@@ -80,11 +82,11 @@ export function DeviceAlertsPanel() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Alert closed");
+      toast.success(t("adminEV07B.alerts.alertClosed"));
       queryClient.invalidateQueries({ queryKey: ["device-offline-alerts"] });
     },
     onError: (error) => {
-      toast.error("Failed to close alert");
+      toast.error(t("adminEV07B.alerts.failedToClose"));
       console.error("Close alert error:", error);
     },
   });
@@ -95,7 +97,7 @@ export function DeviceAlertsPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Open Device Alerts
+            {t("adminEV07B.alerts.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -118,7 +120,7 @@ export function DeviceAlertsPanel() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className={`h-5 w-5 ${alertCount > 0 ? "text-destructive" : "text-muted-foreground"}`} />
-              Open Device Alerts
+              {t("adminEV07B.alerts.title")}
               {alertCount > 0 && (
                 <Badge variant="destructive" className="ml-2">
                   {alertCount}
@@ -126,7 +128,7 @@ export function DeviceAlertsPanel() {
               )}
             </CardTitle>
             <CardDescription>
-              EV-07B devices that have gone offline
+              {t("adminEV07B.alerts.description")}
             </CardDescription>
           </div>
         </div>
@@ -135,18 +137,18 @@ export function DeviceAlertsPanel() {
         {alertCount === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Wifi className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>All devices are online</p>
+            <p>{t("adminEV07B.alerts.allOnline")}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Device</TableHead>
-                <TableHead>Member</TableHead>
-                <TableHead>Offline Since</TableHead>
-                <TableHead>Last Check-in</TableHead>
-                <TableHead>Alert Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("adminEV07B.alerts.device")}</TableHead>
+                <TableHead>{t("adminEV07B.alerts.member")}</TableHead>
+                <TableHead>{t("adminEV07B.alerts.offlineSince")}</TableHead>
+                <TableHead>{t("adminEV07B.alerts.lastCheckin")}</TableHead>
+                <TableHead>{t("adminEV07B.alerts.alertCreated")}</TableHead>
+                <TableHead className="text-right">{t("adminEV07B.alerts.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -160,7 +162,7 @@ export function DeviceAlertsPanel() {
                       <div className="flex items-center gap-2">
                         <WifiOff className="h-4 w-4 text-destructive" />
                         <div>
-                          <p className="font-mono text-sm">{device?.imei || "Unknown"}</p>
+                          <p className="font-mono text-sm">{device?.imei || t("adminEV07B.alerts.unknown")}</p>
                           <p className="text-xs text-muted-foreground">{device?.sim_phone_number}</p>
                         </div>
                       </div>
@@ -175,7 +177,7 @@ export function DeviceAlertsPanel() {
                           </div>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
+                        <span className="text-muted-foreground">{t("adminEV07B.alerts.unassigned")}</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -196,7 +198,7 @@ export function DeviceAlertsPanel() {
                           {format(new Date(device.last_checkin_at), "dd MMM, HH:mm")}
                         </span>
                       ) : (
-                        "Never"
+                        t("adminEV07B.alerts.never")
                       )}
                     </TableCell>
                     <TableCell>
@@ -216,7 +218,7 @@ export function DeviceAlertsPanel() {
                         disabled={closeAlertMutation.isPending}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        Close
+                        {t("adminEV07B.alerts.close")}
                       </Button>
                     </TableCell>
                   </TableRow>

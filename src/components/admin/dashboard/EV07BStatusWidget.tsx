@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Package, Users, Wifi, WifiOff, AlertTriangle } from "lucide-react";
@@ -17,6 +18,7 @@ interface EV07BStats {
 }
 
 export function EV07BStatusWidget() {
+  const { t } = useTranslation();
   // Subscribe to realtime device updates
   useDeviceRealtime();
 
@@ -43,7 +45,7 @@ export function EV07BStatusWidget() {
       const allocated = devices?.filter(d => d.status === "allocated").length || 0;
       const with_staff = devices?.filter(d => d.status === "with_staff").length || 0;
       const live = devices?.filter(d => d.status === "live").length || 0;
-      
+
       // Offline = devices that should be online but aren't (using 2-minute threshold)
       // Note: is_online is set by the offline monitor running every minute
       const monitoredStatuses = ["allocated", "with_staff", "live"];
@@ -70,7 +72,7 @@ export function EV07BStatusWidget() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            EV-07B Status
+            {t("adminEV07B.widget.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -87,12 +89,12 @@ export function EV07BStatusWidget() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              EV-07B Status
+              {t("adminEV07B.widget.title")}
             </CardTitle>
-            <CardDescription>Real-time device fleet summary</CardDescription>
+            <CardDescription>{t("adminEV07B.widget.subtitle")}</CardDescription>
           </div>
           <Badge variant="outline" className="text-lg font-bold">
-            {stats?.total || 0} total
+            {stats?.total || 0} {t("adminEV07B.widget.total")}
           </Badge>
         </div>
       </CardHeader>
@@ -103,7 +105,7 @@ export function EV07BStatusWidget() {
             <Package className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xl font-bold">{stats?.in_stock || 0}</p>
-              <p className="text-xs text-muted-foreground">In Stock</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.inStock")}</p>
             </div>
           </div>
 
@@ -112,7 +114,7 @@ export function EV07BStatusWidget() {
             <Users className="h-4 w-4 text-blue-500" />
             <div>
               <p className="text-xl font-bold">{stats?.allocated || 0}</p>
-              <p className="text-xs text-muted-foreground">Allocated</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.allocated")}</p>
             </div>
           </div>
 
@@ -121,7 +123,7 @@ export function EV07BStatusWidget() {
             <Wifi className="h-4 w-4 text-green-500" />
             <div>
               <p className="text-xl font-bold">{stats?.live || 0}</p>
-              <p className="text-xs text-muted-foreground">Live</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.live")}</p>
             </div>
           </div>
 
@@ -130,7 +132,7 @@ export function EV07BStatusWidget() {
             <Users className="h-4 w-4 text-amber-500" />
             <div>
               <p className="text-xl font-bold">{stats?.with_staff || 0}</p>
-              <p className="text-xs text-muted-foreground">With Staff</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.withStaff")}</p>
             </div>
           </div>
 
@@ -141,7 +143,7 @@ export function EV07BStatusWidget() {
               <p className={`text-xl font-bold ${(stats?.offline || 0) > 0 ? "text-destructive" : ""}`}>
                 {stats?.offline || 0}
               </p>
-              <p className="text-xs text-muted-foreground">Offline</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.offline")}</p>
             </div>
           </div>
 
@@ -152,7 +154,7 @@ export function EV07BStatusWidget() {
               <p className={`text-xl font-bold ${(stats?.open_alerts || 0) > 0 ? "text-destructive" : ""}`}>
                 {stats?.open_alerts || 0}
               </p>
-              <p className="text-xs text-muted-foreground">Alerts</p>
+              <p className="text-xs text-muted-foreground">{t("adminEV07B.widget.alerts")}</p>
             </div>
           </div>
         </div>

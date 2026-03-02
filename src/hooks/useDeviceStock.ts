@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import i18next from "i18next";
 
 export interface DeviceStock {
   id: string;
@@ -67,7 +68,7 @@ export function useDeviceStock(statusFilter: DeviceStatusFilter = "all") {
       const { data, error } = await query;
 
       if (error) throw error;
-      
+
       // Transform the response to flatten member data
       return (data || []).map((device: any) => ({
         ...device,
@@ -102,13 +103,13 @@ export function useAddDeviceStock() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["device-stock"] });
-      toast.success("Device added to stock successfully");
+      toast.success(i18next.t("adminEV07B.stock.addedSuccess"));
     },
     onError: (error: Error) => {
       if (error.message.includes("duplicate")) {
-        toast.error("A device with this IMEI already exists");
+        toast.error(i18next.t("adminEV07B.stock.duplicateImei"));
       } else {
-        toast.error(`Failed to add device: ${error.message}`);
+        toast.error(i18next.t("adminEV07B.stock.addFailed", { message: error.message }));
       }
     },
   });
@@ -131,10 +132,10 @@ export function useUpdateDeviceStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["device-stock"] });
-      toast.success("Device status updated");
+      toast.success(i18next.t("adminEV07B.stock.statusUpdated"));
     },
     onError: (error: Error) => {
-      toast.error(`Failed to update device: ${error.message}`);
+      toast.error(i18next.t("adminEV07B.stock.updateFailed", { message: error.message }));
     },
   });
 }

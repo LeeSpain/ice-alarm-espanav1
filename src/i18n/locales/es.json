@@ -4816,6 +4816,83 @@
     "configured": "Configurado",
     "pending": "Pendiente"
   },
+  "adminEV07B": {
+    "title": "Operaciones de Dispositivos EV-07B",
+    "subtitle": "Gestionar stock de colgantes EV-07B, monitorear conectividad y seguir costes operativos",
+    "managePricing": "Gestionar Precios",
+    "inStock": "EV-07B En Stock",
+    "liveDevices": "Dispositivos Activos",
+    "openAlerts": "Alertas Abiertas",
+    "pendantPrice": "Precio Colgante EV-07B",
+    "activeMembers": "miembros activos",
+    "offlineAlerts": "alertas sin conexión",
+    "inclIva": "IVA incl.",
+    "totalSuffix": "total",
+    "tabs": {
+      "stock": "Stock EV-07B",
+      "alerts": "Alertas Desconexión",
+      "costs": "Costes Operativos"
+    },
+    "widget": {
+      "title": "Estado EV-07B",
+      "subtitle": "Resumen de flota de dispositivos en tiempo real",
+      "total": "total",
+      "inStock": "En Stock",
+      "allocated": "Asignados",
+      "live": "Activos",
+      "withStaff": "Con Personal",
+      "offline": "Sin Conexión",
+      "alerts": "Alertas"
+    },
+    "alerts": {
+      "title": "Alertas de Dispositivos Abiertas",
+      "description": "Dispositivos EV-07B que han perdido conexión",
+      "allOnline": "Todos los dispositivos están en línea",
+      "device": "Dispositivo",
+      "member": "Miembro",
+      "offlineSince": "Sin Conexión Desde",
+      "lastCheckin": "Último Check-in",
+      "alertCreated": "Alerta Creada",
+      "actions": "Acciones",
+      "close": "Cerrar",
+      "alertClosed": "Alerta cerrada",
+      "failedToClose": "Error al cerrar alerta",
+      "unknown": "Desconocido",
+      "unassigned": "Sin Asignar",
+      "never": "Nunca"
+    },
+    "apiConfig": {
+      "title": "API Check-in EV-07B",
+      "description": "Configurar clave API para check-ins de telemetría de dispositivos",
+      "setupRequired": "Configuración Necesaria",
+      "setupInstructions": "Instrucciones de Configuración",
+      "step1": "Generar una clave API segura (ejemplo abajo)",
+      "step2": "Ir a Lovable Cloud → Secretos",
+      "step3Secret": "EV07B_CHECKIN_KEY",
+      "step3": "Agregar secreto llamado",
+      "step4": "Pegar su clave API como valor",
+      "sampleKey": "Clave API de Ejemplo (clic para copiar)",
+      "endpoint": "Endpoint de Check-in",
+      "exampleRequest": "Ejemplo de Solicitud",
+      "copied": "Copiado al portapapeles",
+      "endpointCopied": "URL del endpoint copiada"
+    },
+    "stock": {
+      "addedSuccess": "Dispositivo agregado al stock exitosamente",
+      "duplicateImei": "Ya existe un dispositivo con este IMEI",
+      "addFailed": "Error al agregar dispositivo: {{message}}",
+      "statusUpdated": "Estado del dispositivo actualizado",
+      "updateFailed": "Error al actualizar dispositivo: {{message}}"
+    },
+    "realtime": {
+      "lowBatteryTitle": "Alerta de Batería Baja",
+      "lowBatteryDesc": "La batería del dispositivo está al {{level}}%",
+      "deviceOfflineTitle": "Dispositivo Sin Conexión",
+      "deviceOfflineDesc": "Un dispositivo EV-07B ha perdido conexión",
+      "deviceAllocatedTitle": "Dispositivo Asignado",
+      "deviceAllocatedDesc": "Un dispositivo EV-07B ha sido asignado del stock"
+    }
+  },
   "adminSettings": {
     "title": "Configuración",
     "subtitle": "Gestionar la configuración del sistema e integraciones",

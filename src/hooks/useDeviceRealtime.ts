@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import i18next from "i18next";
 
 /**
  * Hook to subscribe to realtime device updates and invalidate React Query caches.
@@ -36,11 +37,11 @@ export function useDeviceRealtime(memberId?: string) {
           if (payload.eventType === "UPDATE" && payload.new) {
             const device = payload.new as Record<string, unknown>;
             const batteryLevel = device.battery_level as number | null;
-            
+
             if (batteryLevel !== null && batteryLevel <= 20) {
               toast({
-                title: "Low Battery Alert",
-                description: `Device battery is at ${batteryLevel}%`,
+                title: i18next.t("adminEV07B.realtime.lowBatteryTitle"),
+                description: i18next.t("adminEV07B.realtime.lowBatteryDesc", { level: batteryLevel }),
                 variant: "destructive",
               });
             }
@@ -50,8 +51,8 @@ export function useDeviceRealtime(memberId?: string) {
               const oldDevice = payload.old as Record<string, unknown>;
               if (oldDevice.is_online === true) {
                 toast({
-                  title: "Device Offline",
-                  description: "An EV-07B device has gone offline",
+                  title: i18next.t("adminEV07B.realtime.deviceOfflineTitle"),
+                  description: i18next.t("adminEV07B.realtime.deviceOfflineDesc"),
                   variant: "destructive",
                 });
               }
@@ -64,8 +65,8 @@ export function useDeviceRealtime(memberId?: string) {
             const oldDevice = payload.old as Record<string, unknown>;
             if (oldDevice.status === "in_stock" && newDevice.status === "allocated") {
               toast({
-                title: "Device Allocated",
-                description: "An EV-07B device has been allocated from stock",
+                title: i18next.t("adminEV07B.realtime.deviceAllocatedTitle"),
+                description: i18next.t("adminEV07B.realtime.deviceAllocatedDesc"),
               });
             }
           }
