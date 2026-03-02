@@ -8,6 +8,7 @@ import { ScheduleSettings } from "./ScheduleSettings";
 import { ContentPlanner } from "./ContentPlanner";
 import { ContentReviewSection } from "./ContentReviewSection";
 import { PublishingHistorySection } from "./PublishingHistorySection";
+import { LeadInsightsCard } from "./LeadInsightsCard";
 
 export function MediaStrategySection() {
   const { t } = useTranslation();
@@ -125,7 +126,8 @@ export function MediaStrategySection() {
         />
       </TabsContent>
 
-      <TabsContent value="topics">
+      <TabsContent value="topics" className="space-y-4">
+        <LeadInsightsCard />
         <TopicsList
           topics={topics}
           goals={goals}

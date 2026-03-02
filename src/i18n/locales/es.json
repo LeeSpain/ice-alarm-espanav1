@@ -3765,6 +3765,13 @@
       "blog": "Blog",
       "facebook": "Facebook",
       "instagram": "Instagram"
+    },
+    "insights": {
+      "title": "Insights de Leads",
+      "subtitle": "Basado en {{count}} respuestas de outreach en los últimos {{days}} días",
+      "noData": "Aún no hay respuestas de outreach para analizar. Los insights aparecerán cuando los leads empiecen a responder.",
+      "addTopic": "Añadir como tema",
+      "suggestedAngle": "Ángulo sugerido"
     }
   },
   "ai": {
