@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       followups: stepsResult.followup?.followups || 0,
     };
 
-    await supabase.from("outreach_run_logs").insert({
+    const { data: runLog } = await supabase.from("outreach_run_logs").insert({
       run_type: "full_pipeline",
       started_at: startedAt,
       finished_at: finishedAt,
@@ -117,7 +117,40 @@ Deno.serve(async (req) => {
       errors: errors.length > 0 ? errors : null,
       dry_run: dryRun,
       triggered_by: "manual",
-    });
+    }).select("id").single();
+
+    const runId = runLog?.id || null;
+
+    // ── Notify admin of pipeline completion ──
+    try {
+      const summary = `Pipeline ${dryRun ? "(dry run) " : ""}complete: ${totals.enriched} enriched, ${totals.rated} rated, ${totals.drafted} drafted, ${totals.sent} sent`;
+      await supabase.from("notification_log").insert({
+        admin_user_id: null,
+        event_type: "system",
+        entity_type: "outreach_pipeline",
+        entity_id: runId,
+        message: summary,
+        status: "pending",
+      });
+    } catch (notifyErr) {
+      console.error("Pipeline notification failed:", notifyErr);
+    }
+
+    // ── Notify admin of pipeline errors ──
+    if (errors.length > 0) {
+      try {
+        await supabase.from("notification_log").insert({
+          admin_user_id: null,
+          event_type: "alert",
+          entity_type: "outreach_pipeline",
+          entity_id: runId,
+          message: `Pipeline errors: ${errors.slice(0, 3).join("; ")}`,
+          status: "pending",
+        });
+      } catch (notifyErr) {
+        console.error("Pipeline error notification failed:", notifyErr);
+      }
+    }
 
     return new Response(
       JSON.stringify({

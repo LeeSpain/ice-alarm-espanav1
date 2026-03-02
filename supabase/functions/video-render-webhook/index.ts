@@ -64,7 +64,7 @@ serve(async (req) => {
           .eq("id", render_id);
         break;
 
-      case "completed":
+      case "completed": {
         // Mark render as done
         await supabase
           .from("video_renders")
@@ -97,15 +97,37 @@ serve(async (req) => {
             console.error("[Webhook] Export insert error:", exportError);
           }
         }
-        break;
 
-      case "failed":
+        // ── Notify admin of render completion ──
+        try {
+          let projectName = "Untitled";
+          if (project_id) {
+            const { data: proj } = await supabase.from("video_projects").select("name").eq("id", project_id).single();
+            if (proj?.name) projectName = proj.name;
+          }
+          await supabase.from("notification_log").insert({
+            admin_user_id: null,
+            event_type: "system",
+            entity_type: "video_render",
+            entity_id: render_id,
+            message: `Video render complete: "${projectName}"`,
+            status: "pending",
+          });
+        } catch (notifyErr) {
+          console.error("Render notification failed:", notifyErr);
+        }
+        break;
+      }
+
+      case "failed": {
+        const errorMessage = error || "Unknown render error";
+
         // Mark render as failed
         await supabase
           .from("video_renders")
-          .update({ 
-            status: "failed", 
-            error: error || "Unknown render error" 
+          .update({
+            status: "failed",
+            error: errorMessage
           })
           .eq("id", render_id);
 
@@ -116,7 +138,27 @@ serve(async (req) => {
             .update({ status: "draft" })
             .eq("id", project_id);
         }
+
+        // ── Notify admin of render failure ──
+        try {
+          let projectName = "Untitled";
+          if (project_id) {
+            const { data: proj } = await supabase.from("video_projects").select("name").eq("id", project_id).single();
+            if (proj?.name) projectName = proj.name;
+          }
+          await supabase.from("notification_log").insert({
+            admin_user_id: null,
+            event_type: "alert",
+            entity_type: "video_render",
+            entity_id: render_id,
+            message: `Video render failed: "${projectName}" — ${errorMessage}`,
+            status: "pending",
+          });
+        } catch (notifyErr) {
+          console.error("Render failure notification failed:", notifyErr);
+        }
         break;
+      }
 
       default:
         console.log(`[Webhook] Unknown event: ${event}`);

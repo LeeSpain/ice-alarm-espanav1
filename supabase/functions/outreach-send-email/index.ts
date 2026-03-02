@@ -176,6 +176,23 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Notify admin of email send failures ──
+    const failedCount = errors.length;
+    if (failedCount > 0) {
+      try {
+        await supabase.from("notification_log").insert({
+          admin_user_id: null,
+          event_type: "alert",
+          entity_type: "outreach_email",
+          entity_id: null,
+          message: `${failedCount} outreach email(s) failed to send`,
+          status: "pending",
+        });
+      } catch (notifyErr) {
+        console.error("Email failure notification failed:", notifyErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ sent: sentCount, dry_run: dryRun, dry_run_count: dryRunCount, total: draftsToSend.length, errors: errors.length > 0 ? errors : undefined }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

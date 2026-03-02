@@ -54,6 +54,21 @@ function getNotificationLink(
   if (metadata?.link && typeof metadata.link === "string") {
     return metadata.link;
   }
+
+  // Route by entity_type for section-specific navigation
+  const entityType = metadata?.entity_type as string;
+  if (entityType) {
+    switch (entityType) {
+      case "social_post":
+        return "/admin/media-manager";
+      case "outreach_pipeline":
+      case "outreach_email":
+        return "/admin/ai-outreach";
+      case "video_render":
+        return "/admin/video-hub";
+    }
+  }
+
   if (!isStaff) {
     // Member-facing links
     switch (type) {

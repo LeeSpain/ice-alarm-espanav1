@@ -308,18 +308,34 @@ Deno.serve(async (req) => {
 
     if (!fbResponse.ok) {
       // Update social post with error but keep blog post
+      const errorMessage = fbResult?.error?.message || JSON.stringify(fbResult);
+
       await adminClient
         .from("social_posts")
         .update({
           status: "failed",
-          error_message: fbResult?.error?.message || JSON.stringify(fbResult),
+          error_message: errorMessage,
           updated_at: new Date().toISOString(),
         })
         .eq("id", post_id);
 
+      // ── Notify admin of publish failure ──
+      try {
+        await adminClient.from("notification_log").insert({
+          admin_user_id: null,
+          event_type: "alert",
+          entity_type: "social_post",
+          entity_id: post_id,
+          message: `Facebook publish failed: "${post.topic || "Untitled"}" — ${errorMessage}`,
+          status: "pending",
+        });
+      } catch (notifyErr) {
+        console.error("Notification insert failed:", notifyErr);
+      }
+
       return new Response(
         JSON.stringify({
-          error: fbResult?.error?.message || JSON.stringify(fbResult),
+          error: errorMessage,
           blog_post_id: blogPostId, // Blog still created
           blog_slug: blogSlug,
         }),
@@ -418,6 +434,20 @@ Deno.serve(async (req) => {
         console.error("Partner link generation failed:", partnerError);
         // Don't fail the publish - just log the error
       }
+    }
+
+    // ── Notify admin of publish success ──
+    try {
+      await adminClient.from("notification_log").insert({
+        admin_user_id: null,
+        event_type: "system",
+        entity_type: "social_post",
+        entity_id: post_id,
+        message: `Facebook post published: "${post.topic || "Untitled"}"`,
+        status: "pending",
+      });
+    } catch (notifyErr) {
+      console.error("Notification insert failed:", notifyErr);
     }
 
     return new Response(
