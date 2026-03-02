@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +36,24 @@ export function usePublishedPosts() {
   const queryClient = useQueryClient();
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("unknown");
   const [lastError, setLastError] = useState<string | null>(null);
+
+  // Realtime subscription for live metrics updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("social-post-metrics-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "social_post_metrics" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch all published posts with their cached metrics
   const postsQuery = useQuery({

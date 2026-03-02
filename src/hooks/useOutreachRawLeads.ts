@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -70,6 +71,24 @@ function getCampaignId(row: Record<string, unknown>): string | null {
 
 export function useOutreachRawLeads(filters?: Filters) {
   const queryClient = useQueryClient();
+
+  // Realtime subscription for live raw lead updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("outreach-raw-leads-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "outreach_raw_leads" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["outreach-raw-leads"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["outreach-raw-leads", filters],

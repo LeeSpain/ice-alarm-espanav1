@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +13,24 @@ type CRMLeadStatus = "new" | "contacted" | "replied" | "interested" | "converted
 
 export function useOutreachCRMLeads(filters?: Filters) {
   const queryClient = useQueryClient();
+
+  // Realtime subscription for live CRM lead updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("outreach-crm-leads-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "outreach_crm_leads" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["outreach-crm-leads", filters],

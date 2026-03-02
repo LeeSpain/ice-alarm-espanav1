@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +69,26 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Realtime subscription for live social post updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("social-posts-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "social_posts" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["social-posts"] });
+          queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
+          queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch all posts with optional status filter
   const postsQuery = useQuery({
