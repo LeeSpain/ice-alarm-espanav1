@@ -60,6 +60,7 @@ export interface MediaScheduleSettings {
     topic_days: number;
     no_consecutive_style: boolean;
   };
+  auto_publish_enabled: boolean;
   created_at: string;
   updated_at: string;
 }

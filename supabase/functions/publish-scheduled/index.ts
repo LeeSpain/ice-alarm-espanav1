@@ -82,6 +82,20 @@ Deno.serve(async (req) => {
       }
       slotsToPublish = [slot as CalendarSlot];
     } else if (run_scheduler) {
+      // Check if auto-publish is enabled
+      const { data: scheduleSettings } = await adminClient
+        .from("media_schedule_settings")
+        .select("auto_publish_enabled")
+        .limit(1)
+        .single();
+
+      if (!scheduleSettings?.auto_publish_enabled) {
+        return new Response(
+          JSON.stringify({ message: "Auto-publish is disabled", published: 0 }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Find all approved slots due for publishing
       const now = new Date();
       const currentDate = now.toISOString().split("T")[0];
@@ -338,6 +352,35 @@ Deno.serve(async (req) => {
         .eq("id", slot.id);
 
       results.push(result);
+    }
+
+    // Notify admin about auto-publish results (only for scheduler runs)
+    if (run_scheduler && results.length > 0) {
+      const published = results.filter(r => r.blog?.success || r.facebook?.success).length;
+      const failed = results.filter(r => (r.blog && !r.blog.success) || (r.facebook && !r.facebook.success)).length;
+      try {
+        if (failed > 0) {
+          await adminClient.from("notification_log").insert({
+            admin_user_id: null,
+            event_type: "alert",
+            entity_type: "auto_publish",
+            entity_id: null,
+            message: `Auto-publish: ${published} published, ${failed} failed`,
+            status: "pending",
+          });
+        } else if (published > 0) {
+          await adminClient.from("notification_log").insert({
+            admin_user_id: null,
+            event_type: "system",
+            entity_type: "auto_publish",
+            entity_id: null,
+            message: `Auto-publish: ${published} post(s) published successfully`,
+            status: "pending",
+          });
+        }
+      } catch {
+        // Don't fail if notification fails
+      }
     }
 
     return new Response(
