@@ -39,8 +39,8 @@ export function useOutreachPipeline() {
       queryClient.invalidateQueries({ queryKey: ["outreach-daily-usage"] });
       queryClient.invalidateQueries({ queryKey: ["outreach-run-logs"] });
       toast({
-        title: data.dry_run ? "Pipeline completed (Dry Run)" : "Pipeline completed",
-        description: `Enriched: ${data.totals.enriched}, Rated: ${data.totals.rated}, Drafted: ${data.totals.drafted}, Sent: ${data.totals.sent}`,
+        title: data.dry_run ? i18n.t("outreach.pipelineToasts.completedDryRun") : i18n.t("outreach.pipelineToasts.completed"),
+        description: i18n.t("outreach.pipelineToasts.completedDesc", { enriched: data.totals.enriched, rated: data.totals.rated, drafted: data.totals.drafted, sent: data.totals.sent }),
       });
     },
     onError: (error) => {
@@ -58,7 +58,7 @@ export function useOutreachPipeline() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["outreach-raw-leads"] });
-      toast({ title: i18n.t("common.success"), description: `Enriched ${data.enriched} leads` });
+      toast({ title: i18n.t("common.success"), description: i18n.t("outreach.pipelineToasts.enrichedCount", { count: data.enriched }) });
     },
     onError: (error) => {
       toast({ title: i18n.t("common.error"), description: error.message, variant: "destructive" });
@@ -75,7 +75,7 @@ export function useOutreachPipeline() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
-      toast({ title: i18n.t("common.success"), description: `Generated ${data.drafted} drafts` });
+      toast({ title: i18n.t("common.success"), description: i18n.t("outreach.pipelineToasts.draftedCount", { count: data.drafted }) });
     },
     onError: (error) => {
       toast({ title: i18n.t("common.error"), description: error.message, variant: "destructive" });
@@ -94,8 +94,10 @@ export function useOutreachPipeline() {
       queryClient.invalidateQueries({ queryKey: ["outreach-crm-leads"] });
       queryClient.invalidateQueries({ queryKey: ["outreach-daily-usage"] });
       toast({
-        title: data.dry_run ? "Sent (Dry Run)" : i18n.t("common.success"),
-        description: `Sent ${data.sent} emails${data.dry_run ? " (simulated)" : ""}`,
+        title: data.dry_run ? i18n.t("outreach.pipelineToasts.sentDryRun") : i18n.t("common.success"),
+        description: data.dry_run
+          ? i18n.t("outreach.pipelineToasts.sentCountSimulated", { count: data.sent })
+          : i18n.t("outreach.pipelineToasts.sentCount", { count: data.sent }),
       });
     },
     onError: (error) => {

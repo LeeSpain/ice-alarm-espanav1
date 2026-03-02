@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Save, Check, Send, Search, Sparkles, Image as ImageIcon, Play, Trash2, Edit, Eye, RefreshCw, AlertCircle, Wand2, Settings, HelpCircle } from "lucide-react";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { useSocialPosts, useSocialPost, SocialPost, SocialPostStatus, CreateSocialPostData } from "@/hooks/useSocialPosts";
 import { useSocialPostImages } from "@/hooks/useSocialPostImages";
 import { useMediaDraft, MediaDraftOutput } from "@/hooks/useMediaDraft";
@@ -26,6 +27,7 @@ import { PublishedPostsSection } from "@/components/admin/media/PublishedPostsSe
 import { MediaStrategySection } from "@/components/admin/media/strategy/MediaStrategySection";
 import { MediaHelpDialog } from "@/components/admin/media/MediaHelpDialog";
 import { PartnerDistributionSection } from "@/components/admin/media/PartnerDistributionSection";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn } from "@/lib/utils";
 const GOAL_VALUES = ["brand_awareness", "lead_generation", "engagement", "education", "promotion"] as const;
 const AUDIENCE_VALUES = ["expats_spain", "elderly_care", "family_caregivers", "healthcare_pros", "general"] as const;
@@ -39,13 +41,15 @@ const STATUS_COLORS: Record<SocialPostStatus, string> = {
 };
 
 export default function MediaManagerPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mainTab, setMainTab] = useState<"posts" | "strategy">("posts");
   const [statusFilter, setStatusFilter] = useState<SocialPostStatus | "all">("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [previewPost, setPreviewPost] = useState<SocialPost | null>(null);
   const [publishingFromQueue, setPublishingFromQueue] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   
   // Form state
   const [goal, setGoal] = useState("");
@@ -165,11 +169,17 @@ export default function MediaManagerPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm(t("mediaManager.deleteConfirm"))) {
-      await deletePost(id);
-      if (selectedPostId === id) handleClearForm();
-    }
+  const handleDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    await deletePost(deleteTargetId);
+    if (selectedPostId === deleteTargetId) handleClearForm();
+    setDeleteConfirmOpen(false);
+    setDeleteTargetId(null);
   };
 
   // AI workflow handlers
@@ -537,7 +547,7 @@ export default function MediaManagerPage() {
                 rows={6}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {postText.length} / 63,206 {t("mediaManager.characters")}
+                {postText.length.toLocaleString(i18n.language)} / {(63206).toLocaleString(i18n.language)} {t("mediaManager.characters")}
               </p>
             </div>
 
@@ -711,7 +721,7 @@ export default function MediaManagerPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                              {format(new Date(post.created_at), "MMM d, yyyy")}
+                              {format(new Date(post.created_at), "MMM d, yyyy", { locale: i18n.language === "es" ? es : enGB })}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end items-center gap-1">
@@ -807,6 +817,17 @@ export default function MediaManagerPage() {
         onEdit={handleEditFromPreview}
         isPublishing={publishingFromQueue === previewPost?.id}
         isRetrying={isRetrying}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={t("mediaManager.deleteConfirmTitle")}
+        description={t("mediaManager.deleteConfirm")}
+        onConfirm={handleConfirmDelete}
+        destructive
+        confirmLabel={t("common.delete")}
       />
         </>
       )}

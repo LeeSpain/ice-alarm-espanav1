@@ -18,11 +18,13 @@ import {
   Instagram,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { useScheduledContent, ScheduledContentItem } from "@/hooks/useScheduledContent";
 import { ContentPreviewDialog } from "./ContentPreviewDialog";
 
 export function ContentReviewSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewItem, setPreviewItem] = useState<ScheduledContentItem | null>(null);
 
@@ -62,19 +64,16 @@ export function ContentReviewSection() {
   };
 
   const handleBulkApprove = async () => {
-    for (const id of selectedIds) {
-      await approveSlot(id);
-    }
+    await Promise.allSettled(Array.from(selectedIds).map((id) => approveSlot(id)));
     setSelectedIds(new Set());
   };
 
   const handleBulkPublish = async () => {
-    for (const id of selectedIds) {
+    const publishable = Array.from(selectedIds).filter((id) => {
       const item = reviewableItems.find((i) => i.id === id);
-      if (item?.is_approved && !item.is_disabled) {
-        await publishSlot(id);
-      }
-    }
+      return item?.is_approved && !item.is_disabled;
+    });
+    await Promise.allSettled(publishable.map((id) => publishSlot(id)));
     setSelectedIds(new Set());
   };
 
@@ -170,7 +169,7 @@ export function ContentReviewSection() {
                     </TableCell>
                     <TableCell className="font-medium">
                       <div>
-                        <p>{format(parseISO(item.scheduled_date), "EEE, MMM d")}</p>
+                        <p>{format(parseISO(item.scheduled_date), "EEE, MMM d", { locale: dateLocale })}</p>
                         <p className="text-xs text-muted-foreground">{item.scheduled_time}</p>
                       </div>
                     </TableCell>

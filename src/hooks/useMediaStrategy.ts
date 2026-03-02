@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 // Types
 export interface MediaGoal {
@@ -87,10 +88,10 @@ export function useMediaGoals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-goals"] });
-      toast({ title: "Goal created" });
+      toast({ title: i18n.t("mediaStrategy.toasts.goalCreated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error creating goal", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorCreatingGoal"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -101,10 +102,10 @@ export function useMediaGoals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-goals"] });
-      toast({ title: "Goal updated" });
+      toast({ title: i18n.t("mediaStrategy.toasts.goalUpdated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating goal", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorUpdatingGoal"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -115,10 +116,10 @@ export function useMediaGoals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-goals"] });
-      toast({ title: "Goal deleted" });
+      toast({ title: i18n.t("mediaStrategy.toasts.goalDeleted") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error deleting goal", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorDeletingGoal"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -158,10 +159,10 @@ export function useMediaAudiences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-audiences"] });
-      toast({ title: "Audience created" });
+      toast({ title: i18n.t("mediaStrategy.toasts.audienceCreated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error creating audience", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorCreatingAudience"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -172,10 +173,10 @@ export function useMediaAudiences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-audiences"] });
-      toast({ title: "Audience updated" });
+      toast({ title: i18n.t("mediaStrategy.toasts.audienceUpdated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating audience", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorUpdatingAudience"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -186,10 +187,10 @@ export function useMediaAudiences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-audiences"] });
-      toast({ title: "Audience deleted" });
+      toast({ title: i18n.t("mediaStrategy.toasts.audienceDeleted") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error deleting audience", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorDeletingAudience"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -251,10 +252,10 @@ export function useMediaTopics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-topics"] });
-      toast({ title: "Topic created" });
+      toast({ title: i18n.t("mediaStrategy.toasts.topicCreated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error creating topic", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorCreatingTopic"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -273,10 +274,10 @@ export function useMediaTopics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-topics"] });
-      toast({ title: "Topic updated" });
+      toast({ title: i18n.t("mediaStrategy.toasts.topicUpdated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating topic", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorUpdatingTopic"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -287,10 +288,10 @@ export function useMediaTopics() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-topics"] });
-      toast({ title: "Topic deleted" });
+      toast({ title: i18n.t("mediaStrategy.toasts.topicDeleted") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error deleting topic", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorDeletingTopic"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -330,10 +331,10 @@ export function useMediaImageStyles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-image-styles"] });
-      toast({ title: "Image style created" });
+      toast({ title: i18n.t("mediaStrategy.toasts.imageStyleCreated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error creating image style", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorCreatingImageStyle"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -344,10 +345,10 @@ export function useMediaImageStyles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-image-styles"] });
-      toast({ title: "Image style updated" });
+      toast({ title: i18n.t("mediaStrategy.toasts.imageStyleUpdated") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error updating image style", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorUpdatingImageStyle"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -358,10 +359,10 @@ export function useMediaImageStyles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-image-styles"] });
-      toast({ title: "Image style deleted" });
+      toast({ title: i18n.t("mediaStrategy.toasts.imageStyleDeleted") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error deleting image style", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorDeletingImageStyle"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -410,10 +411,10 @@ export function useMediaScheduleSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-schedule-settings"] });
-      toast({ title: "Schedule settings saved" });
+      toast({ title: i18n.t("mediaStrategy.toasts.scheduleSettingsSaved") });
     },
     onError: (err: Error) => {
-      toast({ title: "Error saving settings", description: err.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaStrategy.toasts.errorSavingSettings"), description: err.message, variant: "destructive" });
     },
   });
 

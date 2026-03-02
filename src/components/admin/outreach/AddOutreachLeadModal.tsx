@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,20 +26,22 @@ import {
 import { useOutreachRawLeads } from "@/hooks/useOutreachRawLeads";
 import { useOutreachCampaigns } from "@/hooks/useOutreachCampaigns";
 
-const leadSchema = z.object({
-  company_name: z.string().min(1, "Company name is required"),
-  contact_name: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  website_url: z.string().url("Invalid URL").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  location: z.string().optional(),
-  category: z.string().optional(),
-  pipeline_type: z.enum(["sales", "partner"]),
-  campaign_id: z.string().optional(),
-  notes: z.string().optional(),
-});
+type LeadFormData = z.infer<ReturnType<typeof makeLeadSchema>>;
 
-type LeadFormData = z.infer<typeof leadSchema>;
+function makeLeadSchema(t: (key: string) => string) {
+  return z.object({
+    company_name: z.string().min(1, t("outreach.validation.companyRequired")),
+    contact_name: z.string().optional(),
+    email: z.string().email(t("outreach.validation.invalidEmail")).optional().or(z.literal("")),
+    website_url: z.string().url(t("outreach.validation.invalidUrl")).optional().or(z.literal("")),
+    phone: z.string().optional(),
+    location: z.string().optional(),
+    category: z.string().optional(),
+    pipeline_type: z.enum(["sales", "partner"]),
+    campaign_id: z.string().optional(),
+    notes: z.string().optional(),
+  });
+}
 
 interface AddOutreachLeadModalProps {
   open: boolean;
@@ -47,6 +50,7 @@ interface AddOutreachLeadModalProps {
 
 export function AddOutreachLeadModal({ open, onOpenChange }: AddOutreachLeadModalProps) {
   const { t } = useTranslation();
+  const leadSchema = useMemo(() => makeLeadSchema(t), [t]);
   const { addLead, isAdding } = useOutreachRawLeads();
   const { campaigns } = useOutreachCampaigns();
 

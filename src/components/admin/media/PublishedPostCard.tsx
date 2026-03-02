@@ -18,6 +18,7 @@ import {
   Trash2
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { PublishedPostWithMetrics } from "@/hooks/usePublishedPosts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -45,7 +46,8 @@ export function PublishedPostCard({
   isUnpublishing,
   hasError 
 }: PublishedPostCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
 
   const facebookUrl = post.facebook_post_id
@@ -63,7 +65,7 @@ export function PublishedPostCard({
   };
 
   const metricsAge = post.metrics?.fetched_at
-    ? formatDistanceToNow(new Date(post.metrics.fetched_at), { addSuffix: true })
+    ? formatDistanceToNow(new Date(post.metrics.fetched_at), { addSuffix: true, locale: dateLocale })
     : null;
 
   return (
@@ -113,8 +115,8 @@ export function PublishedPostCard({
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <Clock className="h-3.5 w-3.5" />
           {post.published_at
-            ? format(new Date(post.published_at), "MMM d, yyyy 'at' HH:mm")
-            : format(new Date(post.created_at), "MMM d, yyyy")}
+            ? format(new Date(post.published_at), "PPp", { locale: dateLocale })
+            : format(new Date(post.created_at), "MMM d, yyyy", { locale: dateLocale })}
         </p>
 
         {/* Engagement Metrics */}

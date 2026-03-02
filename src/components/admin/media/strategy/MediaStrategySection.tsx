@@ -62,7 +62,7 @@ export function MediaStrategySection() {
 
   return (
     <Tabs defaultValue="goals" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-8 lg:w-auto lg:inline-grid">
+      <TabsList className="flex w-full overflow-x-auto lg:w-auto lg:inline-grid lg:grid-cols-8">
         <TabsTrigger value="goals" className="gap-2">
           <Target className="h-4 w-4" />
           <span className="hidden sm:inline">{t("mediaStrategy.goals")}</span>

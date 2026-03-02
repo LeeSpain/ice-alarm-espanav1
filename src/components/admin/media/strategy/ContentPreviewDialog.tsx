@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Ban, Send, Loader2, Image as ImageIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { ScheduledContentItem } from "@/hooks/useScheduledContent";
 
 interface ContentPreviewDialogProps {
@@ -36,7 +37,8 @@ export function ContentPreviewDialog({
   isApproving,
   isPublishing,
 }: ContentPreviewDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,7 +58,7 @@ export function ContentPreviewDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            {t("mediaStrategy.scheduledFor")} {format(parseISO(item.scheduled_date), "EEEE, MMMM d, yyyy")} {t("common.at")} {item.scheduled_time}
+            {t("mediaStrategy.scheduledFor")} {format(parseISO(item.scheduled_date), "EEEE, MMMM d, yyyy", { locale: dateLocale })} {t("common.at")} {item.scheduled_time}
           </DialogDescription>
         </DialogHeader>
 

@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Mail, Phone, MapPin, Star, Send, XCircle, RefreshCw, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { useOutreachPipeline } from "@/hooks/useOutreachPipeline";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,7 +20,8 @@ interface LeadDetailDialogProps {
 }
 
 export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetailDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const { generateDrafts, isDrafting, sendEmails, isSending } = useOutreachPipeline();
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<any[]>([]);
@@ -148,8 +151,8 @@ export function OutreachLeadDetailDialog({ lead, open, onOpenChange }: LeadDetai
               <div className="text-sm space-y-1">
                 <h4 className="font-medium">{t("outreach.leadDetail.followupStatus")}</h4>
                 <p>{t("outreach.leadDetail.followupsSent")}: {lead.followup_count || 0}</p>
-                {lead.next_followup_at && <p>{t("outreach.leadDetail.nextFollowup")}: {new Date(lead.next_followup_at).toLocaleDateString()}</p>}
-                {lead.last_contacted_at && <p>{t("outreach.leadDetail.lastContacted")}: {new Date(lead.last_contacted_at).toLocaleDateString()}</p>}
+                {lead.next_followup_at && <p>{t("outreach.leadDetail.nextFollowup")}: {format(new Date(lead.next_followup_at), "d MMM yyyy", { locale: dateLocale })}</p>}
+                {lead.last_contacted_at && <p>{t("outreach.leadDetail.lastContacted")}: {format(new Date(lead.last_contacted_at), "d MMM yyyy", { locale: dateLocale })}</p>}
               </div>
             </>
           )}

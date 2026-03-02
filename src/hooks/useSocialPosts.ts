@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { logSocialPostActivity } from "@/lib/auditLog";
 
@@ -104,7 +105,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     onSuccess: (post) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-      toast({ title: "Draft created", description: "Your post draft has been saved." });
+      toast({ title: i18n.t("mediaManager.toasts.draftCreated"), description: i18n.t("mediaManager.toasts.draftCreatedDesc") });
       // Audit log
       logSocialPostActivity("draft_created", post.id, undefined, {
         goal: post.goal,
@@ -114,7 +115,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onError: (error: any) => {
       toast({
-        title: "Error creating draft",
+        title: i18n.t("mediaManager.toasts.errorCreatingDraft"),
         description: error.message,
         variant: "destructive",
       });
@@ -138,7 +139,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-      toast({ title: "Draft updated", description: "Your changes have been saved." });
+      toast({ title: i18n.t("mediaManager.toasts.draftUpdated"), description: i18n.t("mediaManager.toasts.draftUpdatedDesc") });
       // Audit log
       logSocialPostActivity("draft_edited", post.id, undefined, {
         post_text_length: post.post_text?.length,
@@ -147,7 +148,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onError: (error: any) => {
       toast({
-        title: "Error updating draft",
+        title: i18n.t("mediaManager.toasts.errorUpdatingDraft"),
         description: error.message,
         variant: "destructive",
       });
@@ -175,13 +176,13 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-      toast({ title: "Post approved", description: "The post is ready to publish." });
+      toast({ title: i18n.t("mediaManager.toasts.postApproved"), description: i18n.t("mediaManager.toasts.postApprovedDesc") });
       // Audit log
       logSocialPostActivity("approved", post.id, { status: "draft" }, { status: "approved" });
     },
     onError: (error: any) => {
       toast({
-        title: "Error approving post",
+        title: i18n.t("mediaManager.toasts.errorApprovingPost"),
         description: error.message,
         variant: "destructive",
       });
@@ -209,12 +210,12 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-      toast({ title: "Post ready for retry", description: "You can now attempt to publish again." });
+      toast({ title: i18n.t("mediaManager.toasts.postReadyForRetry"), description: i18n.t("mediaManager.toasts.postReadyForRetryDesc") });
       logSocialPostActivity("retry_requested", post.id, { status: "failed" }, { status: "approved" });
     },
     onError: (error: any) => {
       toast({
-        title: "Error preparing retry",
+        title: i18n.t("mediaManager.toasts.errorPreparingRetry"),
         description: error.message,
         variant: "destructive",
       });
@@ -253,7 +254,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
       toast({
-        title: "Published to Facebook!",
+        title: i18n.t("mediaManager.toasts.publishedToFacebook"),
         description: `Post ID: ${data.facebook_post_id}`,
       });
       // Log publish success
@@ -263,7 +264,7 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
     },
     onError: (error: any, postId: string) => {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
-      toast({ title: "Publishing failed", description: error.message, variant: "destructive" });
+      toast({ title: i18n.t("mediaManager.toasts.publishingFailed"), description: error.message, variant: "destructive" });
       // Log publish failure
       logSocialPostActivity("publish_failed", postId, undefined, {
         error: error.message,
@@ -281,11 +282,11 @@ export function useSocialPosts(statusFilter?: SocialPostStatus | "all") {
       queryClient.invalidateQueries({ queryKey: ["social-posts"] });
       queryClient.invalidateQueries({ queryKey: ["approved-posts"] });
       queryClient.invalidateQueries({ queryKey: ["social-post-metrics"] });
-      toast({ title: "Post deleted", description: "The post has been removed." });
+      toast({ title: i18n.t("mediaManager.toasts.postDeleted"), description: i18n.t("mediaManager.toasts.postDeletedDesc") });
     },
     onError: (error: any) => {
       toast({
-        title: "Error deleting post",
+        title: i18n.t("mediaManager.toasts.errorDeletingPost"),
         description: error.message,
         variant: "destructive",
       });

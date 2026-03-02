@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { StrategyItemEditor } from "./StrategyItemEditor";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface StrategyItem {
   id: string;
@@ -48,6 +49,8 @@ export function StrategyItemList({
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StrategyItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const handleCreate = () => {
     setEditingItem(null);
@@ -59,13 +62,20 @@ export function StrategyItemList({
     setEditorOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("common.deleteConfirm"))) return;
-    setDeletingId(id);
+  const handleDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeletingId(deleteTargetId);
     try {
-      await onDelete(id);
+      await onDelete(deleteTargetId);
     } finally {
       setDeletingId(null);
+      setDeleteConfirmOpen(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -158,6 +168,16 @@ export function StrategyItemList({
         isLoading={isCreating || isUpdating}
         showAiPrompt={showAiPrompt}
         requireDescription={requireDescription}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={t("common.deleteConfirmTitle")}
+        description={t("common.deleteConfirm")}
+        onConfirm={handleConfirmDelete}
+        destructive
+        confirmLabel={t("common.delete")}
       />
     </Card>
   );

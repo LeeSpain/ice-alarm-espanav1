@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, History, ExternalLink, Filter, FileText, Facebook, Instagram } from "lucide-react";
 import { format, parseISO, subDays } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { usePublishingHistory, HistoryFilters } from "@/hooks/usePublishingHistory";
 import { useMediaGoals, useMediaAudiences } from "@/hooks/useMediaStrategy";
 
 export function PublishingHistorySection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const [filters, setFilters] = useState<HistoryFilters>({
     startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"),
     endDate: format(new Date(), "yyyy-MM-dd"),
@@ -155,9 +157,9 @@ export function PublishingHistorySection() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("common.all")}</SelectItem>
-                <SelectItem value="blog">Blog</SelectItem>
-                <SelectItem value="facebook">Facebook</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="blog">{t("mediaStrategy.platforms.blog")}</SelectItem>
+                <SelectItem value="facebook">{t("mediaStrategy.platforms.facebook")}</SelectItem>
+                <SelectItem value="instagram">{t("mediaStrategy.platforms.instagram")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -194,7 +196,7 @@ export function PublishingHistorySection() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
                         <div>
-                          <p>{format(parseISO(item.published_at), "MMM d, yyyy")}</p>
+                          <p>{format(parseISO(item.published_at), "MMM d, yyyy", { locale: dateLocale })}</p>
                           <p className="text-xs text-muted-foreground">
                             {format(parseISO(item.published_at), "HH:mm")}
                           </p>

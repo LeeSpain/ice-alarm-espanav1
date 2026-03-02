@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface CampaignCardProps {
@@ -48,7 +49,8 @@ export function CampaignCard({
   onToggleStatus,
   isUpdating 
 }: CampaignCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
 
   const statusConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode }> = {
     active: { 
@@ -227,7 +229,7 @@ export function CampaignCard({
         <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {t("common.created")}: {format(new Date(campaign.created_at), "dd MMM yyyy")}
+            {t("common.created")}: {format(new Date(campaign.created_at), "dd MMM yyyy", { locale: dateLocale })}
           </div>
           <Button 
             variant="outline" 

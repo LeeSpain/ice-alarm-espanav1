@@ -85,7 +85,8 @@
     "mustBeApproved": "Post must be approved first",
     "noPostsFound": "No posts found. Create your first draft above!",
     "untitled": "Untitled",
-    "deleteConfirm": "Are you sure you want to delete this post?",
+    "deleteConfirmTitle": "Delete Post?",
+    "deleteConfirm": "Are you sure you want to delete this post? This action cannot be undone.",
     "goals": {
       "brand_awareness": "Brand Awareness",
       "lead_generation": "Lead Generation",
@@ -139,6 +140,36 @@
     },
     "errors": {
       "publishFailed": "Publishing failed"
+    },
+    "toasts": {
+      "draftCreated": "Draft created",
+      "draftCreatedDesc": "Your post draft has been saved.",
+      "errorCreatingDraft": "Error creating draft",
+      "draftUpdated": "Draft updated",
+      "draftUpdatedDesc": "Your changes have been saved.",
+      "errorUpdatingDraft": "Error updating draft",
+      "postApproved": "Post approved",
+      "postApprovedDesc": "The post is ready to publish.",
+      "errorApprovingPost": "Error approving post",
+      "postReadyForRetry": "Post ready for retry",
+      "postReadyForRetryDesc": "You can now attempt to publish again.",
+      "errorPreparingRetry": "Error preparing retry",
+      "publishedToFacebook": "Published to Facebook!",
+      "publishingFailed": "Publishing failed",
+      "postDeleted": "Post deleted",
+      "postDeletedDesc": "The post has been removed.",
+      "errorDeletingPost": "Error deleting post",
+      "metricsRefreshed": "Metrics refreshed",
+      "metricsRefreshedDesc": "Post engagement data has been updated.",
+      "allMetricsRefreshed": "All metrics refreshed",
+      "allMetricsRefreshedDesc": "Engagement data for all posts has been updated.",
+      "facebookTokenExpired": "Facebook Token Expired",
+      "failedToRefreshMetrics": "Failed to refresh metrics",
+      "updateTokenInSettings": "Please update your Facebook access token in Settings → Integrations.",
+      "postUnpublished": "Post unpublished",
+      "postUnpublishedFull": "Post removed from Facebook, blog, and metrics deleted.",
+      "postUnpublishedPartial": "Post archived locally. Facebook deletion may have failed.",
+      "failedToUnpublish": "Failed to unpublish"
     },
     "readyToPublish": {
       "title": "Ready to Publish",
@@ -504,6 +535,7 @@
     "filters": "Filters",
     "link": "Link",
     "preview": "Preview",
+    "deleteConfirmTitle": "Confirm Delete",
     "deleteConfirm": "Are you sure you want to delete this item?",
     "languages": {
       "en": "English",
@@ -3670,6 +3702,39 @@
       "deletingCalendarItem": "Error deleting calendar item",
       "clearingCalendar": "Error clearing calendar",
       "generatingCalendar": "Error generating calendar"
+    },
+    "toasts": {
+      "goalCreated": "Goal created",
+      "goalUpdated": "Goal updated",
+      "goalDeleted": "Goal deleted",
+      "errorCreatingGoal": "Error creating goal",
+      "errorUpdatingGoal": "Error updating goal",
+      "errorDeletingGoal": "Error deleting goal",
+      "audienceCreated": "Audience created",
+      "audienceUpdated": "Audience updated",
+      "audienceDeleted": "Audience deleted",
+      "errorCreatingAudience": "Error creating audience",
+      "errorUpdatingAudience": "Error updating audience",
+      "errorDeletingAudience": "Error deleting audience",
+      "topicCreated": "Topic created",
+      "topicUpdated": "Topic updated",
+      "topicDeleted": "Topic deleted",
+      "errorCreatingTopic": "Error creating topic",
+      "errorUpdatingTopic": "Error updating topic",
+      "errorDeletingTopic": "Error deleting topic",
+      "imageStyleCreated": "Image style created",
+      "imageStyleUpdated": "Image style updated",
+      "imageStyleDeleted": "Image style deleted",
+      "errorCreatingImageStyle": "Error creating image style",
+      "errorUpdatingImageStyle": "Error updating image style",
+      "errorDeletingImageStyle": "Error deleting image style",
+      "scheduleSettingsSaved": "Schedule settings saved",
+      "errorSavingSettings": "Error saving settings"
+    },
+    "platforms": {
+      "blog": "Blog",
+      "facebook": "Facebook",
+      "instagram": "Instagram"
     }
   },
   "ai": {
@@ -3972,7 +4037,12 @@
       "editReply": "Edit",
       "linked": "Linked",
       "replyToOutreach": "Reply to outreach email",
-      "viewLead": "View Lead"
+      "viewLead": "View Lead",
+      "replyBadge": "Reply",
+      "noSubject": "(No subject)",
+      "noPreview": "No preview available",
+      "from": "From",
+      "noContent": "No content"
     },
     "analytics": {
       "title": "Analytics",
@@ -4022,6 +4092,22 @@
       "markedDNC": "Marked as Do Not Contact",
       "noDraftsToSend": "No drafts to send",
       "generateFirst": "Generate a draft first"
+    },
+    "pipelineToasts": {
+      "completed": "Pipeline completed",
+      "completedDryRun": "Pipeline completed (Dry Run)",
+      "completedDesc": "Enriched: {{enriched}}, Rated: {{rated}}, Drafted: {{drafted}}, Sent: {{sent}}",
+      "enrichedCount": "Enriched {{count}} leads",
+      "draftedCount": "Generated {{count}} drafts",
+      "sentDryRun": "Sent (Dry Run)",
+      "sentCount": "Sent {{count}} emails",
+      "sentCountSimulated": "Sent {{count}} emails (simulated)"
+    },
+    "validation": {
+      "companyRequired": "Company name is required",
+      "invalidEmail": "Invalid email",
+      "invalidUrl": "Invalid URL",
+      "campaignNameRequired": "Campaign name is required"
     },
     "runFullPipeline": "Run Full Pipeline",
     "runningPipeline": "Running Pipeline...",

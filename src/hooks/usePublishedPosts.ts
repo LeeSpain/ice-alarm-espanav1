@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 import { SocialPost } from "@/hooks/useSocialPosts";
 
 export type ConnectionStatus = "connected" | "token_expired" | "not_configured" | "unknown";
@@ -171,15 +172,15 @@ export function usePublishedPosts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
-      toast({ title: "Metrics refreshed", description: "Post engagement data has been updated." });
+      toast({ title: i18n.t("mediaManager.toasts.metricsRefreshed"), description: i18n.t("mediaManager.toasts.metricsRefreshedDesc") });
     },
     onError: (error: Error) => {
       const isTokenError = error.message.toLowerCase().includes("token") || 
                            error.message.toLowerCase().includes("expired");
       toast({
-        title: isTokenError ? "Facebook Token Expired" : "Failed to refresh metrics",
-        description: isTokenError 
-          ? "Please update your Facebook access token in Settings → Integrations."
+        title: isTokenError ? i18n.t("mediaManager.toasts.facebookTokenExpired") : i18n.t("mediaManager.toasts.failedToRefreshMetrics"),
+        description: isTokenError
+          ? i18n.t("mediaManager.toasts.updateTokenInSettings")
           : error.message,
         variant: "destructive",
       });
@@ -221,15 +222,15 @@ export function usePublishedPosts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
-      toast({ title: "All metrics refreshed", description: "Engagement data for all posts has been updated." });
+      toast({ title: i18n.t("mediaManager.toasts.allMetricsRefreshed"), description: i18n.t("mediaManager.toasts.allMetricsRefreshedDesc") });
     },
     onError: (error: Error) => {
       const isTokenError = error.message.toLowerCase().includes("token") || 
                            error.message.toLowerCase().includes("expired");
       toast({
-        title: isTokenError ? "Facebook Token Expired" : "Failed to refresh metrics",
-        description: isTokenError 
-          ? "Please update your Facebook access token in Settings → Integrations."
+        title: isTokenError ? i18n.t("mediaManager.toasts.facebookTokenExpired") : i18n.t("mediaManager.toasts.failedToRefreshMetrics"),
+        description: isTokenError
+          ? i18n.t("mediaManager.toasts.updateTokenInSettings")
           : error.message,
         variant: "destructive",
       });
@@ -269,20 +270,20 @@ export function usePublishedPosts() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["published-posts-with-metrics"] });
-      toast({ 
-        title: "Post unpublished", 
-        description: data.deleted_from_facebook 
-          ? "Post removed from Facebook, blog, and metrics deleted."
-          : "Post archived locally. Facebook deletion may have failed.",
+      toast({
+        title: i18n.t("mediaManager.toasts.postUnpublished"),
+        description: data.deleted_from_facebook
+          ? i18n.t("mediaManager.toasts.postUnpublishedFull")
+          : i18n.t("mediaManager.toasts.postUnpublishedPartial"),
       });
     },
     onError: (error: Error) => {
       const isTokenError = error.message.toLowerCase().includes("token") || 
                            error.message.toLowerCase().includes("expired");
       toast({
-        title: isTokenError ? "Facebook Token Expired" : "Failed to unpublish",
-        description: isTokenError 
-          ? "Please update your Facebook access token in Settings → Integrations."
+        title: isTokenError ? i18n.t("mediaManager.toasts.facebookTokenExpired") : i18n.t("mediaManager.toasts.failedToUnpublish"),
+        description: isTokenError
+          ? i18n.t("mediaManager.toasts.updateTokenInSettings")
           : error.message,
         variant: "destructive",
       });

@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Loader2, Wand2, Trash2, AlertCircle, Sparkles } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { format, addDays, parseISO } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import { useContentCalendar } from "@/hooks/useContentCalendar";
 import { useScheduledContent } from "@/hooks/useScheduledContent";
 import { MediaGoal, MediaAudience, MediaTopic, MediaImageStyle, MediaScheduleSettings } from "@/hooks/useMediaStrategy";
@@ -42,13 +44,15 @@ export function ContentPlanner({
   imageStyles,
   scheduleSettings,
 }: ContentPlannerProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const { toast } = useToast();
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const [isGenerating, setIsGenerating] = useState(false);
   const [preview, setPreview] = useState<PlannedSlot[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const { items, isLoading, bulkInsert, clearCalendar, isBulkInserting, isClearing } = useContentCalendar(startDate, endDate);
   const { generateContent, isGenerating: isGeneratingContent } = useScheduledContent();
@@ -116,11 +120,15 @@ export function ContentPlanner({
   };
 
   // Clear and regenerate
-  const handleClearCalendar = async () => {
-    if (!confirm(t("mediaStrategy.clearCalendarConfirm"))) return;
+  const handleClearCalendar = () => {
+    setClearConfirmOpen(true);
+  };
+
+  const handleConfirmClear = async () => {
     await clearCalendar({ start: startDate, end: endDate });
     setPreview([]);
     setSelectedIds(new Set());
+    setClearConfirmOpen(false);
   };
 
   const handleSelectSlot = (id: string, checked: boolean) => {
@@ -280,7 +288,7 @@ export function ContentPlanner({
                       )}
                       <TableCell className="font-medium">
                         <div>
-                          <p>{format(parseISO(item.scheduled_date), "EEE, MMM d")}</p>
+                          <p>{format(parseISO(item.scheduled_date), "EEE, MMM d", { locale: dateLocale })}</p>
                           <p className="text-xs text-muted-foreground">{item.scheduled_time}</p>
                         </div>
                       </TableCell>
@@ -319,6 +327,16 @@ export function ContentPlanner({
           </div>
         )}
       </CardContent>
+
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        onOpenChange={setClearConfirmOpen}
+        title={t("mediaStrategy.clearCalendar")}
+        description={t("mediaStrategy.clearCalendarConfirm")}
+        onConfirm={handleConfirmClear}
+        destructive
+        confirmLabel={t("mediaStrategy.clearCalendar")}
+      />
     </Card>
   );
 }

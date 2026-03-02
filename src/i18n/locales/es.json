@@ -85,7 +85,8 @@
     "mustBeApproved": "La publicación debe ser aprobada primero",
     "noPostsFound": "No se encontraron publicaciones. ¡Cree su primer borrador arriba!",
     "untitled": "Sin título",
-    "deleteConfirm": "¿Está seguro de que desea eliminar esta publicación?",
+    "deleteConfirmTitle": "¿Eliminar publicación?",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta publicación? Esta acción no se puede deshacer.",
     "goals": {
       "brand_awareness": "Reconocimiento de Marca",
       "lead_generation": "Generación de Leads",
@@ -139,6 +140,36 @@
     },
     "errors": {
       "publishFailed": "Error de publicación"
+    },
+    "toasts": {
+      "draftCreated": "Borrador creado",
+      "draftCreatedDesc": "Su borrador de publicación se ha guardado.",
+      "errorCreatingDraft": "Error al crear borrador",
+      "draftUpdated": "Borrador actualizado",
+      "draftUpdatedDesc": "Sus cambios se han guardado.",
+      "errorUpdatingDraft": "Error al actualizar borrador",
+      "postApproved": "Publicación aprobada",
+      "postApprovedDesc": "La publicación está lista para publicar.",
+      "errorApprovingPost": "Error al aprobar publicación",
+      "postReadyForRetry": "Publicación lista para reintentar",
+      "postReadyForRetryDesc": "Ahora puede intentar publicar de nuevo.",
+      "errorPreparingRetry": "Error al preparar reintento",
+      "publishedToFacebook": "¡Publicado en Facebook!",
+      "publishingFailed": "Error de publicación",
+      "postDeleted": "Publicación eliminada",
+      "postDeletedDesc": "La publicación se ha eliminado.",
+      "errorDeletingPost": "Error al eliminar publicación",
+      "metricsRefreshed": "Métricas actualizadas",
+      "metricsRefreshedDesc": "Los datos de engagement se han actualizado.",
+      "allMetricsRefreshed": "Todas las métricas actualizadas",
+      "allMetricsRefreshedDesc": "Los datos de engagement de todas las publicaciones se han actualizado.",
+      "facebookTokenExpired": "Token de Facebook Expirado",
+      "failedToRefreshMetrics": "Error al actualizar métricas",
+      "updateTokenInSettings": "Actualice su token de acceso de Facebook en Ajustes → Integraciones.",
+      "postUnpublished": "Publicación retirada",
+      "postUnpublishedFull": "Publicación eliminada de Facebook, blog y métricas borradas.",
+      "postUnpublishedPartial": "Publicación archivada localmente. La eliminación de Facebook pudo haber fallado.",
+      "failedToUnpublish": "Error al retirar publicación"
     },
     "readyToPublish": {
       "title": "Listos para Publicar",
@@ -504,6 +535,7 @@
     "filters": "Filtros",
     "link": "Enlace",
     "preview": "Vista Previa",
+    "deleteConfirmTitle": "Confirmar eliminación",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar este elemento?",
     "languages": {
       "en": "Inglés",
@@ -3646,6 +3678,39 @@
       "deletingCalendarItem": "Error al eliminar elemento del calendario",
       "clearingCalendar": "Error al limpiar calendario",
       "generatingCalendar": "Error al generar calendario"
+    },
+    "toasts": {
+      "goalCreated": "Objetivo creado",
+      "goalUpdated": "Objetivo actualizado",
+      "goalDeleted": "Objetivo eliminado",
+      "errorCreatingGoal": "Error al crear objetivo",
+      "errorUpdatingGoal": "Error al actualizar objetivo",
+      "errorDeletingGoal": "Error al eliminar objetivo",
+      "audienceCreated": "Audiencia creada",
+      "audienceUpdated": "Audiencia actualizada",
+      "audienceDeleted": "Audiencia eliminada",
+      "errorCreatingAudience": "Error al crear audiencia",
+      "errorUpdatingAudience": "Error al actualizar audiencia",
+      "errorDeletingAudience": "Error al eliminar audiencia",
+      "topicCreated": "Tema creado",
+      "topicUpdated": "Tema actualizado",
+      "topicDeleted": "Tema eliminado",
+      "errorCreatingTopic": "Error al crear tema",
+      "errorUpdatingTopic": "Error al actualizar tema",
+      "errorDeletingTopic": "Error al eliminar tema",
+      "imageStyleCreated": "Estilo de imagen creado",
+      "imageStyleUpdated": "Estilo de imagen actualizado",
+      "imageStyleDeleted": "Estilo de imagen eliminado",
+      "errorCreatingImageStyle": "Error al crear estilo de imagen",
+      "errorUpdatingImageStyle": "Error al actualizar estilo de imagen",
+      "errorDeletingImageStyle": "Error al eliminar estilo de imagen",
+      "scheduleSettingsSaved": "Ajustes de programación guardados",
+      "errorSavingSettings": "Error al guardar ajustes"
+    },
+    "platforms": {
+      "blog": "Blog",
+      "facebook": "Facebook",
+      "instagram": "Instagram"
     }
   },
   "ai": {
@@ -3948,7 +4013,12 @@
       "editReply": "Editar",
       "linked": "Vinculado",
       "replyToOutreach": "Respuesta a email de outreach",
-      "viewLead": "Ver Lead"
+      "viewLead": "Ver Lead",
+      "replyBadge": "Respuesta",
+      "noSubject": "(Sin asunto)",
+      "noPreview": "Sin vista previa disponible",
+      "from": "De",
+      "noContent": "Sin contenido"
     },
     "analytics": {
       "title": "Analítica",
@@ -3998,6 +4068,22 @@
       "markedDNC": "Marcado como No Contactar",
       "noDraftsToSend": "No hay borradores para enviar",
       "generateFirst": "Genere un borrador primero"
+    },
+    "pipelineToasts": {
+      "completed": "Pipeline completado",
+      "completedDryRun": "Pipeline completado (Simulación)",
+      "completedDesc": "Enriquecidos: {{enriched}}, Puntuados: {{rated}}, Borradores: {{drafted}}, Enviados: {{sent}}",
+      "enrichedCount": "{{count}} leads enriquecidos",
+      "draftedCount": "{{count}} borradores generados",
+      "sentDryRun": "Enviado (Simulación)",
+      "sentCount": "{{count}} emails enviados",
+      "sentCountSimulated": "{{count}} emails enviados (simulados)"
+    },
+    "validation": {
+      "companyRequired": "El nombre de la empresa es obligatorio",
+      "invalidEmail": "Email no válido",
+      "invalidUrl": "URL no válida",
+      "campaignNameRequired": "El nombre de la campaña es obligatorio"
     },
     "runFullPipeline": "Ejecutar Pipeline Completo",
     "runningPipeline": "Ejecutando Pipeline...",

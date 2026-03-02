@@ -16,10 +16,12 @@ import { useOutreachInbox, type InboundEmail } from "@/hooks/useInboundEmails";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 import DOMPurify from "dompurify";
 
 export function OutreachInboxTab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const { data: emails, isLoading, refetch, isRefetching } = useOutreachInbox();
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
 
@@ -83,19 +85,19 @@ export function OutreachInboxTab() {
                         <span className="font-medium truncate">{email.from_email}</span>
                         {email.is_reply && (
                           <Badge variant="secondary" className="text-xs">
-                            Reply
+                            {t("outreach.inbox.replyBadge")}
                           </Badge>
                         )}
                       </div>
-                      <p className="font-medium mt-1 truncate">{email.subject || "(No subject)"}</p>
+                      <p className="font-medium mt-1 truncate">{email.subject || t("outreach.inbox.noSubject")}</p>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {email.body_snippet || "No preview available"}
+                        {email.body_snippet || t("outreach.inbox.noPreview")}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {format(new Date(email.received_at), "MMM d, HH:mm")}
+                        {format(new Date(email.received_at), "MMM d, HH:mm", { locale: dateLocale })}
                       </span>
                       {email.linked_entity_id && (
                         <Badge variant="outline" className="text-xs">
@@ -117,10 +119,10 @@ export function OutreachInboxTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              {selectedEmail?.subject || "(No subject)"}
+              {selectedEmail?.subject || t("outreach.inbox.noSubject")}
             </DialogTitle>
             <DialogDescription>
-              From: {selectedEmail?.from_email} • {selectedEmail && format(new Date(selectedEmail.received_at), "PPpp")}
+              {t("outreach.inbox.from")}: {selectedEmail?.from_email} • {selectedEmail && format(new Date(selectedEmail.received_at), "PPpp", { locale: dateLocale })}
             </DialogDescription>
           </DialogHeader>
 
@@ -158,7 +160,7 @@ export function OutreachInboxTab() {
                   className="prose prose-sm max-w-none"
                 />
               ) : (
-                <p className="whitespace-pre-wrap">{selectedEmail?.body_snippet || "No content"}</p>
+                <p className="whitespace-pre-wrap">{selectedEmail?.body_snippet || t("outreach.inbox.noContent")}</p>
               )}
             </div>
           </div>

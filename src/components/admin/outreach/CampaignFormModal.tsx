@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,22 +33,24 @@ import { Switch } from "@/components/ui/switch";
 import { useOutreachCampaigns, NewCampaign, Campaign } from "@/hooks/useOutreachCampaigns";
 import { Loader2 } from "lucide-react";
 
-const campaignSchema = z.object({
-  name: z.string().min(1, "Campaign name is required"),
-  description: z.string().optional(),
-  pipeline_type: z.enum(["sales", "partner"]),
-  status: z.enum(["active", "paused", "draft", "completed"]),
-  target_description: z.string().optional(),
-  target_locations: z.string().optional(),
-  default_language: z.enum(["en", "es"]),
-  email_tone: z.enum(["professional", "friendly", "neutral"]),
-  outreach_goal: z.enum(["intro", "partnership", "meeting"]),
-  follow_up_enabled: z.boolean(),
-  max_emails_per_lead: z.number().min(1).max(5),
-  days_between_emails: z.number().min(1).max(14),
-});
+type CampaignFormValues = z.infer<ReturnType<typeof makeCampaignSchema>>;
 
-type CampaignFormValues = z.infer<typeof campaignSchema>;
+function makeCampaignSchema(t: (key: string) => string) {
+  return z.object({
+    name: z.string().min(1, t("outreach.validation.campaignNameRequired")),
+    description: z.string().optional(),
+    pipeline_type: z.enum(["sales", "partner"]),
+    status: z.enum(["active", "paused", "draft", "completed"]),
+    target_description: z.string().optional(),
+    target_locations: z.string().optional(),
+    default_language: z.enum(["en", "es"]),
+    email_tone: z.enum(["professional", "friendly", "neutral"]),
+    outreach_goal: z.enum(["intro", "partnership", "meeting"]),
+    follow_up_enabled: z.boolean(),
+    max_emails_per_lead: z.number().min(1).max(5),
+    days_between_emails: z.number().min(1).max(14),
+  });
+}
 
 interface CampaignFormModalProps {
   open: boolean;
@@ -59,6 +61,7 @@ interface CampaignFormModalProps {
 
 export function CampaignFormModal({ open, onOpenChange, campaign, mode }: CampaignFormModalProps) {
   const { t } = useTranslation();
+  const campaignSchema = useMemo(() => makeCampaignSchema(t), [t]);
   const { createCampaign, isCreating, updateCampaign, isUpdating } = useOutreachCampaigns();
 
   const form = useForm<CampaignFormValues>({
