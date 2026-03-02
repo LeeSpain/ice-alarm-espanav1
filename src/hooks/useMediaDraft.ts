@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 export interface MediaDraftOutput {
   research: {
@@ -38,8 +39,8 @@ export function useMediaDraft() {
   const generateDraft = async (params: GenerateMediaDraftParams): Promise<MediaDraftOutput | null> => {
     if (!params.topic) {
       toast({
-        title: "Topic required",
-        description: "Please enter a topic before generating content",
+        title: i18n.t("mediaManager.ai.topicRequired"),
+        description: i18n.t("mediaManager.ai.topicRequiredDesc"),
         variant: "destructive",
       });
       return null;
@@ -57,20 +58,20 @@ export function useMediaDraft() {
         // Handle specific error codes
         if (error.message?.includes("429")) {
           toast({
-            title: "Rate limit exceeded",
-            description: "Please wait a moment and try again",
+            title: i18n.t("mediaManager.ai.rateLimited"),
+            description: i18n.t("mediaManager.ai.rateLimitedDesc"),
             variant: "destructive",
           });
         } else if (error.message?.includes("402")) {
           toast({
-            title: "AI credits exhausted",
-            description: "Please add funds to continue using AI features",
+            title: i18n.t("mediaManager.ai.creditsExhausted"),
+            description: i18n.t("mediaManager.ai.creditsExhaustedDesc"),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Generation failed",
-            description: error.message || "Failed to generate content",
+            title: i18n.t("mediaManager.ai.generationFailed"),
+            description: error.message || i18n.t("mediaManager.ai.generationFailedDesc"),
             variant: "destructive",
           });
         }
@@ -79,8 +80,8 @@ export function useMediaDraft() {
 
       if (!data?.success) {
         toast({
-          title: "Generation failed",
-          description: data?.error || "Failed to generate content",
+          title: i18n.t("mediaManager.ai.generationFailed"),
+          description: data?.error || i18n.t("mediaManager.ai.generationFailedDesc"),
           variant: "destructive",
         });
         return null;
@@ -90,16 +91,16 @@ export function useMediaDraft() {
       setLastOutput(output);
 
       toast({
-        title: "Content generated",
-        description: "AI has created your draft content",
+        title: i18n.t("mediaManager.ai.contentGenerated"),
+        description: i18n.t("mediaManager.ai.contentGeneratedDesc"),
       });
 
       return output;
     } catch (err) {
       console.error("Media draft error:", err);
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Unknown error occurred",
+        title: i18n.t("common.error"),
+        description: err instanceof Error ? err.message : i18n.t("mediaManager.ai.unknownError"),
         variant: "destructive",
       });
       return null;

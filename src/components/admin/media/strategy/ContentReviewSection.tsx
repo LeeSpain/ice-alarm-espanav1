@@ -187,7 +187,7 @@ export function ContentReviewSection() {
                           size="sm"
                           className={item.publish_to_blog ? "text-primary" : "text-muted-foreground"}
                           onClick={() => togglePublishTarget({ id: item.id, target: "publish_to_blog", value: !item.publish_to_blog })}
-                          title="Blog"
+                          title={t("mediaStrategy.platforms.blog")}
                         >
                           <FileText className="h-4 w-4" />
                         </Button>
@@ -196,7 +196,7 @@ export function ContentReviewSection() {
                           size="sm"
                           className={item.publish_to_facebook ? "text-blue-500" : "text-muted-foreground"}
                           onClick={() => togglePublishTarget({ id: item.id, target: "publish_to_facebook", value: !item.publish_to_facebook })}
-                          title="Facebook"
+                          title={t("mediaStrategy.platforms.facebook")}
                         >
                           <Facebook className="h-4 w-4" />
                         </Button>
@@ -205,7 +205,7 @@ export function ContentReviewSection() {
                           size="sm"
                           className={item.publish_to_instagram ? "text-pink-500" : "text-muted-foreground"}
                           onClick={() => togglePublishTarget({ id: item.id, target: "publish_to_instagram", value: !item.publish_to_instagram })}
-                          title="Instagram"
+                          title={t("mediaStrategy.platforms.instagram")}
                           disabled
                         >
                           <Instagram className="h-4 w-4" />

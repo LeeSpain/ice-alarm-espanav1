@@ -254,8 +254,8 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
 
   const prepareProjectPayload = useCallback(() => {
     const effectiveCta = projectData.ctaText.trim() || 
-      (projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en) || 
-      "Call Now";
+      (projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en) ||
+      t("videoHub.create.defaultCtaFallback");
 
     return {
       name: projectData.name.trim(),
@@ -273,7 +273,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         productIcons: projectData.productIcons,
       },
     };
-  }, [projectData, creationMode, settings]);
+  }, [projectData, creationMode, settings, t]);
 
   const handleSaveDraft = async () => {
     // Mark all fields as touched
@@ -869,7 +869,7 @@ function ContentStep({ projectData, setProjectData, settings, addBullet, removeB
             value={projectData.ctaText}
             onChange={(e) => setProjectData({ ...projectData, ctaText: e.target.value })}
             onBlur={() => onBlur("ctaText")}
-            placeholder={settings?.default_cta_en || "Call Now"}
+            placeholder={settings?.default_cta_en || t("videoHub.create.defaultCtaFallback")}
             className={`mt-1 ${touched.has("ctaText") && validationErrors.ctaText ? "border-destructive" : ""}`}
           />
           {settings?.default_cta_en && (
@@ -913,7 +913,7 @@ function ContentStep({ projectData, setProjectData, settings, addBullet, removeB
           {["en", "es"].map((lang) => (
             <div key={lang} className="flex items-center gap-2">
               <RadioGroupItem value={lang} id={`lang-${lang}`} />
-              <Label htmlFor={`lang-${lang}`}>{lang === "es" ? "Español" : "English"}</Label>
+              <Label htmlFor={`lang-${lang}`}>{t(`videoHub.create.languages.${lang}`)}</Label>
             </div>
           ))}
         </RadioGroup>

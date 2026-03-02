@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 export function useSocialPostImages() {
   const [isUploading, setIsUploading] = useState(false);
@@ -13,8 +14,8 @@ export function useSocialPostImages() {
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!validTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload a JPG, PNG, WebP, or GIF image.",
+        title: i18n.t("mediaManager.upload.invalidFileType"),
+        description: i18n.t("mediaManager.upload.invalidFileTypeDesc"),
         variant: "destructive",
       });
       return null;
@@ -23,8 +24,8 @@ export function useSocialPostImages() {
     // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 10MB.",
+        title: i18n.t("mediaManager.upload.fileTooLarge"),
+        description: i18n.t("mediaManager.upload.fileTooLargeDesc"),
         variant: "destructive",
       });
       return null;
@@ -48,7 +49,7 @@ export function useSocialPostImages() {
       return urlData.publicUrl;
     } catch (error: any) {
       toast({
-        title: "Upload failed",
+        title: i18n.t("mediaManager.upload.uploadFailed"),
         description: error.message,
         variant: "destructive",
       });
@@ -72,7 +73,7 @@ export function useSocialPostImages() {
       return true;
     } catch (error: any) {
       toast({
-        title: "Delete failed",
+        title: i18n.t("mediaManager.upload.deleteFailed"),
         description: error.message,
         variant: "destructive",
       });

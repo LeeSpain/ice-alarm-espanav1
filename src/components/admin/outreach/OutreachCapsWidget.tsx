@@ -5,7 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useOutreachCaps } from "@/hooks/useOutreachCaps";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { es, enGB } from "date-fns/locale";
 
 interface UsageBarProps {
   icon: React.ReactNode;
@@ -49,7 +50,8 @@ function UsageBar({ icon, label, used, max, enabled }: UsageBarProps) {
 }
 
 export function OutreachCapsWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "es" ? es : enGB;
   const { settings, usage, isLoading, getNextResetTime } = useOutreachCaps();
 
   const nextReset = getNextResetTime();
@@ -143,7 +145,7 @@ export function OutreachCapsWidget() {
               <CheckCircle className="h-3 w-3 text-green-500" />
               <span>{t("outreach.caps.allSystemsGo")}</span>
             </div>
-            <span>{new Date().toLocaleDateString()}</span>
+            <span>{format(new Date(), "d MMM yyyy", { locale: dateLocale })}</span>
           </div>
         </CardContent>
       </Card>

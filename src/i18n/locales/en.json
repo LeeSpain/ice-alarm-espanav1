@@ -87,6 +87,27 @@
     "untitled": "Untitled",
     "deleteConfirmTitle": "Delete Post?",
     "deleteConfirm": "Are you sure you want to delete this post? This action cannot be undone.",
+    "ai": {
+      "topicRequired": "Topic required",
+      "topicRequiredDesc": "Please enter a topic before generating content",
+      "rateLimited": "Rate limit exceeded",
+      "rateLimitedDesc": "Please wait a moment and try again",
+      "creditsExhausted": "AI credits exhausted",
+      "creditsExhaustedDesc": "Please add funds to continue using AI features",
+      "generationFailed": "Generation failed",
+      "generationFailedDesc": "Failed to generate content",
+      "contentGenerated": "Content generated",
+      "contentGeneratedDesc": "AI has created your draft content",
+      "unknownError": "Unknown error occurred"
+    },
+    "upload": {
+      "invalidFileType": "Invalid file type",
+      "invalidFileTypeDesc": "Please upload a JPG, PNG, WebP, or GIF image.",
+      "fileTooLarge": "File too large",
+      "fileTooLargeDesc": "Please upload an image smaller than 10MB.",
+      "uploadFailed": "Upload failed",
+      "deleteFailed": "Delete failed"
+    },
     "goals": {
       "brand_awareness": "Brand Awareness",
       "lead_generation": "Lead Generation",
@@ -4380,6 +4401,11 @@
       "contactLine": "Contact Line",
       "disclaimer": "Include Disclaimer",
       "selectLanguage": "Select Language",
+      "languages": {
+        "en": "English",
+        "es": "Español"
+      },
+      "defaultCtaFallback": "Call Now",
       "render": "Render Video",
       "saveDraft": "Save as Draft",
       "updateProject": "Update Project",
@@ -4589,6 +4615,20 @@
         "uploading": "Uploading...",
         "queued": "Queued",
         "failed": "Failed"
+      },
+      "toasts": {
+        "connected": "YouTube Connected",
+        "connectedDesc": "Your YouTube channel has been connected successfully.",
+        "connectionFailed": "Connection Failed",
+        "connectionFailedDesc": "Failed to start YouTube authorization",
+        "disconnected": "YouTube Disconnected",
+        "disconnectedDesc": "Your YouTube channel has been disconnected.",
+        "disconnectFailed": "Disconnect Failed",
+        "disconnectFailedDesc": "Failed to disconnect YouTube",
+        "videoPublished": "Video Published",
+        "videoPublishedDesc": "Your video has been published to YouTube successfully.",
+        "publishFailed": "Publish Failed",
+        "publishFailedDesc": "Failed to publish video to YouTube"
       }
     },
     "formats": {

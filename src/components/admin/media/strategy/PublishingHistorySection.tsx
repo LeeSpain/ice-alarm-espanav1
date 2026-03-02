@@ -198,14 +198,14 @@ export function PublishingHistorySection() {
                         <div>
                           <p>{format(parseISO(item.published_at), "MMM d, yyyy", { locale: dateLocale })}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(parseISO(item.published_at), "HH:mm")}
+                            {format(parseISO(item.published_at), "HH:mm", { locale: dateLocale })}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="gap-1">
                           {getPlatformIcon(item.platform)}
-                          {item.platform}
+                          {t(`mediaStrategy.platforms.${item.platform}`)}
                         </Badge>
                       </TableCell>
                       <TableCell>

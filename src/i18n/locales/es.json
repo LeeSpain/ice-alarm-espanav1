@@ -87,6 +87,27 @@
     "untitled": "Sin título",
     "deleteConfirmTitle": "¿Eliminar publicación?",
     "deleteConfirm": "¿Está seguro de que desea eliminar esta publicación? Esta acción no se puede deshacer.",
+    "ai": {
+      "topicRequired": "Tema requerido",
+      "topicRequiredDesc": "Introduce un tema antes de generar contenido",
+      "rateLimited": "Límite de velocidad excedido",
+      "rateLimitedDesc": "Espera un momento e inténtalo de nuevo",
+      "creditsExhausted": "Créditos de IA agotados",
+      "creditsExhaustedDesc": "Añade fondos para seguir usando las funciones de IA",
+      "generationFailed": "Error en la generación",
+      "generationFailedDesc": "No se pudo generar el contenido",
+      "contentGenerated": "Contenido generado",
+      "contentGeneratedDesc": "La IA ha creado tu borrador de contenido",
+      "unknownError": "Se produjo un error desconocido"
+    },
+    "upload": {
+      "invalidFileType": "Tipo de archivo inválido",
+      "invalidFileTypeDesc": "Sube una imagen JPG, PNG, WebP o GIF.",
+      "fileTooLarge": "Archivo demasiado grande",
+      "fileTooLargeDesc": "Sube una imagen de menos de 10MB.",
+      "uploadFailed": "Error al subir",
+      "deleteFailed": "Error al eliminar"
+    },
     "goals": {
       "brand_awareness": "Reconocimiento de Marca",
       "lead_generation": "Generación de Leads",
@@ -4356,6 +4377,11 @@
       "contactLine": "Línea de Contacto",
       "disclaimer": "Incluir Aviso Legal",
       "selectLanguage": "Seleccionar Idioma",
+      "languages": {
+        "en": "English",
+        "es": "Español"
+      },
+      "defaultCtaFallback": "Llama ahora",
       "render": "Renderizar Video",
       "saveDraft": "Guardar Borrador",
       "updateProject": "Actualizar Proyecto",
@@ -4565,6 +4591,20 @@
         "uploading": "Subiendo...",
         "queued": "En Cola",
         "failed": "Fallido"
+      },
+      "toasts": {
+        "connected": "YouTube conectado",
+        "connectedDesc": "Tu canal de YouTube se ha conectado correctamente.",
+        "connectionFailed": "Error de conexión",
+        "connectionFailedDesc": "No se pudo iniciar la autorización de YouTube",
+        "disconnected": "YouTube desconectado",
+        "disconnectedDesc": "Tu canal de YouTube se ha desconectado.",
+        "disconnectFailed": "Error al desconectar",
+        "disconnectFailedDesc": "No se pudo desconectar YouTube",
+        "videoPublished": "Vídeo publicado",
+        "videoPublishedDesc": "Tu vídeo se ha publicado en YouTube correctamente.",
+        "publishFailed": "Error al publicar",
+        "publishFailedDesc": "No se pudo publicar el vídeo en YouTube"
       }
     },
     "formats": {

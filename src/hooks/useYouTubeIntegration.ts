@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/i18n";
 
 export interface YouTubeIntegration {
   connected: boolean;
@@ -25,7 +26,7 @@ export function useYouTubeIntegration() {
       if (error) throw error;
       return data as YouTubeIntegration;
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
   const connectMutation = useMutation({
@@ -55,8 +56,8 @@ export function useYouTubeIntegration() {
           
           if (event.data.success) {
             toast({
-              title: "YouTube Connected",
-              description: "Your YouTube channel has been connected successfully.",
+              title: i18n.t("videoHub.youtube.toasts.connected"),
+              description: i18n.t("videoHub.youtube.toasts.connectedDesc"),
             });
           }
         }
@@ -74,8 +75,8 @@ export function useYouTubeIntegration() {
     },
     onError: (error: any) => {
       toast({
-        title: "Connection Failed",
-        description: error?.message || "Failed to start YouTube authorization",
+        title: i18n.t("videoHub.youtube.toasts.connectionFailed"),
+        description: error?.message || i18n.t("videoHub.youtube.toasts.connectionFailedDesc"),
         variant: "destructive",
       });
     },
@@ -90,14 +91,14 @@ export function useYouTubeIntegration() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["youtube-integration-status"] });
       toast({
-        title: "YouTube Disconnected",
-        description: "Your YouTube channel has been disconnected.",
+        title: i18n.t("videoHub.youtube.toasts.disconnected"),
+        description: i18n.t("videoHub.youtube.toasts.disconnectedDesc"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Disconnect Failed",
-        description: error?.message || "Failed to disconnect YouTube",
+        title: i18n.t("videoHub.youtube.toasts.disconnectFailed"),
+        description: error?.message || i18n.t("videoHub.youtube.toasts.disconnectFailedDesc"),
         variant: "destructive",
       });
     },
@@ -122,14 +123,14 @@ export function useYouTubeIntegration() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["video-exports"] });
       toast({
-        title: "Video Published",
-        description: "Your video has been published to YouTube successfully.",
+        title: i18n.t("videoHub.youtube.toasts.videoPublished"),
+        description: i18n.t("videoHub.youtube.toasts.videoPublishedDesc"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Publish Failed",
-        description: error?.message || "Failed to publish video to YouTube",
+        title: i18n.t("videoHub.youtube.toasts.publishFailed"),
+        description: error?.message || i18n.t("videoHub.youtube.toasts.publishFailedDesc"),
         variant: "destructive",
       });
     },

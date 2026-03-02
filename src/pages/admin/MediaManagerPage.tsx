@@ -201,6 +201,18 @@ export default function MediaManagerPage() {
     }
   };
 
+  // Helper: apply AI output to post text based on selected language
+  const applyAIOutput = (output: MediaDraftOutput) => {
+    setAiOutput(output);
+    if (language === "en") {
+      setPostText(output.post_en);
+    } else if (language === "es") {
+      setPostText(output.post_es);
+    } else {
+      setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
+    }
+  };
+
   const handleWriteDraft = async () => {
     try {
       const output = await generateDraft({
@@ -211,17 +223,7 @@ export default function MediaManagerPage() {
         post_id: selectedPostId || undefined,
         workflow_type: "write",
       });
-      if (output) {
-        setAiOutput(output);
-        // Apply the generated text based on language
-        if (language === "en") {
-          setPostText(output.post_en);
-        } else if (language === "es") {
-          setPostText(output.post_es);
-        } else {
-          setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
-        }
-      }
+      if (output) applyAIOutput(output);
     } catch (error) {
       console.error("Write draft error:", error);
     }
@@ -237,17 +239,7 @@ export default function MediaManagerPage() {
         post_id: selectedPostId || undefined,
         workflow_type: "full",
       });
-      if (output) {
-        setAiOutput(output);
-        // Apply the generated text based on language
-        if (language === "en") {
-          setPostText(output.post_en);
-        } else if (language === "es") {
-          setPostText(output.post_es);
-        } else {
-          setPostText(`🇬🇧 ENGLISH:\n${output.post_en}\n\n---\n\n🇪🇸 ESPAÑOL:\n${output.post_es}`);
-        }
-      }
+      if (output) applyAIOutput(output);
     } catch (error) {
       console.error("Full workflow error:", error);
     }
