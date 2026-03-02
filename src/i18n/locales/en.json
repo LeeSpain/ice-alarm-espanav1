@@ -1297,7 +1297,22 @@
     "unreadMessages": "{{count}} unread messages",
     "tapToRead": "Tap to read and reply",
     "noNewMessages": "No new messages",
-    "viewMessages": "View Messages"
+    "viewMessages": "View Messages",
+    "marketing": {
+      "title": "Marketing Overview",
+      "subtitle": "30-day performance across all channels",
+      "social": "Social Media",
+      "outreach": "AI Outreach",
+      "video": "Video Hub",
+      "published": "Published",
+      "reach": "Reach",
+      "engagements": "Engagements",
+      "emailsSent": "Emails Sent",
+      "replies": "Replies",
+      "conversions": "Conversions",
+      "videosRendered": "Rendered",
+      "videosExported": "Exported"
+    }
   },
   "phoneOnly": {
     "yourCurrentService": "Your Current Service",

@@ -1289,7 +1289,22 @@
     "unreadMessages": "{{count}} mensajes sin leer",
     "tapToRead": "Toque para leer y responder",
     "noNewMessages": "Sin mensajes nuevos",
-    "viewMessages": "Ver mensajes"
+    "viewMessages": "Ver mensajes",
+    "marketing": {
+      "title": "Resumen de Marketing",
+      "subtitle": "Rendimiento de 30 días en todos los canales",
+      "social": "Redes Sociales",
+      "outreach": "Difusión IA",
+      "video": "Centro de Vídeo",
+      "published": "Publicados",
+      "reach": "Alcance",
+      "engagements": "Interacciones",
+      "emailsSent": "Emails Enviados",
+      "replies": "Respuestas",
+      "conversions": "Conversiones",
+      "videosRendered": "Renderizados",
+      "videosExported": "Exportados"
+    }
   },
   "phoneOnly": {
     "yourCurrentService": "Su servicio actual",

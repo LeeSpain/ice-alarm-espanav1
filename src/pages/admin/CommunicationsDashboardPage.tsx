@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { MarketingOverviewCard } from "@/components/admin/dashboard/MarketingOverviewCard";
 
 export default function CommunicationsDashboardPage() {
   const { t } = useTranslation();
@@ -223,6 +224,9 @@ export default function CommunicationsDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Marketing Overview */}
+      <MarketingOverviewCard />
 
       {/* Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2">
