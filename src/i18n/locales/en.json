@@ -1298,6 +1298,19 @@
     "tapToRead": "Tap to read and reply",
     "noNewMessages": "No new messages",
     "viewMessages": "View Messages",
+    "failedActions": {
+      "title": "Failed Actions",
+      "subtitle": "Operations that need attention across all systems",
+      "retry": "Retry",
+      "retryAll": "Retry All",
+      "retryStarted": "Retry started",
+      "retryAllStarted": "Retrying all failed actions",
+      "retryAllDesc": "Retrying {{count}} failed action(s)",
+      "moreItems": "+{{count}} more items",
+      "systemMedia": "Social",
+      "systemVideo": "Video",
+      "systemOutreach": "Outreach"
+    },
     "marketing": {
       "title": "Marketing Overview",
       "subtitle": "30-day performance across all channels",

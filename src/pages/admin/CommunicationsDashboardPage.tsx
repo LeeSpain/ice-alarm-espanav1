@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { MarketingOverviewCard } from "@/components/admin/dashboard/MarketingOverviewCard";
+import { FailedActionsCard } from "@/components/admin/dashboard/FailedActionsCard";
 
 export default function CommunicationsDashboardPage() {
   const { t } = useTranslation();
@@ -224,6 +225,9 @@ export default function CommunicationsDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Failed Actions (auto-hides when empty) */}
+      <FailedActionsCard />
 
       {/* Marketing Overview */}
       <MarketingOverviewCard />

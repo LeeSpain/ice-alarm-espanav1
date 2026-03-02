@@ -1290,6 +1290,19 @@
     "tapToRead": "Toque para leer y responder",
     "noNewMessages": "Sin mensajes nuevos",
     "viewMessages": "Ver mensajes",
+    "failedActions": {
+      "title": "Acciones fallidas",
+      "subtitle": "Operaciones que necesitan atención en todos los sistemas",
+      "retry": "Reintentar",
+      "retryAll": "Reintentar todo",
+      "retryStarted": "Reintento iniciado",
+      "retryAllStarted": "Reintentando todas las acciones fallidas",
+      "retryAllDesc": "Reintentando {{count}} acción(es) fallida(s)",
+      "moreItems": "+{{count}} elementos más",
+      "systemMedia": "Social",
+      "systemVideo": "Vídeo",
+      "systemOutreach": "Outreach"
+    },
     "marketing": {
       "title": "Resumen de Marketing",
       "subtitle": "Rendimiento de 30 días en todos los canales",
