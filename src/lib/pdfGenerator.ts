@@ -16,6 +16,28 @@ export interface InvoiceMember {
   phone?: string;
 }
 
+export interface CompanyInfo {
+  company_name?: string;
+  cif?: string;
+  address?: string;
+  email?: string;
+  website?: string;
+  phone?: string;
+  iban?: string;
+  bic?: string;
+}
+
+const DEFAULT_COMPANY: Required<CompanyInfo> = {
+  company_name: 'ICE Alarm España S.L.',
+  cif: 'B93557218',
+  address: 'Costa del Sol, Málaga, Spain',
+  email: 'info@icealarmespana.es',
+  website: 'www.icealarmespana.es',
+  phone: '+34 900 123 456',
+  iban: 'ES00 0000 0000 0000 0000 0000',
+  bic: 'CAIXESBBXXX',
+};
+
 export interface InvoiceData {
   invoiceNumber: string;
   date: string;                    // ISO date string or display string
@@ -23,6 +45,7 @@ export interface InvoiceData {
   items: InvoiceLineItem[];
   shippingAmount?: number;         // Shipping is IVA-included
   notes?: string;
+  company?: CompanyInfo;
 }
 
 type Locale = 'es' | 'en';
@@ -49,50 +72,52 @@ interface Labels {
   nieDni: string;
 }
 
-const LABELS: Record<Locale, Labels> = {
-  es: {
-    invoiceTitle: 'FACTURA',
-    invoiceNumber: 'Factura N.',
-    date: 'Fecha',
-    billTo: 'Facturar a',
-    description: 'Descripcion',
-    quantity: 'Cant.',
-    unitPrice: 'Precio Ud.',
-    iva: 'IVA',
-    total: 'Total',
-    subtotalNet: 'Subtotal (Neto)',
-    ivaBreakdown: 'IVA',
-    shipping: 'Envio (IVA incluido)',
-    grandTotal: 'TOTAL',
-    paymentInfo: 'Informacion de pago',
-    companyFooter: 'ICE Alarm Espana S.L. - CIF: XXXXXXXXX - Registro Mercantil de Malaga',
-    page: 'Pagina',
-    email: 'Email',
-    phone: 'Telefono',
-    nieDni: 'NIE/DNI',
-  },
-  en: {
-    invoiceTitle: 'INVOICE',
-    invoiceNumber: 'Invoice No.',
-    date: 'Date',
-    billTo: 'Bill to',
-    description: 'Description',
-    quantity: 'Qty',
-    unitPrice: 'Unit Price',
-    iva: 'IVA',
-    total: 'Total',
-    subtotalNet: 'Subtotal (Net)',
-    ivaBreakdown: 'IVA',
-    shipping: 'Shipping (IVA included)',
-    grandTotal: 'GRAND TOTAL',
-    paymentInfo: 'Payment information',
-    companyFooter: 'ICE Alarm Espana S.L. - CIF: XXXXXXXXX - Registro Mercantil de Malaga',
-    page: 'Page',
-    email: 'Email',
-    phone: 'Phone',
-    nieDni: 'NIE/DNI',
-  },
-};
+function getLabels(company: Required<CompanyInfo>): Record<Locale, Labels> {
+  return {
+    es: {
+      invoiceTitle: 'FACTURA',
+      invoiceNumber: 'Factura N.',
+      date: 'Fecha',
+      billTo: 'Facturar a',
+      description: 'Descripcion',
+      quantity: 'Cant.',
+      unitPrice: 'Precio Ud.',
+      iva: 'IVA',
+      total: 'Total',
+      subtotalNet: 'Subtotal (Neto)',
+      ivaBreakdown: 'IVA',
+      shipping: 'Envio (IVA incluido)',
+      grandTotal: 'TOTAL',
+      paymentInfo: 'Informacion de pago',
+      companyFooter: `${company.company_name} - CIF: ${company.cif} - Registro Mercantil de Málaga`,
+      page: 'Pagina',
+      email: 'Email',
+      phone: 'Telefono',
+      nieDni: 'NIE/DNI',
+    },
+    en: {
+      invoiceTitle: 'INVOICE',
+      invoiceNumber: 'Invoice No.',
+      date: 'Date',
+      billTo: 'Bill to',
+      description: 'Description',
+      quantity: 'Qty',
+      unitPrice: 'Unit Price',
+      iva: 'IVA',
+      total: 'Total',
+      subtotalNet: 'Subtotal (Net)',
+      ivaBreakdown: 'IVA',
+      shipping: 'Shipping (IVA included)',
+      grandTotal: 'GRAND TOTAL',
+      paymentInfo: 'Payment information',
+      companyFooter: `${company.company_name} - CIF: ${company.cif} - Registro Mercantil de Málaga`,
+      page: 'Page',
+      email: 'Email',
+      phone: 'Phone',
+      nieDni: 'NIE/DNI',
+    },
+  };
+}
 
 function formatEur(amount: number): string {
   return amount.toLocaleString('es-ES', {
@@ -147,7 +172,8 @@ function calculateIvaBreakdown(items: InvoiceLineItem[]): { rate: number; net: n
  * The user can then save as PDF via the browser's built-in "Save as PDF" printer.
  */
 export function generateInvoicePdf(order: InvoiceData, locale: Locale = 'es'): void {
-  const l = LABELS[locale];
+  const company = { ...DEFAULT_COMPANY, ...order.company };
+  const l = getLabels(company)[locale];
 
   const subtotalNet = order.items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
@@ -487,12 +513,12 @@ export function generateInvoicePdf(order: InvoiceData, locale: Locale = 'es'): v
   <!-- HEADER -->
   <div class="invoice-header">
     <div class="company-info">
-      <div class="company-name">ICE Alarm Espana</div>
+      <div class="company-name">${escapeHtml(company.company_name)}</div>
       <div class="company-tagline">Personal Emergency Response Service</div>
       <div class="company-address">
-        Costa del Sol, Malaga, Spain<br>
-        info@icealarme.es | www.icealarmespana.es<br>
-        CIF: XXXXXXXXX
+        ${escapeHtml(company.address)}<br>
+        ${escapeHtml(company.email)} | ${escapeHtml(company.website)}<br>
+        CIF: ${escapeHtml(company.cif)}
       </div>
     </div>
     <div class="invoice-meta">
@@ -554,8 +580,8 @@ export function generateInvoicePdf(order: InvoiceData, locale: Locale = 'es'): v
   <!-- PAYMENT INFO -->
   <div class="payment-section">
     <div class="payment-label">${l.paymentInfo}</div>
-    <div class="payment-detail">IBAN: ES00 0000 0000 0000 0000 0000</div>
-    <div class="payment-detail">BIC/SWIFT: XXXXXXXX</div>
+    <div class="payment-detail">IBAN: ${escapeHtml(company.iban)}</div>
+    <div class="payment-detail">BIC/SWIFT: ${escapeHtml(company.bic)}</div>
     <div class="payment-detail">${locale === 'es' ? 'Beneficiario' : 'Beneficiary'}: ICE Alarm Espana S.L.</div>
     <div class="payment-detail">${locale === 'es' ? 'Referencia' : 'Reference'}: ${escapeHtml(order.invoiceNumber)}</div>
   </div>

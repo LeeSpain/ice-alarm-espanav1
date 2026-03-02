@@ -77,13 +77,13 @@ export function useBrandedImageGenerator() {
       // Draw heart icon (brand logo representation)
       ctx.save();
       ctx.translate(80, 70);
-      
+
       // Heart background circle
       ctx.fillStyle = `${BRAND_COLORS.primary}20`;
       ctx.beginPath();
       ctx.arc(0, 0, 35, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Heart icon (simplified path)
       ctx.fillStyle = BRAND_COLORS.primary;
       ctx.beginPath();
@@ -91,7 +91,7 @@ export function useBrandedImageGenerator() {
       ctx.bezierCurveTo(-15, -8, -25, 8, 0, 25);
       ctx.bezierCurveTo(25, 8, 15, -8, 0, 8);
       ctx.fill();
-      
+
       ctx.restore();
 
       // Brand name next to logo
@@ -111,7 +111,7 @@ export function useBrandedImageGenerator() {
       ctx.fillStyle = BRAND_COLORS.dark;
       ctx.font = "bold 56px system-ui, -apple-system, sans-serif";
       ctx.textAlign = "center";
-      
+
       // Word wrap headline
       const headlineLines = wrapText(ctx, imageText.headline, maxTextWidth);
       let currentY = contentY;
@@ -125,7 +125,7 @@ export function useBrandedImageGenerator() {
       ctx.fillStyle = BRAND_COLORS.dark;
       ctx.globalAlpha = 0.7;
       ctx.font = "400 28px system-ui, -apple-system, sans-serif";
-      
+
       const subheadlineLines = wrapText(ctx, imageText.subheadline, maxTextWidth);
       subheadlineLines.forEach((line) => {
         ctx.fillText(line, width / 2, currentY);
@@ -158,7 +158,7 @@ export function useBrandedImageGenerator() {
       ctx.font = "500 18px system-ui, -apple-system, sans-serif";
       ctx.fillStyle = BRAND_COLORS.dark;
       ctx.globalAlpha = 0.6;
-      ctx.fillText("🌐 www.icealarme.es  |  📞 +34 XXX XXX XXX  |  💬 DM us", width / 2, height - 35);
+      ctx.fillText("🌐 www.icealarmespana.es  |  📞 +34 900 123 456  |  💬 DM us", width / 2, height - 35);
       ctx.globalAlpha = 1;
 
       // === EXPORT TO BLOB ===
