@@ -90,7 +90,7 @@ export function ResidentialDashboard({
           email: newResident.email.trim() || null,
           phone: newResident.phone.trim() || null,
           status: "active",
-        })
+        } as any)
         .select()
         .single();
 

@@ -51,7 +51,7 @@ export function useFailedActions() {
             type: "publish",
             title: post.topic || "Untitled post",
             error: post.error_message || "Unknown error",
-            failed_at: post.updated_at,
+            failed_at: post.updated_at || new Date().toISOString(),
             retryable: true,
             entity_id: post.id,
           });
@@ -66,7 +66,7 @@ export function useFailedActions() {
             type: "render",
             title: `Render ${render.id.slice(0, 8)}`,
             error: render.error || "Unknown error",
-            failed_at: render.updated_at,
+            failed_at: render.updated_at || new Date().toISOString(),
             retryable: true,
             entity_id: render.id,
           });
@@ -81,7 +81,7 @@ export function useFailedActions() {
             type: "email",
             title: email.subject || "Untitled email",
             error: "Send failed",
-            failed_at: email.created_at,
+            failed_at: email.created_at || new Date().toISOString(),
             retryable: true,
             entity_id: email.id,
           });

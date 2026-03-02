@@ -72,13 +72,13 @@ export function AlertsTab({ memberId }: AlertsTabProps) {
         .from("alerts")
         .select(`
           *,
-          claimed_by_staff:claimed_by (first_name, last_name)
+          claimed_by_staff:staff!alerts_claimed_by_fkey (first_name, last_name)
         `)
         .eq("member_id", memberId)
         .order("received_at", { ascending: false });
 
       if (error) throw error;
-      setAlerts((data || []) as Alert[]);
+      setAlerts((data || []) as unknown as Alert[]);
     } catch (error) {
       console.error("Error fetching alerts:", error);
       toast.error("Failed to load alerts");
