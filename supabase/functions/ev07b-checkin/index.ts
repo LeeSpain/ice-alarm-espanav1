@@ -200,6 +200,20 @@ serve(async (req) => {
           console.log(`Created ${alertType} alert for device ${body.imei}`);
           alertsCreated.push(alertType);
 
+          // HIGHEST PRIORITY: Notify emergency contacts first (SOS, fall)
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/emergency-contact-notify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({ alert_id: newAlert.id, member_id: device.member_id }),
+            });
+          } catch (ecNotifyErr) {
+            console.error("Emergency contact notification error:", ecNotifyErr);
+          }
+
           // Notify partners
           try {
             await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/partner-alert-notify`, {
@@ -212,6 +226,44 @@ serve(async (req) => {
             });
           } catch (notifyErr) {
             console.error("Partner notification error:", notifyErr);
+          }
+
+          // Notify admin via WhatsApp (non-blocking)
+          try {
+            let memberName = "Unknown";
+            const { data: memberData } = await supabase
+              .from("members")
+              .select("first_name, last_name")
+              .eq("id", device.member_id)
+              .maybeSingle();
+            if (memberData) {
+              memberName = `${memberData.first_name || ""} ${memberData.last_name || ""}`.trim() || "Unknown";
+            }
+
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-admin`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                event_type: "ev07b.alert",
+                entity_type: "alert",
+                entity_id: newAlert.id,
+                payload: {
+                  alert_id: newAlert.id,
+                  alert_type: alertType,
+                  member_id: device.member_id,
+                  member_name: memberName,
+                  imei: body.imei,
+                  message,
+                  lat: locationData.location_lat,
+                  lng: locationData.location_lng,
+                },
+              }),
+            });
+          } catch (adminNotifyErr) {
+            console.error("Admin notification error:", adminNotifyErr);
           }
         }
         return newAlert?.id || null;

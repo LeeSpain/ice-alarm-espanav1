@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
@@ -498,6 +499,8 @@ export function ClientLayout() {
             <Outlet />
           </SectionErrorBoundary>
         </main>
+
+        <FeedbackWidget />
       </div>
     </div>
   );

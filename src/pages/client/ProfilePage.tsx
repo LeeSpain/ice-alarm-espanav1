@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, User, Mail, Phone, MapPin, Lock, Save } from "lucide-react";
+import { Loader2, User, Mail, Phone, MapPin, Lock, Save, Shield } from "lucide-react";
+import { GdprSettingsSection } from "@/components/gdpr/GdprSettingsSection";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -391,6 +392,9 @@ export default function ProfilePage() {
                 <p className="text-xs text-muted-foreground mt-4">{t("profile.addressEmergencyNote") || "This address is used for emergency response"}</p>
               </CardContent>
             </Card>
+
+            {/* GDPR / Data Privacy */}
+            <GdprSettingsSection />
           </div>
         </div>
       </form>

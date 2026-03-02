@@ -45,31 +45,35 @@ export interface EmergencyContact {
 export interface JoinWizardData {
   // Step 1: Membership Type
   membershipType: "single" | "couple";
-  
+
   // Step 2: Personal Details
   primaryMember: MemberDetails;
   partnerMember?: MemberDetails;
-  
+
   // Step 3: Address
   address: AddressDetails;
   separateAddresses?: boolean;
   partnerAddress?: AddressDetails;
-  
-  // Step 4: Emergency Contacts (Medical moved to post-payment intake)
+
+  // Step 4: Emergency Contacts
   emergencyContacts: EmergencyContact[];
-  
-  // Step 5: Pendant Option
+
+  // Step 5: Medical Information
+  medicalInfo: MedicalDetails;
+  partnerMedicalInfo?: MedicalDetails;
+
+  // Step 6: Pendant Option
   includePendant: boolean;
   pendantCount: number;
-  
-  // Step 6: Billing & Summary
+
+  // Step 7: Billing & Summary
   billingFrequency: "monthly" | "annual";
-  
-  // Step 7: Terms & Payment
+
+  // Step 8: Terms & Payment
   acceptTerms: boolean;
   acceptPrivacy: boolean;
   paymentComplete: boolean;
-  
+
   // Generated after submission
   orderId?: string;
   memberId?: string;
@@ -99,6 +103,16 @@ export const initialJoinWizardData: JoinWizardData = {
   },
   separateAddresses: false,
   emergencyContacts: [],
+  medicalInfo: {
+    bloodType: "",
+    allergies: [],
+    medications: [],
+    medicalConditions: [],
+    doctorName: "",
+    doctorPhone: "",
+    hospitalPreference: "",
+    additionalNotes: "",
+  },
   includePendant: true,
   pendantCount: 1,
   billingFrequency: "monthly",

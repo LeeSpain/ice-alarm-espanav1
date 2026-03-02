@@ -52,18 +52,26 @@ serve(async (req) => {
     // Get current integration to revoke token
     const { data: integration } = await supabase
       .from("system_integrations")
-      .select("access_token_encrypted")
+      .select("access_token_encrypted, refresh_token_encrypted")
       .eq("integration_type", "youtube")
       .single();
 
-    if (integration?.access_token_encrypted) {
-      // Revoke Google token
-      try {
-        await fetch(`https://oauth2.googleapis.com/revoke?token=${integration.access_token_encrypted}`, {
-          method: "POST",
-        });
-      } catch (e) {
-        console.warn("Token revocation failed (may already be invalid):", e);
+    if (integration) {
+      // Revoke Google token — prefer refresh_token (doesn't expire) over access_token
+      // Note: column names say "encrypted" but tokens are stored in plain text
+      const tokenToRevoke = integration.refresh_token_encrypted || integration.access_token_encrypted;
+      if (tokenToRevoke) {
+        try {
+          const revokeResp = await fetch(
+            `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(tokenToRevoke)}`,
+            { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+          );
+          if (!revokeResp.ok) {
+            console.warn("Token revocation returned:", revokeResp.status);
+          }
+        } catch (e) {
+          console.warn("Token revocation failed (may already be invalid):", e);
+        }
       }
     }
 

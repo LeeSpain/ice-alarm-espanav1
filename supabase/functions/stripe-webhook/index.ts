@@ -73,6 +73,28 @@ serve(async (req) => {
 
     console.log("Stripe webhook verified:", event.type);
 
+    // Idempotency guard: skip if this event was already processed
+    const { data: existingEvent } = await supabase
+      .from("webhook_events")
+      .select("id")
+      .eq("event_id", event.id)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log("Duplicate webhook event, skipping:", event.id);
+      return new Response(
+        JSON.stringify({ received: true, duplicate: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Record this event as processed
+    await supabase.from("webhook_events").insert({
+      event_id: event.id,
+      provider: "stripe",
+      event_type: event.type,
+    });
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as any;

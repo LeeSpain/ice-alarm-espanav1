@@ -177,6 +177,23 @@ serve(async (req) => {
     const baseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // HIGHEST PRIORITY: Notify emergency contacts first
+    try {
+      await fetch(`${baseUrl}/functions/v1/emergency-contact-notify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({
+          alert_id: newAlert.id,
+          member_id: device.member_id,
+        }),
+      });
+    } catch (err) {
+      console.error("Emergency contact notification error:", err);
+    }
+
     // Notify partners (non-blocking)
     try {
       await fetch(`${baseUrl}/functions/v1/partner-alert-notify`, {

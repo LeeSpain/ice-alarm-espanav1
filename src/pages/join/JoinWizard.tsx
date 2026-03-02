@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Phone, Smartphone, FileText, CreditCard, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, User, Users, MapPin, Phone, HeartPulse, Smartphone, FileText, CreditCard, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JoinWizardData, initialJoinWizardData } from "@/types/wizard";
 import { Logo } from "@/components/ui/logo";
@@ -21,16 +21,18 @@ import { JoinPendantStep } from "@/components/join/steps/JoinPendantStep";
 import { JoinSummaryStep } from "@/components/join/steps/JoinSummaryStep";
 import { JoinPaymentStep } from "@/components/join/steps/JoinPaymentStep";
 import { JoinConfirmationStep } from "@/components/join/steps/JoinConfirmationStep";
+import { JoinMedicalStep } from "@/components/join/steps/JoinMedicalStep";
 
 const steps = [
   { id: 1, titleKey: "joinWizard.steps.plan", icon: Users, shortTitleKey: "joinWizard.steps.plan" },
   { id: 2, titleKey: "joinWizard.steps.personal", icon: User, shortTitleKey: "joinWizard.steps.personal" },
   { id: 3, titleKey: "joinWizard.steps.address", icon: MapPin, shortTitleKey: "joinWizard.steps.address" },
   { id: 4, titleKey: "joinWizard.steps.contacts", icon: Phone, shortTitleKey: "joinWizard.steps.contacts" },
-  { id: 5, titleKey: "joinWizard.steps.device", icon: Smartphone, shortTitleKey: "joinWizard.steps.device" },
-  { id: 6, titleKey: "joinWizard.steps.review", icon: FileText, shortTitleKey: "joinWizard.steps.review" },
-  { id: 7, titleKey: "joinWizard.steps.payment", icon: CreditCard, shortTitleKey: "joinWizard.steps.payment" },
-  { id: 8, titleKey: "joinWizard.steps.complete", icon: PartyPopper, shortTitleKey: "joinWizard.steps.complete" },
+  { id: 5, titleKey: "joinWizard.steps.medical", icon: HeartPulse, shortTitleKey: "joinWizard.steps.medical" },
+  { id: 6, titleKey: "joinWizard.steps.device", icon: Smartphone, shortTitleKey: "joinWizard.steps.device" },
+  { id: 7, titleKey: "joinWizard.steps.review", icon: FileText, shortTitleKey: "joinWizard.steps.review" },
+  { id: 8, titleKey: "joinWizard.steps.payment", icon: CreditCard, shortTitleKey: "joinWizard.steps.payment" },
+  { id: 9, titleKey: "joinWizard.steps.complete", icon: PartyPopper, shortTitleKey: "joinWizard.steps.complete" },
 ];
 
 const WIZARD_STORAGE_KEY = "join_wizard_data";
@@ -79,7 +81,7 @@ export default function JoinWizard() {
             paymentComplete: true,
             orderId: orderNumber,
           });
-          setCurrentStep(8); // Go to confirmation step
+          setCurrentStep(9); // Go to confirmation step
           toast.success(t("joinWizard.payment.success"));
         } catch (e) {
           console.error("Failed to parse saved wizard data:", e);
@@ -91,7 +93,7 @@ export default function JoinWizard() {
           paymentComplete: true,
           orderId: orderNumber,
         }));
-        setCurrentStep(8);
+        setCurrentStep(9);
         toast.success(t("joinWizard.payment.success"));
       }
       // Clear saved data and registration session
@@ -106,7 +108,7 @@ export default function JoinWizard() {
         try {
           const parsed = JSON.parse(savedData);
           setWizardData(parsed);
-          setCurrentStep(7); // Go back to payment step
+          setCurrentStep(8); // Go back to payment step
         } catch (e) {
           console.error("Failed to parse saved wizard data:", e);
         }
@@ -164,12 +166,14 @@ export default function JoinWizard() {
       case 4:
         return wizardData.emergencyContacts.length >= 1;
       case 5:
-        return true; // Pendant option always valid
+        return true; // Medical info is optional but recommended
       case 6:
-        return wizardData.acceptTerms && wizardData.acceptPrivacy;
+        return true; // Pendant option always valid
       case 7:
-        return wizardData.paymentComplete;
+        return wizardData.acceptTerms && wizardData.acceptPrivacy;
       case 8:
+        return wizardData.paymentComplete;
+      case 9:
         return true;
       default:
         return true;
@@ -236,7 +240,7 @@ export default function JoinWizard() {
         return null;
       case 4:
         return t("joinWizard.validation.addEmergencyContact");
-      case 6:
+      case 7:
         if (!wizardData.acceptTerms) {
           return t("joinWizard.validation.acceptTerms");
         }
@@ -276,7 +280,7 @@ export default function JoinWizard() {
 
   const handleStepClick = (stepId: number) => {
     // Allow navigation to completed steps or current step (but not beyond, and not after completion)
-    if (stepId <= currentStep && currentStep < 8) {
+    if (stepId <= currentStep && currentStep < 9) {
       setCurrentStep(stepId);
     }
   };
@@ -299,18 +303,20 @@ export default function JoinWizard() {
       case 4:
         return <JoinContactsStep data={wizardData} onUpdate={updateWizardData} />;
       case 5:
-        return <JoinPendantStep data={wizardData} onUpdate={updateWizardData} />;
+        return <JoinMedicalStep data={wizardData} onUpdate={updateWizardData} />;
       case 6:
-        return <JoinSummaryStep data={wizardData} onUpdate={updateWizardData} />;
+        return <JoinPendantStep data={wizardData} onUpdate={updateWizardData} />;
       case 7:
+        return <JoinSummaryStep data={wizardData} onUpdate={updateWizardData} />;
+      case 8:
         return (
-          <JoinPaymentStep 
-            data={wizardData} 
-            onUpdate={updateWizardData} 
+          <JoinPaymentStep
+            data={wizardData}
+            onUpdate={updateWizardData}
             onPaymentInitiated={handlePaymentInitiated}
           />
         );
-      case 8:
+      case 9:
         return <JoinConfirmationStep data={wizardData} />;
       default:
         return null;
@@ -318,7 +324,7 @@ export default function JoinWizard() {
   };
 
   // Don't show navigation buttons on payment step (handled internally) or confirmation step
-  const showNavigationButtons = currentStep !== 7 && currentStep !== 8;
+  const showNavigationButtons = currentStep !== 8 && currentStep !== 9;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -328,7 +334,7 @@ export default function JoinWizard() {
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-8 w-auto" />
           </Link>
-          {currentStep < 8 && (
+          {currentStep < 9 && (
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
               {t("joinWizard.exit")}
             </Link>
@@ -337,7 +343,7 @@ export default function JoinWizard() {
       </header>
 
       <main className="container max-w-4xl py-8 px-4">
-        {currentStep < 8 && (
+        {currentStep < 9 && (
           <>
             {/* Progress Bar */}
             <Progress value={progress} className="h-2 mb-6" />
@@ -429,7 +435,7 @@ export default function JoinWizard() {
         )}
 
         {/* Back button on payment step */}
-        {currentStep === 7 && (
+        {currentStep === 8 && (
           <div className="flex justify-start mt-8">
             <Button
               variant="outline"

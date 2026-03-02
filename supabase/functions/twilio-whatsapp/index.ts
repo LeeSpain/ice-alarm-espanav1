@@ -44,17 +44,21 @@ serve(async (req) => {
     if (action === "incoming") {
       // Handle incoming WhatsApp message
       const formData = await req.formData();
-      const from = (formData.get("From") as string)?.replace("whatsapp:", "");
+      const rawFrom = (formData.get("From") as string)?.replace("whatsapp:", "");
       const body = formData.get("Body") as string;
       const messageSid = formData.get("MessageSid") as string;
 
+      // Sanitize phone number — strip everything except digits and +
+      const from = (rawFrom || "").replace(/[^\d+]/g, "");
+      const phoneWithoutPlus = from.replace("+", "");
+
       console.log("Incoming WhatsApp from:", from, "Body:", body);
 
-      // Find member by phone
+      // Find member by phone (sanitized input prevents injection via .or())
       const { data: member } = await supabase
         .from("members")
         .select("id, first_name, last_name")
-        .or(`phone.eq.${from},phone.eq.${from.replace("+", "")}`)
+        .or(`phone.eq.${from},phone.eq.${phoneWithoutPlus}`)
         .single();
 
       // Log the incoming message

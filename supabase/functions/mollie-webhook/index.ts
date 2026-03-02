@@ -86,6 +86,28 @@ serve(async (req) => {
 
     console.log("Mollie webhook received for payment:", molliePaymentId);
 
+    // Idempotency guard: skip if this payment was already processed
+    const { data: existingEvent } = await supabase
+      .from("webhook_events")
+      .select("id")
+      .eq("event_id", molliePaymentId)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log("Duplicate Mollie webhook, skipping:", molliePaymentId);
+      return new Response(
+        JSON.stringify({ received: true, duplicate: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Record this event as processed
+    await supabase.from("webhook_events").insert({
+      event_id: molliePaymentId,
+      provider: "mollie",
+      event_type: "payment",
+    });
+
     // Fetch payment details from Mollie
     const payment = await mollieGet(apiKey, `/payments/${molliePaymentId}`);
     console.log(
