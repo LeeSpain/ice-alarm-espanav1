@@ -273,6 +273,24 @@
       "success": "Post unpublished successfully",
       "error": "Failed to unpublish post"
     },
+    "repurpose": {
+      "title": "Repurpose Content",
+      "description": "Transform this post into content for other channels using AI",
+      "button": "Repurpose",
+      "selectTargets": "Select target channels",
+      "createVideo": "Create Video Project",
+      "createVideoDesc": "Generate a video script and create a draft project in Video Hub",
+      "createOutreach": "Create Outreach Email",
+      "createOutreachDesc": "Generate a partner outreach email template from this content",
+      "untitled": "Untitled post",
+      "processing": "Generating...",
+      "repurpose": "Repurpose",
+      "success": "Content repurposed",
+      "successDesc": "New content has been created in the target channels",
+      "created": "Successfully created:",
+      "videoCreated": "Video project created",
+      "outreachCreated": "Email template created"
+    },
     "partnerDistribution": {
       "title": "Partner Distribution",
       "configure": "Configure partner access",

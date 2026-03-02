@@ -3,19 +3,20 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ExternalLink, 
-  RefreshCw, 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  Eye, 
-  Loader2, 
-  Clock, 
-  Image as ImageIcon, 
+import {
+  ExternalLink,
+  RefreshCw,
+  Heart,
+  MessageCircle,
+  Share2,
+  Eye,
+  Loader2,
+  Clock,
+  Image as ImageIcon,
   AlertCircle,
   MoreVertical,
-  Trash2
+  Trash2,
+  Sparkles
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es, enGB } from "date-fns/locale";
@@ -33,18 +34,20 @@ interface PublishedPostCardProps {
   post: PublishedPostWithMetrics;
   onRefresh: (postId: string) => void;
   onUnpublish: (postId: string) => Promise<void>;
+  onRepurpose?: (post: PublishedPostWithMetrics) => void;
   isRefreshing: boolean;
   isUnpublishing: boolean;
   hasError?: boolean;
 }
 
-export function PublishedPostCard({ 
-  post, 
-  onRefresh, 
-  onUnpublish, 
-  isRefreshing, 
+export function PublishedPostCard({
+  post,
+  onRefresh,
+  onUnpublish,
+  onRepurpose,
+  isRefreshing,
   isUnpublishing,
-  hasError 
+  hasError
 }: PublishedPostCardProps) {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === "es" ? es : enGB;
@@ -208,6 +211,12 @@ export function PublishedPostCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {onRepurpose && (
+              <DropdownMenuItem onClick={() => onRepurpose(post)}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                {t("mediaManager.repurpose.button")}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
               onClick={() => setShowUnpublishDialog(true)}

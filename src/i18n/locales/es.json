@@ -273,6 +273,24 @@
       "success": "Publicación despublicada correctamente",
       "error": "Error al despublicar"
     },
+    "repurpose": {
+      "title": "Reutilizar contenido",
+      "description": "Transforma este post en contenido para otros canales usando IA",
+      "button": "Reutilizar",
+      "selectTargets": "Selecciona los canales objetivo",
+      "createVideo": "Crear proyecto de vídeo",
+      "createVideoDesc": "Generar un guión de vídeo y crear un proyecto borrador en Video Hub",
+      "createOutreach": "Crear email de outreach",
+      "createOutreachDesc": "Generar una plantilla de email para socios a partir de este contenido",
+      "untitled": "Post sin título",
+      "processing": "Generando...",
+      "repurpose": "Reutilizar",
+      "success": "Contenido reutilizado",
+      "successDesc": "Se ha creado nuevo contenido en los canales seleccionados",
+      "created": "Creado correctamente:",
+      "videoCreated": "Proyecto de vídeo creado",
+      "outreachCreated": "Plantilla de email creada"
+    },
     "partnerDistribution": {
       "title": "Distribución a Socios",
       "configure": "Configurar acceso de socios",

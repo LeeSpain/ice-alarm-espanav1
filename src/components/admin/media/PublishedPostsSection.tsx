@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
-import { usePublishedPosts } from "@/hooks/usePublishedPosts";
+import { usePublishedPosts, PublishedPostWithMetrics } from "@/hooks/usePublishedPosts";
 import { PublishedOverviewCard } from "./PublishedOverviewCard";
 import { PublishedPostCard } from "./PublishedPostCard";
+import { RepurposeDialog } from "./RepurposeDialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -28,6 +29,7 @@ export function PublishedPostsSection() {
   const [refreshingPostId, setRefreshingPostId] = useState<string | null>(null);
   const [unpublishingPostId, setUnpublishingPostId] = useState<string | null>(null);
   const [hasAutoRefreshed, setHasAutoRefreshed] = useState(false);
+  const [repurposePost, setRepurposePost] = useState<PublishedPostWithMetrics | null>(null);
 
   // Auto-refresh if metrics are stale (only once per component mount)
   useEffect(() => {
@@ -107,12 +109,20 @@ export function PublishedPostsSection() {
             post={post}
             onRefresh={handleRefreshSingle}
             onUnpublish={handleUnpublish}
+            onRepurpose={(post) => setRepurposePost(post)}
             isRefreshing={refreshingPostId === post.id || isRefreshing}
             isUnpublishing={unpublishingPostId === post.id || isUnpublishing}
             hasError={connectionStatus === "token_expired"}
           />
         ))}
       </div>
+
+      {/* Repurpose Dialog */}
+      <RepurposeDialog
+        open={!!repurposePost}
+        onOpenChange={(open) => !open && setRepurposePost(null)}
+        post={repurposePost}
+      />
     </div>
   );
 }
