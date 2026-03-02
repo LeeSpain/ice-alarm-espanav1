@@ -36,6 +36,9 @@ export interface StaffMember {
   contract_type: string | null;
   notes: string | null;
   avatar_url: string | null;
+  personal_mobile: string | null;
+  escalation_priority: number | null;
+  is_on_call: boolean | null;
   created_at: string;
   updated_at: string;
 }
