@@ -32,17 +32,17 @@ export function PaymentStep({ data, onUpdate }: PaymentStepProps) {
     includePendant: data.includePendant,
     includeShipping: data.includePendant,
   });
-  
+
   const total = order.grandTotal;
   const subscriptionAmount = getSubscriptionNetPrice(data.membershipType, data.billingFrequency);
 
   const handleProcessPayment = async () => {
     setIsProcessing(true);
-    
+
     try {
       // Simulate payment processing (in production, integrate with Stripe)
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      
+
       // Create member in database
       const { data: memberData, error: memberError } = await supabase
         .from("members")
@@ -158,7 +158,7 @@ export function PaymentStep({ data, onUpdate }: PaymentStepProps) {
               <CreditCard className="h-5 w-5" />
               <div>
                 <p className="font-medium">Credit/Debit Card</p>
-                <p className="text-sm text-muted-foreground">Pay securely with Stripe</p>
+                <p className="text-sm text-muted-foreground">Pay securely by card</p>
               </div>
               <RadioGroupItem value="card" id="card" className="sr-only" />
             </CardContent>

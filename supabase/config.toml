@@ -71,6 +71,10 @@ project_id = "pduhccavshrhfkfbjgmj"
     verify_jwt = false
   [functions.staff-register]
     verify_jwt = false
+  [functions.create-checkout]
+    verify_jwt = false
+  [functions.submit-registration]
+    verify_jwt = false
   [functions.stripe-webhook]
     verify_jwt = false
   [functions.submit-member-update]

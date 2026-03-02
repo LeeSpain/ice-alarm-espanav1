@@ -16,10 +16,10 @@ function buildRegistrationConfirmationEmail(
   pendantCount: number,
   language: "en" | "es"
 ): string {
-  const pendantInfo = hasPendant 
-    ? (language === "es" 
-        ? `✓ Colgante GPS (×${pendantCount})` 
-        : `✓ GPS Pendant (×${pendantCount})`)
+  const pendantInfo = hasPendant
+    ? (language === "es"
+      ? `✓ Colgante GPS (×${pendantCount})`
+      : `✓ GPS Pendant (×${pendantCount})`)
     : "";
 
   if (language === "es") {
@@ -303,7 +303,7 @@ serve(async (req) => {
     const { data: settingsData } = await supabase
       .from("system_settings")
       .select("key, value")
-      .in("key", ["registration_fee_enabled", "registration_fee_discount"]);
+      .in("key", ["registration_fee_enabled", "registration_fee_discount", "settings_active_payment_gateway"]);
 
     const settingsMap = (settingsData || []).reduce((acc, s) => {
       acc[s.key] = s.value;
@@ -312,25 +312,26 @@ serve(async (req) => {
 
     const registrationFeeEnabled = settingsMap.registration_fee_enabled !== "false";
     const registrationFeeDiscount = parseFloat(settingsMap.registration_fee_discount || "0");
+    const activeGateway = settingsMap.settings_active_payment_gateway || "stripe";
 
     // Calculate pricing with correct IVA rates
-    const monthlyNetPrice = body.membershipType === "single" 
-      ? PRICING.single.monthlyNet 
+    const monthlyNetPrice = body.membershipType === "single"
+      ? PRICING.single.monthlyNet
       : PRICING.couple.monthlyNet;
-    
+
     // Subscription: net price × months (10 for annual, 1 for monthly) + 10% IVA
-    const subscriptionNet = body.billingFrequency === "monthly" 
-      ? monthlyNetPrice 
+    const subscriptionNet = body.billingFrequency === "monthly"
+      ? monthlyNetPrice
       : monthlyNetPrice * PRICING.annualMonths;
     const subscriptionTax = subscriptionNet * PRICING.subscriptionTaxRate;
     const subscriptionFinal = subscriptionNet + subscriptionTax;
-    
+
     // FIXED: Respect user's pendantCount (1-4), with validation
     // Only apply defaults if pendantCount is not provided or invalid
     let pendantCount = 0;
     if (body.includePendant) {
       const requestedCount = body.pendantCount;
-      
+
       // Validate: pendantCount must be between 1 and 4
       if (typeof requestedCount === 'number' && requestedCount >= 1 && requestedCount <= 4) {
         pendantCount = Math.floor(requestedCount); // Ensure integer
@@ -338,24 +339,24 @@ serve(async (req) => {
         // Apply defaults only if invalid or missing
         pendantCount = body.membershipType === "couple" ? 2 : 1;
       }
-      
+
       console.log(`Pendant count: requested=${requestedCount}, validated=${pendantCount}`);
     }
-    
+
     const pendantNet = pendantCount * PRICING.pendantNet;
     const pendantTax = pendantNet * PRICING.pendantTaxRate;
     const pendantFinal = pendantNet + pendantTax;
-    
+
     // Registration: apply enabled/discount settings
     let registrationFee = 0;
     const registrationFeeOriginal = PRICING.registrationFee;
     if (registrationFeeEnabled) {
       registrationFee = registrationFeeOriginal * (1 - registrationFeeDiscount / 100);
     }
-    
+
     // Shipping: IVA included (only if pendant ordered)
     const shipping = pendantCount > 0 ? PRICING.shipping : 0;
-    
+
     // Totals
     const total = subscriptionFinal + pendantFinal + registrationFee + shipping;
 
@@ -428,8 +429,8 @@ serve(async (req) => {
     }
 
     // 3. Create medical information for primary member
-    if (body.medicalInfo.bloodType || body.medicalInfo.allergies.length > 0 || 
-        body.medicalInfo.medications.length > 0 || body.medicalInfo.medicalConditions.length > 0) {
+    if (body.medicalInfo.bloodType || body.medicalInfo.allergies.length > 0 ||
+      body.medicalInfo.medications.length > 0 || body.medicalInfo.medicalConditions.length > 0) {
       const { error: medError } = await supabase.from("medical_information").insert({
         member_id: primaryMemberData.id,
         blood_type: body.medicalInfo.bloodType || null,
@@ -512,7 +513,7 @@ serve(async (req) => {
         has_pendant: body.includePendant,
         registration_fee_paid: false, // Will be true after payment
         status: "pending",
-        payment_method: "stripe",
+        payment_method: activeGateway,
       })
       .select()
       .single();
@@ -539,7 +540,7 @@ serve(async (req) => {
           has_pendant: body.includePendant,
           registration_fee_paid: false,
           status: "pending",
-          payment_method: "stripe",
+          payment_method: activeGateway,
         })
         .select()
         .single();
@@ -617,7 +618,7 @@ serve(async (req) => {
       orderItems.push({
         order_id: orderData.id,
         item_type: "registration_fee",
-        description: registrationFeeDiscount > 0 
+        description: registrationFeeDiscount > 0
           ? `One-time Registration Fee (${registrationFeeDiscount}% discount applied)`
           : "One-time Registration Fee",
         quantity: 1,
@@ -642,7 +643,7 @@ serve(async (req) => {
         order_id: orderData.id,
         amount: total,
         payment_type: "order",
-        payment_method: "stripe",
+        payment_method: activeGateway,
         status: "pending",
       })
       .select()
@@ -659,10 +660,10 @@ serve(async (req) => {
     let attributionId = null;
     let hasPartnerAttribution = false;
     let attributedPartnerId: string | undefined = undefined;
-    
+
     if (body.partnerRef) {
       console.log("Processing partner attribution for ref:", body.partnerRef);
-      
+
       // Find partner by referral code
       const { data: partner, error: partnerError } = await supabase
         .from("partners")
@@ -673,7 +674,7 @@ serve(async (req) => {
 
       if (partner && !partnerError) {
         attributedPartnerId = partner.id;
-        
+
         // Check if attribution already exists (first-touch wins)
         const { data: existingAttribution } = await supabase
           .from("partner_attributions")
@@ -692,7 +693,7 @@ serve(async (req) => {
             if (body.utmParams.utm_term) metadata.utm_term = body.utmParams.utm_term;
             if (body.utmParams.utm_content) metadata.utm_content = body.utmParams.utm_content;
           }
-          
+
           const { data: attribution, error: attrError } = await supabase
             .from("partner_attributions")
             .insert({
@@ -759,7 +760,7 @@ serve(async (req) => {
             // Track post-specific referral if ref_post_id is provided
             if (body.refPostId) {
               console.log("Processing post-specific attribution for post:", body.refPostId);
-              
+
               // Update member with ref_partner_id and ref_post_id
               await supabase
                 .from("members")
@@ -823,42 +824,42 @@ serve(async (req) => {
     // 13. HANDLE TEST MODE - Mark everything as completed without payment
     if (body.testMode) {
       console.log("TEST MODE: Auto-completing registration without payment");
-      
+
       // Update payment to completed
       const { error: paymentUpdateError } = await supabase
         .from("payments")
-        .update({ 
-          status: "completed", 
+        .update({
+          status: "completed",
           paid_at: new Date().toISOString(),
           notes: "TEST MODE - No payment collected"
         })
         .eq("id", paymentData.id);
       if (paymentUpdateError) console.error("Test mode: Error updating payment:", paymentUpdateError);
-      
+
       // Update order to completed
       const { error: orderUpdateError } = await supabase
         .from("orders")
         .update({ status: "completed" })
         .eq("id", orderData.id);
       if (orderUpdateError) console.error("Test mode: Error updating order:", orderUpdateError);
-      
+
       // Update subscription to active
       const { error: subUpdateError } = await supabase
         .from("subscriptions")
-        .update({ 
+        .update({
           status: "active",
           registration_fee_paid: true
         })
         .eq("id", subscriptionData.id);
       if (subUpdateError) console.error("Test mode: Error updating subscription:", subUpdateError);
-      
+
       // Update primary member to active
       const { error: memberUpdateError } = await supabase
         .from("members")
         .update({ status: "active" })
         .eq("id", primaryMemberData.id);
       if (memberUpdateError) console.error("Test mode: Error updating primary member:", memberUpdateError);
-      
+
       // Update partner member to active if exists
       if (partnerMemberData) {
         const { error: partnerUpdateError } = await supabase
@@ -867,7 +868,7 @@ serve(async (req) => {
           .eq("id", partnerMemberData.id);
         if (partnerUpdateError) console.error("Test mode: Error updating partner member:", partnerUpdateError);
       }
-      
+
       // Log audit entry for test mode usage
       await supabase.from("activity_logs").insert({
         action: "create",
@@ -880,7 +881,7 @@ serve(async (req) => {
           total: total,
         },
       });
-      
+
       console.log("TEST MODE: All records marked as completed");
     }
 
@@ -938,8 +939,8 @@ serve(async (req) => {
             quantity: pendantCount,
           }] : []),
           ...(registrationFeeEnabled && registrationFee > 0 ? [{
-            name: registrationFeeDiscount > 0 
-              ? `Registration Fee (${registrationFeeDiscount}% off)` 
+            name: registrationFeeDiscount > 0
+              ? `Registration Fee (${registrationFeeDiscount}% off)`
               : "Registration Fee",
             amount: registrationFee,
             quantity: 1,
