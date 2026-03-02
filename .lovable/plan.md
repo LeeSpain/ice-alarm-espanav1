@@ -1,26 +1,29 @@
 
 
-## Staff Rota, Holidays & Shift Cover Migration
+## SOS Response System — Phase 1: Database Foundation
 
-### What exists
-- The `staff_shifts`, `staff_holidays`, and `staff_shift_covers` tables do **not** exist yet
-- The `annual_holiday_days` and `contracted_hours_per_week` columns are **not** on the `staff` table yet
-- Both `pg_cron` and `pg_net` extensions are enabled
+### What will be created
+
+**4 new tables:**
+- `conference_rooms` — Twilio conference tracking per alert
+- `conference_participants` — who's in each conference (member, staff, AI, emergency contact)
+- `alert_escalations` — escalation chain tracking (levels 1–5)
+- `isabella_assessment_notes` — AI triage observations and decisions
+
+**4 new enums:**
+- `participant_type`, `participant_join_method`, `escalation_target_type`, `isabella_note_type`
+
+**2 extended tables:**
+- `alerts` — adds `is_unresponsive`, `conference_id`, `accepted_by_staff_id`, `accepted_at`, `is_false_alarm`, `escalation_level_reached`
+- `staff` — adds `personal_mobile`, `escalation_priority`, `is_on_call` (these columns already exist per the type definition, so those ALTERs will be no-ops via `IF NOT EXISTS`)
+
+**RLS:** All new tables have SELECT policies restricted to authenticated staff via `is_staff()`.
+
+### Potential issue
+The `staff` table already has `personal_mobile`, `escalation_priority`, and `is_on_call` columns from the previous HR migration. The `ADD COLUMN IF NOT EXISTS` will skip them safely.
 
 ### Plan
-
-**Step 1: Run sections 1–12 as a single migration**
-Execute the full SQL (staff table columns, 3 new tables, triggers, indexes, views, functions, RLS policies, realtime) via the migration tool.
-
-**Step 2: Run the cron job separately via the insert tool**
-The cron section (13) uses `current_setting()` which won't resolve. I'll use the actual project URL and anon key directly in the `net.http_post` call, run via the insert tool (not migration) since it contains project-specific data.
-
-**Step 3: Verify**
-Query the new tables and views to confirm everything was created successfully.
-
-### One concern
-The SQL uses CHECK constraints on `shift_type`, `status`, and `end_date >= start_date`. These are simple enum/range checks and should work fine, though validation triggers would be more robust for future flexibility.
-
-### No code changes needed
-The existing hooks (`useStaffShifts.ts`, `useShiftCovers.ts`, `useStaffHolidays`) and components already reference these tables — they were built in anticipation of this schema. The `types.ts` file will auto-update after migration.
+1. Run sections 1–6 as a single migration
+2. Verify tables and columns were created
+3. Fix any TypeScript errors if the updated `types.ts` causes issues in existing hooks/components
 
