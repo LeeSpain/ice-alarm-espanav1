@@ -26,7 +26,6 @@ export function DeadSwitch({ agents }: DeadSwitchProps) {
     const { toast } = useToast();
     const updateAgent = useUpdateAgent();
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const [pendingState, setPendingState] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     const allEnabled = agents.length > 0 && agents.every((a) => a.enabled);
@@ -37,7 +36,6 @@ export function DeadSwitch({ agents }: DeadSwitchProps) {
         if (!newState) {
             // Killing — show confirmation
             setConfirmOpen(true);
-            setPendingState(false);
         } else {
             // Enabling — no confirmation needed
             executeToggle(true);
@@ -82,15 +80,15 @@ export function DeadSwitch({ agents }: DeadSwitchProps) {
         <>
             <div
                 className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 ${isActive
-                        ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-teal-500/5"
-                        : "border-red-500/40 bg-gradient-to-r from-red-500/5 via-red-500/10 to-rose-500/5"
+                    ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-teal-500/5"
+                    : "border-red-500/40 bg-gradient-to-r from-red-500/5 via-red-500/10 to-rose-500/5"
                     }`}
             >
                 {/* Animated pulse bar */}
                 <div
                     className={`absolute top-0 left-0 right-0 h-1 ${isActive
-                            ? "bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500"
-                            : "bg-gradient-to-r from-red-400 via-red-500 to-rose-500"
+                        ? "bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500"
+                        : "bg-gradient-to-r from-red-400 via-red-500 to-rose-500"
                         }`}
                 >
                     {isActive && (
@@ -102,8 +100,8 @@ export function DeadSwitch({ agents }: DeadSwitchProps) {
                     <div className="flex items-center gap-4">
                         <div
                             className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-500 ${isActive
-                                    ? "bg-emerald-500/15 text-emerald-500 shadow-lg shadow-emerald-500/20"
-                                    : "bg-red-500/15 text-red-500 shadow-lg shadow-red-500/20"
+                                ? "bg-emerald-500/15 text-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-red-500/15 text-red-500 shadow-lg shadow-red-500/20"
                                 }`}
                         >
                             {isActive ? (
@@ -120,8 +118,8 @@ export function DeadSwitch({ agents }: DeadSwitchProps) {
                                 <Badge
                                     variant="outline"
                                     className={`font-semibold text-xs uppercase tracking-wider ${isActive
-                                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-                                            : "border-red-500/30 bg-red-500/10 text-red-600"
+                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                                        : "border-red-500/30 bg-red-500/10 text-red-600"
                                         }`}
                                 >
                                     {isActive

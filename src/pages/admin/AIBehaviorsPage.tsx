@@ -20,11 +20,12 @@ import { DeadSwitch } from "@/components/admin/ai/DeadSwitch";
 import { BehaviorProfileCard } from "@/components/admin/ai/BehaviorProfileCard";
 import type { BehaviorProfile } from "@/components/admin/ai/BehaviorProfileCard";
 import { BehaviorDetailPanel } from "@/components/admin/ai/BehaviorDetailPanel";
+import type { BehaviorSection } from "@/components/admin/ai/BehaviorDetailPanel";
 import { useToast } from "@/hooks/use-toast";
 
 /* ─── Behavior Sections Definition ──────────────────────────────────── */
 
-const BEHAVIOR_SECTIONS = [
+const BEHAVIOR_SECTIONS: BehaviorSection[] = [
     {
         id: "alert-handling",
         titleKey: "isabella.sections.alertHandling",
@@ -234,6 +235,7 @@ export default function AIBehaviorsPage() {
             icon: section.icon,
             iconColor: section.iconColor,
             iconBg: section.cardIconBg,
+            gradientBg: section.iconBg,
             name: t(section.titleKey),
             description: t(section.descKey),
             enabled: agent?.enabled ?? false,
@@ -307,11 +309,11 @@ export default function AIBehaviorsPage() {
                     <>
                         <Badge variant="outline" className="gap-1.5 py-1.5 px-3 text-sm">
                             <Activity className="h-3.5 w-3.5 text-blue-500" />
-                            {t("isabella.status.interactionsToday", { count: stats.interactionsToday ?? 0 })}
+                            {t("isabella.status.interactionsToday", "{{count}} interactions today", { count: stats.interactionsToday ?? 0 })}
                         </Badge>
                         <Badge variant="outline" className="gap-1.5 py-1.5 px-3 text-sm">
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                            {t("isabella.status.escalatedToHumans", { count: stats.escalationsToday ?? 0 })}
+                            {t("isabella.status.escalatedToHumans", "{{count}} escalated today", { count: stats.escalationsToday ?? 0 })}
                         </Badge>
                     </>
                 )}

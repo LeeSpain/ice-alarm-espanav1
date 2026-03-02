@@ -12,6 +12,7 @@ export interface BehaviorProfile {
     icon: LucideIcon;
     iconColor: string;
     iconBg: string;
+    gradientBg: string;
     name: string;
     description: string;
     enabled: boolean;
@@ -80,7 +81,7 @@ export function BehaviorProfileCard({
                 className={cn(
                     "absolute top-0 left-0 right-0 h-1 transition-all duration-300",
                     profile.enabled
-                        ? `bg-gradient-to-r ${profile.iconBg}`
+                        ? `bg-gradient-to-r ${profile.gradientBg}`
                         : "bg-muted"
                 )}
             />

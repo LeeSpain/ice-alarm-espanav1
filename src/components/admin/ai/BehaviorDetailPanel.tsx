@@ -6,11 +6,15 @@ import {
     Settings2,
     GraduationCap,
     Sparkles,
-    ChevronDown,
-    ChevronUp,
+    Wrench,
     Save,
     Loader2,
     X,
+    ScrollText,
+    Play,
+    CheckSquare,
+    XSquare,
+    Bot,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,15 +33,19 @@ import {
     useAIAgent,
     useAIAgentConfig,
     useAIMemory,
+    useAIRuns,
+    useAIActions,
     useCreateMemory,
     useDeleteMemory,
     useUpdateAgent,
     useUpdateAgentConfig,
+    useRunAgent,
 } from "@/hooks/useAIAgents";
 import type { AIAgent, AIAgentConfig } from "@/hooks/useAIAgents";
 import { useIsabellaSettings, useUpdateIsabellaSetting } from "@/hooks/useIsabellaSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import type { LucideIcon } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface FunctionDef {
     key: string;
@@ -45,12 +53,14 @@ interface FunctionDef {
     descKey: string;
 }
 
-interface BehaviorSection {
+export interface BehaviorSection {
     id: string;
     titleKey: string;
     descKey: string;
     icon: LucideIcon;
     iconColor: string;
+    iconBg: string;
+    cardIconBg: string;
     agentKey: string;
     functions: FunctionDef[];
 }
@@ -59,6 +69,21 @@ interface BehaviorDetailPanelProps {
     section: BehaviorSection;
     onClose: () => void;
 }
+
+/* ─── Icon Background Helper ────────────────────────────────────────── */
+
+const ICON_BG_MAP: Record<string, string> = {
+    "text-red-500": "bg-red-500/15",
+    "text-blue-500": "bg-blue-500/15",
+    "text-amber-500": "bg-amber-500/15",
+    "text-green-500": "bg-green-500/15",
+    "text-yellow-500": "bg-yellow-500/15",
+    "text-teal-500": "bg-teal-500/15",
+    "text-purple-500": "bg-purple-500/15",
+    "text-orange-500": "bg-orange-500/15",
+    "text-pink-500": "bg-pink-500/15",
+    "text-emerald-500": "bg-emerald-500/15",
+};
 
 /* ─── Sub-Components ────────────────────────────────────────────────── */
 
@@ -226,9 +251,12 @@ function MemoryTab({ agent }: { agent: AIAgent }) {
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                    {t("ai.behaviors.noMemories", "No memories yet. Add knowledge for Isabella to use.")}
-                </p>
+                <div className="text-center py-10 space-y-3">
+                    <Brain className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                        {t("ai.behaviors.noMemories", "No memories yet. Add knowledge for Isabella to use.")}
+                    </p>
+                </div>
             )}
         </div>
     );
@@ -249,7 +277,7 @@ function ToolsTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) 
 
     const toggleRead = (p: string) => setReadPerms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
     const toggleWrite = (p: string) => setWritePerms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
-    const toggleTool = (t: string) => setToolPolicy((prev) => ({ ...prev, [t]: !prev[t] }));
+    const toggleToolPolicy = (key: string) => setToolPolicy((prev) => ({ ...prev, [key]: !prev[key] }));
 
     const handleSave = async () => {
         try {
@@ -269,6 +297,9 @@ function ToolsTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) 
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">{t("ai.operatingMode", "Operating Mode")}</CardTitle>
+                    <CardDescription className="text-xs">
+                        {t("ai.behaviors.operatingModeDesc", "Controls how Isabella acts: observe only, draft actions for approval, or act automatically.")}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Select value={mode} onValueChange={(v: any) => setMode(v)}>
@@ -286,16 +317,19 @@ function ToolsTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) 
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">{t("ai.readPermissions", "Read Permissions")}</CardTitle>
+                    <CardDescription className="text-xs">
+                        {t("ai.behaviors.readPermsDesc", "Data sources Isabella can read when processing this behavior.")}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-1.5">
                     {ALL_READ.map((p) => (
                         <Badge
                             key={p}
                             variant={readPerms.includes(p) ? "default" : "outline"}
-                            className="cursor-pointer text-xs"
+                            className="cursor-pointer text-xs capitalize"
                             onClick={() => toggleRead(p)}
                         >
-                            {p}
+                            {p.replace(/_/g, " ")}
                         </Badge>
                     ))}
                 </CardContent>
@@ -303,18 +337,21 @@ function ToolsTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) 
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">{t("ai.writePermissions", "Write Permissions")}</CardTitle>
+                    <CardDescription className="text-xs">
+                        {t("ai.behaviors.writePermsDesc", "Actions Isabella is permitted to take.")}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {ALL_WRITE.map((p) => (
                         <div key={p} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Switch checked={writePerms.includes(p)} onCheckedChange={() => toggleWrite(p)} />
-                                <Label className="text-sm">{p}</Label>
+                                <Label className="text-sm capitalize">{p.replace(/_/g, " ")}</Label>
                             </div>
                             {writePerms.includes(p) && mode === "auto_act" && (
                                 <div className="flex items-center gap-2">
                                     <Label className="text-xs text-muted-foreground">{t("ai.autoExecute", "Auto Execute")}</Label>
-                                    <Switch checked={!!toolPolicy[p]} onCheckedChange={() => toggleTool(p)} />
+                                    <Switch checked={!!toolPolicy[p]} onCheckedChange={() => toggleToolPolicy(p)} />
                                 </div>
                             )}
                         </div>
@@ -418,9 +455,12 @@ function TrainingTab({ agent }: { agent: AIAgent }) {
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                    {t("ai.noTrainingData", "No training data added yet. Click 'Add Training' to create a Q&A pair.")}
-                </p>
+                <div className="text-center py-10 space-y-3">
+                    <GraduationCap className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                        {t("ai.noTrainingData", "No training data added yet. Click 'Add Training' to create a Q&A pair.")}
+                    </p>
+                </div>
             )}
         </div>
     );
@@ -522,7 +562,11 @@ function PersonalityTab({ agent, config }: { agent: AIAgent; config: AIAgentConf
                         </Label>
                         <Slider value={[empathy]} onValueChange={(v) => setEmpathy(v[0])} min={1} max={10} step={1} />
                         <p className="text-xs text-muted-foreground">
-                            {empathy <= 3 ? "Factual and direct" : empathy <= 6 ? "Balanced and considerate" : "Highly empathetic and caring"}
+                            {empathy <= 3
+                                ? t("ai.behaviors.personality.empathyLow", "Factual and direct")
+                                : empathy <= 6
+                                    ? t("ai.behaviors.personality.empathyMid", "Balanced and considerate")
+                                    : t("ai.behaviors.personality.empathyHigh", "Highly empathetic and caring")}
                         </p>
                     </div>
                     <Button onClick={handleSave} size="sm" disabled={updateConfig.isPending}>
@@ -553,6 +597,17 @@ function FunctionsTab({ section }: { section: BehaviorSection }) {
     };
 
     const activeCount = section.functions.filter((f) => settingsMap[f.key]?.enabled).length;
+    const allActive = activeCount === section.functions.length;
+    const noneActive = activeCount === 0;
+
+    const handleBatchToggle = (enable: boolean) => {
+        section.functions.forEach((fn) => {
+            const setting = settingsMap[fn.key];
+            if (setting && setting.enabled !== enable) {
+                updateSetting.mutate({ id: setting.id, enabled: enable, staffId: user?.id });
+            }
+        });
+    };
 
     return (
         <div className="space-y-4">
@@ -561,9 +616,23 @@ function FunctionsTab({ section }: { section: BehaviorSection }) {
                     <h4 className="text-sm font-medium">{t("ai.behaviors.functionsTitle", "Operational Functions")}</h4>
                     <p className="text-xs text-muted-foreground">{t("ai.behaviors.functionsDesc", "Toggle individual functions Isabella handles in this behavior area.")}</p>
                 </div>
-                <Badge variant={activeCount > 0 ? "default" : "secondary"} className="text-xs">
-                    {activeCount}/{section.functions.length} active
-                </Badge>
+                <div className="flex items-center gap-2">
+                    <Badge variant={activeCount > 0 ? "default" : "secondary"} className="text-xs">
+                        {activeCount}/{section.functions.length} {t("ai.behaviors.active", "active")}
+                    </Badge>
+                    {!allActive && (
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleBatchToggle(true)}>
+                            <CheckSquare className="h-3 w-3" />
+                            {t("ai.behaviors.enableAll", "Enable All")}
+                        </Button>
+                    )}
+                    {!noneActive && (
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleBatchToggle(false)}>
+                            <XSquare className="h-3 w-3" />
+                            {t("ai.behaviors.disableAll", "Disable All")}
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="space-y-1">
                 {section.functions.map((fn) => {
@@ -590,6 +659,151 @@ function FunctionsTab({ section }: { section: BehaviorSection }) {
     );
 }
 
+function AuditTab({ agent }: { agent: AIAgent }) {
+    const { t } = useTranslation();
+    const { data: runs, isLoading: runsLoading } = useAIRuns(agent.id, 20);
+    const { data: actions, isLoading: actionsLoading } = useAIActions();
+
+    if (runsLoading || actionsLoading) return <Skeleton className="h-40" />;
+
+    const agentRuns = runs || [];
+    const runIds = new Set(agentRuns.map((r) => r.id));
+    const agentActions = (actions || []).filter((a) => runIds.has(a.run_id));
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h4 className="text-sm font-medium mb-3">{t("ai.recentRuns", "Recent Runs")}</h4>
+                {agentRuns.length > 0 ? (
+                    <div className="space-y-1">
+                        {agentRuns.slice(0, 10).map((run) => (
+                            <div key={run.id} className="flex items-center justify-between py-2 px-3 border rounded-lg text-sm">
+                                <div className="flex items-center gap-3">
+                                    <Badge
+                                        variant={run.status === "completed" ? "default" : run.status === "failed" ? "destructive" : "secondary"}
+                                        className="text-[10px]"
+                                    >
+                                        {run.status}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                    {run.tokens_used && <span>{run.tokens_used} tokens</span>}
+                                    {run.duration_ms && <span>{run.duration_ms}ms</span>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 space-y-2">
+                        <ScrollText className="h-8 w-8 mx-auto text-muted-foreground/40" />
+                        <p className="text-sm text-muted-foreground">{t("ai.behaviors.noRuns", "No runs recorded yet.")}</p>
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <h4 className="text-sm font-medium mb-3">{t("ai.recentActions", "Recent Actions")}</h4>
+                {agentActions.length > 0 ? (
+                    <div className="space-y-1">
+                        {agentActions.slice(0, 10).map((action) => (
+                            <div key={action.id} className="flex items-center justify-between py-2 px-3 border rounded-lg text-sm">
+                                <div className="flex items-center gap-3">
+                                    <Badge
+                                        variant={action.status === "executed" ? "default" : action.status === "rejected" ? "destructive" : "secondary"}
+                                        className="text-[10px]"
+                                    >
+                                        {action.status}
+                                    </Badge>
+                                    <span className="font-medium text-xs capitalize">{action.action_type.replace(/_/g, " ")}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(action.created_at), { addSuffix: true })}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center py-6">{t("ai.behaviors.noActions", "No actions recorded yet.")}</p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function SimulatorTab({ agent }: { agent: AIAgent }) {
+    const { t } = useTranslation();
+    const { toast } = useToast();
+    const runAgent = useRunAgent();
+    const [context, setContext] = useState("{}");
+    const [output, setOutput] = useState<string | null>(null);
+
+    const handleRun = async () => {
+        try {
+            const parsed = JSON.parse(context);
+            const result = await runAgent.mutateAsync({
+                agentKey: agent.agent_key,
+                context: parsed,
+                simulationMode: true,
+            });
+            setOutput(JSON.stringify(result, null, 2));
+            toast({ title: t("ai.simulationComplete", "Simulation completed") });
+        } catch (err: any) {
+            if (err instanceof SyntaxError) {
+                toast({ title: t("ai.behaviors.invalidJson", "Invalid JSON"), description: err.message, variant: "destructive" });
+            } else {
+                toast({ title: t("common.error", "Error"), variant: "destructive" });
+            }
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base">{t("ai.inputContext", "Input Context")}</CardTitle>
+                    <CardDescription className="text-xs">{t("ai.inputContextDesc", "Provide JSON context to simulate an agent run.")}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <Textarea
+                        value={context}
+                        onChange={(e) => setContext(e.target.value)}
+                        rows={6}
+                        className="font-mono text-sm"
+                        placeholder='{"event_type": "...", "data": {}}'
+                    />
+                    <Button onClick={handleRun} disabled={runAgent.isPending} size="sm">
+                        {runAgent.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+                        {t("ai.runSimulation", "Run Simulation")}
+                    </Button>
+                </CardContent>
+            </Card>
+            {output && (
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base">{t("ai.output", "Output")}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <pre className="bg-muted rounded-lg p-4 text-xs font-mono overflow-auto max-h-64 whitespace-pre-wrap">
+                            {output}
+                        </pre>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+}
+
+/* ─── Agent Name Helper ─────────────────────────────────────────────── */
+
+const AGENT_NAMES: Record<string, string> = {
+    customer_service_expert: "Customer Service & Sales Expert",
+    main_brain: "Main Brain",
+    member_specialist: "Member Specialist",
+};
+
 /* ─── Main Detail Panel ─────────────────────────────────────────────── */
 
 export function BehaviorDetailPanel({ section, onClose }: BehaviorDetailPanelProps) {
@@ -601,17 +815,24 @@ export function BehaviorDetailPanel({ section, onClose }: BehaviorDetailPanelPro
 
     const Icon = section.icon;
     const isLoading = agentLoading || configLoading;
+    const iconBgClass = ICON_BG_MAP[section.iconColor] || "bg-muted";
 
     return (
         <Card className="border-2 border-primary/20 shadow-lg animate-in slide-in-from-top-2 duration-300">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${section.iconColor.replace("text-", "bg-").replace("500", "500/15")}`}>
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconBgClass}`}>
                             <Icon className={`h-5 w-5 ${section.iconColor}`} />
                         </div>
                         <div>
-                            <CardTitle className="text-lg">{t(section.titleKey)}</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <CardTitle className="text-lg">{t(section.titleKey)}</CardTitle>
+                                <Badge variant="outline" className="text-[10px] gap-1">
+                                    <Bot className="h-3 w-3" />
+                                    {agent?.name || AGENT_NAMES[section.agentKey] || section.agentKey}
+                                </Badge>
+                            </div>
                             <CardDescription className="text-xs">{t(section.descKey)}</CardDescription>
                         </div>
                     </div>
@@ -628,40 +849,51 @@ export function BehaviorDetailPanel({ section, onClose }: BehaviorDetailPanelPro
                     </div>
                 ) : !agent || !config ? (
                     <div className="text-center py-8">
+                        <Bot className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
                         <p className="text-muted-foreground text-sm">
                             {t("ai.behaviors.noAgent", "No AI agent configured for this behavior yet.")}
                         </p>
-                        {/* Still show functions even without agent config */}
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {t("ai.behaviors.noAgentHint", "You can still toggle individual functions below.")}
+                        </p>
                         <div className="mt-6 text-left">
                             <FunctionsTab section={section} />
                         </div>
                     </div>
                 ) : (
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid w-full grid-cols-6 h-9">
+                        <TabsList className="w-full h-9 flex flex-wrap justify-start gap-0.5">
                             <TabsTrigger value="functions" className="text-xs gap-1.5">
-                                <Settings2 className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.functions", "Functions")}</span>
+                                <Wrench className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.functions", "Functions")}</span>
                             </TabsTrigger>
                             <TabsTrigger value="prompts" className="text-xs gap-1.5">
                                 <FileText className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.prompts", "Prompts")}</span>
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.prompts", "Prompts")}</span>
                             </TabsTrigger>
                             <TabsTrigger value="memory" className="text-xs gap-1.5">
                                 <Brain className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.memory", "Memory")}</span>
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.memory", "Memory")}</span>
                             </TabsTrigger>
                             <TabsTrigger value="tools" className="text-xs gap-1.5">
                                 <Settings2 className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.tools", "Tools")}</span>
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.tools", "Tools")}</span>
                             </TabsTrigger>
                             <TabsTrigger value="training" className="text-xs gap-1.5">
                                 <GraduationCap className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.training", "Training")}</span>
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.training", "Training")}</span>
                             </TabsTrigger>
                             <TabsTrigger value="personality" className="text-xs gap-1.5">
                                 <Sparkles className="h-3.5 w-3.5" />
-                                <span className="hidden lg:inline">{t("ai.behaviors.tabs.personality", "Personality")}</span>
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.personality", "Personality")}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="audit" className="text-xs gap-1.5">
+                                <ScrollText className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.audit", "Audit Log")}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="simulator" className="text-xs gap-1.5">
+                                <Play className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">{t("ai.behaviors.tabs.simulator", "Simulator")}</span>
                             </TabsTrigger>
                         </TabsList>
                         <div className="mt-4">
@@ -682,6 +914,12 @@ export function BehaviorDetailPanel({ section, onClose }: BehaviorDetailPanelPro
                             </TabsContent>
                             <TabsContent value="personality" className="mt-0">
                                 <PersonalityTab agent={agent} config={config} />
+                            </TabsContent>
+                            <TabsContent value="audit" className="mt-0">
+                                <AuditTab agent={agent} />
+                            </TabsContent>
+                            <TabsContent value="simulator" className="mt-0">
+                                <SimulatorTab agent={agent} />
                             </TabsContent>
                         </div>
                     </Tabs>
