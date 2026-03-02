@@ -40,20 +40,23 @@ export function RenderVariantButtons({
   const handleRenderVariant = async (format: string) => {
     setRenderingFormat(format);
     try {
-      const { error } = await supabase.functions.invoke('video-render-queue', {
+      const { data, error } = await supabase.functions.invoke('video-render-queue', {
         body: { project_id: projectId, format_override: format }
       });
 
       if (error) {
         console.error("Render variant error:", error);
-        toast.error(t("common.error"));
+        toast.error(error.message || t("videoHub.create.renderFailed"));
+      } else if (data?.error) {
+        console.error("Render variant returned error:", data.error);
+        toast.error(data.error);
       } else {
-        toast.success(t("videoHub.variants.queued", { format }));
+        toast.success(data?.message || t("videoHub.variants.queued", { format }));
         onRenderQueued?.();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Render variant error:", error);
-      toast.error(t("common.error"));
+      toast.error(error?.message || t("videoHub.create.renderFailed"));
     } finally {
       setRenderingFormat(null);
     }

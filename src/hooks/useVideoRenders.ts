@@ -118,8 +118,9 @@ export function useVideoRenders(projectId?: string) {
       const { data, error } = await supabase.functions.invoke('video-render-queue', {
         body: { project_id: projectId }
       });
-      
+
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: () => {

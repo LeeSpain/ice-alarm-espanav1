@@ -37,7 +37,7 @@ serve(async (req) => {
 
     if (projectError || !project) {
       return new Response(
-        JSON.stringify({ error: "Project not found" }),
+        JSON.stringify({ error: "Project not found", message: "The video project could not be found. It may have been deleted." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -99,7 +99,7 @@ serve(async (req) => {
         .update({ status: project.status })
         .eq("id", project_id);
       return new Response(
-        JSON.stringify({ error: "Failed to queue render" }),
+        JSON.stringify({ error: "Failed to queue render", message: "Could not create the render job. Please try again." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -173,9 +173,10 @@ serve(async (req) => {
           .eq("id", project_id);
 
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Render worker unavailable. Please try again later.",
-            details: err.message 
+            message: "The render service is currently unavailable. Please try again in a few minutes.",
+            details: err.message
           }),
           { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

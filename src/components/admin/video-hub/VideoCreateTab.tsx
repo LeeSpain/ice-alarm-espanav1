@@ -338,7 +338,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         projectId = newProject.id;
       }
 
-      const { error } = await supabase.functions.invoke("video-render-queue", {
+      const { data, error } = await supabase.functions.invoke("video-render-queue", {
         body: { project_id: projectId },
       });
 
@@ -347,11 +347,16 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         throw new Error(error.message || t("videoHub.create.renderFailed"));
       }
 
-      toast.success(t("videoHub.create.renderQueued"));
+      if (data?.error) {
+        console.error("Render queue returned error:", data.error);
+        throw new Error(data.error);
+      }
+
+      toast.success(data?.message || t("videoHub.create.renderQueued"));
       onComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Render error:", error);
-      toast.error(t("common.error"));
+      toast.error(error?.message || t("videoHub.create.renderFailed"));
     } finally {
       setIsRendering(false);
     }

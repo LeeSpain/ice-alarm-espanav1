@@ -87,23 +87,26 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
       if (!existingRender) {
         setIsRendering(projectId);
         // Auto-queue render
-        const { error } = await supabase.functions.invoke('video-render-queue', {
+        const { data, error } = await supabase.functions.invoke('video-render-queue', {
           body: { project_id: projectId }
         });
-        
+
         if (error) {
           console.error("Render queue error:", error);
-          toast.error(t("common.error"));
+          toast.error(error.message || t("videoHub.create.renderFailed"));
+        } else if (data?.error) {
+          console.error("Render queue returned error:", data.error);
+          toast.error(data.error);
         } else {
-          toast.success(t("videoHub.projects.approvedAndQueued"));
+          toast.success(data?.message || t("videoHub.projects.approvedAndQueued"));
         }
         setIsRendering(null);
       } else {
         toast.success(t("videoHub.projects.approved"));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Approve error:", error);
-      toast.error(t("common.error"));
+      toast.error(error?.message || t("videoHub.create.renderFailed"));
       setIsRendering(null);
     }
   }, [updateProjectStatus, latestRenderByProject, t]);
@@ -112,19 +115,22 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
   const handleRetryRender = useCallback(async (projectId: string) => {
     try {
       setIsRendering(projectId);
-      const { error } = await supabase.functions.invoke('video-render-queue', {
+      const { data, error } = await supabase.functions.invoke('video-render-queue', {
         body: { project_id: projectId }
       });
-      
+
       if (error) {
         console.error("Render queue error:", error);
-        toast.error(t("common.error"));
+        toast.error(error.message || t("videoHub.create.renderFailed"));
+      } else if (data?.error) {
+        console.error("Render queue returned error:", data.error);
+        toast.error(data.error);
       } else {
-        toast.success(t("videoHub.create.renderQueued"));
+        toast.success(data?.message || t("videoHub.create.renderQueued"));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Retry render error:", error);
-      toast.error(t("common.error"));
+      toast.error(error?.message || t("videoHub.create.renderFailed"));
     } finally {
       setIsRendering(null);
     }
