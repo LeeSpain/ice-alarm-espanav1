@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -51,11 +51,11 @@ export function YouTubePublishDialog({
   defaults,
 }: YouTubePublishDialogProps) {
   const { t } = useTranslation();
-  
+
   const [title, setTitle] = useState(projectName);
   const [description, setDescription] = useState(
-    defaults?.description_footer 
-      ? `\n\n${defaults.description_footer}` 
+    defaults?.description_footer
+      ? `\n\n${defaults.description_footer}`
       : ""
   );
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">(
@@ -64,9 +64,26 @@ export function YouTubePublishDialog({
   const [tags, setTags] = useState(defaults?.tags || "");
   const [madeForKids, setMadeForKids] = useState(false);
 
+  // Reset form state when dialog opens or project changes
+  useEffect(() => {
+    if (open) {
+      setTitle(projectName);
+      setDescription(
+        defaults?.description_footer
+          ? `\n\n${defaults.description_footer}`
+          : ""
+      );
+      setVisibility(
+        (defaults?.visibility as "public" | "unlisted" | "private") || "unlisted"
+      );
+      setTags(defaults?.tags || "");
+      setMadeForKids(false);
+    }
+  }, [open, projectName, defaults]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     await onPublish({
       title,
       description,
@@ -74,7 +91,7 @@ export function YouTubePublishDialog({
       tags: tags || undefined,
       made_for_kids: madeForKids,
     });
-    
+
     onOpenChange(false);
   };
 

@@ -19,10 +19,10 @@ interface VideoPreviewDialogProps {
   projectLanguage?: string;
 }
 
-export function VideoPreviewDialog({ 
-  open, 
-  onOpenChange, 
-  export_, 
+export function VideoPreviewDialog({
+  open,
+  onOpenChange,
+  export_,
   projectName,
   projectLanguage = "en"
 }: VideoPreviewDialogProps) {
@@ -89,11 +89,11 @@ export function VideoPreviewDialog({
                   {showCaptions ? t("common.on", "On") : t("common.off", "Off")}
                 </Button>
               )}
-              
+
               {/* Status Badges */}
               {export_.youtube_status === "published" && (
                 <Badge className="bg-alert-resolved text-alert-resolved-foreground">
-                  YouTube Published
+                  {t("videoHub.youtube.published")}
                 </Badge>
               )}
             </div>
@@ -109,7 +109,7 @@ export function VideoPreviewDialog({
                 <Download className="mr-1 h-4 w-4" />
                 MP4
               </Button>
-              
+
               {hasCaptions && (
                 <Button
                   variant="outline"
@@ -120,7 +120,7 @@ export function VideoPreviewDialog({
                   VTT
                 </Button>
               )}
-              
+
               {export_.srt_url && (
                 <Button
                   variant="outline"
@@ -131,7 +131,7 @@ export function VideoPreviewDialog({
                   SRT
                 </Button>
               )}
-              
+
               {/* Open in new tab */}
               {hasVideo && (
                 <Button

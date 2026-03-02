@@ -52,7 +52,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
   const { projects } = useVideoProjects();
   const { latestRenderByProject } = useVideoRenders();
   const { isConnected: youtubeConnected, publish: publishToYouTube, isPublishing } = useYouTubeIntegration();
-  
+
   const [selectedExport, setSelectedExport] = useState<VideoExport | null>(null);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -70,7 +70,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
           "settings_youtube_default_description_footer",
         ]);
       if (error) throw error;
-      
+
       const map: Record<string, string> = {};
       data?.forEach((s) => {
         const key = s.key.replace("settings_youtube_default_", "");
@@ -96,26 +96,26 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
   // Memoized filtered exports
   const filteredExports = useMemo(() => {
     if (!exports) return [];
-    
+
     return exports.filter(exp => {
       const project = projectMap.get(exp.project_id);
       if (!project) return false;
-      
+
       // Search filter
       if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      
+
       // Language filter
       if (filters.language !== "all" && project.language !== filters.language) {
         return false;
       }
-      
+
       // Format filter - check export format, not project format
       if (filters.format !== "all" && exp.format !== filters.format) {
         return false;
       }
-      
+
       return true;
     });
   }, [exports, projectMap, searchQuery, filters]);
@@ -140,7 +140,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
     made_for_kids: boolean;
   }) => {
     if (!selectedExport) return;
-    
+
     await publishToYouTube({
       video_export_id: selectedExport.id,
       ...data,
@@ -255,9 +255,9 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                 const project = projectMap.get(exp.project_id);
                 const renderStatus = getRenderStatus(exp.project_id);
                 const isApproved = project?.status === "approved";
-                
+
                 return (
-                  <TableRow 
+                  <TableRow
                     key={exp.id}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => {
@@ -338,7 +338,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
                           className="text-red-600 hover:text-red-700"
                         >
                           <Youtube className="mr-1 h-4 w-4" />
-                          {exp.youtube_status === "published" 
+                          {exp.youtube_status === "published"
                             ? t("videoHub.youtube.published", "Published")
                             : t("videoHub.youtube.publishButton", "Publish")
                           }
@@ -371,6 +371,7 @@ export function VideoExportsTab({ searchQuery, filters }: VideoExportsTabProps) 
         onOpenChange={setShowPreviewDialog}
         export_={selectedExport}
         projectName={selectedExport ? (projectMap.get(selectedExport.project_id)?.name || "Untitled") : ""}
+        projectLanguage={selectedExport ? (projectMap.get(selectedExport.project_id)?.language || "en") : "en"}
       />
     </TooltipProvider>
   );

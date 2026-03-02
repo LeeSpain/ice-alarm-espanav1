@@ -27,13 +27,13 @@ interface Filters {
 export default function VideoHubPage() {
   const { t } = useTranslation();
   const { isConnected: youtubeConnected, isLoading: youtubeLoading } = useYouTubeIntegration();
-  
+
   // Persist active tab
   const [activeTab, setActiveTab] = useState(() => {
     const stored = sessionStorage.getItem(TAB_STORAGE_KEY);
     return stored || "projects";
   });
-  
+
   // Persist filters
   const [filters, setFilters] = useState<Filters>(() => {
     const stored = sessionStorage.getItem(FILTERS_STORAGE_KEY);
@@ -46,7 +46,7 @@ export default function VideoHubPage() {
     }
     return { language: "all", format: "all", status: "all" };
   });
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<VideoProject | null>(null);
@@ -108,10 +108,10 @@ export default function VideoHubPage() {
             <p className="text-muted-foreground">{t("videoHub.subtitle")}</p>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2">
           {/* YouTube Connection Status */}
-          <Link 
+          <Link
             to="/admin/settings#communications/social"
             className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted"
           >
@@ -133,7 +133,7 @@ export default function VideoHubPage() {
               </>
             )}
           </Link>
-          
+
           <Button variant="outline" size="icon" onClick={() => setHelpOpen(true)}>
             <HelpCircle className="h-4 w-4" />
           </Button>
@@ -144,66 +144,68 @@ export default function VideoHubPage() {
         </div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t("videoHub.search")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+      {/* Filters Bar — only shown on tabs that use filtering */}
+      {(activeTab === "projects" || activeTab === "exports") && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("videoHub.search")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <Select value={filters.language} onValueChange={(v) => handleFilterChange("language", v)}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder={t("videoHub.projects.language")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.all")}</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="es">Español</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.format} onValueChange={(v) => handleFilterChange("format", v)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder={t("videoHub.projects.format")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.all")}</SelectItem>
+              <SelectItem value="9:16">{t("videoHub.formats.portrait")}</SelectItem>
+              <SelectItem value="16:9">{t("videoHub.formats.landscape")}</SelectItem>
+              <SelectItem value="1:1">{t("videoHub.formats.square")}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder={t("videoHub.projects.status")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("common.all")}</SelectItem>
+              <SelectItem value="draft">{t("videoHub.statuses.draft")}</SelectItem>
+              <SelectItem value="rendering">{t("videoHub.statuses.rendering")}</SelectItem>
+              <SelectItem value="done">{t("videoHub.statuses.done")}</SelectItem>
+              <SelectItem value="failed">{t("videoHub.statuses.failed")}</SelectItem>
+              <SelectItem value="approved">{t("videoHub.statuses.approved")}</SelectItem>
+              <SelectItem value="archived">{t("videoHub.statuses.archived")}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(filters.language !== "all" || filters.format !== "all" || filters.status !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFilters({ language: "all", format: "all", status: "all" })}
+            >
+              {t("common.clearFilters", "Clear Filters")}
+            </Button>
+          )}
         </div>
-        
-        <Select value={filters.language} onValueChange={(v) => handleFilterChange("language", v)}>
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder={t("videoHub.projects.language")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("common.all")}</SelectItem>
-            <SelectItem value="en">English</SelectItem>
-            <SelectItem value="es">Español</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={filters.format} onValueChange={(v) => handleFilterChange("format", v)}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder={t("videoHub.projects.format")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("common.all")}</SelectItem>
-            <SelectItem value="9:16">{t("videoHub.formats.portrait")}</SelectItem>
-            <SelectItem value="16:9">{t("videoHub.formats.landscape")}</SelectItem>
-            <SelectItem value="1:1">{t("videoHub.formats.square")}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder={t("videoHub.projects.status")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("common.all")}</SelectItem>
-            <SelectItem value="draft">{t("videoHub.statuses.draft")}</SelectItem>
-            <SelectItem value="rendering">{t("videoHub.statuses.rendering")}</SelectItem>
-            <SelectItem value="done">{t("videoHub.statuses.done")}</SelectItem>
-            <SelectItem value="failed">{t("videoHub.statuses.failed")}</SelectItem>
-            <SelectItem value="approved">{t("videoHub.statuses.approved")}</SelectItem>
-            <SelectItem value="archived">{t("videoHub.statuses.archived")}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {(filters.language !== "all" || filters.format !== "all" || filters.status !== "all") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setFilters({ language: "all", format: "all", status: "all" })}
-          >
-            {t("common.clearFilters", "Clear Filters")}
-          </Button>
-        )}
-      </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -231,7 +233,7 @@ export default function VideoHubPage() {
         </TabsList>
 
         <TabsContent value="projects">
-          <VideoProjectsTab 
+          <VideoProjectsTab
             searchQuery={searchQuery}
             filters={filters}
             onCreateNew={() => handleNewVideo(false)}
@@ -240,7 +242,7 @@ export default function VideoHubPage() {
         </TabsContent>
 
         <TabsContent value="create">
-          <VideoCreateTab 
+          <VideoCreateTab
             onComplete={handleCreateComplete}
             editingProject={editingProject}
             initialTemplateId={selectedTemplateId}

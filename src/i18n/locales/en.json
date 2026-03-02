@@ -330,7 +330,14 @@
       },
       "workflow": {
         "title": "The Content Workflow",
-        "steps": ["Set Topic", "AI Research", "Write Draft", "Generate Image", "Approve", "Publish"]
+        "steps": [
+          "Set Topic",
+          "AI Research",
+          "Write Draft",
+          "Generate Image",
+          "Approve",
+          "Publish"
+        ]
       },
       "create": {
         "title": "Creating Content",
@@ -731,7 +738,6 @@
     "englishSpanish": "English & Spanish support",
     "floatingMonitored": "Always Monitored",
     "floatingIsabella": "Your Personal Assistant",
-
     "whyChoose": "Why Families Choose ICE Alarm",
     "whyChooseDesc": "More than just an alarm button. Isabella, your personal safety assistant, combines instant response with real-time technology — designed specifically for life in Spain.",
     "featureIsabella": "Meet Isabella",
@@ -742,7 +748,6 @@
     "featureGpsDesc": "Your pendant tracks your location and detects falls automatically. If you can't press the button yourself, the system alerts our team for you — with your exact position. At home, in the garden, at the shops — wherever you are in Spain.",
     "featureDashboard": "Your Safety Dashboard",
     "featureDashboardDesc": "Log into your private portal on any device to see your pendant's battery, connection status, and account details. Chat with Isabella anytime for help or questions. Everything in one place, always available.",
-
     "howItWorks": {
       "title": "How ICE Alarm Protects You",
       "description": "From the moment you press the button to the moment help arrives — here's exactly what happens.",
@@ -755,7 +760,6 @@
       "step4Title": "Ongoing Care",
       "step4Desc": "After every incident, we follow up to make sure you're okay. Your pendant continues monitoring around the clock. Isabella is always there when you need her — for emergencies, questions, or just reassurance."
     },
-
     "simplePricing": "Clear, Honest Pricing",
     "pricingDesc": "Everything included. No hidden fees, no long-term contracts. Choose monthly or save with an annual plan.",
     "pricesIncludeIva": "All prices include 21% IVA. One-time registration fee: €59.99",
@@ -791,7 +795,6 @@
         "title": "ICE Alarm GPS Pendant"
       }
     },
-
     "dashboard": {
       "title": "Your Safety, Always Visible",
       "description": "Every ICE Alarm member gets access to a private online portal — on your phone, tablet, or computer.",
@@ -804,12 +807,10 @@
       "familyTitle": "Family Peace of Mind",
       "familyDesc": "Know that your pendant is charged, connected, and monitored. Your family can rest easy."
     },
-
     "testimonials": {
       "title": "Trusted by Families Across Spain",
       "trustLine": "Protecting families across the Costa Blanca, Costa del Sol, Balearic Islands, and all of Spain."
     },
-
     "partners": {
       "title": "ICE Alarm for Communities & Partners",
       "description": "We work with residential communities, urbanisations, care providers, and local businesses across Spain to bring safety to their residents and clients.",
@@ -824,7 +825,6 @@
       "cta": "Become a Partner",
       "idealFor": "Ideal for: urbanisations, residential communities, care homes, physiotherapy clinics, insurance brokers, and estate agents."
     },
-
     "readyToJoin": "Start Your Protection Today",
     "readyToJoinDesc": "Join ICE Alarm in minutes. No engineers, no installation, no long-term contracts. Your pendant arrives ready to use — and Isabella is ready to meet you.",
     "haveQuestions": "Questions?",
@@ -4462,6 +4462,8 @@
         "es": "Español"
       },
       "defaultCtaFallback": "Call Now",
+      "defaultCta": "Default",
+      "renderFailed": "Video render failed",
       "render": "Render Video",
       "saveDraft": "Save as Draft",
       "updateProject": "Update Project",
@@ -4561,8 +4563,7 @@
       "download": "Download",
       "copyLink": "Copy Link",
       "linkCopied": "{{type}} link copied",
-      "downloading": "Downloading {{type}}...",
-      "thumbnail": "Thumbnail"
+      "downloading": "Downloading {{type}}..."
     },
     "variants": {
       "title": "Render Variants",
@@ -5152,21 +5153,56 @@
       "s2p2": "Contact: info@icealarm.es",
       "s3Title": "3. Description of Services",
       "s3_1Title": "3.1 What We Provide",
-      "s3_1Items": ["GPS pendant devices for emergency alerts", "24/7 monitoring of device alerts (SOS button, fall detection, device offline)", "Response to alerts via phone call to assess the situation", "Coordination with emergency services (112) when required", "Notification of your designated emergency contacts", "AI-assisted call handling and customer support", "Courtesy welfare check calls (where subscribed)", "Member dashboard for account management"],
+      "s3_1Items": [
+        "GPS pendant devices for emergency alerts",
+        "24/7 monitoring of device alerts (SOS button, fall detection, device offline)",
+        "Response to alerts via phone call to assess the situation",
+        "Coordination with emergency services (112) when required",
+        "Notification of your designated emergency contacts",
+        "AI-assisted call handling and customer support",
+        "Courtesy welfare check calls (where subscribed)",
+        "Member dashboard for account management"
+      ],
       "s3_2Title": "3.2 What We Do NOT Provide",
-      "s3_2Items": ["Direct medical care or medical advice", "Emergency medical services", "Ambulance or paramedic services", "Guaranteed response times", "A substitute for calling 112 in emergencies", "A replacement for proper medical monitoring or care facilities"],
+      "s3_2Items": [
+        "Direct medical care or medical advice",
+        "Emergency medical services",
+        "Ambulance or paramedic services",
+        "Guaranteed response times",
+        "A substitute for calling 112 in emergencies",
+        "A replacement for proper medical monitoring or care facilities"
+      ],
       "s4Title": "4. Important Limitations and Disclaimers",
       "s4_1Title": "4.1 Not a Replacement for Emergency Services",
       "s4_1Warning": "ICE ALARM IS A SUPPLEMENTARY SERVICE. WE ARE NOT EMERGENCY SERVICES.",
-      "s4_1Items": ["If you are able to call 112 directly in an emergency, you should do so", "Our service depends on technology that can fail", "There may be delays in our response", "We cannot guarantee that help will arrive in time in any situation"],
+      "s4_1Items": [
+        "If you are able to call 112 directly in an emergency, you should do so",
+        "Our service depends on technology that can fail",
+        "There may be delays in our response",
+        "We cannot guarantee that help will arrive in time in any situation"
+      ],
       "s4_2Title": "4.2 Technology Limitations",
       "s4_2Intro": "Our service depends on technology that is subject to limitations:",
       "s4_2GpsLabel": "GPS Pendant:",
-      "s4_2GpsItems": ["Requires battery charge (if battery dies, no alerts can be sent)", "Requires mobile network coverage (may not work in remote areas or buildings with poor signal)", "GPS accuracy varies (typically 5-50 meters, may be less accurate indoors)", "Fall detection is not 100% accurate (may miss some falls or trigger false alerts)", "Device must be worn to be effective"],
+      "s4_2GpsItems": [
+        "Requires battery charge (if battery dies, no alerts can be sent)",
+        "Requires mobile network coverage (may not work in remote areas or buildings with poor signal)",
+        "GPS accuracy varies (typically 5-50 meters, may be less accurate indoors)",
+        "Fall detection is not 100% accurate (may miss some falls or trigger false alerts)",
+        "Device must be worn to be effective"
+      ],
       "s4_2SystemsLabel": "Our Systems:",
-      "s4_2SystemsItems": ["Internet and phone networks can experience outages", "Software systems can have bugs or failures", "AI assistant may misunderstand or make errors"],
+      "s4_2SystemsItems": [
+        "Internet and phone networks can experience outages",
+        "Software systems can have bugs or failures",
+        "AI assistant may misunderstand or make errors"
+      ],
       "s4_2ThirdPartyLabel": "Third-Party Dependencies:",
-      "s4_2ThirdPartyItems": ["We rely on mobile network operators", "We rely on device monitoring partners", "We rely on emergency services to respond once notified"],
+      "s4_2ThirdPartyItems": [
+        "We rely on mobile network operators",
+        "We rely on device monitoring partners",
+        "We rely on emergency services to respond once notified"
+      ],
       "s4_3Title": "4.3 Response Time",
       "s4_3Warning": "WE DO NOT GUARANTEE ANY SPECIFIC RESPONSE TIME.",
       "s4_3p1": "While we strive to respond to alerts as quickly as possible, response times depend on volume of simultaneous alerts, availability of operators, accuracy of information provided, response time of emergency services (112), and traffic, weather, and other factors beyond our control.",
@@ -5174,95 +5210,209 @@
       "s4_4p1": "Our staff and AI assistant provide emergency coordination, NOT medical advice. Any information provided is general in nature and should not be relied upon as medical advice. Always consult qualified medical professionals for health decisions.",
       "s4_5Title": "4.5 AI Assistant Limitations",
       "s4_5Intro": "Our AI assistant \"Isabella\":",
-      "s4_5Items": ["Is an artificial intelligence, not a human", "May misunderstand what you say", "May provide incorrect or inappropriate responses", "Will transfer to human operators when uncertain or upon request", "Should not be relied upon for critical medical decisions"],
+      "s4_5Items": [
+        "Is an artificial intelligence, not a human",
+        "May misunderstand what you say",
+        "May provide incorrect or inappropriate responses",
+        "Will transfer to human operators when uncertain or upon request",
+        "Should not be relied upon for critical medical decisions"
+      ],
       "s5Title": "5. Eligibility",
       "s5Intro": "To use our services, you must:",
-      "s5Items": ["Be at least 18 years old, OR have a parent/guardian agree on your behalf", "Provide accurate and complete information", "Have a valid payment method", "Be located in an area with mobile network coverage", "Be capable of wearing and using the GPS pendant (or have a caregiver who can assist)"],
+      "s5Items": [
+        "Be at least 18 years old, OR have a parent/guardian agree on your behalf",
+        "Provide accurate and complete information",
+        "Have a valid payment method",
+        "Be located in an area with mobile network coverage",
+        "Be capable of wearing and using the GPS pendant (or have a caregiver who can assist)"
+      ],
       "s5p1": "We reserve the right to refuse service to anyone for any reason.",
       "s6Title": "6. Your Account",
       "s6_1Title": "6.1 Account Creation",
       "s6_1p1": "You must provide accurate, current, and complete information during registration. You agree to update this information to keep it accurate.",
       "s6_2Title": "6.2 Account Security",
       "s6_2Intro": "You are responsible for:",
-      "s6_2Items": ["Maintaining the confidentiality of your login credentials", "All activities that occur under your account", "Notifying us immediately of any unauthorized access"],
+      "s6_2Items": [
+        "Maintaining the confidentiality of your login credentials",
+        "All activities that occur under your account",
+        "Notifying us immediately of any unauthorized access"
+      ],
       "s6_3Title": "6.3 Accuracy of Information",
       "s6_3Warning": "CRITICAL: The accuracy of your personal information, medical details, and emergency contacts directly affects our ability to help you in an emergency. You are responsible for keeping this information current and accurate.",
       "s6_3p1": "If we contact your emergency contacts or provide your medical information to emergency services based on what you have provided, you agree that we are not liable for any consequences of inaccurate information.",
       "s7Title": "7. Devices and Equipment",
       "s7_1Title": "7.1 GPS Pendant",
-      "s7_1Items": ["The device remains our property unless otherwise specified", "You must use the device in accordance with provided instructions", "You are responsible for reasonable care of the device", "You must return the device if you cancel your subscription (where applicable)", "Lost or damaged devices may incur replacement charges"],
+      "s7_1Items": [
+        "The device remains our property unless otherwise specified",
+        "You must use the device in accordance with provided instructions",
+        "You are responsible for reasonable care of the device",
+        "You must return the device if you cancel your subscription (where applicable)",
+        "Lost or damaged devices may incur replacement charges"
+      ],
       "s7_2Title": "7.2 Your Responsibilities",
       "s7_2Intro": "You agree to:",
-      "s7_2Items": ["Keep the device charged", "Wear the device as intended", "Test the device periodically as instructed", "Notify us of any device malfunctions", "Not attempt to modify, repair, or tamper with the device"],
+      "s7_2Items": [
+        "Keep the device charged",
+        "Wear the device as intended",
+        "Test the device periodically as instructed",
+        "Notify us of any device malfunctions",
+        "Not attempt to modify, repair, or tamper with the device"
+      ],
       "s7_3Title": "7.3 Device Connectivity",
       "s7_3p1": "The device requires mobile network coverage, battery charge, and the SIM card to remain active (managed by our partner).",
       "s7_3p2": "We are not responsible for service failures caused by:",
-      "s7_3Items": ["Poor or no mobile network coverage in your area", "Interference from buildings, terrain, or weather", "Mobile network outages", "Depleted device battery"],
+      "s7_3Items": [
+        "Poor or no mobile network coverage in your area",
+        "Interference from buildings, terrain, or weather",
+        "Mobile network outages",
+        "Depleted device battery"
+      ],
       "s8Title": "8. Subscription and Payment",
       "s8_1Title": "8.1 Subscription Plans",
       "s8_1p1": "Details of available subscription plans, including pricing, are displayed on our website and during registration. Prices include applicable VAT.",
       "s8_2Title": "8.2 Payment",
-      "s8_2Items": ["Payment is processed securely by Stripe", "Subscriptions are billed monthly or annually as selected", "You authorize us to charge your payment method automatically", "Failed payments may result in service suspension"],
+      "s8_2Items": [
+        "Payment is processed securely by Stripe",
+        "Subscriptions are billed monthly or annually as selected",
+        "You authorize us to charge your payment method automatically",
+        "Failed payments may result in service suspension"
+      ],
       "s8_3Title": "8.3 Price Changes",
       "s8_3p1": "We may change subscription prices with 30 days notice. If you do not agree to a price change, you may cancel before it takes effect.",
       "s8_4Title": "8.4 Refunds",
-      "s8_4Items": ["Registration fees are non-refundable", "If you cancel within 14 days of signup (cooling-off period), you are entitled to a refund of subscription fees minus any services already used", "After 14 days, subscription fees are non-refundable for the current billing period", "Device deposits are refundable upon return of the device in good condition"],
+      "s8_4Items": [
+        "Registration fees are non-refundable",
+        "If you cancel within 14 days of signup (cooling-off period), you are entitled to a refund of subscription fees minus any services already used",
+        "After 14 days, subscription fees are non-refundable for the current billing period",
+        "Device deposits are refundable upon return of the device in good condition"
+      ],
       "s8_5Title": "8.5 Non-Payment",
       "s8_5Intro": "If payment fails:",
-      "s8_5Items": ["We will notify you and attempt to charge again", "After 7 days of failed payment, service may be suspended", "After 30 days, your account may be terminated", "Outstanding amounts may be sent to collections"],
+      "s8_5Items": [
+        "We will notify you and attempt to charge again",
+        "After 7 days of failed payment, service may be suspended",
+        "After 30 days, your account may be terminated",
+        "Outstanding amounts may be sent to collections"
+      ],
       "s9Title": "9. Cancellation and Termination",
       "s9_1Title": "9.1 Your Right to Cancel",
       "s9_1Intro": "You may cancel your subscription at any time through:",
-      "s9_1Items": ["Your member dashboard", "Emailing info@icealarm.es", "Calling our customer service"],
+      "s9_1Items": [
+        "Your member dashboard",
+        "Emailing info@icealarm.es",
+        "Calling our customer service"
+      ],
       "s9_1p1": "Cancellation takes effect at the end of your current billing period.",
       "s9_2Title": "9.2 Cooling-Off Period",
       "s9_2p1": "Under EU consumer law, you have 14 days from signup to cancel for a full refund. To exercise this right, contact us clearly stating your wish to cancel.",
       "s9_3Title": "9.3 Our Right to Terminate",
       "s9_3Intro": "We may suspend or terminate your account if:",
-      "s9_3Items": ["You breach these Terms", "Your payment method fails repeatedly", "You provide false information", "You misuse the service or devices", "You abuse our staff or AI systems", "Continued service poses a risk to you or others"],
+      "s9_3Items": [
+        "You breach these Terms",
+        "Your payment method fails repeatedly",
+        "You provide false information",
+        "You misuse the service or devices",
+        "You abuse our staff or AI systems",
+        "Continued service poses a risk to you or others"
+      ],
       "s9_3p1": "We will provide reasonable notice except in cases of serious breach.",
       "s9_4Title": "9.4 Effect of Termination",
       "s9_4Intro": "Upon termination:",
-      "s9_4Items": ["Your access to services will cease", "Alert monitoring will stop", "You must return any devices (if applicable)", "We will retain your data as described in our Privacy Policy"],
+      "s9_4Items": [
+        "Your access to services will cease",
+        "Alert monitoring will stop",
+        "You must return any devices (if applicable)",
+        "We will retain your data as described in our Privacy Policy"
+      ],
       "s10Title": "10. Limitation of Liability",
       "s10_1Title": "10.1 To the Maximum Extent Permitted by Law",
       "s10_1Warning": "WE SHALL NOT BE LIABLE FOR:",
       "s10_1a": "(a) <strong>Death or personal injury</strong> except where caused directly by our gross negligence or willful misconduct",
       "s10_1b": "(b) <strong>Any indirect, incidental, special, consequential, or punitive damages</strong> including but not limited to loss of profits, data, use, goodwill, or other intangible losses",
       "s10_1c": "(c) <strong>Damages arising from:</strong>",
-      "s10_1cItems": ["Technology failures (networks, devices, software)", "Delays in response to alerts", "Actions or failures of emergency services (112, police, ambulance)", "Inaccurate information provided by you", "Your failure to maintain device charge or wear the device", "Circumstances beyond our reasonable control (force majeure)", "Actions of third parties including our technology partners", "AI assistant errors or misunderstandings"],
+      "s10_1cItems": [
+        "Technology failures (networks, devices, software)",
+        "Delays in response to alerts",
+        "Actions or failures of emergency services (112, police, ambulance)",
+        "Inaccurate information provided by you",
+        "Your failure to maintain device charge or wear the device",
+        "Circumstances beyond our reasonable control (force majeure)",
+        "Actions of third parties including our technology partners",
+        "AI assistant errors or misunderstandings"
+      ],
       "s10_2Title": "10.2 Maximum Liability",
       "s10_2Warning": "OUR TOTAL LIABILITY TO YOU FOR ANY CLAIMS ARISING FROM OR RELATED TO THESE TERMS OR OUR SERVICES SHALL NOT EXCEED THE TOTAL AMOUNT YOU HAVE PAID US IN THE 12 MONTHS PRECEDING THE CLAIM.",
       "s10_3Title": "10.3 Essential Purpose",
       "s10_3Intro": "You acknowledge that:",
-      "s10_3Items": ["Our service is designed to provide additional support, not guaranteed protection", "No emergency response system can guarantee safety", "Multiple factors beyond our control affect emergency outcomes", "The limitations above are an essential part of our agreement and reflected in our pricing"],
+      "s10_3Items": [
+        "Our service is designed to provide additional support, not guaranteed protection",
+        "No emergency response system can guarantee safety",
+        "Multiple factors beyond our control affect emergency outcomes",
+        "The limitations above are an essential part of our agreement and reflected in our pricing"
+      ],
       "s10_4Title": "10.4 Statutory Rights",
       "s10_4Intro": "Nothing in these Terms limits or excludes:",
-      "s10_4Items": ["Liability for death or personal injury caused by gross negligence", "Liability for fraud or fraudulent misrepresentation", "Any liability that cannot be limited or excluded under Spanish law", "Your statutory rights as a consumer"],
+      "s10_4Items": [
+        "Liability for death or personal injury caused by gross negligence",
+        "Liability for fraud or fraudulent misrepresentation",
+        "Any liability that cannot be limited or excluded under Spanish law",
+        "Your statutory rights as a consumer"
+      ],
       "s11Title": "11. Indemnification",
       "s11p1": "You agree to indemnify and hold harmless ICE Alarm España, its officers, directors, employees, and partners from any claims, damages, losses, liabilities, costs, and expenses (including legal fees) arising from:",
-      "s11Items": ["Your breach of these Terms", "Your misuse of the service or devices", "Inaccurate information you provide", "Your violation of any law or third-party rights", "Claims by your emergency contacts or family members"],
+      "s11Items": [
+        "Your breach of these Terms",
+        "Your misuse of the service or devices",
+        "Inaccurate information you provide",
+        "Your violation of any law or third-party rights",
+        "Claims by your emergency contacts or family members"
+      ],
       "s12Title": "12. Intellectual Property",
       "s12p1": "All content, software, trademarks, and materials on our website and in our apps remain our property or that of our licensors. You may not:",
-      "s12Items": ["Copy, modify, or distribute our materials", "Reverse engineer our software", "Use our trademarks without permission", "Scrape or harvest data from our systems"],
+      "s12Items": [
+        "Copy, modify, or distribute our materials",
+        "Reverse engineer our software",
+        "Use our trademarks without permission",
+        "Scrape or harvest data from our systems"
+      ],
       "s13Title": "13. Privacy",
       "s13p1": "Your privacy is important to us. Please review our <a href=\"/privacy\">Privacy Policy</a> which explains how we collect, use, and protect your personal data.",
       "s13p2": "By using our services, you consent to:",
-      "s13Items": ["Processing of your personal and medical data as described in our Privacy Policy", "Recording of phone calls for quality and training purposes", "Sharing of your information with emergency services when necessary", "Receiving communications about your service"],
+      "s13Items": [
+        "Processing of your personal and medical data as described in our Privacy Policy",
+        "Recording of phone calls for quality and training purposes",
+        "Sharing of your information with emergency services when necessary",
+        "Receiving communications about your service"
+      ],
       "s14Title": "14. Communications",
       "s14_1Title": "14.1 From Us to You",
       "s14_1Intro": "You agree to receive communications from us via:",
-      "s14_1Items": ["Email", "SMS", "Phone calls (including from our AI assistant)", "WhatsApp", "Push notifications (if you use our app)", "Post"],
+      "s14_1Items": [
+        "Email",
+        "SMS",
+        "Phone calls (including from our AI assistant)",
+        "WhatsApp",
+        "Push notifications (if you use our app)",
+        "Post"
+      ],
       "s14_2Title": "14.2 Emergency Communications",
       "s14_2Intro": "You agree that we may contact:",
-      "s14_2Items": ["You at any phone numbers you provide", "Your emergency contacts when an alert is triggered", "Emergency services on your behalf"],
+      "s14_2Items": [
+        "You at any phone numbers you provide",
+        "Your emergency contacts when an alert is triggered",
+        "Emergency services on your behalf"
+      ],
       "s14_3Title": "14.3 Marketing",
       "s14_3p1": "We will only send marketing communications with your consent. You can opt out at any time.",
       "s15Title": "15. Modifications to Service",
       "s15p1": "We may modify, suspend, or discontinue any aspect of our services at any time. We will provide reasonable notice of significant changes. Continued use after changes constitutes acceptance.",
       "s16Title": "16. Modifications to Terms",
       "s16Intro": "We may update these Terms from time to time. We will notify you of material changes by:",
-      "s16Items": ["Email", "Notice on our website", "Notice in your dashboard"],
+      "s16Items": [
+        "Email",
+        "Notice on our website",
+        "Notice in your dashboard"
+      ],
       "s16p1": "If you do not agree to updated Terms, you must stop using our services and cancel your subscription.",
       "s17Title": "17. Dispute Resolution",
       "s17_1Title": "17.1 Informal Resolution",
@@ -5288,7 +5438,15 @@
       "s19Content": "<strong>ICE Alarm España</strong><br/><br/>General enquiries: info@icealarm.es<br/>Support: support@icealarm.es<br/>Privacy: privacy@icealarm.es",
       "s20Title": "20. Acknowledgment",
       "s20Warning": "BY USING OUR SERVICES, YOU ACKNOWLEDGE THAT:",
-      "s20Items": ["You have read and understood these Terms", "You understand this is a supplementary service, not a guarantee of safety", "You understand the technology limitations described above", "You accept the limitations of liability described above", "You will maintain accurate personal, medical, and emergency contact information", "You will properly maintain and wear your GPS device", "You will call 112 directly whenever possible in a life-threatening emergency"],
+      "s20Items": [
+        "You have read and understood these Terms",
+        "You understand this is a supplementary service, not a guarantee of safety",
+        "You understand the technology limitations described above",
+        "You accept the limitations of liability described above",
+        "You will maintain accurate personal, medical, and emergency contact information",
+        "You will properly maintain and wear your GPS device",
+        "You will call 112 directly whenever possible in a life-threatening emergency"
+      ],
       "effectiveDate": "These Terms of Service are effective as of the date last updated above.",
       "tagline": "ICE Alarm España — Keeping You Connected, Keeping You Safe"
     },
@@ -5299,91 +5457,269 @@
       "s1p3": "For any privacy-related questions, contact us at: privacy@icealarm.es",
       "s2Title": "2. What This Policy Covers",
       "s2Intro": "This Privacy Policy explains:",
-      "s2Items": ["What personal data we collect", "Why we collect it", "How we use it", "Who we share it with", "Your rights under EU General Data Protection Regulation (GDPR) and Spanish Organic Law 3/2018 (LOPD-GDD)"],
+      "s2Items": [
+        "What personal data we collect",
+        "Why we collect it",
+        "How we use it",
+        "Who we share it with",
+        "Your rights under EU General Data Protection Regulation (GDPR) and Spanish Organic Law 3/2018 (LOPD-GDD)"
+      ],
       "s3Title": "3. Data We Collect",
       "s3_1Title": "3.1 Information You Provide",
       "s3AccountLabel": "Account Information:",
-      "s3AccountItems": ["Full name", "Email address", "Phone number", "Home address", "Date of birth", "Preferred language"],
+      "s3AccountItems": [
+        "Full name",
+        "Email address",
+        "Phone number",
+        "Home address",
+        "Date of birth",
+        "Preferred language"
+      ],
       "s3HealthLabel": "Health & Medical Information (Special Category Data):",
-      "s3HealthItems": ["Medical conditions", "Current medications", "Allergies", "Blood type", "Doctor's name and contact details", "Hospital preference", "Mobility limitations or special needs"],
+      "s3HealthItems": [
+        "Medical conditions",
+        "Current medications",
+        "Allergies",
+        "Blood type",
+        "Doctor's name and contact details",
+        "Hospital preference",
+        "Mobility limitations or special needs"
+      ],
       "s3EmergencyLabel": "Emergency Contacts:",
-      "s3EmergencyItems": ["Names, phone numbers, and email addresses of people you designate", "Their relationship to you", "Language preferences"],
+      "s3EmergencyItems": [
+        "Names, phone numbers, and email addresses of people you designate",
+        "Their relationship to you",
+        "Language preferences"
+      ],
       "s3PaymentLabel": "Payment Information:",
-      "s3PaymentItems": ["Billing address", "Payment card details (processed securely by Stripe, Inc.)"],
+      "s3PaymentItems": [
+        "Billing address",
+        "Payment card details (processed securely by Stripe, Inc.)"
+      ],
       "s3_2Title": "3.2 Information Collected Automatically",
       "s3DeviceLabel": "Device Information:",
-      "s3DeviceItems": ["Your GPS pendant's unique identifier (IMEI)", "Battery status", "Online/offline status", "Location data when alerts are triggered"],
+      "s3DeviceItems": [
+        "Your GPS pendant's unique identifier (IMEI)",
+        "Battery status",
+        "Online/offline status",
+        "Location data when alerts are triggered"
+      ],
       "s3UsageLabel": "Usage Data:",
-      "s3UsageItems": ["Pages visited on our website", "Time and date of access", "Browser type and device information"],
+      "s3UsageItems": [
+        "Pages visited on our website",
+        "Time and date of access",
+        "Browser type and device information"
+      ],
       "s3CommsLabel": "Communication Records:",
-      "s3CommsItems": ["Voice call recordings (with your consent)", "SMS and WhatsApp message logs", "Chat transcripts with our AI assistant"],
+      "s3CommsItems": [
+        "Voice call recordings (with your consent)",
+        "SMS and WhatsApp message logs",
+        "Chat transcripts with our AI assistant"
+      ],
       "s3_3Title": "3.3 Information from Third Parties",
       "s3_3p1": "<strong>Device Monitoring Partner (MonitorLinq B.V.):</strong> We receive real-time device status updates including location, battery level, SOS alerts, and fall detection events from your GPS pendant via our technology partner MonitorLinq B.V. (Netherlands).",
       "s4Title": "4. Why We Collect Your Data (Legal Basis)",
-      "s4TableHeaders": ["Purpose", "Legal Basis (GDPR Article 6)"],
+      "s4TableHeaders": [
+        "Purpose",
+        "Legal Basis (GDPR Article 6)"
+      ],
       "s4TableRows": [
-        ["Provide emergency response services", "Performance of contract"],
-        ["Process your subscription payments", "Performance of contract"],
-        ["Contact you about your account", "Performance of contract"],
-        ["Respond to SOS alerts and emergencies", "Legitimate interest (protecting vital interests)"],
-        ["Store medical information for emergencies", "Explicit consent (Article 9)"],
-        ["Record calls for quality and training", "Legitimate interest + consent"],
-        ["Improve our services", "Legitimate interest"],
-        ["Comply with legal obligations", "Legal obligation"],
-        ["Send service updates", "Performance of contract"],
-        ["Send marketing communications", "Consent (opt-in only)"]
+        [
+          "Provide emergency response services",
+          "Performance of contract"
+        ],
+        [
+          "Process your subscription payments",
+          "Performance of contract"
+        ],
+        [
+          "Contact you about your account",
+          "Performance of contract"
+        ],
+        [
+          "Respond to SOS alerts and emergencies",
+          "Legitimate interest (protecting vital interests)"
+        ],
+        [
+          "Store medical information for emergencies",
+          "Explicit consent (Article 9)"
+        ],
+        [
+          "Record calls for quality and training",
+          "Legitimate interest + consent"
+        ],
+        [
+          "Improve our services",
+          "Legitimate interest"
+        ],
+        [
+          "Comply with legal obligations",
+          "Legal obligation"
+        ],
+        [
+          "Send service updates",
+          "Performance of contract"
+        ],
+        [
+          "Send marketing communications",
+          "Consent (opt-in only)"
+        ]
       ],
       "s4SpecialCategory": "<strong>Special Category Data (Health Information):</strong> We process your medical information ONLY because you have given us explicit consent during registration, AND because this information may be vital for protecting your life in an emergency situation (GDPR Article 9(2)(a) and (c)).",
       "s5Title": "5. How We Use Your Data",
       "s5_1Title": "5.1 Emergency Response",
       "s5_1Intro": "When your pendant detects an emergency (SOS button, fall detection, device offline), we:",
-      "s5_1Items": ["Receive the alert from our monitoring partner", "Access your profile to identify you", "Review your medical information and emergency contacts", "Contact you by phone to assess the situation", "Contact emergency services (112) if required", "Notify your designated emergency contacts"],
+      "s5_1Items": [
+        "Receive the alert from our monitoring partner",
+        "Access your profile to identify you",
+        "Review your medical information and emergency contacts",
+        "Contact you by phone to assess the situation",
+        "Contact emergency services (112) if required",
+        "Notify your designated emergency contacts"
+      ],
       "s5_2Title": "5.2 AI-Assisted Services",
       "s5_2Intro": "Our AI assistant \"Isabella\" may:",
-      "s5_2Items": ["Answer your phone calls", "Respond to chat messages", "Make courtesy check-in calls", "Handle initial emergency triage"],
+      "s5_2Items": [
+        "Answer your phone calls",
+        "Respond to chat messages",
+        "Make courtesy check-in calls",
+        "Handle initial emergency triage"
+      ],
       "s5_2p1": "When speaking with Isabella, your conversation is processed using artificial intelligence. Human operators can take over at any time and will always handle genuine emergencies.",
       "s5_3Title": "5.3 Service Administration",
-      "s5_3Items": ["Process monthly subscription payments", "Send service-related communications", "Provide customer support", "Schedule courtesy welfare calls"],
+      "s5_3Items": [
+        "Process monthly subscription payments",
+        "Send service-related communications",
+        "Provide customer support",
+        "Schedule courtesy welfare calls"
+      ],
       "s6Title": "6. Who We Share Your Data With",
       "s6Intro": "We share your data ONLY with the following categories of recipients, and ONLY when necessary:",
       "s6_1Title": "6.1 Service Providers (Data Processors)",
-      "s6_1TableHeaders": ["Provider", "Purpose", "Location", "Safeguards"],
+      "s6_1TableHeaders": [
+        "Provider",
+        "Purpose",
+        "Location",
+        "Safeguards"
+      ],
       "s6_1TableRows": [
-        ["Supabase, Inc.", "Database hosting", "EU (Stockholm, Sweden)", "EU data center, DPA in place"],
-        ["MonitorLinq B.V.", "Device monitoring & GPS tracking", "Netherlands (EU)", "ISO 27001, NEN 7510 certified"],
-        ["Stripe, Inc.", "Payment processing", "EU/US", "EU-US Data Privacy Framework, PCI-DSS compliant"],
-        ["Twilio, Inc.", "Voice calls & SMS", "EU/US", "Standard Contractual Clauses"],
-        ["OpenAI, LLC", "AI assistant functionality", "US", "Standard Contractual Clauses"],
-        ["Google (Gmail)", "Email delivery", "EU/US", "Standard Contractual Clauses"],
-        ["Vercel, Inc.", "Website hosting", "EU", "EU data center"]
+        [
+          "Supabase, Inc.",
+          "Database hosting",
+          "EU (Stockholm, Sweden)",
+          "EU data center, DPA in place"
+        ],
+        [
+          "MonitorLinq B.V.",
+          "Device monitoring & GPS tracking",
+          "Netherlands (EU)",
+          "ISO 27001, NEN 7510 certified"
+        ],
+        [
+          "Stripe, Inc.",
+          "Payment processing",
+          "EU/US",
+          "EU-US Data Privacy Framework, PCI-DSS compliant"
+        ],
+        [
+          "Twilio, Inc.",
+          "Voice calls & SMS",
+          "EU/US",
+          "Standard Contractual Clauses"
+        ],
+        [
+          "OpenAI, LLC",
+          "AI assistant functionality",
+          "US",
+          "Standard Contractual Clauses"
+        ],
+        [
+          "Google (Gmail)",
+          "Email delivery",
+          "EU/US",
+          "Standard Contractual Clauses"
+        ],
+        [
+          "Vercel, Inc.",
+          "Website hosting",
+          "EU",
+          "EU data center"
+        ]
       ],
       "s6_2Title": "6.2 Emergency Services",
       "s6_2Intro": "In an emergency, we may share your name, location, and relevant medical information with:",
-      "s6_2Items": ["Spanish emergency services (112)", "Local police, fire, or ambulance services", "Hospital emergency departments"],
+      "s6_2Items": [
+        "Spanish emergency services (112)",
+        "Local police, fire, or ambulance services",
+        "Hospital emergency departments"
+      ],
       "s6_2p1": "This sharing is based on protecting your vital interests (GDPR Article 6(1)(d)).",
       "s6_3Title": "6.3 Your Emergency Contacts",
       "s6_3Intro": "People you designate as emergency contacts will receive:",
-      "s6_3Items": ["Notification when an alert is triggered", "Your location at the time of alert", "Status updates during an incident"],
+      "s6_3Items": [
+        "Notification when an alert is triggered",
+        "Your location at the time of alert",
+        "Status updates during an incident"
+      ],
       "s6_4Title": "6.4 Legal Requirements",
       "s6_4Intro": "We may disclose your data if required by:",
-      "s6_4Items": ["Court order or legal process", "Spanish law enforcement with valid legal basis", "Regulatory authorities"],
+      "s6_4Items": [
+        "Court order or legal process",
+        "Spanish law enforcement with valid legal basis",
+        "Regulatory authorities"
+      ],
       "s6_5Title": "6.5 We Do NOT",
-      "s6_5Items": ["Sell your personal data", "Share your data for third-party marketing", "Use your medical data for any purpose other than emergency response"],
+      "s6_5Items": [
+        "Sell your personal data",
+        "Share your data for third-party marketing",
+        "Use your medical data for any purpose other than emergency response"
+      ],
       "s7Title": "7. International Data Transfers",
       "s7Intro": "Some of our service providers are located outside the European Economic Area (EEA). When we transfer your data outside the EEA, we ensure protection through:",
-      "s7Items": ["<strong>EU-US Data Privacy Framework</strong> (for certified US companies)", "<strong>Standard Contractual Clauses</strong> approved by the European Commission", "<strong>Adequacy decisions</strong> where applicable"],
+      "s7Items": [
+        "<strong>EU-US Data Privacy Framework</strong> (for certified US companies)",
+        "<strong>Standard Contractual Clauses</strong> approved by the European Commission",
+        "<strong>Adequacy decisions</strong> where applicable"
+      ],
       "s7p1": "You can request copies of the relevant safeguards by contacting us.",
       "s8Title": "8. Data Retention",
-      "s8TableHeaders": ["Data Type", "Retention Period"],
+      "s8TableHeaders": [
+        "Data Type",
+        "Retention Period"
+      ],
       "s8TableRows": [
-        ["Account information", "Duration of membership + 5 years"],
-        ["Medical information", "Duration of membership + 5 years"],
-        ["Emergency contact details", "Duration of membership + 1 year"],
-        ["Alert and incident records", "7 years (legal requirement)"],
-        ["Call recordings", "2 years"],
-        ["Payment records", "10 years (Spanish tax law)"],
-        ["Chat/message logs", "2 years"],
-        ["Website analytics", "26 months"]
+        [
+          "Account information",
+          "Duration of membership + 5 years"
+        ],
+        [
+          "Medical information",
+          "Duration of membership + 5 years"
+        ],
+        [
+          "Emergency contact details",
+          "Duration of membership + 1 year"
+        ],
+        [
+          "Alert and incident records",
+          "7 years (legal requirement)"
+        ],
+        [
+          "Call recordings",
+          "2 years"
+        ],
+        [
+          "Payment records",
+          "10 years (Spanish tax law)"
+        ],
+        [
+          "Chat/message logs",
+          "2 years"
+        ],
+        [
+          "Website analytics",
+          "26 months"
+        ]
       ],
       "s8p1": "After these periods, data is securely deleted or anonymized.",
       "s9Title": "9. Your Rights",
@@ -5404,25 +5740,46 @@
       "s9_7p1": "Where we rely on your consent, you can withdraw it at any time. This does not affect the lawfulness of processing before withdrawal.",
       "s9Warning": "Important: If you withdraw consent for medical data processing or request deletion, we may no longer be able to provide effective emergency response services. In such cases, we may need to terminate your membership for your own safety.",
       "s9_8Title": "9.8 How to Exercise Your Rights",
-      "s9_8Items": ["<strong>Online:</strong> Through your member dashboard at icealarm.es/dashboard", "<strong>Email:</strong> privacy@icealarm.es"],
+      "s9_8Items": [
+        "<strong>Online:</strong> Through your member dashboard at icealarm.es/dashboard",
+        "<strong>Email:</strong> privacy@icealarm.es"
+      ],
       "s9_8p1": "We will respond within 30 days. We may need to verify your identity before processing requests.",
       "s10Title": "10. Data Security",
       "s10Intro": "We implement appropriate technical and organizational measures including:",
-      "s10Items": ["Encryption of data in transit (TLS 1.3)", "Encryption of data at rest", "Access controls and authentication", "Regular security assessments", "Staff training on data protection", "Incident response procedures"],
+      "s10Items": [
+        "Encryption of data in transit (TLS 1.3)",
+        "Encryption of data at rest",
+        "Access controls and authentication",
+        "Regular security assessments",
+        "Staff training on data protection",
+        "Incident response procedures"
+      ],
       "s10p1": "Our database is hosted in a Tier 3 certified data center in the European Union.",
       "s11Title": "11. Children's Privacy",
       "s11p1": "Our services are not directed at children under 16. We do not knowingly collect personal data from children under 16 without parental consent. If you believe we have collected such data, please contact us immediately.",
       "s12Title": "12. Automated Decision-Making",
       "s12Intro": "Our AI assistant may process your data to:",
-      "s12Items": ["Triage emergency calls", "Determine appropriate responses", "Route calls to human operators"],
+      "s12Items": [
+        "Triage emergency calls",
+        "Determine appropriate responses",
+        "Route calls to human operators"
+      ],
       "s12p1": "You have the right to request human intervention in any automated decision that significantly affects you. During any emergency, human operators are always available to take over.",
       "s13Title": "13. Cookies",
       "s13Intro": "Our website uses cookies for:",
-      "s13Items": ["<strong>Essential cookies:</strong> Required for the website to function", "<strong>Analytics cookies:</strong> To understand how visitors use our site (only with consent)"],
+      "s13Items": [
+        "<strong>Essential cookies:</strong> Required for the website to function",
+        "<strong>Analytics cookies:</strong> To understand how visitors use our site (only with consent)"
+      ],
       "s13p1": "You can manage cookie preferences through our cookie banner or your browser settings.",
       "s14Title": "14. Changes to This Policy",
       "s14Intro": "We may update this Privacy Policy from time to time. We will notify you of significant changes by:",
-      "s14Items": ["Email notification", "Notice on our website", "Notice in your member dashboard"],
+      "s14Items": [
+        "Email notification",
+        "Notice on our website",
+        "Notice in your member dashboard"
+      ],
       "s14p1": "The \"Last Updated\" date at the top indicates when the policy was last revised.",
       "s15Title": "15. Complaints",
       "s15p1": "If you are not satisfied with how we handle your data, you have the right to lodge a complaint with:",

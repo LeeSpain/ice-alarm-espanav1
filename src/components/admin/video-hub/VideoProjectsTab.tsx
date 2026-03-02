@@ -60,12 +60,12 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
   const { templates } = useVideoTemplates();
   const { latestRenderByProject } = useVideoRenders();
   const { exports, exportsByProjectAndFormat } = useVideoExports();
-  
+
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState<string | null>(null);
-  
+
   // Render detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<VideoProject | null>(null);
@@ -81,7 +81,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
     try {
       // Update status to approved
       await updateProjectStatus(projectId, "approved");
-      
+
       // Check if render exists
       const existingRender = latestRenderByProject.get(projectId);
       if (!existingRender) {
@@ -176,7 +176,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
   // Memoized filtered projects
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
-    
+
     return projects.filter(project => {
       // Search filter
       if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -205,7 +205,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
 
   const handleConfirmDelete = async () => {
     if (!projectToDelete) return;
-    
+
     try {
       await deleteProject(projectToDelete);
       toast.success(t("videoHub.projects.deleted"));
@@ -285,13 +285,19 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProjects.map((project) => {
+              {filteredProjects.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                    {t("common.noResults", "No matching results. Try adjusting your filters.")}
+                  </TableCell>
+                </TableRow>
+              ) : filteredProjects.map((project) => {
                 const latestRender = latestRenderByProject.get(project.id);
                 const renderFailed = latestRender?.status === "failed";
                 const projectExports = exportsByProjectAndFormat.get(project.id);
-                
+
                 return (
-                  <TableRow 
+                  <TableRow
                     key={project.id}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => {
@@ -338,7 +344,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                             <Copy className="mr-2 h-4 w-4" />
                             {t("videoHub.projects.duplicate")}
                           </DropdownMenuItem>
-                          
+
                           {/* Open Latest Export */}
                           {projectExports && projectExports.size > 0 && (
                             <DropdownMenuItem onClick={() => handleOpenLatestExport(project.id)}>
@@ -346,11 +352,11 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                               {t("videoHub.projects.openExport", "Open Latest Export")}
                             </DropdownMenuItem>
                           )}
-                          
+
                           <DropdownMenuSeparator />
-                          
+
                           {project.status === "draft" && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleApproveAndRender(project.id)}
                               disabled={isRendering === project.id}
                             >
@@ -358,10 +364,10 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                               {t("videoHub.projects.approve")}
                             </DropdownMenuItem>
                           )}
-                          
+
                           {/* Retry Render (for failed) */}
                           {renderFailed && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleRetryRender(project.id)}
                               disabled={isRendering === project.id}
                               className="text-amber-600"
@@ -370,10 +376,10 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                               {t("videoHub.projects.retryRender", "Retry Render")}
                             </DropdownMenuItem>
                           )}
-                          
+
                           {/* Re-render (for non-failed) */}
                           {!renderFailed && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleRetryRender(project.id)}
                               disabled={isRendering === project.id}
                             >
@@ -381,7 +387,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                               {t("videoHub.projects.rerender")}
                             </DropdownMenuItem>
                           )}
-                          
+
                           {project.status !== "archived" && (
                             <DropdownMenuItem onClick={() => updateProjectStatus(project.id, "archived")}>
                               <Archive className="mr-2 h-4 w-4" />
@@ -389,7 +395,7 @@ export function VideoProjectsTab({ searchQuery, filters, onCreateNew, onEditProj
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleDeleteClick(project.id)}
                             className="text-destructive focus:text-destructive"
                           >

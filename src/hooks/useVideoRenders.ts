@@ -23,9 +23,9 @@ export function useVideoRenders(projectId?: string) {
       .channel('video-renders-realtime')
       .on(
         'postgres_changes',
-        { 
-          event: '*', 
-          schema: 'public', 
+        {
+          event: '*',
+          schema: 'public',
           table: 'video_renders',
           ...(projectId ? { filter: `project_id=eq.${projectId}` } : {})
         },
@@ -34,7 +34,7 @@ export function useVideoRenders(projectId?: string) {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newRender = payload.new as VideoRender;
             queryClient.setQueryData<VideoRender[]>(
-              ["video-renders", projectId], 
+              ["video-renders", projectId],
               (old) => {
                 if (!old) return [newRender];
                 const index = old.findIndex(r => r.id === newRender.id);
@@ -46,8 +46,6 @@ export function useVideoRenders(projectId?: string) {
                 return [newRender, ...old];
               }
             );
-            // Also invalidate to ensure consistency
-            queryClient.invalidateQueries({ queryKey: ['video-renders'] });
           } else if (payload.eventType === 'DELETE') {
             queryClient.invalidateQueries({ queryKey: ['video-renders'] });
           }

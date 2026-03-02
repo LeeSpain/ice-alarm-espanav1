@@ -17,7 +17,7 @@ import { useState, useEffect } from "react";
 export function VideoSettingsTab() {
   const { t } = useTranslation();
   const { settings, isLoading, updateSettings, isUpdating } = useVideoBrandSettings();
-  
+
   const [formData, setFormData] = useState({
     logo_url: null as string | null,
     watermark_enabled: true,
@@ -72,8 +72,12 @@ export function VideoSettingsTab() {
   };
 
   const handleSave = async () => {
-    await updateSettings(formData);
-    toast.success(t("videoHub.settings.saved"));
+    try {
+      await updateSettings(formData);
+      toast.success(t("videoHub.settings.saved"));
+    } catch (error: any) {
+      toast.error(error?.message || t("common.error", "Failed to save settings"));
+    }
   };
 
   if (isLoading) {
@@ -130,14 +134,14 @@ export function VideoSettingsTab() {
               <p className="text-xs text-muted-foreground mb-2">{t("videoHub.settings.colorsLocked")}</p>
               <div className="mt-2 flex gap-3">
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="h-8 w-8 rounded-md border shadow-sm"
                     style={{ backgroundColor: settings?.primary_color || "#B91C1C" }}
                   />
                   <span className="text-sm">{t("videoHub.settings.iceRed")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="h-8 w-8 rounded-md border shadow-sm"
                     style={{ backgroundColor: settings?.secondary_color || "#1E3A8A" }}
                   />
