@@ -87,7 +87,7 @@ const ICON_BG_MAP: Record<string, string> = {
 
 /* ─── Sub-Components ────────────────────────────────────────────────── */
 
-function PromptsTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) {
+function PromptsTab({ agent: _agent, config }: { agent: AIAgent; config: AIAgentConfig }) {
     const { t } = useTranslation();
     const { toast } = useToast();
     const [systemInstruction, setSystemInstruction] = useState(config.system_instruction);
@@ -466,7 +466,7 @@ function TrainingTab({ agent }: { agent: AIAgent }) {
     );
 }
 
-function PersonalityTab({ agent, config }: { agent: AIAgent; config: AIAgentConfig }) {
+function PersonalityTab({ agent: _agent, config }: { agent: AIAgent; config: AIAgentConfig }) {
     const { t } = useTranslation();
     const { toast } = useToast();
     const updateConfig = useUpdateAgentConfig();

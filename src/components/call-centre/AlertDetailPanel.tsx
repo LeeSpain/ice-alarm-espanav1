@@ -626,7 +626,7 @@ export function AlertDetailPanel({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    {smsTemplates.map((template, i) => (
+                    {["I'm on my way", "Help is coming", "Are you okay?", "Stay calm"].map((template: string, i: number) => (
                       <Button 
                         key={i} 
                         variant="outline" 

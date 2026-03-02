@@ -465,14 +465,81 @@ export type Database = {
           },
         ]
       }
+      alert_escalations: {
+        Row: {
+          alert_id: string
+          attempted_at: string
+          escalation_level: number
+          id: string
+          responded: boolean
+          responded_at: string | null
+          response_method: string | null
+          target_phone: string | null
+          target_staff_id: string | null
+          target_type: Database["public"]["Enums"]["escalation_target_type"]
+        }
+        Insert: {
+          alert_id: string
+          attempted_at?: string
+          escalation_level: number
+          id?: string
+          responded?: boolean
+          responded_at?: string | null
+          response_method?: string | null
+          target_phone?: string | null
+          target_staff_id?: string | null
+          target_type: Database["public"]["Enums"]["escalation_target_type"]
+        }
+        Update: {
+          alert_id?: string
+          attempted_at?: string
+          escalation_level?: number
+          id?: string
+          responded?: boolean
+          responded_at?: string | null
+          response_method?: string | null
+          target_phone?: string | null
+          target_staff_id?: string | null
+          target_type?: Database["public"]["Enums"]["escalation_target_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_escalations_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_escalations_target_staff_id_fkey"
+            columns: ["target_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_escalations_target_staff_id_fkey"
+            columns: ["target_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
+          accepted_at: string | null
+          accepted_by_staff_id: string | null
           alert_type: Database["public"]["Enums"]["alert_type"]
           claimed_at: string | null
           claimed_by: string | null
+          conference_id: string | null
           device_id: string | null
           emergency_services_called: boolean | null
+          escalation_level_reached: number | null
           id: string
+          is_false_alarm: boolean | null
+          is_unresponsive: boolean | null
           location_address: string | null
           location_lat: number | null
           location_lng: number | null
@@ -485,12 +552,18 @@ export type Database = {
           status: Database["public"]["Enums"]["alert_status"] | null
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by_staff_id?: string | null
           alert_type: Database["public"]["Enums"]["alert_type"]
           claimed_at?: string | null
           claimed_by?: string | null
+          conference_id?: string | null
           device_id?: string | null
           emergency_services_called?: boolean | null
+          escalation_level_reached?: number | null
           id?: string
+          is_false_alarm?: boolean | null
+          is_unresponsive?: boolean | null
           location_address?: string | null
           location_lat?: number | null
           location_lng?: number | null
@@ -503,12 +576,18 @@ export type Database = {
           status?: Database["public"]["Enums"]["alert_status"] | null
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by_staff_id?: string | null
           alert_type?: Database["public"]["Enums"]["alert_type"]
           claimed_at?: string | null
           claimed_by?: string | null
+          conference_id?: string | null
           device_id?: string | null
           emergency_services_called?: boolean | null
+          escalation_level_reached?: number | null
           id?: string
+          is_false_alarm?: boolean | null
+          is_unresponsive?: boolean | null
           location_address?: string | null
           location_lat?: number | null
           location_lng?: number | null
@@ -522,6 +601,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "alerts_accepted_by_staff_id_fkey"
+            columns: ["accepted_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_accepted_by_staff_id_fkey"
+            columns: ["accepted_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
             foreignKeyName: "alerts_claimed_by_fkey"
             columns: ["claimed_by"]
             isOneToOne: false
@@ -534,6 +627,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff_holiday_balance"
             referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "alerts_conference_id_fkey"
+            columns: ["conference_id"]
+            isOneToOne: false
+            referencedRelation: "conference_rooms"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "alerts_device_id_fkey"
@@ -612,6 +712,124 @@ export type Database = {
             columns: ["social_post_id"]
             isOneToOne: false
             referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conference_participants: {
+        Row: {
+          conference_id: string
+          emergency_contact_id: string | null
+          id: string
+          is_muted: boolean
+          join_method: Database["public"]["Enums"]["participant_join_method"]
+          joined_at: string
+          left_at: string | null
+          participant_name: string
+          participant_type: Database["public"]["Enums"]["participant_type"]
+          phone_number: string | null
+          staff_id: string | null
+          twilio_call_sid: string | null
+        }
+        Insert: {
+          conference_id: string
+          emergency_contact_id?: string | null
+          id?: string
+          is_muted?: boolean
+          join_method?: Database["public"]["Enums"]["participant_join_method"]
+          joined_at?: string
+          left_at?: string | null
+          participant_name: string
+          participant_type: Database["public"]["Enums"]["participant_type"]
+          phone_number?: string | null
+          staff_id?: string | null
+          twilio_call_sid?: string | null
+        }
+        Update: {
+          conference_id?: string
+          emergency_contact_id?: string | null
+          id?: string
+          is_muted?: boolean
+          join_method?: Database["public"]["Enums"]["participant_join_method"]
+          joined_at?: string
+          left_at?: string | null
+          participant_name?: string
+          participant_type?: Database["public"]["Enums"]["participant_type"]
+          phone_number?: string | null
+          staff_id?: string | null
+          twilio_call_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conference_participants_conference_id_fkey"
+            columns: ["conference_id"]
+            isOneToOne: false
+            referencedRelation: "conference_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conference_participants_emergency_contact_id_fkey"
+            columns: ["emergency_contact_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conference_participants_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conference_participants_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
+      conference_rooms: {
+        Row: {
+          alert_id: string
+          conference_name: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          recording_duration_seconds: number | null
+          recording_url: string | null
+          status: string
+          twilio_conference_sid: string | null
+        }
+        Insert: {
+          alert_id: string
+          conference_name: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          recording_duration_seconds?: number | null
+          recording_url?: string | null
+          status?: string
+          twilio_conference_sid?: string | null
+        }
+        Update: {
+          alert_id?: string
+          conference_name?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          recording_duration_seconds?: number | null
+          recording_url?: string | null
+          status?: string
+          twilio_conference_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conference_rooms_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
             referencedColumns: ["id"]
           },
         ]
@@ -1720,6 +1938,41 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      isabella_assessment_notes: {
+        Row: {
+          alert_id: string
+          content: string
+          id: string
+          is_critical: boolean
+          note_type: Database["public"]["Enums"]["isabella_note_type"]
+          timestamp: string
+        }
+        Insert: {
+          alert_id: string
+          content: string
+          id?: string
+          is_critical?: boolean
+          note_type: Database["public"]["Enums"]["isabella_note_type"]
+          timestamp?: string
+        }
+        Update: {
+          alert_id?: string
+          content?: string
+          id?: string
+          is_critical?: boolean
+          note_type?: Database["public"]["Enums"]["isabella_note_type"]
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "isabella_assessment_notes_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
             referencedColumns: ["id"]
           },
         ]
@@ -4695,15 +4948,18 @@ export type Database = {
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
+          escalation_priority: number | null
           first_name: string
           hire_date: string | null
           id: string
           is_active: boolean | null
+          is_on_call: boolean | null
           last_login_at: string | null
           last_name: string
           nationality: string | null
           nie_number: string | null
           notes: string | null
+          personal_mobile: string | null
           phone: string | null
           position: string | null
           postal_code: string | null
@@ -4734,15 +4990,18 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          escalation_priority?: number | null
           first_name: string
           hire_date?: string | null
           id?: string
           is_active?: boolean | null
+          is_on_call?: boolean | null
           last_login_at?: string | null
           last_name: string
           nationality?: string | null
           nie_number?: string | null
           notes?: string | null
+          personal_mobile?: string | null
           phone?: string | null
           position?: string | null
           postal_code?: string | null
@@ -4773,15 +5032,18 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          escalation_priority?: number | null
           first_name?: string
           hire_date?: string | null
           id?: string
           is_active?: boolean | null
+          is_on_call?: boolean | null
           last_login_at?: string | null
           last_name?: string
           nationality?: string | null
           nie_number?: string | null
           notes?: string | null
+          personal_mobile?: string | null
           phone?: string | null
           position?: string | null
           postal_code?: string | null
@@ -6149,6 +6411,10 @@ export type Database = {
         | "emergency"
         | "partner"
       documentation_status: "draft" | "published"
+      escalation_target_type:
+        | "browser_alert"
+        | "mobile_call"
+        | "emergency_contact_call"
       import_batch_status:
         | "uploaded"
         | "parsed"
@@ -6165,6 +6431,13 @@ export type Database = {
         | "registered"
         | "converted"
         | "expired"
+      isabella_note_type:
+        | "observation"
+        | "question_asked"
+        | "member_response"
+        | "triage_decision"
+        | "handover_briefing"
+        | "flag"
       member_status: "active" | "inactive" | "suspended"
       order_item_type:
         | "pendant"
@@ -6177,6 +6450,17 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
+      participant_join_method:
+        | "automatic"
+        | "accepted_alert"
+        | "added_by_staff"
+        | "callback_routed"
+      participant_type:
+        | "member"
+        | "staff"
+        | "ai"
+        | "emergency_contact"
+        | "external_service"
       partner_status: "pending" | "active" | "suspended"
       payment_method: "stripe" | "bank_transfer" | "paypal"
       payment_status: "pending" | "completed" | "failed" | "refunded"
@@ -6383,6 +6667,11 @@ export const Constants = {
         "partner",
       ],
       documentation_status: ["draft", "published"],
+      escalation_target_type: [
+        "browser_alert",
+        "mobile_call",
+        "emergency_contact_call",
+      ],
       import_batch_status: [
         "uploaded",
         "parsed",
@@ -6401,6 +6690,14 @@ export const Constants = {
         "converted",
         "expired",
       ],
+      isabella_note_type: [
+        "observation",
+        "question_asked",
+        "member_response",
+        "triage_decision",
+        "handover_briefing",
+        "flag",
+      ],
       member_status: ["active", "inactive", "suspended"],
       order_item_type: [
         "pendant",
@@ -6414,6 +6711,19 @@ export const Constants = {
         "shipped",
         "delivered",
         "cancelled",
+      ],
+      participant_join_method: [
+        "automatic",
+        "accepted_alert",
+        "added_by_staff",
+        "callback_routed",
+      ],
+      participant_type: [
+        "member",
+        "staff",
+        "ai",
+        "emergency_contact",
+        "external_service",
       ],
       partner_status: ["pending", "active", "suspended"],
       payment_method: ["stripe", "bank_transfer", "paypal"],
