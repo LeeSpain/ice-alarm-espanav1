@@ -109,6 +109,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ─── CONFERENCE-JOIN ────────────────────────────────
+    // Returns TwiML that dials into an existing SOS conference.
+    // Called as the Url for outbound Twilio calls placed by sos-conference-join.
+    if (action === "conference-join") {
+      const conferenceName = url.searchParams.get("conference_name") || "";
+      if (!conferenceName) {
+        console.error(`[${FN} ${VERSION}] conference-join missing conference_name`);
+        return safeFallback();
+      }
+
+      const statusUrl = `${baseUrl}/functions/v1/sos-conference-status`;
+      return twiml(
+        `<Dial>` +
+          `<Conference statusCallback="${esc(statusUrl)}" ` +
+            `statusCallbackEvent="start end join leave mute" ` +
+            `record="record-from-start">` +
+            `${esc(conferenceName)}` +
+          `</Conference>` +
+        `</Dial>`,
+      );
+    }
+
     // Parse form data for all remaining actions
     let fd: FormData;
     try {
@@ -161,6 +183,60 @@ Deno.serve(async (req) => {
           member = m2;
         }
 
+        // Check if caller is an emergency contact calling back during an active alert
+        const normalizedFrom = from.replace("+", "");
+        const { data: ecMatch } = await sb
+          .from("emergency_contacts")
+          .select("id, contact_name, relationship, member_id")
+          .or(`phone.eq.${from},phone.eq.${normalizedFrom}`)
+          .limit(5);
+
+        if (ecMatch && ecMatch.length > 0) {
+          // Check if any of these contacts' members have an active alert with a conference
+          for (const ec of ecMatch) {
+            const { data: activeAlert } = await sb
+              .from("alerts")
+              .select("id, conference_id")
+              .eq("member_id", ec.member_id)
+              .in("status", ["incoming", "in_progress"])
+              .not("conference_id", "is", null)
+              .order("received_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (activeAlert?.conference_id) {
+              const { data: conf } = await sb
+                .from("conference_rooms")
+                .select("id, conference_name")
+                .eq("id", activeAlert.conference_id)
+                .eq("status", "active")
+                .maybeSingle();
+
+              if (conf) {
+                // Get member name
+                const { data: ecMember } = await sb
+                  .from("members")
+                  .select("first_name, last_name")
+                  .eq("id", ec.member_id)
+                  .maybeSingle();
+                const ecMemberName = ecMember ? `${ecMember.first_name} ${ecMember.last_name}` : "member";
+
+                console.log(`[${FN} ${VERSION}] Emergency contact ${ec.contact_name} calling back for alert ${activeAlert.id}`);
+
+                // Redirect to sos-inbound-router
+                const routerUrl = `${baseUrl}/functions/v1/sos-inbound-router?action=initial` +
+                  `&alert_id=${encodeURIComponent(activeAlert.id)}` +
+                  `&member_name=${encodeURIComponent(ecMemberName)}` +
+                  `&relationship=${encodeURIComponent(ec.relationship)}` +
+                  `&conference_name=${encodeURIComponent(conf.conference_name)}` +
+                  `&ec_id=${encodeURIComponent(ec.id)}`;
+
+                return twiml(`<Redirect method="POST">${esc(routerUrl)}</Redirect>`);
+              }
+            }
+          }
+        }
+
         // Check if caller is an EV-07B pendant SIM
         const { data: pendantDevice } = await sb
           .from("devices")
@@ -173,24 +249,6 @@ Deno.serve(async (req) => {
         if (pendantDevice && pendantDevice.member_id) {
           console.log(`[${FN} ${VERSION}] Pendant SOS call detected: IMEI=${pendantDevice.imei} from=${from}`);
 
-          // Create SOS alert via edge function (non-blocking)
-          try {
-            fetch(`${baseUrl}/functions/v1/ev07b-sos-alert`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-api-key": Deno.env.get("EV07B_CHECKIN_KEY") || "",
-              },
-              body: JSON.stringify({
-                imei: pendantDevice.imei,
-                alarm_type: "sos",
-                lat: pendantDevice.last_location_lat,
-                lng: pendantDevice.last_location_lng,
-                caller_phone: from,
-              }),
-            }).catch((e) => console.error(`[${FN}] SOS alert error:`, e));
-          } catch {}
-
           // If no member found by phone, use the pendant's assigned member
           if (!member) {
             const { data: pendantMember } = await sb
@@ -202,6 +260,135 @@ Deno.serve(async (req) => {
               member = pendantMember;
             }
           }
+
+          const memberName = member ? `${member.first_name} ${member.last_name}` : "Member";
+          const memberLang = member?.preferred_language === "en" ? "en" : "es";
+
+          // Check for existing active alert + conference for this member
+          let sosAlertId: string | null = null;
+          let conferenceData: { conference_id: string; conference_name: string } | null = null;
+
+          const { data: existingAlert } = await sb
+            .from("alerts")
+            .select("id, conference_id")
+            .eq("member_id", pendantDevice.member_id)
+            .in("status", ["incoming", "in_progress"])
+            .in("alert_type", ["sos_button", "fall_detected"])
+            .order("received_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingAlert?.conference_id) {
+            // Reuse existing conference
+            const { data: existingConf } = await sb
+              .from("conference_rooms")
+              .select("id, conference_name")
+              .eq("id", existingAlert.conference_id)
+              .eq("status", "active")
+              .maybeSingle();
+
+            if (existingConf) {
+              sosAlertId = existingAlert.id;
+              conferenceData = {
+                conference_id: existingConf.id,
+                conference_name: existingConf.conference_name,
+              };
+              console.log(`[${FN} ${VERSION}] Reusing conference ${existingConf.conference_name} for alert ${sosAlertId}`);
+            }
+          }
+
+          // Create new alert + conference if none exists
+          if (!conferenceData) {
+            try {
+              const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+              // Create SOS alert (BLOCKING)
+              const alertRes = await fetch(`${baseUrl}/functions/v1/ev07b-sos-alert`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": Deno.env.get("EV07B_CHECKIN_KEY") || "",
+                },
+                body: JSON.stringify({
+                  imei: pendantDevice.imei,
+                  alarm_type: "sos",
+                  lat: pendantDevice.last_location_lat,
+                  lng: pendantDevice.last_location_lng,
+                  caller_phone: from,
+                }),
+              });
+
+              if (alertRes.ok) {
+                const alertData = await alertRes.json();
+                sosAlertId = alertData.alert_id || alertData.id || null;
+              }
+
+              // If we got an alert ID, create the conference
+              if (!sosAlertId) {
+                // Fallback: find the just-created alert
+                const { data: newAlert } = await sb
+                  .from("alerts")
+                  .select("id")
+                  .eq("member_id", pendantDevice.member_id)
+                  .in("status", ["incoming", "in_progress"])
+                  .order("received_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                sosAlertId = newAlert?.id || null;
+              }
+
+              if (sosAlertId) {
+                const confRes = await fetch(
+                  `${baseUrl}/functions/v1/sos-conference-create`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${serviceKey}`,
+                    },
+                    body: JSON.stringify({
+                      alert_id: sosAlertId,
+                      member_phone: from,
+                      member_name: memberName,
+                    }),
+                  },
+                );
+
+                if (confRes.ok) {
+                  conferenceData = await confRes.json();
+                  console.log(
+                    `[${FN} ${VERSION}] Created conference ${conferenceData!.conference_name} for alert ${sosAlertId}`,
+                  );
+                }
+              }
+            } catch (e) {
+              console.error(`[${FN} ${VERSION}] Conference creation error:`, e);
+            }
+          }
+
+          // If we have a conference, route caller into it
+          if (conferenceData) {
+            const statusUrl = `${baseUrl}/functions/v1/sos-conference-status`;
+            const greetMsg =
+              memberLang === "es"
+                ? `${memberName ? `${memberName}, ` : ""}esto es ICE Alarm. Hemos recibido su alerta de emergencia. Un operador se conectará en breve. Por favor permanezca en línea.`
+                : `${memberName ? `${memberName}, ` : ""}this is ICE Alarm. We have received your emergency alert. An operator will connect shortly. Please stay on the line.`;
+            const twimlLang = memberLang === "es" ? "es-ES" : "en-GB";
+
+            return twiml(
+              `<Say language="${twimlLang}" voice="alice">${esc(greetMsg)}</Say>` +
+                `<Dial>` +
+                  `<Conference statusCallback="${esc(statusUrl)}" ` +
+                    `statusCallbackEvent="start end join leave mute" ` +
+                    `record="record-from-start">` +
+                    `${esc(conferenceData.conference_name)}` +
+                  `</Conference>` +
+                `</Dial>`,
+            );
+          }
+
+          // Fallback: conference creation failed, continue with AI conversation flow
+          console.warn(`[${FN} ${VERSION}] Conference creation failed for pendant SOS, falling back to AI flow`);
         }
 
         const lang =

@@ -4730,12 +4730,13 @@
     "viewer": "Viewer"
   },
   "adminAlerts": {
-    "title": "Alerts",
-    "subtitle": "Monitor and manage system alerts",
+    "title": "Alerts History",
+    "subtitle": "View and manage all alert records.",
     "type": "Type",
     "severity": "Severity",
     "received": "Received",
     "resolved": "Resolved",
+    "resolvedAt": "Resolved",
     "claimed": "Claimed",
     "unresolved": "Unresolved",
     "highSeverity": "High",
@@ -4743,7 +4744,25 @@
     "lowSeverity": "Low",
     "medical": "Medical",
     "device": "Device",
-    "panic": "Panic Button"
+    "panic": "Panic Button",
+    "history": "Alert History",
+    "falseAlarms": "False Alarm Monitor",
+    "incoming": "Incoming",
+    "inProgress": "In Progress",
+    "escalated": "Escalated",
+    "allStatus": "All Status",
+    "allTypes": "All Types",
+    "sosButton": "SOS Button",
+    "fallDetected": "Fall Detected",
+    "lowBattery": "Low Battery",
+    "geoFence": "Geo-fence",
+    "checkIn": "Check-in",
+    "manual": "Manual",
+    "member": "Member",
+    "handledBy": "Handled By",
+    "loading": "Loading alerts...",
+    "unknown": "Unknown",
+    "noAlerts": "No alerts found"
   },
   "adminMemberDetail": {
     "title": "Member Details",
@@ -5197,7 +5216,15 @@
     "nobodyOnShift": "Nobody is currently on shift",
     "staff": "Staff",
     "uncoveredSlots": "Some shifts are uncovered this week",
-    "allCovered": "All shifts covered this week"
+    "allCovered": "All shifts covered this week",
+    "escalation": "Escalation",
+    "escalationChain": "Escalation Chain",
+    "primaryStaff": "Primary (Level 2 — first call)",
+    "selectStaff": "Select staff...",
+    "none": "— None —",
+    "backupStaff": "Backup (Level 2 — if primary unavailable)",
+    "supervisorStaff": "Supervisor (Level 3)",
+    "escalationHelp": "If no chain is configured, the escalation runner falls back to on-call staff sorted by escalation priority."
   },
   "holidays": {
     "title": "Staff Holidays",
@@ -5326,5 +5353,117 @@
       "admin": "Admin",
       "callCentre": "Call Centre Operator"
     }
+  },
+  "sos": {
+    "alertBar": {
+      "accepting": "Accepting...",
+      "acceptAlert": "Accept Alert"
+    },
+    "action": {
+      "joinCall": "JOIN CALL",
+      "connected": "Connected to Conference",
+      "privateCallActive": "Private Call Active",
+      "bridgeToConference": "Bridge to Conference",
+      "endCall": "End Call",
+      "emergencyContacts": "Emergency Contacts",
+      "noContacts": "No emergency contacts on file",
+      "callPrivately": "Call Privately",
+      "addToCall": "Add to Call",
+      "quickActions": "Quick Actions",
+      "doctor": "Doctor",
+      "hospital": "Hospital",
+      "previousAlerts": "Previous Alerts",
+      "notes": "Notes",
+      "notesPlaceholder": "Staff notes during call...",
+      "autoSave": "Auto-saves every 30 seconds"
+    },
+    "controls": {
+      "unmute": "Unmute",
+      "mute": "Mute",
+      "isabellaHold": "Isabella Takes Over",
+      "patchBackIn": "Patch Back In",
+      "addParticipant": "Add Participant",
+      "resolveAlert": "Resolve Alert"
+    },
+    "resolve": {
+      "title": "Resolve Alert",
+      "resolutionType": "Resolution Type",
+      "selectType": "Select type...",
+      "ambulanceDispatched": "Ambulance Dispatched",
+      "memberSafe": "Member Safe",
+      "falseAlarm": "False Alarm",
+      "contactHandling": "Contact Handling",
+      "other": "Other",
+      "notes": "Resolution Notes",
+      "notesPlaceholder": "Describe what happened and actions taken (min 10 chars)...",
+      "isFalseAlarm": "This was a false alarm",
+      "minChars": "Minimum 10 characters required",
+      "confirm": "Resolve Alert"
+    },
+    "addParticipant": {
+      "title": "Add Participant to Conference",
+      "name": "Name",
+      "phone": "Phone Number",
+      "call": "Call & Add"
+    },
+    "participants": {
+      "label": "ON CALL",
+      "standby": "Standby",
+      "active": "Active",
+      "left": "left"
+    },
+    "isabella": {
+      "waitingForNotes": "Waiting for Isabella's assessment..."
+    },
+    "medical": {
+      "bloodType": "Blood Type",
+      "callDoctor": "Call",
+      "hospital": "Hospital Preference",
+      "specialInstructions": "Special Instructions",
+      "conditions": "Conditions",
+      "medications": "Medications",
+      "allergies": "ALLERGIES",
+      "noMedicalInfo": "No medical information on file"
+    },
+    "situation": {
+      "lastKnownLocation": "Last Known Location",
+      "noLocation": "No location available",
+      "isabellaFeed": "Isabella Live Feed",
+      "incidentTimeline": "Incident Timeline"
+    },
+    "timeline": {
+      "system": "System",
+      "alertReceived": "Alert received",
+      "staff": "Staff",
+      "alertAccepted": "Accepted alert",
+      "joinedConference": "Joined conference",
+      "leftConference": "Left conference",
+      "escalationLevel": "Escalation level {{level}} ({{type}})",
+      "escalationResponded": "Responded to escalation",
+      "noEvents": "No events yet"
+    },
+    "vitals": {
+      "years": "yrs",
+      "memberUnresponsive": "MEMBER UNRESPONSIVE"
+    },
+    "secondary": {
+      "otherAlerts": "{{count}} other pending alert(s)"
+    }
+  },
+  "falseAlarm": {
+    "last7Days": "Last 7 Days",
+    "falseAlarms": "false alarms",
+    "last30Days": "Last 30 Days",
+    "highFrequency": "High Frequency",
+    "membersNeedAttention": "members need attention (5+ in 7 days)",
+    "perMember": "False Alarms per Member",
+    "noAlarms": "No false alarms in the last 30 days",
+    "member": "Member",
+    "phone": "Phone",
+    "7d": "7 Days",
+    "30d": "30 Days",
+    "actions": "Actions",
+    "needsReview": "Needs Review",
+    "scheduleFollowUp": "Schedule Follow-up"
   }
 }

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { INTERVALS } from "@/config/constants";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
+import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
@@ -14,6 +14,7 @@ import {
   Phone,
   Activity
 } from "lucide-react";
+import { FalseAlarmMonitor } from "@/components/admin/FalseAlarmMonitor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,7 @@ const alertTypeIcons: Record<string, React.ElementType> = {
 
 export default function AlertsPage() {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<"history" | "false_alarms">("history");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -122,6 +124,35 @@ export default function AlertsPage() {
         </div>
       </div>
 
+      {/* Tab Toggle */}
+      <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === "history"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("adminAlerts.history", "Alert History")}
+        </button>
+        <button
+          onClick={() => setActiveTab("false_alarms")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            activeTab === "false_alarms"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          {t("adminAlerts.falseAlarms", "False Alarm Monitor")}
+        </button>
+      </div>
+
+      {activeTab === "false_alarms" ? (
+        <FalseAlarmMonitor />
+      ) : (
+      <>
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -262,6 +293,8 @@ export default function AlertsPage() {
             </Button>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

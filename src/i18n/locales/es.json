@@ -4722,12 +4722,13 @@
     "viewer": "Visor"
   },
   "adminAlerts": {
-    "title": "Alertas",
-    "subtitle": "Monitorear y gestionar alertas del sistema",
+    "title": "Historial de Alertas",
+    "subtitle": "Ver y gestionar todos los registros de alertas.",
     "type": "Tipo",
     "severity": "Severidad",
     "received": "Recibida",
     "resolved": "Resuelta",
+    "resolvedAt": "Resuelta",
     "claimed": "Reclamada",
     "unresolved": "Sin Resolver",
     "highSeverity": "Alta",
@@ -4735,7 +4736,25 @@
     "lowSeverity": "Baja",
     "medical": "Médica",
     "device": "Dispositivo",
-    "panic": "Botón de Pánico"
+    "panic": "Botón de Pánico",
+    "history": "Historial de Alertas",
+    "falseAlarms": "Monitor de Falsas Alarmas",
+    "incoming": "Entrante",
+    "inProgress": "En Curso",
+    "escalated": "Escalada",
+    "allStatus": "Todos los Estados",
+    "allTypes": "Todos los Tipos",
+    "sosButton": "Botón SOS",
+    "fallDetected": "Caída Detectada",
+    "lowBattery": "Batería Baja",
+    "geoFence": "Geo-cerca",
+    "checkIn": "Check-in",
+    "manual": "Manual",
+    "member": "Miembro",
+    "handledBy": "Gestionada Por",
+    "loading": "Cargando alertas...",
+    "unknown": "Desconocido",
+    "noAlerts": "No se encontraron alertas"
   },
   "adminMemberDetail": {
     "title": "Detalles del Miembro",
@@ -5189,7 +5208,15 @@
     "nobodyOnShift": "Nadie está de turno actualmente",
     "staff": "Personal",
     "uncoveredSlots": "Algunos turnos no están cubiertos esta semana",
-    "allCovered": "Todos los turnos cubiertos esta semana"
+    "allCovered": "Todos los turnos cubiertos esta semana",
+    "escalation": "Escalamiento",
+    "escalationChain": "Cadena de Escalamiento",
+    "primaryStaff": "Principal (Nivel 2 — primera llamada)",
+    "selectStaff": "Seleccionar personal...",
+    "none": "— Ninguno —",
+    "backupStaff": "Respaldo (Nivel 2 — si el principal no está disponible)",
+    "supervisorStaff": "Supervisor (Nivel 3)",
+    "escalationHelp": "Si no se configura una cadena, el sistema de escalamiento recurre al personal de guardia ordenado por prioridad."
   },
   "holidays": {
     "title": "Vacaciones del Personal",
@@ -5318,5 +5345,117 @@
       "admin": "Administrador",
       "callCentre": "Operador de Centro de Llamadas"
     }
+  },
+  "sos": {
+    "alertBar": {
+      "accepting": "Aceptando...",
+      "acceptAlert": "Aceptar Alerta"
+    },
+    "action": {
+      "joinCall": "UNIRSE A LLAMADA",
+      "connected": "Conectado a la Conferencia",
+      "privateCallActive": "Llamada Privada Activa",
+      "bridgeToConference": "Conectar a Conferencia",
+      "endCall": "Finalizar Llamada",
+      "emergencyContacts": "Contactos de Emergencia",
+      "noContacts": "No hay contactos de emergencia registrados",
+      "callPrivately": "Llamar en Privado",
+      "addToCall": "Añadir a Llamada",
+      "quickActions": "Acciones Rápidas",
+      "doctor": "Médico",
+      "hospital": "Hospital",
+      "previousAlerts": "Alertas Anteriores",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas del personal durante la llamada...",
+      "autoSave": "Se guarda automáticamente cada 30 segundos"
+    },
+    "controls": {
+      "unmute": "Activar Micrófono",
+      "mute": "Silenciar",
+      "isabellaHold": "Isabella Toma Control",
+      "patchBackIn": "Reconectar",
+      "addParticipant": "Añadir Participante",
+      "resolveAlert": "Resolver Alerta"
+    },
+    "resolve": {
+      "title": "Resolver Alerta",
+      "resolutionType": "Tipo de Resolución",
+      "selectType": "Seleccionar tipo...",
+      "ambulanceDispatched": "Ambulancia Enviada",
+      "memberSafe": "Miembro a Salvo",
+      "falseAlarm": "Falsa Alarma",
+      "contactHandling": "Gestión de Contactos",
+      "other": "Otro",
+      "notes": "Notas de Resolución",
+      "notesPlaceholder": "Describe lo ocurrido y las acciones tomadas (mín. 10 caracteres)...",
+      "isFalseAlarm": "Esto fue una falsa alarma",
+      "minChars": "Se requieren mínimo 10 caracteres",
+      "confirm": "Resolver Alerta"
+    },
+    "addParticipant": {
+      "title": "Añadir Participante a la Conferencia",
+      "name": "Nombre",
+      "phone": "Número de Teléfono",
+      "call": "Llamar y Añadir"
+    },
+    "participants": {
+      "label": "EN LLAMADA",
+      "standby": "En Espera",
+      "active": "Activo",
+      "left": "salió"
+    },
+    "isabella": {
+      "waitingForNotes": "Esperando la evaluación de Isabella..."
+    },
+    "medical": {
+      "bloodType": "Grupo Sanguíneo",
+      "callDoctor": "Llamar",
+      "hospital": "Hospital Preferido",
+      "specialInstructions": "Instrucciones Especiales",
+      "conditions": "Condiciones",
+      "medications": "Medicamentos",
+      "allergies": "ALERGIAS",
+      "noMedicalInfo": "No hay información médica registrada"
+    },
+    "situation": {
+      "lastKnownLocation": "Última Ubicación Conocida",
+      "noLocation": "Ubicación no disponible",
+      "isabellaFeed": "Isabella en Directo",
+      "incidentTimeline": "Cronología del Incidente"
+    },
+    "timeline": {
+      "system": "Sistema",
+      "alertReceived": "Alerta recibida",
+      "staff": "Personal",
+      "alertAccepted": "Alerta aceptada",
+      "joinedConference": "Se unió a la conferencia",
+      "leftConference": "Salió de la conferencia",
+      "escalationLevel": "Nivel de escalamiento {{level}} ({{type}})",
+      "escalationResponded": "Respondió al escalamiento",
+      "noEvents": "Sin eventos aún"
+    },
+    "vitals": {
+      "years": "años",
+      "memberUnresponsive": "MIEMBRO NO RESPONDE"
+    },
+    "secondary": {
+      "otherAlerts": "{{count}} otra(s) alerta(s) pendiente(s)"
+    }
+  },
+  "falseAlarm": {
+    "last7Days": "Últimos 7 Días",
+    "falseAlarms": "falsas alarmas",
+    "last30Days": "Últimos 30 Días",
+    "highFrequency": "Alta Frecuencia",
+    "membersNeedAttention": "miembros necesitan atención (5+ en 7 días)",
+    "perMember": "Falsas Alarmas por Miembro",
+    "noAlarms": "No hay falsas alarmas en los últimos 30 días",
+    "member": "Miembro",
+    "phone": "Teléfono",
+    "7d": "7 Días",
+    "30d": "30 Días",
+    "actions": "Acciones",
+    "needsReview": "Necesita Revisión",
+    "scheduleFollowUp": "Programar Seguimiento"
   }
 }

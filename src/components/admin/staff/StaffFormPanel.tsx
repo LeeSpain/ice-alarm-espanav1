@@ -60,6 +60,9 @@ const staffFormSchema = z.object({
   contract_type: z.string().optional(),
   notes: z.string().optional(),
   annual_holiday_days: z.coerce.number().min(0).max(60).optional(),
+  personal_mobile: z.string().regex(/^\+?\d[\d\s]{6,18}$/, "Invalid phone number (e.g. +34 6XX XXX XXX)").optional().or(z.literal("")),
+  escalation_priority: z.coerce.number().min(1).max(99).optional(),
+  is_on_call: z.enum(["yes", "no"]).optional(),
 });
 
 type StaffFormValues = z.infer<typeof staffFormSchema>;
@@ -104,6 +107,9 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
       contract_type: "",
       notes: "",
       annual_holiday_days: 22,
+      personal_mobile: "",
+      escalation_priority: undefined,
+      is_on_call: "no",
     },
   });
 
@@ -135,6 +141,9 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
         contract_type: staffMember.contract_type || "",
         notes: staffMember.notes || "",
         annual_holiday_days: (staffMember as any).annual_holiday_days ?? 22,
+        personal_mobile: staffMember.personal_mobile || "",
+        escalation_priority: staffMember.escalation_priority ?? undefined,
+        is_on_call: staffMember.is_on_call ? "yes" : "no",
       });
     } else if (mode === "create") {
       form.reset();
@@ -160,6 +169,7 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
         "address_line1", "address_line2", "city", "province", "postal_code", "country",
         "emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship",
         "hire_date", "department", "position", "contract_type", "notes", "annual_holiday_days",
+        "personal_mobile", "escalation_priority",
       ] as const;
 
       for (const field of editableFields) {
@@ -168,6 +178,9 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
           updates[field] = value || null;
         }
       }
+
+      // Handle is_on_call boolean conversion
+      updates.is_on_call = values.is_on_call === "yes";
 
       await updateStaff.mutateAsync({ id: staffMember.id, updates });
       onOpenChange(false);
@@ -595,6 +608,62 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
                       <FormControl>
                         <Input placeholder="e.g. Spouse" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Escalation Settings */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Escalation Settings
+              </h3>
+              <FormField
+                control={form.control}
+                name="personal_mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Personal Mobile</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="+34 6XX XXX XXX" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="escalation_priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Escalation Priority</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} max={99} placeholder="1 = highest" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="is_on_call"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>On Call</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "no"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="On call?" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
