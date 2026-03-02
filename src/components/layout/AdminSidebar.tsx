@@ -1,10 +1,10 @@
-import { 
-  LayoutDashboard, 
-  Users, 
-  Smartphone, 
-  Bell, 
-  UserCog, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Users,
+  Smartphone,
+  Bell,
+  UserCog,
+  BarChart3,
   Settings,
   LogOut,
   ChevronLeft,
@@ -22,7 +22,7 @@ import {
   DollarSign,
   PieChart,
   Activity,
-  
+
   Brain,
   Share2,
   Megaphone,
@@ -147,7 +147,7 @@ const menuGroups: MenuGroup[] = [
     icon: Brain,
     labelKey: "sidebar.aiCommandCentre",
     items: [
-      { icon: Brain, labelKey: "sidebar.aiOverview", path: "/admin/ai" },
+      { icon: Brain, labelKey: "sidebar.aiBehaviors", path: "/admin/ai" },
       { icon: Headphones, labelKey: "sidebar.isabellaOperations", path: "/admin/ai/operations" }
     ]
   },
@@ -208,7 +208,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
     setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
-  const filterByRole = (items: MenuItem[]) => 
+  const filterByRole = (items: MenuItem[]) =>
     items.filter(item => {
       if (item.superAdminOnly && staffRole !== "super_admin") {
         return false;
@@ -232,11 +232,11 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
   };
 
   const renderMenuItem = (item: MenuItem, isMobile: boolean, isNested: boolean = false) => {
-    const isActive = location.pathname === item.path || 
+    const isActive = location.pathname === item.path ||
       (item.path !== "/admin" && location.pathname.startsWith(item.path + "/"));
     const Icon = item.icon;
     const label = t(item.labelKey);
-    
+
     const linkContent = (
       <NavLink
         to={item.path}
@@ -244,8 +244,8 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
           "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-          isActive 
-            ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+          isActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
           !isMobile && collapsed && "justify-center px-2",
           isNested && !collapsed && "pl-9"
@@ -310,8 +310,8 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
                 className={cn(
                   "flex items-center justify-center w-full rounded-lg px-2 py-2.5 text-sm font-medium transition-all",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isActive 
-                    ? "bg-sidebar-primary/20 text-sidebar-primary-foreground" 
+                  isActive
+                    ? "bg-sidebar-primary/20 text-sidebar-primary-foreground"
                     : "text-sidebar-foreground"
                 )}
               >
@@ -336,8 +336,8 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
               className={cn(
                 "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive 
-                  ? "bg-sidebar-primary/20 text-sidebar-primary" 
+                isActive
+                  ? "bg-sidebar-primary/20 text-sidebar-primary"
                   : "text-sidebar-foreground/70"
               )}
             >
@@ -374,25 +374,25 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
         <div className="space-y-1">
           {/* Dashboard - standalone */}
           {renderMenuGroup(menuGroups[0], isMobile)}
-          
+
           {/* People */}
           {renderMenuGroup(menuGroups[1], isMobile, true)}
-          
+
           {/* Partners */}
           {renderMenuGroup(menuGroups[2], isMobile, true)}
-          
+
           {/* Staff Operations */}
           {renderMenuGroup(menuGroups[3], isMobile, true)}
-          
+
           {/* Communications */}
           {renderMenuGroup(menuGroups[4], isMobile, true)}
-          
+
           {/* Business */}
           {renderMenuGroup(menuGroups[5], isMobile, true)}
-          
+
           {/* AI Command Centre */}
           {renderMenuGroup(menuGroups[6], isMobile, true)}
-          
+
           {/* System */}
           {renderMenuGroup(menuGroups[7], isMobile, true)}
         </div>
@@ -457,7 +457,7 @@ export function AdminSidebar({ onCollapsedChange }: AdminSidebarProps = {}) {
         collapsed ? "w-16" : "w-64"
       )}>
         <SidebarContent />
-        
+
         {/* Collapse Toggle */}
         <Button
           variant="ghost"

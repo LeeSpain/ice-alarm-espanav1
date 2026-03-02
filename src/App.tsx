@@ -87,7 +87,7 @@ const PartnerDetailPage = lazyWithRetry(() => import("./pages/admin/PartnerDetai
 const AddPartnerPage = lazyWithRetry(() => import("./pages/admin/AddPartnerPage"));
 const CommissionsPage = lazyWithRetry(() => import("./pages/admin/CommissionsPage"));
 const PartnersQAPage = lazyWithRetry(() => import("./pages/admin/PartnersQAPage"));
-const AICommandCentre = lazyWithRetry(() => import("./pages/admin/AICommandCentre"));
+const AIBehaviorsPage = lazyWithRetry(() => import("./pages/admin/AIBehaviorsPage"));
 const AIAgentDetail = lazyWithRetry(() => import("./pages/admin/AIAgentDetail"));
 const CRMImportPage = lazyWithRetry(() => import("./pages/admin/CRMImportPage"));
 const CRMContactsPage = lazyWithRetry(() => import("./pages/admin/CRMContactsPage"));
@@ -175,15 +175,15 @@ queryClient.prefetchQuery({
       .from("system_settings")
       .select("key, value")
       .in("key", ["settings_company_name", "settings_emergency_phone", "settings_support_email", "settings_address"]);
-    
+
     if (error) throw error;
-    
+
     const settingsMap = (data || []).reduce((acc, setting) => {
       const normalizedKey = setting.key.replace(/^settings_/, '');
       acc[normalizedKey] = setting.value;
       return acc;
     }, {} as Record<string, string>);
-    
+
     return {
       company_name: settingsMap.company_name || "ICE Alarm España",
       emergency_phone: settingsMap.emergency_phone || "+34 900 123 456",
@@ -202,7 +202,7 @@ queryClient.prefetchQuery({
       .from("website_images")
       .select("id, location_key, image_url, alt_text, updated_at")
       .in("location_key", ["homepage_hero", "homepage_pendant_promo", "pendant_hero", "pendant_specs"]);
-    
+
     if (error) throw error;
     return data || [];
   },
@@ -257,7 +257,7 @@ const App = () => {
         toast.error("Something went wrong. Please try again.");
       });
     };
-    
+
     window.addEventListener("unhandledrejection", handleRejection);
     return () => window.removeEventListener("unhandledrejection", handleRejection);
   }, []);
@@ -303,161 +303,161 @@ const App = () => {
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <div id="main-content">
-                <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/pendant" element={<PendantPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/blog" element={<BlogListPage />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
-                <Route path="/join" element={<JoinWizard />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/staff/login" element={<StaffLogin />} />
-                <Route path="/register" element={<Navigate to="/join" replace />} />
-                <Route path="/complete-registration" element={<CompleteRegistration />} />
-                <Route path="/unauthorized" element={<Unauthorized />} />
-                <Route path="/help" element={<KnowledgeBasePage />} />
-                <Route path="/member-update" element={<MemberUpdatePage />} />
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/pendant" element={<PendantPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/terms" element={<TermsPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
+                    <Route path="/blog" element={<BlogListPage />} />
+                    <Route path="/blog/:slug" element={<BlogPostPage />} />
+                    <Route path="/join" element={<JoinWizard />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/staff/login" element={<StaffLogin />} />
+                    <Route path="/register" element={<Navigate to="/join" replace />} />
+                    <Route path="/complete-registration" element={<CompleteRegistration />} />
+                    <Route path="/unauthorized" element={<Unauthorized />} />
+                    <Route path="/help" element={<KnowledgeBasePage />} />
+                    <Route path="/member-update" element={<MemberUpdatePage />} />
 
-                {/* Admin Dashboard Routes - Require Admin Role */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute requireStaff requireAdmin>
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="members" element={<MembersPage />} />
-                  <Route path="devices" element={<DevicesPage />} />
-                  <Route path="devices/:id" element={<DeviceDetailPage />} />
-                  <Route path="finance" element={<FinanceDashboard />} />
-                  <Route path="orders" element={<OrdersPage />} />
-                  <Route path="subscriptions" element={<SubscriptionsPage />} />
-                  <Route path="payments" element={<PaymentsPage />} />
-                  <Route path="alerts" element={<AlertsPage />} />
-                  <Route path="staff" element={<StaffPage />} />
-                  <Route path="staff/:staffId" element={<StaffDetailPage />} />
-                  <Route path="reports" element={<ReportsPage />} />
-                  <Route path="analytics" element={<AnalyticsPage />} />
-                  <Route path="ev07b" element={<EV07BPage />} />
-                  <Route path="products" element={<Navigate to="/admin/ev07b" replace />} />
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="messages" element={<MessagesPage />} />
-                  <Route path="tasks" element={<TasksPage />} />
-                  <Route path="tickets" element={<AdminTicketsPage />} />
-                  <Route path="notifications" element={<NotificationsPage />} />
-                  <Route path="leads" element={<LeadsPage />} />
-                  <Route path="members/new" element={<AddMemberWizard />} />
-                  <Route path="members/:id" element={<MemberDetailPage />} />
-                  <Route path="partners" element={<PartnersPage />} />
-                  <Route path="partners/new" element={<AddPartnerPage />} />
-                  <Route path="partners/:id" element={<PartnerDetailPage />} />
-                  <Route path="partners-qa" element={<PartnersQAPage />} />
-                  <Route path="commissions" element={<CommissionsPage />} />
-                  <Route path="crm-import" element={<CRMImportPage />} />
-                  <Route path="crm-import/batches" element={<ImportBatchesPage />} />
-                  <Route path="crm-contacts" element={<CRMContactsPage />} />
-                  <Route path="crm-contacts/:id" element={<CRMContactDetailPage />} />
-                  <Route path="ai" element={<AICommandCentre />} />
-                  <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
-                  <Route path="ai/operations" element={<IsabellaOperationsPage />} />
-                  <Route path="media-manager" element={<MediaManagerPage />} />
-                  <Route path="ai-outreach" element={<AIOutreachPage />} />
-                  <Route path="video-hub" element={<VideoHubPage />} />
-                  <Route path="communications" element={<CommunicationsDashboardPage />} />
-                  <Route path="partner-pricing" element={<PartnerPricingSettingsPage />} />
-                  <Route path="blog" element={<BlogManagerPage />} />
-                  <Route path="audit-log" element={<AuditLogPage />} />
-                  <Route path="sla" element={<SLADashboardPage />} />
-                  <Route path="feedback" element={<FeedbackDashboardPage />} />
-                  <Route path="testimonials" element={<TestimonialsPage />} />
-                  <Route path="rota" element={<RotaPage />} />
-                  <Route path="holidays" element={<AdminHolidaysPage />} />
-                </Route>
+                    {/* Admin Dashboard Routes - Require Admin Role */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute requireStaff requireAdmin>
+                          <AdminLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="members" element={<MembersPage />} />
+                      <Route path="devices" element={<DevicesPage />} />
+                      <Route path="devices/:id" element={<DeviceDetailPage />} />
+                      <Route path="finance" element={<FinanceDashboard />} />
+                      <Route path="orders" element={<OrdersPage />} />
+                      <Route path="subscriptions" element={<SubscriptionsPage />} />
+                      <Route path="payments" element={<PaymentsPage />} />
+                      <Route path="alerts" element={<AlertsPage />} />
+                      <Route path="staff" element={<StaffPage />} />
+                      <Route path="staff/:staffId" element={<StaffDetailPage />} />
+                      <Route path="reports" element={<ReportsPage />} />
+                      <Route path="analytics" element={<AnalyticsPage />} />
+                      <Route path="ev07b" element={<EV07BPage />} />
+                      <Route path="products" element={<Navigate to="/admin/ev07b" replace />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="messages" element={<MessagesPage />} />
+                      <Route path="tasks" element={<TasksPage />} />
+                      <Route path="tickets" element={<AdminTicketsPage />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+                      <Route path="leads" element={<LeadsPage />} />
+                      <Route path="members/new" element={<AddMemberWizard />} />
+                      <Route path="members/:id" element={<MemberDetailPage />} />
+                      <Route path="partners" element={<PartnersPage />} />
+                      <Route path="partners/new" element={<AddPartnerPage />} />
+                      <Route path="partners/:id" element={<PartnerDetailPage />} />
+                      <Route path="partners-qa" element={<PartnersQAPage />} />
+                      <Route path="commissions" element={<CommissionsPage />} />
+                      <Route path="crm-import" element={<CRMImportPage />} />
+                      <Route path="crm-import/batches" element={<ImportBatchesPage />} />
+                      <Route path="crm-contacts" element={<CRMContactsPage />} />
+                      <Route path="crm-contacts/:id" element={<CRMContactDetailPage />} />
+                      <Route path="ai" element={<AIBehaviorsPage />} />
+                      <Route path="ai/agents/:agentKey" element={<AIAgentDetail />} />
+                      <Route path="ai/operations" element={<IsabellaOperationsPage />} />
+                      <Route path="media-manager" element={<MediaManagerPage />} />
+                      <Route path="ai-outreach" element={<AIOutreachPage />} />
+                      <Route path="video-hub" element={<VideoHubPage />} />
+                      <Route path="communications" element={<CommunicationsDashboardPage />} />
+                      <Route path="partner-pricing" element={<PartnerPricingSettingsPage />} />
+                      <Route path="blog" element={<BlogManagerPage />} />
+                      <Route path="audit-log" element={<AuditLogPage />} />
+                      <Route path="sla" element={<SLADashboardPage />} />
+                      <Route path="feedback" element={<FeedbackDashboardPage />} />
+                      <Route path="testimonials" element={<TestimonialsPage />} />
+                      <Route path="rota" element={<RotaPage />} />
+                      <Route path="holidays" element={<AdminHolidaysPage />} />
+                    </Route>
 
-                {/* Partner Public Routes */}
-                <Route path="/partner" element={<PartnerOnboarding />} />
-                <Route path="/partner/join" element={<PartnerJoin />} />
-                <Route path="/partner/verify" element={<PartnerVerify />} />
-                <Route path="/partner/login" element={<PartnerLogin />} />
+                    {/* Partner Public Routes */}
+                    <Route path="/partner" element={<PartnerOnboarding />} />
+                    <Route path="/partner/join" element={<PartnerJoin />} />
+                    <Route path="/partner/verify" element={<PartnerVerify />} />
+                    <Route path="/partner/login" element={<PartnerLogin />} />
 
-                {/* Partner Dashboard Routes - Require Partner Role */}
-                <Route
-                  path="/partner-dashboard"
-                  element={
-                    <ProtectedRoute requirePartner>
-                      <PartnerLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<PartnerDashboard />} />
-                  <Route path="invites" element={<PartnerInvitesPage />} />
-                  <Route path="marketing" element={<PartnerMarketingPage />} />
-                  <Route path="commissions" element={<PartnerCommissionsPage />} />
-                  <Route path="agreement" element={<PartnerAgreementPage />} />
-                  <Route path="settings" element={<PartnerSettingsPage />} />
-                  <Route path="members" element={<PartnerMembersPage />} />
-                  <Route path="alerts" element={<PartnerAlertsPage />} />
-                  <Route path="support" element={<PartnerSupportPage />} />
-                </Route>
+                    {/* Partner Dashboard Routes - Require Partner Role */}
+                    <Route
+                      path="/partner-dashboard"
+                      element={
+                        <ProtectedRoute requirePartner>
+                          <PartnerLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<PartnerDashboard />} />
+                      <Route path="invites" element={<PartnerInvitesPage />} />
+                      <Route path="marketing" element={<PartnerMarketingPage />} />
+                      <Route path="commissions" element={<PartnerCommissionsPage />} />
+                      <Route path="agreement" element={<PartnerAgreementPage />} />
+                      <Route path="settings" element={<PartnerSettingsPage />} />
+                      <Route path="members" element={<PartnerMembersPage />} />
+                      <Route path="alerts" element={<PartnerAlertsPage />} />
+                      <Route path="support" element={<PartnerSupportPage />} />
+                    </Route>
 
-                {/* Call Centre Dashboard Routes - Require Staff Role */}
-                <Route
-                  path="/call-centre"
-                  element={
-                    <ProtectedRoute requireStaff>
-                      <CallCentreLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<StaffDashboard />} />
-                  <Route path="alerts" element={<CallCentreDashboard />} />
-                  <Route path="members" element={<CallCentreMembersPage />} />
-                  <Route path="members/:id" element={<MemberDetailPage />} />
-                  <Route path="shift-notes" element={<ShiftNotesPage />} />
-                  <Route path="shift-history" element={<ShiftHistoryPage />} />
-                  <Route path="preferences" element={<StaffPreferencesPage />} />
-                  <Route path="messages" element={<CallCentreMessagesPage />} />
-                  <Route path="tasks" element={<CallCentreTasksPage />} />
-                  <Route path="tickets" element={<CallCentreTicketsPage />} />
-                  <Route path="leads" element={<CallCentreLeadsPage />} />
-                  <Route path="documents" element={<CallCentreDocumentsPage />} />
-                  <Route path="holidays" element={<CallCentreHolidaysPage />} />
-                </Route>
+                    {/* Call Centre Dashboard Routes - Require Staff Role */}
+                    <Route
+                      path="/call-centre"
+                      element={
+                        <ProtectedRoute requireStaff>
+                          <CallCentreLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<StaffDashboard />} />
+                      <Route path="alerts" element={<CallCentreDashboard />} />
+                      <Route path="members" element={<CallCentreMembersPage />} />
+                      <Route path="members/:id" element={<MemberDetailPage />} />
+                      <Route path="shift-notes" element={<ShiftNotesPage />} />
+                      <Route path="shift-history" element={<ShiftHistoryPage />} />
+                      <Route path="preferences" element={<StaffPreferencesPage />} />
+                      <Route path="messages" element={<CallCentreMessagesPage />} />
+                      <Route path="tasks" element={<CallCentreTasksPage />} />
+                      <Route path="tickets" element={<CallCentreTicketsPage />} />
+                      <Route path="leads" element={<CallCentreLeadsPage />} />
+                      <Route path="documents" element={<CallCentreDocumentsPage />} />
+                      <Route path="holidays" element={<CallCentreHolidaysPage />} />
+                    </Route>
 
-                {/* Client Dashboard Routes - Require Member */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute requireMember>
-                      <ClientLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<ClientDashboard />} />
-                  <Route path="profile" element={<ProfilePage />} />
-                  <Route path="medical" element={<MedicalInfoPage />} />
-                  <Route path="contacts" element={<EmergencyContactsPage />} />
-                  <Route path="device" element={<DevicePage />} />
-                  <Route path="subscription" element={<SubscriptionPage />} />
-                  <Route path="alerts" element={<AlertHistoryPage />} />
-                  <Route path="support" element={<SupportPage />} />
-                  <Route path="messages" element={<ClientMessagesPage />} />
-                </Route>
+                    {/* Client Dashboard Routes - Require Member */}
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute requireMember>
+                          <ClientLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<ClientDashboard />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="medical" element={<MedicalInfoPage />} />
+                      <Route path="contacts" element={<EmergencyContactsPage />} />
+                      <Route path="device" element={<DevicePage />} />
+                      <Route path="subscription" element={<SubscriptionPage />} />
+                      <Route path="alerts" element={<AlertHistoryPage />} />
+                      <Route path="support" element={<SupportPage />} />
+                      <Route path="messages" element={<ClientMessagesPage />} />
+                    </Route>
 
-                {/* Referral Tracking Routes */}
-                <Route path="/r/:partnerCode/:postSlug" element={<ReferralRedirect />} />
-                <Route path="/r/:partnerCode" element={<ReferralRedirect />} />
+                    {/* Referral Tracking Routes */}
+                    <Route path="/r/:partnerCode/:postSlug" element={<ReferralRedirect />} />
+                    <Route path="/r/:partnerCode" element={<ReferralRedirect />} />
 
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-                </Routes>
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
                 </div>
               </Suspense>
             </ErrorBoundary>

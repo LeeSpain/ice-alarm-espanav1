@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { 
-  ChevronLeft, ChevronRight, Wand2, Save, Loader2, Plus, Trash2, 
+import {
+  ChevronLeft, ChevronRight, Wand2, Save, Loader2, Plus, Trash2,
   Layout, Zap, AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -224,22 +224,23 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
     if (currentStep < currentSteps.length - 1) {
       const stepName = currentSteps[currentStep];
       const stepFields = STEP_FIELDS[stepName] || [];
-      
+
       // Mark current step fields as touched
       setTouched(prev => {
         const newTouched = new Set(prev);
         stepFields.forEach(field => newTouched.add(field));
         return newTouched;
       });
-      
-      // Check if current step has validation errors
-      const stepHasErrors = stepFields.some(field => validationErrors[field as keyof ValidationErrors]);
-      
+
+      // Run validation fresh against current data (avoids stale-state race)
+      const freshErrors = validate();
+      const stepHasErrors = stepFields.some(field => freshErrors[field as keyof ValidationErrors]);
+
       if (stepHasErrors) {
         toast.error(t("videoHub.validation.fixStepErrors", "Please fix errors on this step before continuing"));
         return;
       }
-      
+
       setCurrentStep(currentStep + 1);
     }
   };
@@ -253,7 +254,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
   };
 
   const prepareProjectPayload = useCallback(() => {
-    const effectiveCta = projectData.ctaText.trim() || 
+    const effectiveCta = projectData.ctaText.trim() ||
       (projectData.language === "es" ? settings?.default_cta_es : settings?.default_cta_en) ||
       t("videoHub.create.defaultCtaFallback");
 
@@ -400,7 +401,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
 
         <div className="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
           {/* Template Mode (Primary) */}
-          <Card 
+          <Card
             className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group border-2"
             onClick={() => setCreationMode("template")}
           >
@@ -421,7 +422,7 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           </Card>
 
           {/* Quick Mode */}
-          <Card 
+          <Card
             className="cursor-pointer transition-all hover:border-primary hover:shadow-lg group"
             onClick={() => setCreationMode("quick")}
           >
@@ -453,8 +454,8 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
       switch (stepName) {
         case "template":
           return (
-            <TemplateSelectionStep 
-              templates={templates} 
+            <TemplateSelectionStep
+              templates={templates}
               templatesLoading={templatesLoading}
               projectData={projectData}
               setProjectData={setProjectData}
@@ -466,9 +467,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           );
         case "format":
           return (
-            <FormatDurationStep 
-              projectData={projectData} 
-              setProjectData={setProjectData} 
+            <FormatDurationStep
+              projectData={projectData}
+              setProjectData={setProjectData}
               selectedTemplate={selectedTemplate}
               validationErrors={validationErrors}
               t={t}
@@ -476,9 +477,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           );
         case "content":
           return (
-            <ContentStep 
-              projectData={projectData} 
-              setProjectData={setProjectData} 
+            <ContentStep
+              projectData={projectData}
+              setProjectData={setProjectData}
               settings={settings}
               addBullet={addBullet}
               removeBullet={removeBullet}
@@ -493,9 +494,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           return <AssetsStep projectData={projectData} setProjectData={setProjectData} settings={settings} t={t} />;
         case "preview":
           return (
-            <PreviewStep 
-              projectData={projectData} 
-              settings={settings} 
+            <PreviewStep
+              projectData={projectData}
+              settings={settings}
               validationErrors={validationErrors}
               isValid={isValid}
               t={t}
@@ -509,9 +510,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
       switch (stepName) {
         case "quick-setup":
           return (
-            <QuickSetupStep 
-              projectData={projectData} 
-              setProjectData={setProjectData} 
+            <QuickSetupStep
+              projectData={projectData}
+              setProjectData={setProjectData}
               settings={settings}
               templates={templates}
               templatesLoading={templatesLoading}
@@ -526,9 +527,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           );
         case "preview":
           return (
-            <PreviewStep 
-              projectData={projectData} 
-              settings={settings} 
+            <PreviewStep
+              projectData={projectData}
+              settings={settings}
               validationErrors={validationErrors}
               isValid={isValid}
               t={t}
@@ -571,9 +572,9 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
           </p>
         </div>
         {!isEditMode && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { setCreationMode(null); setCurrentStep(0); }}
           >
             {t("videoHub.create.changeMode")}
@@ -586,9 +587,8 @@ export function VideoCreateTab({ onComplete, editingProject, initialTemplateId, 
         {currentSteps.map((step, index) => (
           <div
             key={step}
-            className={`h-2 flex-1 rounded-full transition-colors ${
-              index <= currentStep ? "bg-primary" : "bg-muted"
-            }`}
+            className={`h-2 flex-1 rounded-full transition-colors ${index <= currentStep ? "bg-primary" : "bg-muted"
+              }`}
           />
         ))}
       </div>
@@ -670,22 +670,21 @@ function TemplateSelectionStep({ templates, templatesLoading, projectData, setPr
           templates?.map((template: any) => (
             <Card
               key={template.id}
-              className={`cursor-pointer transition-all hover:border-primary ${
-                projectData.template_id === template.id ? "border-2 border-primary" : ""
-              }`}
+              className={`cursor-pointer transition-all hover:border-primary ${projectData.template_id === template.id ? "border-2 border-primary" : ""
+                }`}
               onClick={() => {
                 // Auto-sync format/duration to first allowed values if current is invalid
                 const allowedFormats = template.allowed_formats || ["16:9"];
                 const allowedDurations = template.allowed_durations || [15];
-                const newFormat = allowedFormats.includes(projectData.format) 
-                  ? projectData.format 
+                const newFormat = allowedFormats.includes(projectData.format)
+                  ? projectData.format
                   : allowedFormats[0];
-                const newDuration = allowedDurations.includes(projectData.duration) 
-                  ? projectData.duration 
+                const newDuration = allowedDurations.includes(projectData.duration)
+                  ? projectData.duration
                   : allowedDurations[0];
-                
-                setProjectData({ 
-                  ...projectData, 
+
+                setProjectData({
+                  ...projectData,
                   template_id: template.id,
                   format: newFormat,
                   duration: newDuration
@@ -735,17 +734,16 @@ function FormatDurationStep({ projectData, setProjectData, selectedTemplate, val
             const isAllowed = allowedFormats.includes(format);
             return (
               <div key={format}>
-                <RadioGroupItem 
-                  value={format} 
-                  id={`format-${format}`} 
-                  className="peer sr-only" 
+                <RadioGroupItem
+                  value={format}
+                  id={`format-${format}`}
+                  className="peer sr-only"
                   disabled={!isAllowed}
                 />
                 <Label
                   htmlFor={`format-${format}`}
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${
-                    !isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
-                  }`}
+                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${!isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
+                    }`}
                 >
                   <span className="text-lg font-medium">
                     {t(`videoHub.formats.${format === "9:16" ? "portrait" : format === "16:9" ? "landscape" : "square"}`)}
@@ -775,17 +773,16 @@ function FormatDurationStep({ projectData, setProjectData, selectedTemplate, val
             const isAllowed = allowedDurations.includes(duration);
             return (
               <div key={duration}>
-                <RadioGroupItem 
-                  value={duration.toString()} 
-                  id={`duration-${duration}`} 
+                <RadioGroupItem
+                  value={duration.toString()}
+                  id={`duration-${duration}`}
                   className="peer sr-only"
                   disabled={!isAllowed}
                 />
                 <Label
                   htmlFor={`duration-${duration}`}
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${
-                    !isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
-                  }`}
+                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 peer-data-[state=checked]:border-primary cursor-pointer ${!isAllowed ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground"
+                    }`}
                 >
                   <span className="text-lg font-medium">{duration}s</span>
                   <span className="text-sm text-muted-foreground">{t(`videoHub.durations.${duration}s`)}</span>
@@ -826,7 +823,7 @@ function ContentStep({ projectData, setProjectData, settings, addBullet, removeB
       <div>
         <div className="flex items-center justify-between">
           <Label>
-            {t("videoHub.create.bulletPoints")} * 
+            {t("videoHub.create.bulletPoints")} *
             <span className="text-muted-foreground text-xs ml-2">({filledBulletCount}/{MIN_BULLETS}-{MAX_BULLETS} required)</span>
           </Label>
           <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= MAX_BULLETS}>
@@ -971,9 +968,8 @@ function AssetsStep({ projectData, setProjectData, settings, t }: any) {
             return (
               <Card
                 key={product}
-                className={`cursor-pointer transition-all hover:border-primary ${
-                  isSelected ? "border-2 border-primary bg-primary/5" : ""
-                }`}
+                className={`cursor-pointer transition-all hover:border-primary ${isSelected ? "border-2 border-primary bg-primary/5" : ""
+                  }`}
                 onClick={() => {
                   if (isSelected) {
                     setProjectData({
@@ -1216,7 +1212,7 @@ function QuickSetupStep({ projectData, setProjectData, settings, templates, temp
       <div>
         <div className="flex items-center justify-between">
           <Label>
-            {t("videoHub.create.bulletPoints")} * 
+            {t("videoHub.create.bulletPoints")} *
             <span className="text-muted-foreground text-xs ml-2">({filledBulletCount}/{MIN_BULLETS}-{MAX_BULLETS})</span>
           </Label>
           <Button type="button" variant="outline" size="sm" onClick={addBullet} disabled={projectData.bullets.length >= MAX_BULLETS}>
