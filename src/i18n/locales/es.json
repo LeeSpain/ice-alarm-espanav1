@@ -5457,5 +5457,120 @@
     "actions": "Acciones",
     "needsReview": "Necesita Revisión",
     "scheduleFollowUp": "Programar Seguimiento"
+  },
+  "howItWorksPage": {
+    "meta": {
+      "title": "Cómo Funciona — Del SOS a la Seguridad en Minutos"
+    },
+    "hero": {
+      "badge": "Del botón al rescate — un escenario real",
+      "title": "¿Qué Pasa Realmente Cuando Pulsa el Botón?",
+      "subtitle": "Conozca a María, 78 años, que vive sola en su villa en Alicante. Su hija Sara vive en Londres. Un martes por la mañana, María resbala en su cocina...",
+      "scrollPrompt": "Siga la historia de María"
+    },
+    "step1": {
+      "time": "0 segundos",
+      "title": "La Alerta",
+      "description": "María pulsa el botón SOS de su colgante. Al instante, ocurren dos cosas simultáneamente:",
+      "voicePath": "Se abre un canal de voz bidireccional a través de su colgante",
+      "dataPath": "Su perfil se carga automáticamente — nombre, edad, dirección, condiciones médicas, contactos de emergencia, idioma preferido",
+      "note": "Incluso si María hubiera caído y no pudiera pulsar el botón, la detección de caídas incorporada habría activado la alerta automáticamente."
+    },
+    "step2": {
+      "time": "3 segundos",
+      "title": "Isabella Responde — Por Su Nombre",
+      "description": "Una voz tranquila y familiar sale del colgante:",
+      "isabellaQuote": "\"Hola María, soy Isabella de ICE Alarm. Estoy aquí contigo. ¿Qué ha pasado?\"",
+      "isabellaQuoteTranslation": "",
+      "detail1": "Isabella ya sabe que María habla español en casa",
+      "detail2": "No es un sistema automatizado frío — saluda a María por su nombre, en su idioma, con un tono tranquilo y reconfortante",
+      "detail3": "María no está en espera. No navega por menús. Tiene una voz junto a ella al instante."
+    },
+    "step3": {
+      "time": "5–30 segundos",
+      "title": "Preguntas Inteligentes, Respuestas Rápidas",
+      "description": "Isabella pregunta a María qué ha pasado. María dice que resbaló y le duele la cadera.",
+      "detail1": "Isabella ya conoce el historial médico de María — tuvo una prótesis de cadera hace dos años",
+      "detail2": "Así que hace la pregunta correcta: \"¿Puedes mover la pierna, María? ¿Es la misma cadera que antes?\"",
+      "detail3": "Esto no es genérico. Es un triaje inteligente y personalizado basado en las condiciones conocidas de María.",
+      "note": "Isabella recopila detalles críticos que ahorran tiempo a los servicios de emergencia — detalles que María podría olvidar mencionar bajo estrés."
+    },
+    "step4": {
+      "time": "15–30 segundos",
+      "title": "Su Equipo Lo Ve Todo",
+      "description": "Mientras Isabella habla con María, el panel de nuestro centro de llamadas muestra:",
+      "detail1": "Nombre, foto y edad de María",
+      "detail2": "Su ubicación GPS — localizada en su cocina",
+      "detail3": "Perfil médico completo, alergias, medicamentos",
+      "detail4": "Contactos de emergencia — incluyendo a Sara en Londres",
+      "detail5": "Una transcripción en directo de todo lo que Isabella y María han hablado",
+      "note": "El agente del centro de llamadas ve esto antes de atender. Cero tiempo perdido."
+    },
+    "step5": {
+      "time": "30 segundos",
+      "title": "Un Humano Toma el Control — Sin Interrupciones",
+      "description": "Un agente bilingüe se une a la llamada. Pero no es un traspaso frío:",
+      "detail1": "Ya saben el nombre de María y lo que ha pasado",
+      "detail2": "Ya tienen la transcripción de la IA y el contexto médico",
+      "detail3": "Pueden hablar con María en español y con los servicios de emergencia en español",
+      "agentQuote": "\"María, soy Ana del equipo de ICE Alarm. Isabella me ha contado lo que ha pasado. Voy a llamar a una ambulancia ahora mismo. Quédate en la línea — no me voy a ir.\"",
+      "note": "María no tiene que repetir nada. Sin explicaciones. Sin frustración. Solo ayuda."
+    },
+    "step6": {
+      "time": "1 minuto",
+      "title": "La Ayuda Está en Camino",
+      "description": "Ana llama al número de emergencias español en nombre de María:",
+      "detail1": "Da a la ambulancia las coordenadas GPS exactas de María",
+      "detail2": "Explica la caída, el dolor de cadera y su historial quirúrgico — en español",
+      "detail3": "Mientras tanto, Isabella se queda en el colgante con María, manteniéndola tranquila",
+      "isabellaQuote": "\"Lo estás haciendo muy bien, María. La ayuda ya está en camino. Intenta no moverte y me quedo aquí contigo.\"",
+      "note": "Isabella no cuelga. Se queda con María hasta que la ayuda llega físicamente."
+    },
+    "step7": {
+      "time": "2 minutos",
+      "title": "Su Teléfono Suena",
+      "subtitle": "Este es el momento más importante.",
+      "description": "Sara está sentada en su oficina en Londres. Su teléfono suena. Es ICE Alarm.",
+      "agentQuote": "\"Hola Sara, soy Ana de ICE Alarm España. Tu madre María ha tenido una caída en su cocina hace unos dos minutos. Está consciente, hablando, y una ambulancia está en camino. Tiene algo de dolor en la cadera, así que hemos informado a los paramédicos sobre su historial quirúrgico. ¿Te gustaría que te conectara con ella ahora?\"",
+      "emotionalNote": "Sara no se enteró horas después. No recibió una llamada perdida de un número español que no reconocía. Recibió una llamada clara, tranquila y profesional — en inglés — en menos de dos minutos desde el incidente.",
+      "detail1": "Sara se conecta con María a través del colgante",
+      "detail2": "Puede escuchar la voz de su madre y saber que está bien",
+      "detail3": "Sabe exactamente qué está pasando y quién está ayudando"
+    },
+    "step8": {
+      "time": "Resolución",
+      "title": "En Buenas Manos",
+      "description": "La ambulancia llega. María es llevada al hospital para revisión. Tiene moratones pero nada está roto.",
+      "detail1": "Ana ya ha enviado el perfil médico de María al hospital",
+      "detail2": "Sara es informada durante todo el proceso",
+      "detail3": "Al día siguiente, ICE Alarm llama a María para comprobar que está bien",
+      "note": "Esto no es una respuesta puntual. Es una relación continua. María recibe una llamada de seguimiento, y su incidente queda registrado para que nuestro equipo sepa que debe comprobar cómo está."
+    },
+    "whatIf": {
+      "title": "¿Y Si...?",
+      "subtitle": "Preocupaciones reales, respuestas reales.",
+      "q1": "¿Y si María no puede hablar?",
+      "a1": "Isabella y el equipo siguen recibiendo la alerta con el perfil completo y la ubicación GPS de María. La ayuda se envía inmediatamente — sin necesidad de voz. El colgante tiene un micrófono sensible que puede detectar sonidos de angustia incluso sin palabras.",
+      "q2": "¿Y si es una falsa alarma?",
+      "a2": "Isabella pregunta a María con calma. Si dice que está bien, la alerta se cancela sin problema y sin coste. Preferimos que lo pulse por accidente cien veces antes de que dude una sola vez cuando realmente lo necesite.",
+      "q3": "¿Y si son las 3 de la madrugada?",
+      "a3": "Isabella nunca duerme. Nuestro centro de llamadas tiene personal las 24 horas del día, los 365 días del año. Las emergencias no tienen horario de oficina — y nosotros tampoco.",
+      "q4": "¿Y si María habla inglés y la tripulación de la ambulancia solo habla español?",
+      "a4": "Nuestro equipo bilingüe gestiona la llamada con los servicios de emergencia españoles en nombre de María. No tiene que decir ni una palabra a los paramédicos si no quiere — ya les hemos informado."
+    },
+    "cta": {
+      "title": "Regale a Alguien que Quiere Esta Tranquilidad",
+      "subtitle": "Sin contratos. Sin costes ocultos. Cancele cuando quiera. Desde solo 27,49€/mes IVA incluido.",
+      "primaryButton": "Proteja a Quien Más Quiere",
+      "secondaryButton": "Hable con Nuestro Equipo",
+      "trust1": "Sin contratos a largo plazo",
+      "trust2": "Garantía de devolución de 30 días",
+      "trust3": "Entrega gratuita al día siguiente en España"
+    },
+    "timeline": {
+      "seconds": "segundos",
+      "minute": "minuto",
+      "minutes": "minutos"
+    }
   }
 }

@@ -233,37 +233,41 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Section — Teaser */}
       <section id="how-it-works" className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("landing.howItWorks.title")}</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t("landing.howItWorks.description")}
-            </p>
-          </div>
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl font-bold mb-4">{t("landing.howItWorks.title")}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-4">
+            {t("landing.howItWorks.description")}
+          </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto my-10">
             {[
-              { step: 1, icon: AlertCircle, titleKey: "landing.howItWorks.step1Title", descKey: "landing.howItWorks.step1Desc" },
-              { step: 2, icon: MessageCircle, titleKey: "landing.howItWorks.step2Title", descKey: "landing.howItWorks.step2Desc" },
-              { step: 3, icon: Shield, titleKey: "landing.howItWorks.step3Title", descKey: "landing.howItWorks.step3Desc" },
-              { step: 4, icon: Heart, titleKey: "landing.howItWorks.step4Title", descKey: "landing.howItWorks.step4Desc" },
+              { step: 1, icon: AlertCircle, titleKey: "landing.howItWorks.step1Title" },
+              { step: 2, icon: MessageCircle, titleKey: "landing.howItWorks.step2Title" },
+              { step: 3, icon: Shield, titleKey: "landing.howItWorks.step3Title" },
+              { step: 4, icon: Heart, titleKey: "landing.howItWorks.step4Title" },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="relative inline-block mb-6">
-                  <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <item.icon className="h-8 w-8 text-primary" />
+                <div className="relative inline-block mb-3">
+                  <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <item.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <div className="absolute -top-2 -left-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                  <div className="absolute -top-1.5 -left-1.5 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
                     {item.step}
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{t(item.titleKey)}</h3>
-                <p className="text-muted-foreground text-sm">{t(item.descKey)}</p>
+                <h3 className="text-sm font-semibold">{t(item.titleKey)}</h3>
               </div>
             ))}
           </div>
+
+          <Button asChild size="lg">
+            <Link to="/how-it-works">
+              {t("howItWorksPage.hero.scrollPrompt", "Follow Maria's story")}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 

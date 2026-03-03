@@ -159,6 +159,29 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
         role: values.role,
         phone: values.phone || undefined,
         preferred_language: values.preferred_language,
+        // Include all optional fields admin has filled in
+        date_of_birth: values.date_of_birth || undefined,
+        nationality: values.nationality || undefined,
+        nie_number: values.nie_number || undefined,
+        social_security_number: values.social_security_number || undefined,
+        address_line1: values.address_line1 || undefined,
+        address_line2: values.address_line2 || undefined,
+        city: values.city || undefined,
+        province: values.province || undefined,
+        postal_code: values.postal_code || undefined,
+        country: values.country || undefined,
+        emergency_contact_name: values.emergency_contact_name || undefined,
+        emergency_contact_phone: values.emergency_contact_phone || undefined,
+        emergency_contact_relationship: values.emergency_contact_relationship || undefined,
+        hire_date: values.hire_date || undefined,
+        department: values.department || undefined,
+        position: values.position || undefined,
+        contract_type: values.contract_type || undefined,
+        notes: values.notes || undefined,
+        personal_mobile: values.personal_mobile || undefined,
+        escalation_priority: values.escalation_priority || undefined,
+        is_on_call: values.is_on_call === "yes",
+        annual_holiday_days: values.annual_holiday_days,
       });
       onOpenChange(false);
     } else if (staffMember) {
@@ -196,7 +219,7 @@ export function StaffFormPanel({ open, onOpenChange, mode, staffMember }: StaffF
           </SheetTitle>
           <SheetDescription>
             {mode === "create"
-              ? "Create a new staff account. They will receive login credentials via email."
+              ? "Create a new staff member. You can send them an invitation from their profile page."
               : "Update staff member details."}
           </SheetDescription>
         </SheetHeader>

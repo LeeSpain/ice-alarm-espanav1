@@ -10,7 +10,7 @@ export function PublicHeader() {
   const { t } = useTranslation();
 
   const navItems = [
-    { to: "/#how-it-works", label: t("navigation.howItWorks"), isAnchor: true },
+    { to: "/how-it-works", label: t("navigation.howItWorks") },
     { to: "/pendant", label: t("navigation.pendant") },
     { to: "/#pricing", label: t("navigation.pricing"), isAnchor: true },
     { to: "/partner", label: t("navigation.partners") },

@@ -5465,5 +5465,120 @@
     "actions": "Actions",
     "needsReview": "Needs Review",
     "scheduleFollowUp": "Schedule Follow-up"
+  },
+  "howItWorksPage": {
+    "meta": {
+      "title": "How It Works — From SOS to Safety in Minutes"
+    },
+    "hero": {
+      "badge": "From button press to safety — a real scenario",
+      "title": "What Really Happens When You Press the Button?",
+      "subtitle": "Meet Maria, 78, who lives alone in her villa in Alicante. Her daughter Sarah lives in London. One Tuesday morning, Maria slips in her kitchen...",
+      "scrollPrompt": "Follow Maria's story"
+    },
+    "step1": {
+      "time": "0 seconds",
+      "title": "The Alert",
+      "description": "Maria presses the SOS button on her pendant. Instantly, two things happen simultaneously:",
+      "voicePath": "A two-way voice channel opens through her pendant",
+      "dataPath": "Her profile loads automatically — name, age, address, medical conditions, emergency contacts, preferred language",
+      "note": "Even if Maria had fallen and couldn't press the button, the built-in fall detection would have triggered the alert automatically."
+    },
+    "step2": {
+      "time": "3 seconds",
+      "title": "Isabella Answers — By Name",
+      "description": "A calm, familiar voice comes through the pendant:",
+      "isabellaQuote": "\"Hola Maria, soy Isabella de ICE Alarm. Estoy aquí contigo. ¿Qué ha pasado?\"",
+      "isabellaQuoteTranslation": "(\"Hello Maria, it's Isabella from ICE Alarm. I'm here with you. What happened?\")",
+      "detail1": "Isabella already knows Maria speaks Spanish at home",
+      "detail2": "She's not a cold automated system — she greets Maria by name, in her language, in a calm and reassuring tone",
+      "detail3": "Maria isn't on hold. She isn't navigating menus. She has a voice with her instantly."
+    },
+    "step3": {
+      "time": "5–30 seconds",
+      "title": "Smart Questions, Fast Answers",
+      "description": "Isabella asks Maria what happened. Maria says she slipped and her hip hurts.",
+      "detail1": "Isabella already knows Maria's medical history — she had a hip replacement two years ago",
+      "detail2": "So she asks the right follow-up: \"Can you move your leg, Maria? Is it the same hip as before?\"",
+      "detail3": "This isn't generic. It's intelligent, personalised triage based on Maria's known conditions.",
+      "note": "Isabella gathers critical details that save time for the emergency services later — details Maria might forget to mention under stress."
+    },
+    "step4": {
+      "time": "15–30 seconds",
+      "title": "Your Team Sees Everything",
+      "description": "While Isabella talks to Maria, our call centre dashboard lights up with:",
+      "detail1": "Maria's name, photo, and age",
+      "detail2": "Her GPS location — pinpointed to her kitchen",
+      "detail3": "Full medical profile, allergies, medications",
+      "detail4": "Emergency contacts — including Sarah in London",
+      "detail5": "A live transcript of everything Isabella and Maria have discussed",
+      "note": "The call centre agent sees this before they even pick up. Zero wasted time."
+    },
+    "step5": {
+      "time": "30 seconds",
+      "title": "Human Takes Over — Seamlessly",
+      "description": "A bilingual agent joins the call. But this isn't a cold handoff:",
+      "detail1": "They already know Maria's name and what happened",
+      "detail2": "They already have the AI transcript and medical context",
+      "detail3": "They can speak to Maria in Spanish and to emergency services in Spanish",
+      "agentQuote": "\"Maria, I'm Ana from the ICE Alarm team. Isabella has told me what happened. I'm going to call an ambulance for you right now. Stay on the line — I'm not going anywhere.\"",
+      "note": "Maria doesn't have to repeat a single thing. No explaining. No frustration. Just help."
+    },
+    "step6": {
+      "time": "1 minute",
+      "title": "Help Is On The Way",
+      "description": "Ana calls the Spanish emergency number on Maria's behalf:",
+      "detail1": "Gives the ambulance Maria's exact GPS coordinates",
+      "detail2": "Explains the fall, the hip pain, and her surgical history — in Spanish",
+      "detail3": "Meanwhile, Isabella stays on the pendant with Maria, keeping her calm",
+      "isabellaQuote": "\"You're doing great, Maria. Help is already on its way. Try to stay still and I'll stay right here with you.\"",
+      "note": "Isabella doesn't hang up. She stays with Maria until help physically arrives."
+    },
+    "step7": {
+      "time": "2 minutes",
+      "title": "Your Phone Rings",
+      "subtitle": "This is the moment that matters most.",
+      "description": "Sarah is sitting in her office in London. Her phone rings. It's ICE Alarm.",
+      "agentQuote": "\"Hello Sarah, this is Ana from ICE Alarm España. Your mum Maria had a fall in her kitchen about two minutes ago. She's conscious, talking, and an ambulance is on its way. She has some hip pain, so we've flagged her surgical history with the paramedics. Would you like me to connect you to her now?\"",
+      "emotionalNote": "Sarah didn't find out hours later. She didn't get a missed call from a Spanish number she didn't recognise. She received a clear, calm, professional call — in English — within two minutes of the incident.",
+      "detail1": "Sarah gets connected to Maria on the pendant",
+      "detail2": "She can hear her mum's voice and know she's okay",
+      "detail3": "She knows exactly what is happening and who is helping"
+    },
+    "step8": {
+      "time": "Resolution",
+      "title": "Safe Hands",
+      "description": "The ambulance arrives. Maria is taken to hospital for checks. She's bruised but nothing is broken.",
+      "detail1": "Ana has already sent Maria's medical profile to the hospital",
+      "detail2": "Sarah is kept updated throughout",
+      "detail3": "The next day, ICE Alarm follows up with Maria to check she's okay",
+      "note": "This isn't a one-time response. It's an ongoing relationship. Maria gets a follow-up call, and her incident is logged so our team knows to check on her."
+    },
+    "whatIf": {
+      "title": "What If...?",
+      "subtitle": "Real concerns, real answers.",
+      "q1": "What if Maria can't speak?",
+      "a1": "Isabella and the team still receive the alert with Maria's full profile and GPS location. Help is dispatched immediately — no voice needed. The pendant has a sensitive microphone that can detect sounds of distress even without words.",
+      "q2": "What if it's a false alarm?",
+      "a2": "Isabella asks Maria calmly. If she says she's fine, the alert is cancelled with no fuss and no charge. We'd rather you pressed it by accident a hundred times than hesitate once when you really need it.",
+      "q3": "What if it's 3am?",
+      "a3": "Isabella never sleeps. Our call centre is staffed 24 hours a day, 365 days a year. Emergencies don't keep office hours — and neither do we.",
+      "q4": "What if Maria speaks English and the ambulance crew only speaks Spanish?",
+      "a4": "Our bilingual team handles the call with Spanish emergency services on Maria's behalf. She doesn't have to say a word to the paramedics if she doesn't want to — we've already briefed them."
+    },
+    "cta": {
+      "title": "Give Someone You Love This Peace of Mind",
+      "subtitle": "No contracts. No hidden fees. Cancel any time. From just €27.49/month including IVA.",
+      "primaryButton": "Protect Someone You Love",
+      "secondaryButton": "Talk to Our Team",
+      "trust1": "No long-term contracts",
+      "trust2": "30-day money-back guarantee",
+      "trust3": "Free next-day delivery to Spain"
+    },
+    "timeline": {
+      "seconds": "seconds",
+      "minute": "minute",
+      "minutes": "minutes"
+    }
   }
 }

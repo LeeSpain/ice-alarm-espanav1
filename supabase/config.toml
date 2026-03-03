@@ -71,6 +71,12 @@ project_id = "pduhccavshrhfkfbjgmj"
     verify_jwt = false
   [functions.staff-register]
     verify_jwt = false
+  [functions.staff-send-invite]
+    verify_jwt = false
+  [functions.staff-validate-invite]
+    verify_jwt = false
+  [functions.staff-complete-invite]
+    verify_jwt = false
   [functions.create-checkout]
     verify_jwt = false
   [functions.submit-registration]

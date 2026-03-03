@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
-import { sendEmail } from "../_shared/email.ts";
 import { staffRegisterSchema, validateRequest } from "../_shared/validation.ts";
-
-
 
 interface StaffRegistrationRequest {
   email: string;
@@ -12,31 +9,41 @@ interface StaffRegistrationRequest {
   last_name: string;
   role: "admin" | "call_centre_supervisor" | "call_centre";
   phone?: string;
-  preferred_language: "en" | "es";
+  preferred_language?: "en" | "es";
+  // Optional fields admin may fill in
+  date_of_birth?: string;
+  nationality?: string;
+  nie_number?: string;
+  social_security_number?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relationship?: string;
+  hire_date?: string;
+  department?: string;
+  position?: string;
+  contract_type?: string;
+  notes?: string;
+  personal_mobile?: string;
+  escalation_priority?: number;
+  is_on_call?: boolean;
+  annual_holiday_days?: number;
 }
 
-function generateTempPassword(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
-  let password = "";
-  for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
-
-function getRoleDisplayName(role: string): string {
-  switch (role) {
-    case "admin": return "Admin";
-    case "call_centre_supervisor": return "Call Centre Supervisor";
-    case "call_centre": return "Call Centre Agent";
-    default: return role;
-  }
+function generateSecurePassword(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
 
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -51,7 +58,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create Supabase client with user's token for authorization check
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -63,7 +69,7 @@ serve(async (req: Request) => {
     // Verify the caller's JWT and get their role
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    
+
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
@@ -76,7 +82,7 @@ serve(async (req: Request) => {
     // Check if user is admin or super_admin
     const { data: staffData, error: staffError } = await userClient
       .from("staff")
-      .select("role")
+      .select("id, role")
       .eq("user_id", userId)
       .eq("is_active", true)
       .single();
@@ -100,7 +106,6 @@ serve(async (req: Request) => {
     const validated = validateRequest(staffRegisterSchema, rawBody, corsHeaders);
     if (validated.error) return validated.error;
     const body = validated.data as StaffRegistrationRequest;
-    const { email, first_name, last_name, role, phone, preferred_language } = body;
 
     // Create admin client for user creation
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -109,7 +114,7 @@ serve(async (req: Request) => {
     const { data: existingStaff } = await adminClient
       .from("staff")
       .select("id")
-      .eq("email", email.toLowerCase())
+      .eq("email", body.email.toLowerCase())
       .maybeSingle();
 
     if (existingStaff) {
@@ -119,17 +124,17 @@ serve(async (req: Request) => {
       );
     }
 
-    // Generate temporary password
-    const tempPassword = generateTempPassword();
+    // Create auth user with random unguessable password
+    // Nobody needs to know this password — the staff member will set their own via the invite wizard
+    const randomPassword = generateSecurePassword();
 
-    // Create auth user
     const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-      email: email.toLowerCase(),
-      password: tempPassword,
+      email: body.email.toLowerCase(),
+      password: randomPassword,
       email_confirm: true,
       user_metadata: {
-        first_name,
-        last_name,
+        first_name: body.first_name,
+        last_name: body.last_name,
         role: "staff",
       },
     });
@@ -142,19 +147,38 @@ serve(async (req: Request) => {
       );
     }
 
+    // Build the staff record with all fields provided by admin
+    const staffRecord: Record<string, unknown> = {
+      user_id: authUser.user.id,
+      email: body.email.toLowerCase(),
+      first_name: body.first_name,
+      last_name: body.last_name,
+      role: body.role,
+      phone: body.phone || null,
+      preferred_language: body.preferred_language || "en",
+      status: "pending",
+    };
+
+    // Add optional fields if provided
+    const optionalFields = [
+      "date_of_birth", "nationality", "nie_number", "social_security_number",
+      "address_line1", "address_line2", "city", "province", "postal_code", "country",
+      "emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship",
+      "hire_date", "department", "position", "contract_type", "notes",
+      "personal_mobile", "escalation_priority", "is_on_call", "annual_holiday_days",
+    ];
+
+    for (const field of optionalFields) {
+      const value = (body as Record<string, unknown>)[field];
+      if (value !== undefined && value !== null && value !== "") {
+        staffRecord[field] = value;
+      }
+    }
+
     // Insert staff record
     const { data: newStaff, error: staffInsertError } = await adminClient
       .from("staff")
-      .insert({
-        user_id: authUser.user.id,
-        email: email.toLowerCase(),
-        first_name,
-        last_name,
-        role,
-        phone: phone || null,
-        preferred_language: preferred_language || "en",
-        status: "active",
-      })
+      .insert(staffRecord)
       .select("id")
       .single();
 
@@ -173,71 +197,22 @@ serve(async (req: Request) => {
       action: "staff_created",
       entity_type: "staff",
       entity_id: newStaff.id,
-      staff_id: null, // Will be set by RLS context if available
+      staff_id: null,
       new_values: {
-        email: email.toLowerCase(),
-        role,
+        email: body.email.toLowerCase(),
+        role: body.role,
         created_by_user_id: userId,
       },
     });
-
-    // Send welcome email with credentials via Gmail SMTP
-    try {
-      const staffLoginUrl = `${req.headers.get("origin") || "https://shelter-span.lovable.app"}/staff/login`;
-      
-      const emailContent = preferred_language === "es" 
-        ? `
-          <h1>Bienvenido al Portal de Personal de ICE Alarm</h1>
-          <p>Hola ${first_name},</p>
-          <p>Tu cuenta de personal ha sido creada con el rol: <strong>${getRoleDisplayName(role)}</strong></p>
-          <p>Tus credenciales de acceso temporales:</p>
-          <ul>
-            <li><strong>Email:</strong> ${email}</li>
-            <li><strong>Contraseña temporal:</strong> ${tempPassword}</li>
-          </ul>
-          <p>Por favor, inicia sesión y cambia tu contraseña inmediatamente.</p>
-          <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Iniciar Sesión</a></p>
-          <p>Si tienes alguna pregunta, contacta con tu supervisor.</p>
-        `
-        : `
-          <h1>Welcome to ICE Alarm Staff Portal</h1>
-          <p>Hello ${first_name},</p>
-          <p>Your staff account has been created with the role: <strong>${getRoleDisplayName(role)}</strong></p>
-          <p>Your temporary login credentials:</p>
-          <ul>
-            <li><strong>Email:</strong> ${email}</li>
-            <li><strong>Temporary Password:</strong> ${tempPassword}</li>
-          </ul>
-          <p>Please log in and change your password immediately.</p>
-          <p><a href="${staffLoginUrl}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login to Staff Portal</a></p>
-          <p>If you have any questions, please contact your supervisor.</p>
-        `;
-
-      const emailSubject = preferred_language === "es" 
-        ? "Tu cuenta de personal de ICE Alarm ha sido creada" 
-        : "Your ICE Alarm Staff Account Has Been Created";
-
-      const emailResult = await sendEmail(email, emailSubject, emailContent);
-
-      if (emailResult.success) {
-        console.log("Welcome email sent successfully to:", email);
-      } else {
-        console.error("Failed to send welcome email:", emailResult.error);
-      }
-    } catch (emailError) {
-      console.error("Failed to send welcome email:", emailError);
-      // Don't fail the request if email fails - staff account was created successfully
-    }
 
     return new Response(
       JSON.stringify({
         success: true,
         staff_id: newStaff.id,
-        message: "Staff member created successfully",
+        message: "Staff member created successfully. Send them an invitation from their profile.",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error: unknown) {
     console.error("Error in staff-register function:", error);
     const message = error instanceof Error ? error.message : "Internal server error";

@@ -14,6 +14,7 @@ import {
   UserCheck,
   Clock,
   UserX,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,8 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
       return <Badge className="bg-alert-resolved text-alert-resolved-foreground">Active</Badge>;
+    case "pending":
+      return <Badge className="bg-blue-500 text-white">Pending</Badge>;
     case "on_leave":
       return <Badge className="bg-amber-500 text-white">On Leave</Badge>;
     case "suspended":
@@ -130,7 +133,7 @@ export default function StaffPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -165,6 +168,19 @@ export default function StaffPage() {
           <CardContent>
             <div className="text-2xl font-bold text-amber-500">
               {stats?.on_leave || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Send className="h-4 w-4" />
+              Pending
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-500">
+              {stats?.pending || 0}
             </div>
           </CardContent>
         </Card>
@@ -212,6 +228,7 @@ export default function StaffPage() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="on_leave">On Leave</SelectItem>
                 <SelectItem value="suspended">Suspended</SelectItem>
                 <SelectItem value="terminated">Terminated</SelectItem>

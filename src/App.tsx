@@ -50,6 +50,7 @@ const BlogListPage = lazyWithRetry(() => import("./pages/blog/BlogListPage"));
 const BlogPostPage = lazyWithRetry(() => import("./pages/blog/BlogPostPage"));
 const ReferralRedirect = lazyWithRetry(() => import("./pages/ReferralRedirect"));
 const KnowledgeBasePage = lazyWithRetry(() => import("./pages/KnowledgeBasePage"));
+const HowItWorksPage = lazyWithRetry(() => import("./pages/HowItWorksPage"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 // Join Flow - Lazy loaded
@@ -62,6 +63,7 @@ const ResetPassword = lazyWithRetry(() => import("./pages/auth/ResetPassword"));
 const StaffLogin = lazyWithRetry(() => import("./pages/auth/StaffLogin"));
 const CompleteRegistration = lazyWithRetry(() => import("./pages/auth/CompleteRegistration"));
 const Unauthorized = lazyWithRetry(() => import("./pages/auth/Unauthorized"));
+const StaffInvitePage = lazyWithRetry(() => import("./pages/staff/StaffInvitePage"));
 
 // Admin Pages - Lazy loaded
 const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
@@ -306,6 +308,7 @@ const App = () => {
                   <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<Index />} />
+                    <Route path="/how-it-works" element={<HowItWorksPage />} />
                     <Route path="/pendant" element={<PendantPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/terms" element={<TermsPage />} />
@@ -317,6 +320,7 @@ const App = () => {
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/staff/login" element={<StaffLogin />} />
+                    <Route path="/staff/invite" element={<StaffInvitePage />} />
                     <Route path="/register" element={<Navigate to="/join" replace />} />
                     <Route path="/complete-registration" element={<CompleteRegistration />} />
                     <Route path="/unauthorized" element={<Unauthorized />} />

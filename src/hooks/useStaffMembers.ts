@@ -83,6 +83,7 @@ export function useStaffStats() {
         on_leave: 0,
         suspended: 0,
         terminated: 0,
+        pending: 0,
       };
 
       data?.forEach((s: { status: string }) => {
@@ -108,6 +109,29 @@ export function useCreateStaff() {
       role: string;
       phone?: string;
       preferred_language: string;
+      // Optional fields admin may fill in
+      date_of_birth?: string;
+      nationality?: string;
+      nie_number?: string;
+      social_security_number?: string;
+      address_line1?: string;
+      address_line2?: string;
+      city?: string;
+      province?: string;
+      postal_code?: string;
+      country?: string;
+      emergency_contact_name?: string;
+      emergency_contact_phone?: string;
+      emergency_contact_relationship?: string;
+      hire_date?: string;
+      department?: string;
+      position?: string;
+      contract_type?: string;
+      notes?: string;
+      personal_mobile?: string;
+      escalation_priority?: number;
+      is_on_call?: boolean;
+      annual_holiday_days?: number;
     }) => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
@@ -131,7 +155,7 @@ export function useCreateStaff() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-members"] });
       queryClient.invalidateQueries({ queryKey: ["staff-stats"] });
-      toast.success("Staff member created successfully! They will receive login credentials via email.");
+      toast.success("Staff member created. Send them an invitation from their profile.");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create staff member");

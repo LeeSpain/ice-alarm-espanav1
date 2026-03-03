@@ -1,4 +1,4 @@
-export type StaffStatus = "active" | "on_leave" | "suspended" | "terminated";
+export type StaffStatus = "active" | "on_leave" | "suspended" | "terminated" | "pending";
 
 export type StaffRole = "super_admin" | "admin" | "call_centre_supervisor" | "call_centre";
 
@@ -75,3 +75,48 @@ export type StaffFormData = Omit<
   StaffMember,
   "id" | "user_id" | "created_at" | "updated_at" | "is_active" | "last_login_at"
 >;
+
+// --- Staff Invites ---
+
+export type StaffInviteStatus = "pending" | "completed" | "expired" | "revoked";
+
+export interface StaffInvite {
+  id: string;
+  staff_id: string;
+  token: string;
+  status: StaffInviteStatus;
+  expires_at: string;
+  completed_at: string | null;
+  revoked_at: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+// --- Staff Onboarding Wizard ---
+
+export interface StaffOnboardingWizardData {
+  password: string;
+  confirmPassword: string;
+  date_of_birth?: string;
+  nationality?: string;
+  nie_number?: string;
+  social_security_number?: string;
+  phone?: string;
+  personal_mobile?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relationship?: string;
+}
+
+export const WIZARD_COLLECTABLE_FIELDS = [
+  "phone", "personal_mobile", "date_of_birth", "nationality",
+  "nie_number", "social_security_number",
+  "address_line1", "address_line2", "city", "province", "postal_code", "country",
+  "emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship",
+] as const;

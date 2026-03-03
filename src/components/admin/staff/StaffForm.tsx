@@ -88,7 +88,7 @@ export function StaffForm({ onSuccess, onCancel }: StaffFormProps) {
         throw new Error(response.data.error);
       }
 
-      toast.success("Staff member created successfully! They will receive login credentials via email.");
+      toast.success("Staff member created. Send them an invitation from their profile.");
       onSuccess();
     } catch (error: any) {
       console.error("Error creating staff member:", error);
