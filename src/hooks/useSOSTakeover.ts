@@ -30,6 +30,7 @@ export interface UseSOSTakeoverReturn {
   activeAlert: SOSAlert | null;
   pendingAlerts: SOSAlert[];
   isTakeoverActive: boolean;
+  isTakeoverDismissed: boolean;
   loading: boolean;
   acceptAlert: (alertId: string) => Promise<boolean>;
   resolveAlert: (
@@ -37,6 +38,8 @@ export interface UseSOSTakeoverReturn {
     notes: string,
     isFalseAlarm: boolean,
   ) => Promise<boolean>;
+  dismissTakeover: () => void;
+  restoreTakeover: () => void;
 }
 
 const SOS_TYPES = ["sos_button", "fall_detected"];
@@ -47,6 +50,7 @@ export function useSOSTakeover(): UseSOSTakeoverReturn {
 
   const [alerts, setAlerts] = useState<SOSAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTakeoverDismissed, setIsTakeoverDismissed] = useState(false);
 
   // Fetch SOS alerts
   useEffect(() => {
@@ -205,12 +209,18 @@ export function useSOSTakeover(): UseSOSTakeoverReturn {
     [],
   );
 
+  const dismissTakeover = useCallback(() => setIsTakeoverDismissed(true), []);
+  const restoreTakeover = useCallback(() => setIsTakeoverDismissed(false), []);
+
   return {
     activeAlert,
     pendingAlerts,
     isTakeoverActive,
+    isTakeoverDismissed,
     loading,
     acceptAlert,
     resolveAlert,
+    dismissTakeover,
+    restoreTakeover,
   };
 }
