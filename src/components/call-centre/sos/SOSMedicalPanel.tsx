@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Card not needed - using explicit dark styled divs within the SOS dark modal
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,30 +96,28 @@ export function SOSMedicalPanel({ memberId, specialInstructions }: SOSMedicalPan
 
         {/* Doctor */}
         {medical?.doctor_name && (
-          <Card className="bg-zinc-800 border-zinc-700">
-            <CardContent className="p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Stethoscope className="h-4 w-4 text-zinc-400" />
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">{medical.doctor_name}</p>
-                  {medical.doctor_phone && (
-                    <p className="text-xs text-zinc-500">{medical.doctor_phone}</p>
-                  )}
-                </div>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Stethoscope className="h-4 w-4 text-blue-400" />
+              <div>
+                <p className="text-sm font-medium text-zinc-200">{medical.doctor_name}</p>
+                {medical.doctor_phone && (
+                  <p className="text-xs text-zinc-400 font-mono">{medical.doctor_phone}</p>
+                )}
               </div>
-              {medical.doctor_phone && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-green-400 hover:text-green-300 hover:bg-green-900/30"
-                  onClick={() => window.open(`tel:${medical.doctor_phone}`, "_self")}
-                >
-                  <Phone className="h-3.5 w-3.5 mr-1" />
-                  {t("sos.medical.callDoctor", "Call")}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+            {medical.doctor_phone && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-green-400 hover:text-green-300 hover:bg-green-900/30"
+                onClick={() => window.open(`tel:${medical.doctor_phone}`, "_self")}
+              >
+                <Phone className="h-3.5 w-3.5 mr-1" />
+                {t("sos.medical.callDoctor", "Call")}
+              </Button>
+            )}
+          </div>
         )}
 
         {/* Hospital */}

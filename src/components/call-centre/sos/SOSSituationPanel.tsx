@@ -89,9 +89,9 @@ export function SOSSituationPanel({
     <div className="h-full flex flex-col gap-2">
       {/* Map — top third */}
       <div className="shrink-0" style={{ height: "33%" }}>
-        <div className="h-full bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden flex flex-col">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 border-b border-zinc-700">
-            <MapPin className="h-3.5 w-3.5 text-zinc-400" />
+        <div className="h-full bg-zinc-800/50 rounded-lg border border-zinc-700/50 overflow-hidden flex flex-col">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/30 border-b border-zinc-700/50">
+            <MapPin className="h-3.5 w-3.5 text-red-400" />
             <span className="text-xs font-medium text-zinc-400">
               {t("sos.situation.lastKnownLocation", "Last Known Location")}
             </span>
@@ -114,7 +114,7 @@ export function SOSSituationPanel({
             )}
           </div>
           {address && lat && lng && (
-            <p className="text-xs text-zinc-500 px-3 py-1 border-t border-zinc-700 truncate">
+            <p className="text-xs text-zinc-500 px-3 py-1 border-t border-zinc-700/50 truncate">
               {address}
             </p>
           )}
@@ -123,8 +123,8 @@ export function SOSSituationPanel({
 
       {/* Isabella Feed — middle third */}
       <div className="flex-1 min-h-0" style={{ height: "33%" }}>
-        <div className="h-full bg-zinc-800 rounded-lg border border-zinc-700 flex flex-col">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-zinc-700 shrink-0">
+        <div className="h-full bg-zinc-800/50 rounded-lg border border-zinc-700/50 flex flex-col">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-zinc-700/50 shrink-0">
             <Brain className="h-3.5 w-3.5 text-purple-400" />
             <span className="text-xs font-medium text-zinc-400">
               {t("sos.situation.isabellaFeed", "Isabella Live Feed")}
@@ -139,9 +139,9 @@ export function SOSSituationPanel({
 
       {/* Timeline — bottom third */}
       <div className="shrink-0" style={{ height: "33%" }}>
-        <div className="h-full bg-zinc-800 rounded-lg border border-zinc-700 flex flex-col">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-zinc-700 shrink-0">
-            <Clock className="h-3.5 w-3.5 text-zinc-400" />
+        <div className="h-full bg-zinc-800/50 rounded-lg border border-zinc-700/50 flex flex-col">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-zinc-700/50 shrink-0">
+            <Clock className="h-3.5 w-3.5 text-blue-400" />
             <span className="text-xs font-medium text-zinc-400">
               {t("sos.situation.incidentTimeline", "Incident Timeline")}
             </span>

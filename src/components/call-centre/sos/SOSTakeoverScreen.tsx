@@ -247,8 +247,8 @@ export function SOSTakeoverScreen({ onClose }: SOSTakeoverScreenProps) {
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-[96%] h-[94%] max-w-[1800px] bg-zinc-900 rounded-xl shadow-2xl border border-zinc-700 flex flex-col overflow-hidden">
+      {/* Modal — dark class activates dark CSS variables for all shadcn components */}
+      <div className="dark relative w-[96%] h-[94%] max-w-[1800px] bg-zinc-900 rounded-xl shadow-2xl border border-zinc-700/50 flex flex-col overflow-hidden text-zinc-200">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-red-900/90 border-b border-red-700">
           <div className="flex items-center gap-3">
@@ -309,46 +309,67 @@ export function SOSTakeoverScreen({ onClose }: SOSTakeoverScreenProps) {
         {/* Main three-column layout */}
         <div className="flex-1 min-h-0 flex">
           {/* Left: Medical (30%) */}
-          <div className="w-[30%] border-r border-zinc-700 p-3 overflow-hidden">
-            <SOSMedicalPanel
-              memberId={activeAlert.member_id}
-              specialInstructions={memberSpecialInstructions}
-            />
+          <div className="w-[30%] border-r border-zinc-700/50 flex flex-col overflow-hidden">
+            <div className="shrink-0 px-3 py-1.5 border-b border-zinc-800 bg-zinc-900/50">
+              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                {t("sos.section.medical", "Medical Profile")}
+              </h3>
+            </div>
+            <div className="flex-1 min-h-0 p-3 overflow-hidden">
+              <SOSMedicalPanel
+                memberId={activeAlert.member_id}
+                specialInstructions={memberSpecialInstructions}
+              />
+            </div>
           </div>
 
           {/* Centre: Situation (40%) */}
-          <div className="w-[40%] border-r border-zinc-700 p-3 overflow-hidden">
-            <SOSSituationPanel
-              alertId={activeAlert.id}
-              memberId={activeAlert.member_id}
-              receivedAt={activeAlert.received_at}
-              alertStatus={activeAlert.status}
-              acceptedAt={activeAlert.accepted_at}
-              acceptedByName={acceptedByName}
-              locationLat={activeAlert.location_lat}
-              locationLng={activeAlert.location_lng}
-              locationAddress={activeAlert.location_address}
-              isabellaLogs={isabellaLogs}
-              participants={participants}
-              escalations={escalations}
-            />
+          <div className="w-[40%] border-r border-zinc-700/50 flex flex-col overflow-hidden">
+            <div className="shrink-0 px-3 py-1.5 border-b border-zinc-800 bg-zinc-900/50">
+              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                {t("sos.section.situation", "Situation Overview")}
+              </h3>
+            </div>
+            <div className="flex-1 min-h-0 p-3 overflow-hidden">
+              <SOSSituationPanel
+                alertId={activeAlert.id}
+                memberId={activeAlert.member_id}
+                receivedAt={activeAlert.received_at}
+                alertStatus={activeAlert.status}
+                acceptedAt={activeAlert.accepted_at}
+                acceptedByName={acceptedByName}
+                locationLat={activeAlert.location_lat}
+                locationLng={activeAlert.location_lng}
+                locationAddress={activeAlert.location_address}
+                isabellaLogs={isabellaLogs}
+                participants={participants}
+                escalations={escalations}
+              />
+            </div>
           </div>
 
           {/* Right: Actions (30%) */}
-          <div className="w-[30%] overflow-hidden">
-            <SOSActionPanel
-              alertId={activeAlert.id}
-              memberId={activeAlert.member_id}
-              conferenceId={conference?.id || null}
-              isInConference={isInConference}
-              onJoinConference={handleJoinConference}
-              onAddToCall={handleAddToCall}
-              onCallPrivately={handleCallPrivately}
-              privateCall={privateCall}
-              onBridgeToConference={handleBridgeToConference}
-              onEndPrivateCall={handleEndPrivateCall}
-              doctorPhone={doctorPhone}
-            />
+          <div className="w-[30%] flex flex-col overflow-hidden">
+            <div className="shrink-0 px-3 py-1.5 border-b border-zinc-800 bg-zinc-900/50">
+              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                {t("sos.section.actions", "Actions & Contacts")}
+              </h3>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <SOSActionPanel
+                alertId={activeAlert.id}
+                memberId={activeAlert.member_id}
+                conferenceId={conference?.id || null}
+                isInConference={isInConference}
+                onJoinConference={handleJoinConference}
+                onAddToCall={handleAddToCall}
+                onCallPrivately={handleCallPrivately}
+                privateCall={privateCall}
+                onBridgeToConference={handleBridgeToConference}
+                onEndPrivateCall={handleEndPrivateCall}
+                doctorPhone={doctorPhone}
+              />
+            </div>
           </div>
         </div>
 

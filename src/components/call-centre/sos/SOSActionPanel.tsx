@@ -10,7 +10,6 @@ import {
   Building2,
   CheckCircle,
   Mail,
-  MessageSquare,
   Shield,
   Siren,
   Users,
@@ -20,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Card not needed - using explicit dark styled divs within the SOS dark modal
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +97,7 @@ export function SOSActionPanel({
   const [emergencyServicesCalled, setEmergencyServicesCalled] = useState(false);
   const [nextOfKinNotified, setNextOfKinNotified] = useState(false);
   const [memberPhone, setMemberPhone] = useState<string | null>(null);
+  const [hospitalPreference, setHospitalPreference] = useState<string | null>(null);
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch emergency contacts
@@ -113,17 +113,25 @@ export function SOSActionPanel({
     fetchContacts();
   }, [memberId]);
 
-  // Fetch member phone
+  // Fetch member phone and hospital preference
   useEffect(() => {
-    const fetchMember = async () => {
-      const { data } = await supabase
-        .from("members")
-        .select("phone")
-        .eq("id", memberId)
-        .maybeSingle();
-      if (data?.phone) setMemberPhone(data.phone);
+    const fetchMemberAndMedical = async () => {
+      const [memberRes, medRes] = await Promise.all([
+        supabase
+          .from("members")
+          .select("phone")
+          .eq("id", memberId)
+          .maybeSingle(),
+        supabase
+          .from("medical_information")
+          .select("hospital_preference")
+          .eq("member_id", memberId)
+          .maybeSingle(),
+      ]);
+      if (memberRes.data?.phone) setMemberPhone(memberRes.data.phone);
+      if (medRes.data?.hospital_preference) setHospitalPreference(medRes.data.hospital_preference);
     };
-    fetchMember();
+    fetchMemberAndMedical();
   }, [memberId]);
 
   // Fetch previous alerts
@@ -251,61 +259,58 @@ export function SOSActionPanel({
 
         {/* Private Call Active Indicator */}
         {privateCall && (
-          <Card className="bg-yellow-900/30 border-yellow-700">
-            <CardContent className="px-3 py-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 animate-pulse" />
-                  <span className="text-sm font-semibold text-yellow-300">
-                    {t("sos.action.privateCallActive", "Private Call Active")}
-                  </span>
-                </div>
-                <span className="text-xs text-yellow-400 font-mono">
-                  <PrivateCallElapsed startTime={privateCall.startTime} />
+          <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg px-3 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 animate-pulse" />
+                <span className="text-sm font-semibold text-yellow-300">
+                  {t("sos.action.privateCallActive", "Private Call Active")}
                 </span>
               </div>
-              <p className="text-xs text-yellow-200">
-                {privateCall.contactName} — {privateCall.phone}
-              </p>
-              <div className="flex gap-1.5">
-                <Button
-                  size="sm"
-                  className="flex-1 text-xs bg-blue-700 hover:bg-blue-800"
-                  disabled={!conferenceId}
-                  onClick={onBridgeToConference}
-                >
-                  <UserPlus className="h-3 w-3 mr-1" />
-                  {t("sos.action.bridgeToConference", "Bridge to Conference")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="text-xs"
-                  onClick={onEndPrivateCall}
-                >
-                  <Phone className="h-3 w-3 mr-1" />
-                  {t("sos.action.endCall", "End Call")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs text-yellow-400 font-mono">
+                <PrivateCallElapsed startTime={privateCall.startTime} />
+              </span>
+            </div>
+            <p className="text-xs text-yellow-200">
+              {privateCall.contactName} — {privateCall.phone}
+            </p>
+            <div className="flex gap-1.5">
+              <Button
+                size="sm"
+                className="flex-1 text-xs bg-blue-700 hover:bg-blue-800 text-white"
+                disabled={!conferenceId}
+                onClick={onBridgeToConference}
+              >
+                <UserPlus className="h-3 w-3 mr-1" />
+                {t("sos.action.bridgeToConference", "Bridge to Conference")}
+              </Button>
+              <Button
+                size="sm"
+                className="text-xs bg-red-700 hover:bg-red-800 text-white"
+                onClick={onEndPrivateCall}
+              >
+                <Phone className="h-3 w-3 mr-1" />
+                {t("sos.action.endCall", "End Call")}
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Emergency Contacts */}
-        <Card className="bg-zinc-800 border-zinc-700">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5" />
+        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700/50">
+            <Phone className="h-3.5 w-3.5 text-zinc-400" />
+            <span className="text-sm font-medium text-zinc-300">
               {t("sos.action.emergencyContacts", "Emergency Contacts")}
-              <Badge variant="outline" className="ml-auto text-xs border-zinc-600 text-zinc-500">
-                {contacts.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
+            </span>
+            <Badge className="ml-auto text-xs bg-zinc-700 text-zinc-400 border-0">
+              {contacts.length}
+            </Badge>
+          </div>
+          <div className="px-3 py-2 space-y-2">
             {/* Member direct dial */}
             {memberPhone && (
-              <div className="bg-green-900/20 border border-green-800 rounded-lg p-2 space-y-1.5">
+              <div className="bg-green-900/20 border border-green-800/50 rounded-lg p-2 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Shield className="h-3.5 w-3.5 text-green-400" />
@@ -318,7 +323,7 @@ export function SOSActionPanel({
                 <div className="flex gap-1.5">
                   <Button
                     size="sm"
-                    className="flex-1 text-xs bg-green-700 hover:bg-green-800"
+                    className="flex-1 text-xs bg-green-700 hover:bg-green-800 text-white"
                     disabled={!!privateCall}
                     onClick={() => onCallPrivately(memberPhone, "Member")}
                   >
@@ -327,7 +332,7 @@ export function SOSActionPanel({
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 text-xs bg-blue-700 hover:bg-blue-800"
+                    className="flex-1 text-xs bg-blue-700 hover:bg-blue-800 text-white"
                     disabled={!conferenceId}
                     onClick={() => onAddToCall("Member", memberPhone, "member")}
                   >
@@ -342,7 +347,7 @@ export function SOSActionPanel({
               <p className="text-xs text-zinc-500">{t("sos.action.noContacts", "No emergency contacts on file")}</p>
             ) : (
               contacts.map((contact) => (
-                <div key={contact.id} className="bg-zinc-900 rounded-lg p-2 space-y-1.5">
+                <div key={contact.id} className="bg-zinc-900/50 border border-zinc-700/30 rounded-lg p-2 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-200">
@@ -351,9 +356,9 @@ export function SOSActionPanel({
                         <span className="text-zinc-500 text-xs ml-1">({contact.relationship})</span>
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-zinc-500 font-mono">{contact.phone}</span>
+                        <span className="text-xs text-zinc-400 font-mono">{contact.phone}</span>
                         {contact.email && (
-                          <span className="flex items-center gap-0.5 text-xs text-zinc-600">
+                          <span className="flex items-center gap-0.5 text-xs text-zinc-500">
                             <Mail className="h-2.5 w-2.5" />
                             {contact.email}
                           </span>
@@ -362,14 +367,14 @@ export function SOSActionPanel({
                     </div>
                     <div className="flex items-center gap-1">
                       {contact.speaks_spanish && <span className="text-xs">🇪🇸</span>}
-                      <Badge variant="outline" className="text-xs border-zinc-600 text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">
                         #{contact.priority_order}
-                      </Badge>
+                      </span>
                     </div>
                   </div>
                   {/* Contact notes */}
                   {contact.notes && (
-                    <div className="flex items-start gap-1 bg-zinc-800 rounded px-2 py-1">
+                    <div className="flex items-start gap-1 bg-zinc-800/50 rounded px-2 py-1">
                       <Info className="h-3 w-3 text-zinc-500 mt-0.5 shrink-0" />
                       <p className="text-xs text-zinc-400">{contact.notes}</p>
                     </div>
@@ -377,8 +382,7 @@ export function SOSActionPanel({
                   <div className="flex gap-1.5">
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="flex-1 text-xs border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                      className="flex-1 text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
                       disabled={!!privateCall}
                       onClick={() => onCallPrivately(contact.phone, contact.contact_name, contact.id)}
                     >
@@ -387,7 +391,7 @@ export function SOSActionPanel({
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 text-xs bg-blue-700 hover:bg-blue-800"
+                      className="flex-1 text-xs bg-blue-700 hover:bg-blue-800 text-white"
                       disabled={!conferenceId}
                       onClick={() =>
                         onAddToCall(
@@ -404,8 +408,7 @@ export function SOSActionPanel({
                     {contact.email && (
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="text-xs border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                        className="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
                         onClick={() => window.open(`mailto:${contact.email}`, "_blank")}
                       >
                         <Mail className="h-3 w-3" />
@@ -415,83 +418,98 @@ export function SOSActionPanel({
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quick Actions */}
-        <Card className="bg-zinc-800 border-zinc-700">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
-              <PhoneCall className="h-3.5 w-3.5" />
-              {t("sos.action.quickActions", "Quick Actions")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <div className="grid grid-cols-3 gap-1.5">
-              <Button
-                size="sm"
-                variant="destructive"
-                className="text-xs"
-                onClick={() => {
-                  window.open("tel:112", "_self");
-                  if (!emergencyServicesCalled) toggleEmergencyServices();
-                }}
-              >
-                <Siren className="h-3 w-3 mr-1" />
-                112
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs border-zinc-600 text-zinc-300 hover:bg-zinc-700"
-                disabled={!doctorPhone}
-                onClick={() => doctorPhone && window.open(`tel:${doctorPhone}`, "_self")}
-              >
-                <Stethoscope className="h-3 w-3 mr-1" />
-                {t("sos.action.doctor", "Doctor")}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs border-zinc-600 text-zinc-300 hover:bg-zinc-700"
-                disabled
-              >
-                <Building2 className="h-3 w-3 mr-1" />
-                {t("sos.action.hospital", "Hospital")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-1.5">
+          <h4 className="text-xs font-semibold text-zinc-500 uppercase px-1 flex items-center gap-1.5">
+            <PhoneCall className="h-3 w-3" />
+            {t("sos.action.quickActions", "Quick Actions")}
+          </h4>
+          <div className="grid grid-cols-3 gap-1.5">
+            <Button
+              size="sm"
+              className="text-xs bg-red-700 hover:bg-red-800 text-white font-semibold"
+              onClick={() => {
+                window.open("tel:112", "_self");
+                if (!emergencyServicesCalled) toggleEmergencyServices();
+              }}
+            >
+              <Siren className="h-3 w-3 mr-1" />
+              112
+            </Button>
+            <Button
+              size="sm"
+              className={cn(
+                "text-xs",
+                doctorPhone
+                  ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
+                  : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              )}
+              disabled={!doctorPhone}
+              onClick={() => doctorPhone && window.open(`tel:${doctorPhone}`, "_self")}
+            >
+              <Stethoscope className="h-3 w-3 mr-1" />
+              {t("sos.action.doctor", "Doctor")}
+            </Button>
+            <Button
+              size="sm"
+              className={cn(
+                "text-xs",
+                hospitalPreference
+                  ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
+                  : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              )}
+              disabled={!hospitalPreference}
+              onClick={() => {
+                if (hospitalPreference) {
+                  window.open(`https://www.google.com/maps/search/${encodeURIComponent(hospitalPreference)}`, "_blank");
+                }
+              }}
+              title={hospitalPreference || t("sos.action.noHospital", "No hospital preference on file")}
+            >
+              <Building2 className="h-3 w-3 mr-1" />
+              {t("sos.action.hospital", "Hospital")}
+            </Button>
+          </div>
+          {hospitalPreference && (
+            <p className="text-[10px] text-zinc-500 px-1 truncate">
+              <Building2 className="h-2.5 w-2.5 inline mr-0.5" />
+              {hospitalPreference}
+            </p>
+          )}
+        </div>
 
         {/* Previous Alerts */}
         {previousAlerts.length > 0 && (
-          <Card className="bg-zinc-800 border-zinc-700">
-            <CardHeader className="py-2 px-3">
-              <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
-                <History className="h-3.5 w-3.5" />
+          <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg overflow-hidden">
+            <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700/50">
+              <History className="h-3.5 w-3.5 text-zinc-400" />
+              <span className="text-sm font-medium text-zinc-300">
                 {t("sos.action.previousAlerts", "Previous Alerts")}
-                {falseAlarmCount > 0 && (
-                  <Badge className="ml-auto text-xs bg-yellow-700 text-yellow-200">
-                    {falseAlarmCount} false alarm{falseAlarmCount !== 1 ? "s" : ""}
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-3 pb-3 space-y-1.5">
+              </span>
+              {falseAlarmCount > 0 && (
+                <Badge className="ml-auto text-xs bg-yellow-800/60 text-yellow-300 border-0">
+                  {falseAlarmCount} false alarm{falseAlarmCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
+            </div>
+            <div className="px-3 py-2 space-y-1.5">
               {previousAlerts.map((alert) => (
-                <div key={alert.id} className="bg-zinc-900 rounded px-2 py-1.5 text-xs">
+                <div key={alert.id} className="bg-zinc-900/50 rounded px-2 py-1.5 text-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs border-zinc-600 text-zinc-400">
+                      <span className="text-xs text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">
                         {alert.alert_type.replace("_", " ")}
-                      </Badge>
+                      </span>
                       <span className="text-zinc-500">
                         {new Date(alert.received_at).toLocaleDateString()}
                       </span>
                       {alert.is_false_alarm && (
-                        <Badge className="text-[10px] bg-yellow-800 text-yellow-300 px-1 py-0">
+                        <span className="text-[10px] bg-yellow-800/60 text-yellow-300 px-1 py-0 rounded">
                           False
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     {alert.resolved_at && (
@@ -503,31 +521,31 @@ export function SOSActionPanel({
                   )}
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Notes */}
-        <Card className="bg-zinc-800 border-zinc-700">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5" />
+        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700/50">
+            <FileText className="h-3.5 w-3.5 text-zinc-400" />
+            <span className="text-sm font-medium text-zinc-300">
               {t("sos.action.notes", "Notes")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
+            </span>
+          </div>
+          <div className="px-3 py-2">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={handleNotesBlur}
               placeholder={t("sos.action.notesPlaceholder", "Staff notes during call...")}
-              className="bg-zinc-900 border-zinc-700 text-zinc-300 placeholder:text-zinc-600 min-h-[80px] text-sm"
+              className="bg-zinc-900/50 border-zinc-700/50 text-zinc-300 placeholder:text-zinc-600 min-h-[80px] text-sm"
             />
             <p className="text-[10px] text-zinc-600 mt-1">
               {t("sos.action.autoSave", "Auto-saves every 30 seconds")}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </ScrollArea>
   );

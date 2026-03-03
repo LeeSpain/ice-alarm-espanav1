@@ -73,7 +73,7 @@ export function SOSCallControls({
 
   return (
     <>
-      <div className="flex items-center justify-center gap-3 px-4 py-3 bg-zinc-900 border-t border-zinc-700">
+      <div className="flex items-center justify-center gap-3 px-4 py-3 bg-zinc-900/80 border-t border-zinc-700/50">
         {/* Mute/Unmute */}
         <Button
           size="lg"

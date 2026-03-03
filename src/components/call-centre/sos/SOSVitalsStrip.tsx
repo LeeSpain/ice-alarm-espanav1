@@ -131,7 +131,7 @@ export function SOSVitalsStrip({ alertId, alertType, memberId, receivedAt, isUnr
     : null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/80 border-b border-zinc-700">
+    <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/60 border-b border-zinc-700/50">
       {/* Left: Member Identity */}
       <div className="flex items-center gap-4">
         {/* Photo */}

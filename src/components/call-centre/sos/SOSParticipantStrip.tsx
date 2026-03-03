@@ -68,7 +68,7 @@ export function SOSParticipantStrip({ participants, onMute, onUnmute, onRemove }
   if (active.length === 0 && left.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 bg-zinc-800/50 border-t border-zinc-700 overflow-x-auto">
+    <div className="flex items-center gap-3 px-4 py-2 bg-zinc-800/40 border-t border-zinc-700/50 overflow-x-auto">
       <span className="text-xs text-zinc-500 font-medium shrink-0">
         {t("sos.participants.label", "ON CALL")}
       </span>
