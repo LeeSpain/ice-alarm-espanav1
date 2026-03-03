@@ -16,6 +16,7 @@ import { Database } from "@/integrations/supabase/types";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 import { PARTNER_TYPES, getPartnerTypeLabel } from "@/config/partnerTypes";
+import { InvitePartnerDialog } from "@/components/admin/InvitePartnerDialog";
 
 type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 
@@ -47,6 +48,7 @@ interface PartnerStats {
 const ITEMS_PER_PAGE = 20;
 
 const statusColors: Record<PartnerStatus, string> = {
+  invited: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
   active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   suspended: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
@@ -64,6 +66,7 @@ export default function PartnersPage() {
   const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
   const [partnerToSuspend, setPartnerToSuspend] = useState<Partner | null>(null);
   const [partnerToActivate, setPartnerToActivate] = useState<Partner | null>(null);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   // Mutation to update partner status
   const updateStatusMutation = useMutation({
@@ -241,10 +244,16 @@ export default function PartnersPage() {
              {t("adminPartners.subtitle", "Manage your partner network and track referral commissions")}
            </p>
          </div>
-        <Button onClick={() => navigate("/admin/partners/new")}>
-           <Plus className="mr-2 h-4 w-4" />
-           {t("common.add", "Add")} {t("adminPartners.partner", "Partner")}
-         </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowInviteDialog(true)}>
+            <Send className="mr-2 h-4 w-4" />
+            {t("adminPartners.invitePartner", "Invite Partner")}
+          </Button>
+          <Button onClick={() => navigate("/admin/partners/new")}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("common.add", "Add")} {t("adminPartners.partner", "Partner")}
+          </Button>
+        </div>
       </div>
 
        {/* Stats Cards */}
@@ -306,6 +315,7 @@ export default function PartnersPage() {
                </SelectTrigger>
                <SelectContent>
                  <SelectItem value="all">{t("adminPartners.allStatus", "All Status")}</SelectItem>
+                 <SelectItem value="invited">{t("adminPartners.invited", "Invited")}</SelectItem>
                  <SelectItem value="pending">{t("common.pending", "Pending")}</SelectItem>
                  <SelectItem value="active">{t("common.active", "Active")}</SelectItem>
                  <SelectItem value="suspended">{t("adminPartners.suspended", "Suspended")}</SelectItem>
@@ -654,6 +664,9 @@ export default function PartnersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invite Partner Dialog */}
+      <InvitePartnerDialog open={showInviteDialog} onOpenChange={setShowInviteDialog} />
     </div>
   );
 }

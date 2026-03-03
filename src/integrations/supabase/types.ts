@@ -4032,6 +4032,57 @@ export type Database = {
           },
         ]
       }
+      partner_admin_invites: {
+        Row: {
+          id: string
+          partner_id: string
+          token: string
+          status: string
+          expires_at: string
+          completed_at: string | null
+          revoked_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          partner_id: string
+          token: string
+          status?: string
+          expires_at: string
+          completed_at?: string | null
+          revoked_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          partner_id?: string
+          token?: string
+          status?: string
+          expires_at?: string
+          completed_at?: string | null
+          revoked_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_admin_invites_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_admin_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_commissions: {
         Row: {
           amount_eur: number
@@ -6551,7 +6602,7 @@ export type Database = {
         | "ai"
         | "emergency_contact"
         | "external_service"
-      partner_status: "pending" | "active" | "suspended"
+      partner_status: "invited" | "pending" | "active" | "suspended"
       payment_method: "stripe" | "bank_transfer" | "paypal"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       payment_type:
@@ -6815,7 +6866,7 @@ export const Constants = {
         "emergency_contact",
         "external_service",
       ],
-      partner_status: ["pending", "active", "suspended"],
+      partner_status: ["invited", "pending", "active", "suspended"],
       payment_method: ["stripe", "bank_transfer", "paypal"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       payment_type: [

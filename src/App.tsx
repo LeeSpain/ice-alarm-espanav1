@@ -131,6 +131,7 @@ const PartnerOnboarding = lazyWithRetry(() => import("./pages/partner/PartnerOnb
 const PartnerJoin = lazyWithRetry(() => import("./pages/partner/PartnerJoin"));
 const PartnerVerify = lazyWithRetry(() => import("./pages/partner/PartnerVerify"));
 const PartnerLogin = lazyWithRetry(() => import("./pages/partner/PartnerLogin"));
+const PartnerInvitePage = lazyWithRetry(() => import("./pages/partner/PartnerInvitePage"));
 const PartnerDashboard = lazyWithRetry(() => import("./pages/partner/PartnerDashboard"));
 const PartnerInvitesPage = lazyWithRetry(() => import("./pages/partner/PartnerInvitesPage"));
 const PartnerMarketingPage = lazyWithRetry(() => import("./pages/partner/PartnerMarketingPage"));
@@ -410,6 +411,7 @@ const App = () => {
                     <Route path="/partner/join" element={<PartnerJoin />} />
                     <Route path="/partner/verify" element={<PartnerVerify />} />
                     <Route path="/partner/login" element={<PartnerLogin />} />
+                    <Route path="/partner/invite" element={<PartnerInvitePage />} />
 
                     {/* Partner Dashboard Routes - Require Partner Role */}
                     <Route

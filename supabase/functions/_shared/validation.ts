@@ -191,6 +191,34 @@ export const staffCompleteInviteSchema = z.object({
   }),
 });
 
+export const partnerAdminInviteSchema = z.object({
+  contact_name: name,
+  email,
+  preferred_language: language.optional(),
+  partner_type: z.enum([
+    "referral", "care", "residential", "pharmacy",
+    "insurance", "healthcare_provider", "real_estate",
+    "expat_community", "corporate_other",
+  ]).optional(),
+});
+
+export const partnerCompleteInviteSchema = z.object({
+  token: z.string().min(1).max(100),
+  password,
+  profile: z.object({
+    phone: z.string().max(20).optional(),
+    company_name: z.string().max(200).optional(),
+    position_title: z.string().max(200).optional(),
+    organization_type: z.string().max(100).optional(),
+    organization_registration: z.string().max(100).optional(),
+    organization_website: z.string().max(500).optional(),
+    estimated_monthly_referrals: z.string().max(50).optional(),
+    payout_beneficiary_name: z.string().max(200).optional(),
+    payout_iban: z.string().max(50).optional(),
+    region: z.string().max(100).optional(),
+  }),
+});
+
 export const saveDraftSchema = z.object({
   sessionId: z.string().min(1).max(200),
   currentStep: z.unknown(),
