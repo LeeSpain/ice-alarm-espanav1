@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Brain, Clock } from "lucide-react";
+import { MapPin, Brain, Clock, ExternalLink, Navigation } from "lucide-react";
 import { LocationMap } from "@/components/maps/LocationMap";
 import { SOSIsabellaFeed } from "./SOSIsabellaFeed";
 import { SOSTimeline } from "./SOSTimeline";
@@ -56,8 +56,6 @@ export function SOSSituationPanel({
 }: SOSSituationPanelProps) {
   const { t } = useTranslation();
   const [memberAddress, setMemberAddress] = useState<string | null>(null);
-  const [memberLat] = useState<number | null>(null);
-  const [memberLng] = useState<number | null>(null);
 
   // Fallback: fetch member address if no GPS location on alert
   useEffect(() => {
@@ -78,8 +76,8 @@ export function SOSSituationPanel({
     fetchAddress();
   }, [memberId, locationLat, locationLng]);
 
-  const lat = locationLat || memberLat;
-  const lng = locationLng || memberLng;
+  const lat = locationLat ?? null;
+  const lng = locationLng ?? null;
   const address = locationAddress || memberAddress;
 
   return (
@@ -92,6 +90,26 @@ export function SOSSituationPanel({
             <span className="text-xs font-medium text-zinc-400">
               {t("sos.situation.lastKnownLocation", "Last Known Location")}
             </span>
+            {lat && lng && (
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank")}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                  title="Open in Google Maps"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Map
+                </button>
+                <button
+                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank")}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                  title="Get Directions"
+                >
+                  <Navigation className="h-3 w-3" />
+                  Directions
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex-1 min-h-0">
             {lat && lng ? (
@@ -100,7 +118,7 @@ export function SOSSituationPanel({
                 lng={lng}
                 address={address || undefined}
                 height="100%"
-                showDirections={true}
+                showDirections={false}
                 className="border-0 rounded-none [&_.p-3]:p-1.5 [&_iframe]:rounded-none"
               />
             ) : (
