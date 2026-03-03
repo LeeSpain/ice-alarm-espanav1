@@ -15,7 +15,7 @@ export function useEscalationChains(startDate: string, endDate: string) {
   return useQuery({
     queryKey: ["escalation-chains", startDate, endDate],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("shift_escalation_chain")
         .select("*")
         .gte("shift_date", startDate)
@@ -39,7 +39,7 @@ export function useEscalationChainMutations() {
       supervisor_staff_id: string | null;
       created_by?: string;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("shift_escalation_chain")
         .upsert(entry, { onConflict: "shift_date,shift_type" })
         .select()

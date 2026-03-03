@@ -2978,6 +2978,7 @@ export type Database = {
           whatsapp_number: string | null
           whatsapp_paid_sales: boolean | null
           whatsapp_partner_signup: boolean | null
+          whatsapp_shift_alerts: boolean | null
         }
         Insert: {
           admin_user_id: string
@@ -2988,6 +2989,7 @@ export type Database = {
           whatsapp_number?: string | null
           whatsapp_paid_sales?: boolean | null
           whatsapp_partner_signup?: boolean | null
+          whatsapp_shift_alerts?: boolean | null
         }
         Update: {
           admin_user_id?: string
@@ -2998,6 +3000,7 @@ export type Database = {
           whatsapp_number?: string | null
           whatsapp_paid_sales?: boolean | null
           whatsapp_partner_signup?: boolean | null
+          whatsapp_shift_alerts?: boolean | null
         }
         Relationships: []
       }
@@ -4719,6 +4722,51 @@ export type Database = {
           },
         ]
       }
+      shift_alert_log: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          resolved_at: string | null
+          shift_date: string
+          shift_type: string
+          staff_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          shift_date?: string
+          shift_type: string
+          staff_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          shift_date?: string
+          shift_type?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_alert_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_alert_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
       shift_notes: {
         Row: {
           created_at: string | null
@@ -5247,6 +5295,48 @@ export type Database = {
             foreignKeyName: "staff_holidays_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+        ]
+      }
+      staff_presence: {
+        Row: {
+          created_at: string
+          id: string
+          is_online: boolean
+          last_heartbeat_at: string
+          session_started_at: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          last_heartbeat_at?: string
+          session_started_at?: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          last_heartbeat_at?: string
+          session_started_at?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_presence_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_presence_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
             referencedRelation: "staff_holiday_balance"
             referencedColumns: ["staff_id"]
           },

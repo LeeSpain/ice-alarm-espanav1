@@ -5,7 +5,6 @@ import {
   LogOut,
   Clock,
   Settings,
-  Phone,
   Lightbulb,
   Shield,
   ShieldOff,

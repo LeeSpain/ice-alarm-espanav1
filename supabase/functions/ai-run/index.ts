@@ -845,6 +845,7 @@ serve(async (req) => {
 
 // Handle CHAT WIDGET requests
     if (isChatWidget && (agentKey === "customer_service_expert" || agentKey === "member_specialist" || agentKey === "staff_support_specialist")) {
+      const startTime = Date.now();
       const userLanguage = context?.userLanguage || "en";
       const conversationHistory = context?.conversationHistory || [];
       const currentMessage = context?.currentMessage || "";
@@ -1057,6 +1058,9 @@ This will IMMEDIATELY transfer the call to a staff member. Only use when necessa
 
 REMEMBER: Every word you write will be spoken aloud. Write as you would naturally speak.
 `;
+
+      // Use customer service prompt as base for voice calls
+      let systemPrompt = CUSTOMER_SERVICE_CHAT_PROMPT;
 
       // Fetch member data if available
       let memberContext = "";

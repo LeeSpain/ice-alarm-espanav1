@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
     let query = supabase.from("outreach_email_drafts").select("*");
     if (send_all_approved) {
       query = query.eq("status", "approved").is("sent_at", null);
-    } else if (draft_ids?.length > 0) {
-      query = query.in("id", draft_ids);
+    } else if (draft_ids && draft_ids.length > 0) {
+      query = query.in("id", draft_ids as string[]);
     } else {
       return new Response(JSON.stringify({ error: "Provide draft_ids or send_all_approved" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

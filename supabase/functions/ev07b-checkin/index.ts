@@ -162,7 +162,8 @@ serve(async (req) => {
     // --- Alert creation ---
     const alertsCreated: string[] = [];
 
-    if (device.member_id) {
+    if (device && device.member_id) {
+      const currentDevice = device; // Narrow for nested function
       const locationData = {
         location_lat: (typeof body.lat === "number" && body.lat >= -90 && body.lat <= 90) ? body.lat : null,
         location_lng: (typeof body.lng === "number" && body.lng >= -180 && body.lng <= 180) ? body.lng : null,
@@ -174,7 +175,7 @@ serve(async (req) => {
         const { data: existing } = await supabase
           .from("alerts")
           .select("id")
-          .eq("device_id", device.id)
+          .eq("device_id", currentDevice.id)
           .eq("alert_type", alertType)
           .in("status", ["incoming", "in_progress"])
           .maybeSingle();
@@ -185,8 +186,8 @@ serve(async (req) => {
         const { data: newAlert } = await supabase
           .from("alerts")
           .insert({
-            device_id: device.id,
-            member_id: device.member_id,
+            device_id: currentDevice.id,
+            member_id: currentDevice.member_id,
             alert_type: alertType,
             status: "incoming",
             message,
@@ -208,7 +209,7 @@ serve(async (req) => {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
               },
-              body: JSON.stringify({ alert_id: newAlert.id, member_id: device.member_id }),
+              body: JSON.stringify({ alert_id: newAlert.id, member_id: currentDevice.member_id }),
             });
           } catch (ecNotifyErr) {
             console.error("Emergency contact notification error:", ecNotifyErr);
@@ -222,7 +223,7 @@ serve(async (req) => {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
               },
-              body: JSON.stringify({ alert_id: newAlert.id, member_id: device.member_id }),
+              body: JSON.stringify({ alert_id: newAlert.id, member_id: currentDevice.member_id }),
             });
           } catch (notifyErr) {
             console.error("Partner notification error:", notifyErr);
@@ -234,7 +235,7 @@ serve(async (req) => {
             const { data: memberData } = await supabase
               .from("members")
               .select("first_name, last_name")
-              .eq("id", device.member_id)
+              .eq("id", currentDevice.member_id)
               .maybeSingle();
             if (memberData) {
               memberName = `${memberData.first_name || ""} ${memberData.last_name || ""}`.trim() || "Unknown";
@@ -253,7 +254,7 @@ serve(async (req) => {
                 payload: {
                   alert_id: newAlert.id,
                   alert_type: alertType,
-                  member_id: device.member_id,
+                  member_id: currentDevice.member_id,
                   member_name: memberName,
                   imei: body.imei,
                   message,

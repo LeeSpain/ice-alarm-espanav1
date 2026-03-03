@@ -42,7 +42,6 @@ interface SOSSituationPanelProps {
 }
 
 export function SOSSituationPanel({
-  alertId,
   memberId,
   receivedAt,
   alertStatus,
@@ -57,8 +56,8 @@ export function SOSSituationPanel({
 }: SOSSituationPanelProps) {
   const { t } = useTranslation();
   const [memberAddress, setMemberAddress] = useState<string | null>(null);
-  const [memberLat, setMemberLat] = useState<number | null>(null);
-  const [memberLng, setMemberLng] = useState<number | null>(null);
+  const [memberLat] = useState<number | null>(null);
+  const [memberLng] = useState<number | null>(null);
 
   // Fallback: fetch member address if no GPS location on alert
   useEffect(() => {
@@ -67,15 +66,13 @@ export function SOSSituationPanel({
     const fetchAddress = async () => {
       const { data } = await supabase
         .from("members")
-        .select("address_line_1, city, province, latitude, longitude")
+        .select("address_line_1, city, province")
         .eq("id", memberId)
         .maybeSingle();
       if (data) {
         setMemberAddress(
           [data.address_line_1, data.city, data.province].filter(Boolean).join(", ")
         );
-        if (data.latitude) setMemberLat(Number(data.latitude));
-        if (data.longitude) setMemberLng(Number(data.longitude));
       }
     };
     fetchAddress();

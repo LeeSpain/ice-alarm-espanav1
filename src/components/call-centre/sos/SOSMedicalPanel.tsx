@@ -23,9 +23,9 @@ interface SOSMedicalPanelProps {
 }
 
 interface MedicalInfo {
-  medical_conditions: string[];
-  medications: string[];
-  allergies: string[];
+  medical_conditions: string[] | null;
+  medications: string[] | null;
+  allergies: string[] | null;
   blood_type: string | null;
   doctor_name: string | null;
   doctor_phone: string | null;
