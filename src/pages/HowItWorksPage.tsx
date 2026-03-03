@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
             {t("howItWorksPage.hero.title")}
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-foreground/80 leading-relaxed max-w-2xl mx-auto mb-8">
             {t("howItWorksPage.hero.subtitle")}
           </p>
           <div className="flex flex-col items-center gap-2 text-muted-foreground animate-pulse-slow">
@@ -115,7 +115,7 @@ export default function HowItWorksPage() {
               iconBg="bg-alert-sos/10"
               dotColor="bg-alert-sos"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step1.description")}
               </p>
               <div className="grid sm:grid-cols-2 gap-3 mb-4">
@@ -144,14 +144,14 @@ export default function HowItWorksPage() {
               iconBg="bg-blue-500/10"
               dotColor="bg-blue-500"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step2.description")}
               </p>
               <blockquote className="border-l-4 border-blue-400 pl-4 py-3 mb-1 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-foreground">
                 {t("howItWorksPage.step2.isabellaQuote")}
               </blockquote>
               {t("howItWorksPage.step2.isabellaQuoteTranslation") && (
-                <p className="text-xs text-muted-foreground mb-4 pl-4">
+                <p className="text-sm text-foreground/60 mb-4 pl-4">
                   {t("howItWorksPage.step2.isabellaQuoteTranslation")}
                 </p>
               )}
@@ -177,7 +177,7 @@ export default function HowItWorksPage() {
               iconBg="bg-purple-500/10"
               dotColor="bg-purple-500"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step3.description")}
               </p>
               <ul className="space-y-2 mb-4">
@@ -203,7 +203,7 @@ export default function HowItWorksPage() {
               iconBg="bg-amber-500/10"
               dotColor="bg-amber-500"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step4.description")}
               </p>
               <div className="space-y-2 mb-4">
@@ -235,7 +235,7 @@ export default function HowItWorksPage() {
               iconBg="bg-green-500/10"
               dotColor="bg-green-500"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step5.description")}
               </p>
               <ul className="space-y-2 mb-4">
@@ -264,7 +264,7 @@ export default function HowItWorksPage() {
               iconBg="bg-red-500/10"
               dotColor="bg-red-500"
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step6.description")}
               </p>
               <ul className="space-y-2 mb-4">
@@ -312,7 +312,7 @@ export default function HowItWorksPage() {
           <p className="text-lg text-primary font-medium mb-4">
             {t("howItWorksPage.step7.subtitle")}
           </p>
-          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+          <p className="text-foreground/80 mb-6 max-w-xl mx-auto">
             {t("howItWorksPage.step7.description")}
           </p>
 
@@ -361,7 +361,7 @@ export default function HowItWorksPage() {
               dotColor="bg-pink-500"
               isLast
             >
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground/80 mb-4">
                 {t("howItWorksPage.step8.description")}
               </p>
               <ul className="space-y-2 mb-4">
@@ -396,7 +396,7 @@ export default function HowItWorksPage() {
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
               {t("howItWorksPage.whatIf.title")}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-foreground/70">
               {t("howItWorksPage.whatIf.subtitle")}
             </p>
           </div>
@@ -424,7 +424,7 @@ export default function HowItWorksPage() {
                 <AccordionTrigger className="text-left text-base">
                   {t(item.q)}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed">
+                <AccordionContent className="text-foreground/75 leading-relaxed">
                   {t(item.a)}
                 </AccordionContent>
               </AccordionItem>
@@ -443,7 +443,7 @@ export default function HowItWorksPage() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {t("howItWorksPage.cta.title")}
           </h2>
-          <p className="text-muted-foreground mb-8 text-lg">
+          <p className="text-foreground/75 mb-8 text-lg">
             {t("howItWorksPage.cta.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -465,7 +465,7 @@ export default function HowItWorksPage() {
               </a>
             </Button>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground/70">
             <span className="flex items-center gap-1.5">
               <Check className="h-4 w-4 text-alert-resolved" />
               {t("howItWorksPage.cta.trust1")}
@@ -639,7 +639,7 @@ function DetailItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2.5 text-sm">
       <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
-      <span className="text-muted-foreground">{children}</span>
+      <span className="text-foreground/75">{children}</span>
     </li>
   );
 }
@@ -654,7 +654,7 @@ function DashboardItem({
   return (
     <div className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50">
       <Icon className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-      <span className="text-sm text-muted-foreground">{children}</span>
+      <span className="text-sm text-foreground/75">{children}</span>
     </div>
   );
 }
@@ -663,7 +663,7 @@ function InfoNote({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/50 border border-border/50 mt-4">
       <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-      <p className="text-xs text-muted-foreground leading-relaxed">
+      <p className="text-sm text-foreground/70 leading-relaxed">
         {children}
       </p>
     </div>
