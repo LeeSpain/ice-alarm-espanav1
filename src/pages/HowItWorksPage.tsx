@@ -14,10 +14,8 @@ import {
   Heart,
   HelpCircle,
   Shield,
-  ShieldCheck,
   Clock,
   Check,
-  Bot,
   Mic,
   MapPin,
   Activity,
@@ -32,7 +30,6 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
-import { useAIAgent } from "@/hooks/useAIAgents";
 import {
   Accordion,
   AccordionContent,
@@ -77,7 +74,6 @@ function useScrollReveal() {
 export default function HowItWorksPage() {
   const { t } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
-  const { data: isabellaAgent } = useAIAgent("customer_service_expert");
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const revealRef = useScrollReveal();
 
@@ -175,47 +171,13 @@ export default function HowItWorksPage() {
                   imageUrl={heroImage.imageUrl || "/images/how-it-works-hero.svg"}
                   altText={
                     heroImage.altText ||
-                    "How ICE Alarm works — from SOS button press to safety in under 2 minutes"
+                    "Elderly woman at home protected by ICE Alarm pendant"
                   }
                   priority={true}
                   width={800}
                   height={600}
                   isLoadingUrl={imagesLoading}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-              </div>
-
-              {/* Floating 24/7 card */}
-              <div className="absolute -bottom-6 -left-6 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-alert-resolved/20 flex items-center justify-center">
-                    <ShieldCheck className="h-6 w-6 text-alert-resolved" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">24/7</p>
-                    <p className="text-sm text-muted-foreground">{t("landing.floatingMonitored")}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Isabella card */}
-              <div
-                className="absolute -top-4 -right-4 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block"
-                style={{ animationDelay: "0.2s" }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden">
-                    {isabellaAgent?.avatar_url ? (
-                      <img src={isabellaAgent.avatar_url} alt="Isabella" className="h-full w-full object-cover" />
-                    ) : (
-                      <Bot className="h-6 w-6 text-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">Isabella</p>
-                    <p className="text-sm text-muted-foreground">{t("landing.floatingIsabella")}</p>
-                  </div>
-                </div>
               </div>
 
               <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-primary/10" />
