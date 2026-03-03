@@ -52,7 +52,7 @@ function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
     );
 
     const children = el.querySelectorAll("[data-reveal]");
@@ -76,7 +76,7 @@ export default function HowItWorksPage() {
       <PublicHeader />
 
       {/* Hero */}
-      <section className="pt-28 pb-20 px-4 bg-gradient-to-b from-primary/5 to-background">
+      <section className="pt-28 pb-12 px-4 bg-gradient-to-b from-primary/5 to-background">
         <div
           className="container mx-auto max-w-3xl text-center opacity-0 translate-y-6 transition-all duration-700 ease-out"
           data-reveal
@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
             {t("howItWorksPage.hero.title")}
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-8">
             {t("howItWorksPage.hero.subtitle")}
           </p>
           <div className="flex flex-col items-center gap-2 text-muted-foreground animate-pulse-slow">
@@ -99,249 +99,295 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Timeline */}
-      <div className="relative">
-        {/* Vertical timeline line — hidden on mobile */}
-        <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2" />
+      {/* Timeline — Left-rail with full-width cards */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="relative">
+            {/* Vertical timeline rail */}
+            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-border" />
 
-        {/* Step 1: The Alert */}
-        <TimelineStep
-          time={t("howItWorksPage.step1.time")}
-          title={t("howItWorksPage.step1.title")}
-          icon={AlertCircle}
-          iconColor="text-alert-sos"
-          iconBg="bg-alert-sos/10"
-          side="left"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step1.description")}
-          </p>
-          <div className="grid sm:grid-cols-2 gap-3 mb-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
-              <Mic className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm">{t("howItWorksPage.step1.voicePath")}</p>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
-              <Activity className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm">{t("howItWorksPage.step1.dataPath")}</p>
-            </div>
-          </div>
-          <InfoNote>{t("howItWorksPage.step1.note")}</InfoNote>
-        </TimelineStep>
-
-        {/* Step 2: Isabella Answers */}
-        <TimelineStep
-          time={t("howItWorksPage.step2.time")}
-          title={t("howItWorksPage.step2.title")}
-          icon={MessageCircle}
-          iconColor="text-blue-500"
-          iconBg="bg-blue-500/10"
-          side="right"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step2.description")}
-          </p>
-          <blockquote className="border-l-4 border-blue-400 pl-4 py-3 mb-1 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-foreground">
-            {t("howItWorksPage.step2.isabellaQuote")}
-          </blockquote>
-          {t("howItWorksPage.step2.isabellaQuoteTranslation") && (
-            <p className="text-xs text-muted-foreground mb-4 pl-4">
-              {t("howItWorksPage.step2.isabellaQuoteTranslation")}
-            </p>
-          )}
-          <ul className="space-y-2 mt-4">
-            <DetailItem>{t("howItWorksPage.step2.detail1")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step2.detail2")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step2.detail3")}</DetailItem>
-          </ul>
-        </TimelineStep>
-
-        {/* Step 3: Smart Questions */}
-        <TimelineStep
-          time={t("howItWorksPage.step3.time")}
-          title={t("howItWorksPage.step3.title")}
-          icon={Brain}
-          iconColor="text-purple-500"
-          iconBg="bg-purple-500/10"
-          side="left"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step3.description")}
-          </p>
-          <ul className="space-y-2 mb-4">
-            <DetailItem>{t("howItWorksPage.step3.detail1")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step3.detail2")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step3.detail3")}</DetailItem>
-          </ul>
-          <InfoNote>{t("howItWorksPage.step3.note")}</InfoNote>
-        </TimelineStep>
-
-        {/* Step 4: Dashboard */}
-        <TimelineStep
-          time={t("howItWorksPage.step4.time")}
-          title={t("howItWorksPage.step4.title")}
-          icon={Monitor}
-          iconColor="text-amber-500"
-          iconBg="bg-amber-500/10"
-          side="right"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step4.description")}
-          </p>
-          <div className="space-y-2 mb-4">
-            <DashboardItem icon={Users}>
-              {t("howItWorksPage.step4.detail1")}
-            </DashboardItem>
-            <DashboardItem icon={MapPin}>
-              {t("howItWorksPage.step4.detail2")}
-            </DashboardItem>
-            <DashboardItem icon={Activity}>
-              {t("howItWorksPage.step4.detail3")}
-            </DashboardItem>
-            <DashboardItem icon={Phone}>
-              {t("howItWorksPage.step4.detail4")}
-            </DashboardItem>
-            <DashboardItem icon={FileText}>
-              {t("howItWorksPage.step4.detail5")}
-            </DashboardItem>
-          </div>
-          <InfoNote>{t("howItWorksPage.step4.note")}</InfoNote>
-        </TimelineStep>
-
-        {/* Step 5: Human Takes Over */}
-        <TimelineStep
-          time={t("howItWorksPage.step5.time")}
-          title={t("howItWorksPage.step5.title")}
-          icon={Headphones}
-          iconColor="text-green-500"
-          iconBg="bg-green-500/10"
-          side="left"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step5.description")}
-          </p>
-          <ul className="space-y-2 mb-4">
-            <DetailItem>{t("howItWorksPage.step5.detail1")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step5.detail2")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step5.detail3")}</DetailItem>
-          </ul>
-          <blockquote className="border-l-4 border-green-400 pl-4 py-3 mb-4 bg-green-50 dark:bg-green-950/30 rounded-r-lg italic text-foreground">
-            {t("howItWorksPage.step5.agentQuote")}
-          </blockquote>
-          <InfoNote>{t("howItWorksPage.step5.note")}</InfoNote>
-        </TimelineStep>
-
-        {/* Step 6: Help Is Called */}
-        <TimelineStep
-          time={t("howItWorksPage.step6.time")}
-          title={t("howItWorksPage.step6.title")}
-          icon={Ambulance}
-          iconColor="text-red-500"
-          iconBg="bg-red-500/10"
-          side="right"
-        >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step6.description")}
-          </p>
-          <ul className="space-y-2 mb-4">
-            <DetailItem>{t("howItWorksPage.step6.detail1")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step6.detail2")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step6.detail3")}</DetailItem>
-          </ul>
-          <blockquote className="border-l-4 border-blue-400 pl-4 py-3 mb-4 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-foreground">
-            {t("howItWorksPage.step6.isabellaQuote")}
-          </blockquote>
-          <InfoNote>{t("howItWorksPage.step6.note")}</InfoNote>
-        </TimelineStep>
-
-        {/* Step 7: Your Phone Rings — EMOTIONAL PEAK */}
-        <section className="relative py-16 md:py-24 bg-gradient-to-b from-primary/5 via-primary/10 to-primary/5">
-          <div
-            className="container mx-auto max-w-3xl px-4 text-center opacity-0 translate-y-6 transition-all duration-700 ease-out"
-            data-reveal
-          >
-            <div className="inline-flex items-center gap-2 mb-6">
-              <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">
-                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                {t("howItWorksPage.step7.time")}
-              </Badge>
-            </div>
-
-            <div className="flex justify-center mb-6">
-              <div className="h-16 w-16 rounded-2xl bg-primary/15 flex items-center justify-center">
-                <PhoneCall className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              {t("howItWorksPage.step7.title")}
-            </h2>
-            <p className="text-lg text-primary font-medium mb-6">
-              {t("howItWorksPage.step7.subtitle")}
-            </p>
-            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              {t("howItWorksPage.step7.description")}
-            </p>
-
-            <Card className="text-left max-w-2xl mx-auto border-primary/20 shadow-glow mb-8">
-              <CardContent className="p-6">
-                <blockquote className="text-foreground leading-relaxed italic">
-                  {t("howItWorksPage.step7.agentQuote")}
-                </blockquote>
-              </CardContent>
-            </Card>
-
-            <div className="max-w-2xl mx-auto bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-5 mb-8 text-left">
-              <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
-                {t("howItWorksPage.step7.emotionalNote")}
+            {/* Step 1: The Alert */}
+            <TimelineStep
+              time={t("howItWorksPage.step1.time")}
+              title={t("howItWorksPage.step1.title")}
+              icon={AlertCircle}
+              iconColor="text-alert-sos"
+              iconBg="bg-alert-sos/10"
+              dotColor="bg-alert-sos"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step1.description")}
               </p>
-            </div>
+              <div className="grid sm:grid-cols-2 gap-3 mb-4">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <Mic className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm">
+                    {t("howItWorksPage.step1.voicePath")}
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <Activity className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm">
+                    {t("howItWorksPage.step1.dataPath")}
+                  </p>
+                </div>
+              </div>
+              <InfoNote>{t("howItWorksPage.step1.note")}</InfoNote>
+            </TimelineStep>
 
-            <ul className="flex flex-col sm:flex-row gap-4 justify-center text-sm text-left max-w-2xl mx-auto">
-              <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
-                <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
-                <span>{t("howItWorksPage.step7.detail1")}</span>
-              </li>
-              <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
-                <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
-                <span>{t("howItWorksPage.step7.detail2")}</span>
-              </li>
-              <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
-                <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
-                <span>{t("howItWorksPage.step7.detail3")}</span>
-              </li>
-            </ul>
+            {/* Step 2: Isabella Answers */}
+            <TimelineStep
+              time={t("howItWorksPage.step2.time")}
+              title={t("howItWorksPage.step2.title")}
+              icon={MessageCircle}
+              iconColor="text-blue-500"
+              iconBg="bg-blue-500/10"
+              dotColor="bg-blue-500"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step2.description")}
+              </p>
+              <blockquote className="border-l-4 border-blue-400 pl-4 py-3 mb-1 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-foreground">
+                {t("howItWorksPage.step2.isabellaQuote")}
+              </blockquote>
+              {t("howItWorksPage.step2.isabellaQuoteTranslation") && (
+                <p className="text-xs text-muted-foreground mb-4 pl-4">
+                  {t("howItWorksPage.step2.isabellaQuoteTranslation")}
+                </p>
+              )}
+              <ul className="space-y-2 mt-4">
+                <DetailItem>
+                  {t("howItWorksPage.step2.detail1")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step2.detail2")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step2.detail3")}
+                </DetailItem>
+              </ul>
+            </TimelineStep>
+
+            {/* Step 3: Smart Questions */}
+            <TimelineStep
+              time={t("howItWorksPage.step3.time")}
+              title={t("howItWorksPage.step3.title")}
+              icon={Brain}
+              iconColor="text-purple-500"
+              iconBg="bg-purple-500/10"
+              dotColor="bg-purple-500"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step3.description")}
+              </p>
+              <ul className="space-y-2 mb-4">
+                <DetailItem>
+                  {t("howItWorksPage.step3.detail1")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step3.detail2")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step3.detail3")}
+                </DetailItem>
+              </ul>
+              <InfoNote>{t("howItWorksPage.step3.note")}</InfoNote>
+            </TimelineStep>
+
+            {/* Step 4: Dashboard */}
+            <TimelineStep
+              time={t("howItWorksPage.step4.time")}
+              title={t("howItWorksPage.step4.title")}
+              icon={Monitor}
+              iconColor="text-amber-500"
+              iconBg="bg-amber-500/10"
+              dotColor="bg-amber-500"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step4.description")}
+              </p>
+              <div className="space-y-2 mb-4">
+                <DashboardItem icon={Users}>
+                  {t("howItWorksPage.step4.detail1")}
+                </DashboardItem>
+                <DashboardItem icon={MapPin}>
+                  {t("howItWorksPage.step4.detail2")}
+                </DashboardItem>
+                <DashboardItem icon={Activity}>
+                  {t("howItWorksPage.step4.detail3")}
+                </DashboardItem>
+                <DashboardItem icon={Phone}>
+                  {t("howItWorksPage.step4.detail4")}
+                </DashboardItem>
+                <DashboardItem icon={FileText}>
+                  {t("howItWorksPage.step4.detail5")}
+                </DashboardItem>
+              </div>
+              <InfoNote>{t("howItWorksPage.step4.note")}</InfoNote>
+            </TimelineStep>
+
+            {/* Step 5: Human Takes Over */}
+            <TimelineStep
+              time={t("howItWorksPage.step5.time")}
+              title={t("howItWorksPage.step5.title")}
+              icon={Headphones}
+              iconColor="text-green-500"
+              iconBg="bg-green-500/10"
+              dotColor="bg-green-500"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step5.description")}
+              </p>
+              <ul className="space-y-2 mb-4">
+                <DetailItem>
+                  {t("howItWorksPage.step5.detail1")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step5.detail2")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step5.detail3")}
+                </DetailItem>
+              </ul>
+              <blockquote className="border-l-4 border-green-400 pl-4 py-3 mb-4 bg-green-50 dark:bg-green-950/30 rounded-r-lg italic text-foreground">
+                {t("howItWorksPage.step5.agentQuote")}
+              </blockquote>
+              <InfoNote>{t("howItWorksPage.step5.note")}</InfoNote>
+            </TimelineStep>
+
+            {/* Step 6: Help Is Called */}
+            <TimelineStep
+              time={t("howItWorksPage.step6.time")}
+              title={t("howItWorksPage.step6.title")}
+              icon={Ambulance}
+              iconColor="text-red-500"
+              iconBg="bg-red-500/10"
+              dotColor="bg-red-500"
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step6.description")}
+              </p>
+              <ul className="space-y-2 mb-4">
+                <DetailItem>
+                  {t("howItWorksPage.step6.detail1")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step6.detail2")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step6.detail3")}
+                </DetailItem>
+              </ul>
+              <blockquote className="border-l-4 border-blue-400 pl-4 py-3 mb-4 bg-blue-50 dark:bg-blue-950/30 rounded-r-lg italic text-foreground">
+                {t("howItWorksPage.step6.isabellaQuote")}
+              </blockquote>
+              <InfoNote>{t("howItWorksPage.step6.note")}</InfoNote>
+            </TimelineStep>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Step 8: Resolution */}
-        <TimelineStep
-          time={t("howItWorksPage.step8.time")}
-          title={t("howItWorksPage.step8.title")}
-          icon={Heart}
-          iconColor="text-pink-500"
-          iconBg="bg-pink-500/10"
-          side="left"
+      {/* Step 7: Your Phone Rings — EMOTIONAL PEAK */}
+      <section className="relative py-12 md:py-16 bg-gradient-to-b from-primary/5 via-primary/10 to-primary/5">
+        <div
+          className="container mx-auto max-w-3xl px-4 text-center opacity-0 translate-y-6 transition-all duration-700 ease-out"
+          data-reveal
         >
-          <p className="text-muted-foreground mb-4">
-            {t("howItWorksPage.step8.description")}
+          <div className="inline-flex items-center gap-2 mb-4">
+            <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
+              {t("howItWorksPage.step7.time")}
+            </Badge>
+          </div>
+
+          <div className="flex justify-center mb-4">
+            <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+              <PhoneCall className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+
+          <h2 className="text-3xl md:text-4xl font-bold mb-2">
+            {t("howItWorksPage.step7.title")}
+          </h2>
+          <p className="text-lg text-primary font-medium mb-4">
+            {t("howItWorksPage.step7.subtitle")}
           </p>
-          <ul className="space-y-2 mb-4">
-            <DetailItem>{t("howItWorksPage.step8.detail1")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step8.detail2")}</DetailItem>
-            <DetailItem>{t("howItWorksPage.step8.detail3")}</DetailItem>
+          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            {t("howItWorksPage.step7.description")}
+          </p>
+
+          <Card className="text-left max-w-2xl mx-auto border-primary/20 shadow-glow mb-6">
+            <CardContent className="p-5">
+              <blockquote className="text-foreground leading-relaxed italic text-sm">
+                {t("howItWorksPage.step7.agentQuote")}
+              </blockquote>
+            </CardContent>
+          </Card>
+
+          <div className="max-w-2xl mx-auto bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+              {t("howItWorksPage.step7.emotionalNote")}
+            </p>
+          </div>
+
+          <ul className="flex flex-col sm:flex-row gap-3 justify-center text-sm text-left max-w-2xl mx-auto">
+            <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
+              <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
+              <span>{t("howItWorksPage.step7.detail1")}</span>
+            </li>
+            <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
+              <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
+              <span>{t("howItWorksPage.step7.detail2")}</span>
+            </li>
+            <li className="flex items-start gap-2 flex-1 p-3 rounded-lg bg-card border">
+              <Check className="h-4 w-4 text-alert-resolved mt-0.5 shrink-0" />
+              <span>{t("howItWorksPage.step7.detail3")}</span>
+            </li>
           </ul>
-          <InfoNote>{t("howItWorksPage.step8.note")}</InfoNote>
-        </TimelineStep>
-      </div>
+        </div>
+      </section>
+
+      {/* Step 8: Resolution — back to timeline */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="relative">
+            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-border" />
+            <TimelineStep
+              time={t("howItWorksPage.step8.time")}
+              title={t("howItWorksPage.step8.title")}
+              icon={Heart}
+              iconColor="text-pink-500"
+              iconBg="bg-pink-500/10"
+              dotColor="bg-pink-500"
+              isLast
+            >
+              <p className="text-muted-foreground mb-4">
+                {t("howItWorksPage.step8.description")}
+              </p>
+              <ul className="space-y-2 mb-4">
+                <DetailItem>
+                  {t("howItWorksPage.step8.detail1")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step8.detail2")}
+                </DetailItem>
+                <DetailItem>
+                  {t("howItWorksPage.step8.detail3")}
+                </DetailItem>
+              </ul>
+              <InfoNote>{t("howItWorksPage.step8.note")}</InfoNote>
+            </TimelineStep>
+          </div>
+        </div>
+      </section>
 
       {/* What If FAQ Section */}
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="py-16 px-4 bg-muted/30">
         <div
           className="container mx-auto max-w-3xl opacity-0 translate-y-6 transition-all duration-700 ease-out"
           data-reveal
         >
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <HelpCircle className="h-6 w-6 text-primary" />
@@ -357,10 +403,22 @@ export default function HowItWorksPage() {
 
           <Accordion type="single" collapsible className="w-full">
             {[
-              { q: "howItWorksPage.whatIf.q1", a: "howItWorksPage.whatIf.a1" },
-              { q: "howItWorksPage.whatIf.q2", a: "howItWorksPage.whatIf.a2" },
-              { q: "howItWorksPage.whatIf.q3", a: "howItWorksPage.whatIf.a3" },
-              { q: "howItWorksPage.whatIf.q4", a: "howItWorksPage.whatIf.a4" },
+              {
+                q: "howItWorksPage.whatIf.q1",
+                a: "howItWorksPage.whatIf.a1",
+              },
+              {
+                q: "howItWorksPage.whatIf.q2",
+                a: "howItWorksPage.whatIf.a2",
+              },
+              {
+                q: "howItWorksPage.whatIf.q3",
+                a: "howItWorksPage.whatIf.a3",
+              },
+              {
+                q: "howItWorksPage.whatIf.q4",
+                a: "howItWorksPage.whatIf.a4",
+              },
             ].map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-left text-base">
@@ -376,12 +434,12 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/10 to-primary/5">
+      <section className="py-16 px-4 bg-gradient-to-br from-primary/10 to-primary/5">
         <div
           className="container mx-auto text-center max-w-2xl opacity-0 translate-y-6 transition-all duration-700 ease-out"
           data-reveal
         >
-          <Shield className="h-10 w-10 text-primary mx-auto mb-6" />
+          <Shield className="h-10 w-10 text-primary mx-auto mb-5" />
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {t("howItWorksPage.cta.title")}
           </h2>
@@ -526,7 +584,8 @@ interface TimelineStepProps {
   icon: React.ElementType;
   iconColor: string;
   iconBg: string;
-  side: "left" | "right";
+  dotColor: string;
+  isLast?: boolean;
   children: React.ReactNode;
 }
 
@@ -536,56 +595,43 @@ function TimelineStep({
   icon: Icon,
   iconColor,
   iconBg,
-  side,
+  dotColor,
+  isLast,
   children,
 }: TimelineStepProps) {
   return (
-    <section className="relative py-12 md:py-16 px-4">
+    <div
+      className={`relative pl-12 md:pl-16 ${isLast ? "pb-4" : "pb-8"} opacity-0 translate-y-6 transition-all duration-700 ease-out`}
+      data-reveal
+    >
+      {/* Timeline dot */}
       <div
-        className="container mx-auto max-w-5xl opacity-0 translate-y-6 transition-all duration-700 ease-out"
-        data-reveal
-      >
-        <div
-          className={`md:grid md:grid-cols-2 md:gap-16 items-start ${
-            side === "right" ? "md:direction-rtl" : ""
-          }`}
-        >
-          {/* Content side */}
-          <div
-            className={`${side === "right" ? "md:col-start-2 md:direction-ltr" : "md:col-start-1"}`}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <Badge
-                variant="outline"
-                className="text-xs font-mono px-2 py-0.5"
-              >
-                <Clock className="h-3 w-3 mr-1" />
-                {time}
-              </Badge>
-            </div>
+        className={`absolute left-2.5 md:left-4.5 top-1 h-3.5 w-3.5 rounded-full ${dotColor} border-[3px] border-background shadow-sm z-10`}
+      />
 
-            <div className="flex items-center gap-3 mb-5">
-              <div
-                className={`h-11 w-11 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}
-              >
-                <Icon className={`h-5 w-5 ${iconColor}`} />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
-            </div>
-
-            <div className="pl-0">{children}</div>
-          </div>
-
-          {/* Empty side for timeline alignment on desktop */}
-          <div
-            className={`hidden md:block ${side === "right" ? "md:col-start-1 md:row-start-1" : "md:col-start-2"}`}
-          />
-        </div>
+      {/* Time badge */}
+      <div className="mb-3">
+        <Badge variant="outline" className="text-xs font-mono px-2 py-0.5">
+          <Clock className="h-3 w-3 mr-1" />
+          {time}
+        </Badge>
       </div>
 
-      {/* Timeline dot — centered on the vertical line (desktop only) */}
-      <div className="hidden md:flex absolute left-1/2 top-12 -translate-x-1/2 h-4 w-4 rounded-full bg-primary border-4 border-background shadow-sm" />
-    </section>
+      {/* Card with content */}
+      <Card className="border shadow-sm">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className={`h-10 w-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}
+            >
+              <Icon className={`h-5 w-5 ${iconColor}`} />
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold">{title}</h2>
+          </div>
+          {children}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
