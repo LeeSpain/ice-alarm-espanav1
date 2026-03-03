@@ -5472,7 +5472,8 @@
     },
     "hero": {
       "badge": "From button press to safety — a real scenario",
-      "title": "What Really Happens When You Press the Button?",
+      "title": "What Really Happens",
+      "titleHighlight": "When You Press the Button?",
       "subtitle": "Meet Maria, 78, who lives alone in her villa in Alicante. Her daughter Sarah lives in London. One Tuesday morning, Maria slips in her kitchen...",
       "scrollPrompt": "Follow Maria's story"
     },

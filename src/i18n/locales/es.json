@@ -5464,7 +5464,8 @@
     },
     "hero": {
       "badge": "Del botón al rescate — un escenario real",
-      "title": "¿Qué Pasa Realmente Cuando Pulsa el Botón?",
+      "title": "¿Qué Pasa Realmente",
+      "titleHighlight": "Cuando Pulsa el Botón?",
       "subtitle": "Conozca a María, 78 años, que vive sola en su villa en Alicante. Su hija Sara vive en Londres. Un martes por la mañana, María resbala en su cocina...",
       "scrollPrompt": "Siga la historia de María"
     },

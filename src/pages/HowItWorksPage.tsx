@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,10 +13,11 @@ import {
   PhoneCall,
   Heart,
   HelpCircle,
-  ChevronDown,
   Shield,
+  ShieldCheck,
   Clock,
   Check,
+  Bot,
   Mic,
   MapPin,
   Activity,
@@ -28,13 +29,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { ImageWithPlaceholder } from "@/components/ui/image-placeholder";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useWebsiteImagesBatch } from "@/hooks/useWebsiteImage";
+import { useAIAgent } from "@/hooks/useAIAgents";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -67,34 +77,150 @@ function useScrollReveal() {
 export default function HowItWorksPage() {
   const { t } = useTranslation();
   const { settings: companySettings } = useCompanySettings();
+  const { data: isabellaAgent } = useAIAgent("customer_service_expert");
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const revealRef = useScrollReveal();
 
   const phoneForLink = companySettings.emergency_phone.replace(/\s/g, "");
+  const whatsappNumber = companySettings.emergency_phone.replace(/[\s+]/g, "");
+
+  const { getImage, isLoading: imagesLoading } = useWebsiteImagesBatch([
+    "how_it_works_hero",
+  ]);
+  const heroImage = getImage("how_it_works_hero");
 
   return (
     <div className="min-h-screen bg-background" ref={revealRef}>
       <PublicHeader />
 
-      {/* Hero */}
-      <section className="pt-28 pb-12 px-4 bg-gradient-to-b from-primary/5 to-background">
-        <div
-          className="container mx-auto max-w-3xl text-center opacity-0 translate-y-6 transition-all duration-700 ease-out"
-          data-reveal
-        >
-          <Badge variant="secondary" className="mb-6 text-sm px-4 py-1.5">
-            {t("howItWorksPage.hero.badge")}
-          </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
-            {t("howItWorksPage.hero.title")}
-          </h1>
-          <p className="text-lg md:text-xl text-foreground/80 leading-relaxed max-w-2xl mx-auto mb-8">
-            {t("howItWorksPage.hero.subtitle")}
-          </p>
-          <div className="flex flex-col items-center gap-2 text-muted-foreground animate-pulse-slow">
-            <span className="text-sm font-medium">
-              {t("howItWorksPage.hero.scrollPrompt")}
-            </span>
-            <ChevronDown className="h-5 w-5" />
+      {/* Hero — matches homepage layout */}
+      <section className="pt-24 pb-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/30 -z-10" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
+
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-alert-resolved opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-alert-resolved" />
+                </span>
+                <span className="text-sm font-medium text-primary">
+                  {t("howItWorksPage.hero.badge")}
+                </span>
+              </div>
+
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+                {t("howItWorksPage.hero.title")}
+                <span className="text-gradient block mt-2">{t("howItWorksPage.hero.titleHighlight")}</span>
+              </h1>
+
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto lg:mx-0">
+                {t("howItWorksPage.hero.subtitle")}
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                <Button size="lg" className="h-14 px-8 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" asChild>
+                  <Link to="/join">
+                    {t("howItWorksPage.cta.primaryButton")}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-lg group"
+                  onClick={() => setContactDialogOpen(true)}
+                >
+                  <Phone className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+                  {t("common.callNow")}
+                </Button>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 pt-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">
+                    {t("howItWorksPage.cta.trust1")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">
+                    {t("howItWorksPage.cta.trust2")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-alert-resolved/20 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-alert-resolved" />
+                  </div>
+                  <span className="text-muted-foreground">
+                    {t("howItWorksPage.cta.trust3")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Image */}
+            <div className="relative">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 aspect-[4/3] bg-muted">
+                <ImageWithPlaceholder
+                  imageUrl={heroImage.imageUrl || "/images/how-it-works-hero.svg"}
+                  altText={
+                    heroImage.altText ||
+                    "How ICE Alarm works — from SOS button press to safety in under 2 minutes"
+                  }
+                  priority={true}
+                  width={800}
+                  height={600}
+                  isLoadingUrl={imagesLoading}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              </div>
+
+              {/* Floating 24/7 card */}
+              <div className="absolute -bottom-6 -left-6 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-alert-resolved/20 flex items-center justify-center">
+                    <ShieldCheck className="h-6 w-6 text-alert-resolved" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">24/7</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.floatingMonitored")}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Isabella card */}
+              <div
+                className="absolute -top-4 -right-4 bg-card rounded-2xl shadow-xl p-4 border animate-fade-up hidden md:block"
+                style={{ animationDelay: "0.2s" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden">
+                    {isabellaAgent?.avatar_url ? (
+                      <img src={isabellaAgent.avatar_url} alt="Isabella" className="h-full w-full object-cover" />
+                    ) : (
+                      <Bot className="h-6 w-6 text-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">Isabella</p>
+                    <p className="text-sm text-muted-foreground">{t("landing.floatingIsabella")}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-primary/10" />
+              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-primary/5" />
+            </div>
           </div>
         </div>
       </section>
@@ -572,6 +698,56 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </footer>
+
+      {/* Contact Options Dialog */}
+      <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">
+              {t("landing.contactDialog.title")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center mb-6">
+            <p className="text-sm text-muted-foreground">
+              {t("landing.contactDialog.available")}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              size="lg"
+              className="h-20 flex-col gap-2"
+              asChild
+            >
+              <a href={`tel:${phoneForLink}`}>
+                <Phone className="h-6 w-6" />
+                <span className="text-sm font-medium">
+                  {t("landing.contactDialog.phoneCall")}
+                </span>
+              </a>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-20 flex-col gap-2 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700"
+              asChild
+            >
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-6 w-6" />
+                <span className="text-sm font-medium">
+                  {t("landing.contactDialog.whatsapp")}
+                </span>
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-center text-muted-foreground mt-4">
+            {t("landing.contactDialog.voiceOnly")}
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
