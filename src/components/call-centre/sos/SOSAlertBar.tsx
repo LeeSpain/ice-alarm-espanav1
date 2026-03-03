@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, Activity, Navigation, Battery, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -164,10 +165,15 @@ export function SOSAlertBar() {
     };
   }, [pendingAlerts]);
 
+  const navigate = useNavigate();
+
   const handleAccept = async (alertId: string) => {
     setAccepting(alertId);
-    await acceptAlert(alertId);
+    const accepted = await acceptAlert(alertId);
     setAccepting(null);
+    if (accepted) {
+      navigate("/call-centre/sos-alert");
+    }
   };
 
   if (pendingAlerts.length === 0) return null;

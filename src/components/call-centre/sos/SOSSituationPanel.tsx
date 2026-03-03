@@ -100,7 +100,7 @@ export function SOSSituationPanel({
                 lng={lng}
                 address={address || undefined}
                 height="100%"
-                showDirections={false}
+                showDirections={true}
                 className="border-0 rounded-none [&_.p-3]:p-1.5 [&_iframe]:rounded-none"
               />
             ) : (

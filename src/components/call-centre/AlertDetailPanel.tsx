@@ -37,6 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { LocationMap } from "@/components/maps/LocationMap";
 
 type AlertType = "sos_button" | "fall_detected" | "low_battery" | "geo_fence" | "check_in" | "manual" | "device_offline";
 
@@ -355,25 +356,36 @@ export function AlertDetailPanel({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {alert.location ? (
+                  {alert.locationLat && alert.locationLng ? (
+                    <>
+                      {alert.location && <p className="text-sm">{alert.location}</p>}
+                      <LocationMap
+                        lat={alert.locationLat}
+                        lng={alert.locationLng}
+                        address={alert.location}
+                        height="160px"
+                        showDirections={true}
+                      />
+                    </>
+                  ) : alert.location ? (
                     <>
                       <p className="text-sm">{alert.location}</p>
-                      {alert.locationLat && alert.locationLng && (
-                        <p className="text-xs text-muted-foreground">
-                          GPS: {alert.locationLat.toFixed(6)}, {alert.locationLng.toFixed(6)}
-                        </p>
-                      )}
-                      <div className="bg-muted h-40 rounded-lg flex items-center justify-center">
-                        <span className="text-muted-foreground text-sm">
-                          {t("callCentre.alert.mapsIntegration", "[Google Maps Integration]")}
-                        </span>
-                      </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(alert.location!)}`, "_blank")}
+                        >
                           <ExternalLink className="w-3 h-3 mr-1" />
                           {t("callCentre.alert.openInMaps", "Open in Maps")}
                         </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(alert.location!)}`, "_blank")}
+                        >
                           <Navigation className="w-3 h-3 mr-1" />
                           {t("callCentre.alert.getDirections", "Get Directions")}
                         </Button>
