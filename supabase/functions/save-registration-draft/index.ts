@@ -43,10 +43,12 @@ Deno.serve(async (req) => {
     }
 
     // Extract key identifiable info from wizard data for quick access
-    const email = wizardData?.primaryMember?.email || null;
-    const phone = wizardData?.primaryMember?.phone || null;
-    const firstName = wizardData?.primaryMember?.firstName || null;
-    const lastName = wizardData?.primaryMember?.lastName || null;
+    const wd = wizardData as Record<string, any>;
+    const pm = wd?.primaryMember || {};
+    const email = pm?.email || null;
+    const phone = pm?.phone || null;
+    const firstName = pm?.firstName || null;
+    const lastName = pm?.lastName || null;
 
     // Upsert the draft - update if exists, insert if new
     const { data, error } = await supabase

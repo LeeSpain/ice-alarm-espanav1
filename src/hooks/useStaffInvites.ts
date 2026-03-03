@@ -9,13 +9,13 @@ export function useStaffInvite(staffId: string | undefined) {
     queryFn: async () => {
       if (!staffId) return null;
 
-      const { data, error } = await supabase
-        .from("staff_invites")
+      const { data, error } = await (supabase
+        .from("staff_invites" as any)
         .select("*")
         .eq("staff_id", staffId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .maybeSingle());
 
       if (error) throw error;
       return data as StaffInvite | null;
@@ -64,11 +64,11 @@ export function useRevokeInvite() {
 
   return useMutation({
     mutationFn: async ({ inviteId, staffId }: { inviteId: string; staffId: string }) => {
-      const { error } = await supabase
-        .from("staff_invites")
+      const { error } = await (supabase
+        .from("staff_invites" as any)
         .update({ status: "revoked", revoked_at: new Date().toISOString() })
         .eq("id", inviteId)
-        .eq("status", "pending");
+        .eq("status", "pending"));
 
       if (error) throw error;
       return { inviteId, staffId };

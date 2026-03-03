@@ -169,7 +169,7 @@ serve(async (req: Request) => {
     ];
 
     for (const field of optionalFields) {
-      const value = (body as Record<string, unknown>)[field];
+      const value = (body as unknown as Record<string, unknown>)[field];
       if (value !== undefined && value !== null && value !== "") {
         staffRecord[field] = value;
       }

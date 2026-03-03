@@ -3767,6 +3767,64 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_admin_invites: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string
+          id: string
+          partner_id: string
+          revoked_at: string | null
+          status: string
+          token: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          partner_id: string
+          revoked_at?: string | null
+          status?: string
+          token: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          partner_id?: string
+          revoked_at?: string | null
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_admin_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_admin_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_holiday_balance"
+            referencedColumns: ["staff_id"]
+          },
+          {
+            foreignKeyName: "partner_admin_invites_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_agreements: {
         Row: {
           agreement_html: string
