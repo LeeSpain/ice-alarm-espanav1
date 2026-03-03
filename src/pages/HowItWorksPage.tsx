@@ -168,7 +168,7 @@ export default function HowItWorksPage() {
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 aspect-[4/3] bg-muted">
                 <ImageWithPlaceholder
-                  imageUrl={heroImage.imageUrl || "/images/how-it-works-hero.svg"}
+                  imageUrl={heroImage.imageUrl || "/images/how-it-works-hero.jpg"}
                   altText={
                     heroImage.altText ||
                     "Elderly woman at home protected by ICE Alarm pendant"
