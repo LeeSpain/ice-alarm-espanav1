@@ -5,7 +5,6 @@ import { CallCentreSidebar } from "./CallCentreSidebar";
 import { CallCentreHeader } from "./CallCentreHeader";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { SOSAlertBar } from "@/components/call-centre/sos/SOSAlertBar";
 import { SOSTakeoverScreen } from "@/components/call-centre/sos/SOSTakeoverScreen";
 import { useSOSTakeover } from "@/hooks/useSOSTakeover";

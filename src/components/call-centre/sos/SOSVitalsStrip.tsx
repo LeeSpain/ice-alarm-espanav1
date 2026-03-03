@@ -32,7 +32,7 @@ interface MemberData {
   first_name: string;
   last_name: string;
   date_of_birth: string | null;
-  preferred_language: string;
+  preferred_language: string | null;
   photo_url: string | null;
   phone: string | null;
   nie_dni: string | null;
@@ -94,7 +94,7 @@ function BatteryIcon({ level }: { level: number }) {
   return <BatteryCharging className="h-4 w-4 text-green-400" />;
 }
 
-export function SOSVitalsStrip({ alertId, alertType, memberId, receivedAt, isUnresponsive }: SOSVitalsStripProps) {
+export function SOSVitalsStrip({ alertType, memberId, receivedAt, isUnresponsive }: SOSVitalsStripProps) {
   const { t } = useTranslation();
   const [member, setMember] = useState<MemberData | null>(null);
   const [device, setDevice] = useState<DeviceData | null>(null);

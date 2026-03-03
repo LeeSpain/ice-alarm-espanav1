@@ -42,7 +42,7 @@ export interface UseSOSTakeoverReturn {
   restoreTakeover: () => void;
 }
 
-const SOS_TYPES = ["sos_button", "fall_detected"];
+const SOS_TYPES: Array<"sos_button" | "fall_detected"> = ["sos_button", "fall_detected"];
 
 export function useSOSTakeover(): UseSOSTakeoverReturn {
   const { data: staff } = useCurrentStaff();
@@ -93,7 +93,7 @@ export function useSOSTakeover(): UseSOSTakeoverReturn {
           if (payload.eventType === "INSERT") {
             const newAlert = payload.new as unknown as SOSAlert;
             if (
-              SOS_TYPES.includes(newAlert.alert_type) &&
+              (SOS_TYPES as readonly string[]).includes(newAlert.alert_type) &&
               ["incoming", "in_progress"].includes(newAlert.status)
             ) {
               setAlerts((prev) => {

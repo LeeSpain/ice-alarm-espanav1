@@ -76,7 +76,7 @@ export function SOSTakeoverScreen({ onClose }: SOSTakeoverScreenProps) {
     addParticipantByPhone,
   } = useSOSConference(activeAlert?.id || null);
 
-  const { connect, disconnect, toggleMute, isMuted, activeCall } = useTwilioDevice();
+  const { connect, disconnect, toggleMute, isMuted } = useTwilioDevice();
 
   const [isInConference, setIsInConference] = useState(false);
   const [isIsabellaHolding, setIsIsabellaHolding] = useState(false);
@@ -125,7 +125,7 @@ export function SOSTakeoverScreen({ onClose }: SOSTakeoverScreenProps) {
       const { data } = await supabase
         .from("staff")
         .select("first_name, last_name")
-        .eq("id", activeAlert.accepted_by_staff_id)
+        .eq("id", activeAlert.accepted_by_staff_id!)
         .maybeSingle();
       if (data) setAcceptedByName(`${data.first_name} ${data.last_name}`);
     };
@@ -216,15 +216,15 @@ export function SOSTakeoverScreen({ onClose }: SOSTakeoverScreenProps) {
   }, [disconnect]);
 
   const handleResolveAlert = useCallback(
-    async (notes: string, isFalseAlarm: boolean, resolutionType?: string) => {
+    async (notes: string, isFalseAlarm: boolean, _resolutionType?: string) => {
       if (!activeAlert) return;
-      await resolveAlert(activeAlert.id, notes, isFalseAlarm, resolutionType);
+      await resolveAlert(activeAlert.id, notes, isFalseAlarm);
     },
     [activeAlert, resolveAlert]
   );
 
   const handleLeaveParticipant = useCallback(
-    async (participantId: string) => {
+    async (_participantId: string) => {
       await leaveConference();
     },
     [leaveConference]

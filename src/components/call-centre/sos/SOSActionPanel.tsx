@@ -30,7 +30,7 @@ interface EmergencyContact {
   relationship: string;
   phone: string;
   email: string | null;
-  speaks_spanish: boolean;
+  speaks_spanish: boolean | null;
   is_primary: boolean | null;
   priority_order: number;
   notes: string | null;
@@ -39,7 +39,7 @@ interface EmergencyContact {
 interface PreviousAlert {
   id: string;
   alert_type: string;
-  received_at: string;
+  received_at: string | null;
   resolved_at: string | null;
   resolution_notes: string | null;
   is_false_alarm: boolean | null;
@@ -504,7 +504,7 @@ export function SOSActionPanel({
                         {alert.alert_type.replace("_", " ")}
                       </span>
                       <span className="text-zinc-500">
-                        {new Date(alert.received_at).toLocaleDateString()}
+                        {alert.received_at ? new Date(alert.received_at).toLocaleDateString() : "—"}
                       </span>
                       {alert.is_false_alarm && (
                         <span className="text-[10px] bg-yellow-800/60 text-yellow-300 px-1 py-0 rounded">
