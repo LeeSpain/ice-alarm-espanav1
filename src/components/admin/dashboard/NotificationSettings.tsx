@@ -17,6 +17,7 @@ interface NotificationSettingsData {
   whatsapp_paid_sales: boolean;
   whatsapp_partner_signup: boolean;
   whatsapp_hot_sales: boolean;
+  whatsapp_shift_alerts: boolean;
   whatsapp_number: string | null;
 }
 
@@ -53,6 +54,7 @@ export function NotificationSettings() {
         whatsapp_paid_sales: true,
         whatsapp_partner_signup: true,
         whatsapp_hot_sales: true,
+        whatsapp_shift_alerts: true,
         whatsapp_number: null,
       });
     }
@@ -68,6 +70,7 @@ export function NotificationSettings() {
             whatsapp_paid_sales: data.whatsapp_paid_sales,
             whatsapp_partner_signup: data.whatsapp_partner_signup,
             whatsapp_hot_sales: data.whatsapp_hot_sales,
+            whatsapp_shift_alerts: data.whatsapp_shift_alerts,
             whatsapp_number: data.whatsapp_number,
             updated_at: new Date().toISOString(),
           })
@@ -82,6 +85,7 @@ export function NotificationSettings() {
             whatsapp_paid_sales: data.whatsapp_paid_sales,
             whatsapp_partner_signup: data.whatsapp_partner_signup,
             whatsapp_hot_sales: data.whatsapp_hot_sales,
+            whatsapp_shift_alerts: data.whatsapp_shift_alerts,
             whatsapp_number: data.whatsapp_number,
           });
         if (error) throw error;
@@ -205,6 +209,18 @@ export function NotificationSettings() {
           <Switch
             checked={localSettings?.whatsapp_hot_sales ?? true}
             onCheckedChange={() => handleToggle("whatsapp_hot_sales")}
+            disabled={saveMutation.isPending}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Shift monitoring alerts</Label>
+            <p className="text-xs text-muted-foreground">No-shows, coverage gaps, staff disconnections</p>
+          </div>
+          <Switch
+            checked={localSettings?.whatsapp_shift_alerts ?? true}
+            onCheckedChange={() => handleToggle("whatsapp_shift_alerts")}
             disabled={saveMutation.isPending}
           />
         </div>

@@ -39,6 +39,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnShiftNow } from "@/hooks/useStaffShifts";
 import { useLogStaffActivity } from "@/hooks/useStaffActivityLog";
+import { useStaffHeartbeat } from "@/hooks/useStaffHeartbeat";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,9 @@ export function CallCentreHeader() {
   }, [staffInfo?.id]);
 
   const isOnDuty = !!staffInfo?.is_on_call;
+
+  // Heartbeat — sends presence pings every 30s while on duty
+  useStaffHeartbeat(staffInfo?.id ?? null, isOnDuty);
 
   // Check if current staff is on a scheduled shift
   const isOnScheduledShift = onShiftNow?.some(

@@ -5,7 +5,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 
 
 interface NotifyPayload {
-  event_type: "sale.paid" | "partner.joined" | "hot.sales" | "test" | "ev07b.alert";
+  event_type: "sale.paid" | "partner.joined" | "hot.sales" | "test" | "ev07b.alert" | "shift.no_show" | "shift.no_coverage" | "shift.disconnected";
   entity_type?: string;
   entity_id?: string;
   payload: {
@@ -28,6 +28,10 @@ interface NotifyPayload {
     message?: string;
     lat?: number;
     lng?: number;
+    // Shift monitoring fields
+    staff_name?: string;
+    shift_type?: string;
+    shift_time?: string;
   };
 }
 
@@ -80,6 +84,41 @@ const ALERT_TYPE_LABELS: Record<string, { emoji: string; label: string }> = {
   geo_fence: { emoji: "📍", label: "GEOFENCE BREACH" },
   device_offline: { emoji: "📡", label: "DEVICE OFFLINE" },
 };
+
+const SHIFT_LABELS: Record<string, string> = {
+  morning: "Morning (07:00-15:00)",
+  afternoon: "Afternoon (15:00-23:00)",
+  night: "Night (23:00-07:00)",
+};
+
+function formatShiftNoShowMessage(payload: NotifyPayload["payload"], timestamp: string): string {
+  const name = payload.staff_name || "Unknown";
+  const shiftLabel = SHIFT_LABELS[payload.shift_type || ""] || payload.shift_type || "Unknown";
+  return `🚫 SHIFT NO-SHOW
+👤 ${name} has not signed in
+📅 ${shiftLabel} shift
+🕒 ${timestamp}
+➡️ Action: Contact staff member or arrange cover immediately`;
+}
+
+function formatShiftNoCoverageMessage(payload: NotifyPayload["payload"], timestamp: string): string {
+  const shiftLabel = SHIFT_LABELS[payload.shift_type || ""] || payload.shift_type || "Unknown";
+  return `🔴 NO COVERAGE
+⚠️ No staff member is currently on duty!
+📅 ${shiftLabel} shift
+🕒 ${timestamp}
+➡️ Action: Immediate action required — assign coverage now`;
+}
+
+function formatShiftDisconnectedMessage(payload: NotifyPayload["payload"], timestamp: string): string {
+  const name = payload.staff_name || "Unknown";
+  const shiftLabel = SHIFT_LABELS[payload.shift_type || ""] || payload.shift_type || "Unknown";
+  return `📡 STAFF DISCONNECTED
+👤 ${name} has lost connection while on duty
+📅 ${shiftLabel} shift
+🕒 ${timestamp}
+➡️ Action: Check staff member's status and ensure coverage`;
+}
 
 function formatEV07BAlertMessage(payload: NotifyPayload["payload"], timestamp: string): string {
   const alertInfo = ALERT_TYPE_LABELS[payload.alert_type || ""] || { emoji: "🔔", label: "DEVICE ALERT" };
@@ -183,6 +222,18 @@ serve(async (req) => {
         case "ev07b.alert":
           shouldSend = settings.whatsapp_ev07b_alerts === true || settings.whatsapp_paid_sales === true;
           message = formatEV07BAlertMessage(payload, timestamp);
+          break;
+        case "shift.no_show":
+          shouldSend = settings.whatsapp_shift_alerts === true;
+          message = formatShiftNoShowMessage(payload, timestamp);
+          break;
+        case "shift.no_coverage":
+          shouldSend = settings.whatsapp_shift_alerts === true;
+          message = formatShiftNoCoverageMessage(payload, timestamp);
+          break;
+        case "shift.disconnected":
+          shouldSend = settings.whatsapp_shift_alerts === true;
+          message = formatShiftDisconnectedMessage(payload, timestamp);
           break;
         case "test":
           shouldSend = true;
