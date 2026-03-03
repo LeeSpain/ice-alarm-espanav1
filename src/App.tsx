@@ -18,14 +18,27 @@ import { RouteAnnouncer } from "@/components/ui/route-announcer";
 import i18n from "@/i18n";
 
 /**
- * Retry a dynamic import once after clearing the failed module from cache.
- * Handles stale chunk URLs after a new Vercel deployment.
+ * Retry a dynamic import after a new deployment invalidates chunk URLs.
+ * On failure, triggers a single page reload so the browser fetches the
+ * new HTML with updated chunk hashes. A sessionStorage flag prevents
+ * infinite reload loops.
  */
 function lazyWithRetry(importFn: () => Promise<{ default: React.ComponentType<any> }>) {
   return lazy(() =>
-    importFn().catch(() => {
-      // First attempt failed — likely a stale chunk. Retry once.
-      return importFn();
+    importFn().catch((error: unknown) => {
+      const key = "chunk-reload-" + window.location.pathname;
+      const alreadyReloaded = sessionStorage.getItem(key);
+
+      if (!alreadyReloaded) {
+        sessionStorage.setItem(key, "1");
+        window.location.reload();
+        // Return a never-resolving promise so React doesn't render stale state
+        return new Promise(() => {});
+      }
+
+      // Already reloaded once for this page — clear flag and let error propagate
+      sessionStorage.removeItem(key);
+      throw error;
     })
   );
 }
@@ -249,6 +262,12 @@ const RecoveryRedirect = () => {
 
 const App = () => {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  // Clear chunk-reload flags on successful load (prevents stale flags blocking future reloads)
+  useEffect(() => {
+    const key = "chunk-reload-" + window.location.pathname;
+    sessionStorage.removeItem(key);
+  }, []);
 
   // Global unhandled promise rejection handler - prevents blank screens
   useEffect(() => {
