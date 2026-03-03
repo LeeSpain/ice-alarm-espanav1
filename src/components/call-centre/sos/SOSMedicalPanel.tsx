@@ -30,6 +30,7 @@ interface MedicalInfo {
   doctor_name: string | null;
   doctor_phone: string | null;
   hospital_preference: string | null;
+  additional_notes: string | null;
 }
 
 const CRITICAL_CONDITIONS = [
@@ -61,7 +62,7 @@ export function SOSMedicalPanel({ memberId, specialInstructions }: SOSMedicalPan
     const fetchMedical = async () => {
       const { data } = await supabase
         .from("medical_information")
-        .select("medical_conditions, medications, allergies, blood_type, doctor_name, doctor_phone, hospital_preference")
+        .select("medical_conditions, medications, allergies, blood_type, doctor_name, doctor_phone, hospital_preference, additional_notes")
         .eq("member_id", memberId)
         .maybeSingle();
       setMedical(data);
@@ -214,6 +215,17 @@ export function SOSMedicalPanel({ memberId, specialInstructions }: SOSMedicalPan
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Additional Medical Notes */}
+          {medical?.additional_notes && (
+            <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-2">
+              <h4 className="text-xs font-semibold text-zinc-500 uppercase mb-1.5 flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                {t("sos.medical.additionalNotes", "Additional Notes")}
+              </h4>
+              <p className="text-sm text-zinc-300">{medical.additional_notes}</p>
             </div>
           )}
 

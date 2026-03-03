@@ -4,12 +4,18 @@ import {
   Phone,
   PhoneCall,
   UserPlus,
-  Clock,
   History,
   FileText,
   Stethoscope,
   Building2,
   CheckCircle,
+  Mail,
+  MessageSquare,
+  Shield,
+  Siren,
+  Users,
+  Star,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +30,11 @@ interface EmergencyContact {
   contact_name: string;
   relationship: string;
   phone: string;
+  email: string | null;
   speaks_spanish: boolean;
+  is_primary: boolean | null;
   priority_order: number;
+  notes: string | null;
 }
 
 interface PreviousAlert {
@@ -34,6 +43,7 @@ interface PreviousAlert {
   received_at: string;
   resolved_at: string | null;
   resolution_notes: string | null;
+  is_false_alarm: boolean | null;
 }
 
 interface PrivateCallState {
@@ -85,6 +95,9 @@ export function SOSActionPanel({
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [previousAlerts, setPreviousAlerts] = useState<PreviousAlert[]>([]);
   const [notes, setNotes] = useState("");
+  const [emergencyServicesCalled, setEmergencyServicesCalled] = useState(false);
+  const [nextOfKinNotified, setNextOfKinNotified] = useState(false);
+  const [memberPhone, setMemberPhone] = useState<string | null>(null);
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch emergency contacts
@@ -92,7 +105,7 @@ export function SOSActionPanel({
     const fetchContacts = async () => {
       const { data } = await supabase
         .from("emergency_contacts")
-        .select("id, contact_name, relationship, phone, speaks_spanish, priority_order")
+        .select("id, contact_name, relationship, phone, email, speaks_spanish, is_primary, priority_order, notes")
         .eq("member_id", memberId)
         .order("priority_order");
       if (data) setContacts(data);
@@ -100,33 +113,50 @@ export function SOSActionPanel({
     fetchContacts();
   }, [memberId]);
 
+  // Fetch member phone
+  useEffect(() => {
+    const fetchMember = async () => {
+      const { data } = await supabase
+        .from("members")
+        .select("phone")
+        .eq("id", memberId)
+        .maybeSingle();
+      if (data?.phone) setMemberPhone(data.phone);
+    };
+    fetchMember();
+  }, [memberId]);
+
   // Fetch previous alerts
   useEffect(() => {
     const fetchPrev = async () => {
       const { data } = await supabase
         .from("alerts")
-        .select("id, alert_type, received_at, resolved_at, resolution_notes")
+        .select("id, alert_type, received_at, resolved_at, resolution_notes, is_false_alarm")
         .eq("member_id", memberId)
         .eq("status", "resolved")
         .neq("id", alertId)
         .order("received_at", { ascending: false })
-        .limit(3);
+        .limit(5);
       if (data) setPreviousAlerts(data);
     };
     fetchPrev();
   }, [memberId, alertId]);
 
-  // Fetch existing notes
+  // Fetch existing notes and service flags
   useEffect(() => {
-    const fetchNotes = async () => {
+    const fetchAlert = async () => {
       const { data } = await supabase
         .from("alerts")
-        .select("resolution_notes")
+        .select("resolution_notes, emergency_services_called, next_of_kin_notified")
         .eq("id", alertId)
         .maybeSingle();
-      if (data?.resolution_notes) setNotes(data.resolution_notes);
+      if (data) {
+        if (data.resolution_notes) setNotes(data.resolution_notes);
+        setEmergencyServicesCalled(!!data.emergency_services_called);
+        setNextOfKinNotified(!!data.next_of_kin_notified);
+      }
     };
-    fetchNotes();
+    fetchAlert();
   }, [alertId]);
 
   // Auto-save notes every 30 seconds
@@ -147,6 +177,26 @@ export function SOSActionPanel({
   }, [notes, saveNotes]);
 
   const handleNotesBlur = () => saveNotes();
+
+  const toggleEmergencyServices = async () => {
+    const newValue = !emergencyServicesCalled;
+    setEmergencyServicesCalled(newValue);
+    await supabase
+      .from("alerts")
+      .update({ emergency_services_called: newValue })
+      .eq("id", alertId);
+  };
+
+  const toggleNextOfKin = async () => {
+    const newValue = !nextOfKinNotified;
+    setNextOfKinNotified(newValue);
+    await supabase
+      .from("alerts")
+      .update({ next_of_kin_notified: newValue })
+      .eq("id", alertId);
+  };
+
+  const falseAlarmCount = previousAlerts.filter((a) => a.is_false_alarm).length;
 
   return (
     <ScrollArea className="h-full">
@@ -170,6 +220,34 @@ export function SOSActionPanel({
             </span>
           </div>
         )}
+
+        {/* Service Tracking Flags */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            onClick={toggleEmergencyServices}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors",
+              emergencyServicesCalled
+                ? "bg-red-900/40 border-red-600 text-red-300"
+                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
+            )}
+          >
+            <Siren className="h-3.5 w-3.5 shrink-0" />
+            <span>112 {emergencyServicesCalled ? "Called" : "Not Called"}</span>
+          </button>
+          <button
+            onClick={toggleNextOfKin}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors",
+              nextOfKinNotified
+                ? "bg-blue-900/40 border-blue-600 text-blue-300"
+                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
+            )}
+          >
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span>NOK {nextOfKinNotified ? "Notified" : "Not Notified"}</span>
+          </button>
+        </div>
 
         {/* Private Call Active Indicator */}
         {privateCall && (
@@ -219,9 +297,47 @@ export function SOSActionPanel({
             <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5" />
               {t("sos.action.emergencyContacts", "Emergency Contacts")}
+              <Badge variant="outline" className="ml-auto text-xs border-zinc-600 text-zinc-500">
+                {contacts.length}
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-3 space-y-2">
+            {/* Member direct dial */}
+            {memberPhone && (
+              <div className="bg-green-900/20 border border-green-800 rounded-lg p-2 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3.5 w-3.5 text-green-400" />
+                    <p className="text-sm font-medium text-green-300">
+                      {t("sos.action.callMember", "Call Member Directly")}
+                    </p>
+                  </div>
+                  <span className="text-xs text-green-400 font-mono">{memberPhone}</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    className="flex-1 text-xs bg-green-700 hover:bg-green-800"
+                    disabled={!!privateCall}
+                    onClick={() => onCallPrivately(memberPhone, "Member")}
+                  >
+                    <Phone className="h-3 w-3 mr-1" />
+                    {t("sos.action.callPrivately", "Call Privately")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 text-xs bg-blue-700 hover:bg-blue-800"
+                    disabled={!conferenceId}
+                    onClick={() => onAddToCall("Member", memberPhone, "member")}
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" />
+                    {t("sos.action.addToCall", "Add to Call")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {contacts.length === 0 ? (
               <p className="text-xs text-zinc-500">{t("sos.action.noContacts", "No emergency contacts on file")}</p>
             ) : (
@@ -230,10 +346,19 @@ export function SOSActionPanel({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-200">
+                        {contact.is_primary && <Star className="h-3 w-3 inline mr-1 text-yellow-400" />}
                         {contact.contact_name}
                         <span className="text-zinc-500 text-xs ml-1">({contact.relationship})</span>
                       </p>
-                      <p className="text-xs text-zinc-500">{contact.phone}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-zinc-500 font-mono">{contact.phone}</span>
+                        {contact.email && (
+                          <span className="flex items-center gap-0.5 text-xs text-zinc-600">
+                            <Mail className="h-2.5 w-2.5" />
+                            {contact.email}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       {contact.speaks_spanish && <span className="text-xs">🇪🇸</span>}
@@ -242,6 +367,13 @@ export function SOSActionPanel({
                       </Badge>
                     </div>
                   </div>
+                  {/* Contact notes */}
+                  {contact.notes && (
+                    <div className="flex items-start gap-1 bg-zinc-800 rounded px-2 py-1">
+                      <Info className="h-3 w-3 text-zinc-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-zinc-400">{contact.notes}</p>
+                    </div>
+                  )}
                   <div className="flex gap-1.5">
                     <Button
                       size="sm"
@@ -269,6 +401,16 @@ export function SOSActionPanel({
                       <UserPlus className="h-3 w-3 mr-1" />
                       {t("sos.action.addToCall", "Add to Call")}
                     </Button>
+                    {contact.email && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs border-zinc-600 text-zinc-300 hover:bg-zinc-700"
+                        onClick={() => window.open(`mailto:${contact.email}`, "_blank")}
+                      >
+                        <Mail className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
@@ -290,9 +432,12 @@ export function SOSActionPanel({
                 size="sm"
                 variant="destructive"
                 className="text-xs"
-                onClick={() => window.open("tel:112", "_self")}
+                onClick={() => {
+                  window.open("tel:112", "_self");
+                  if (!emergencyServicesCalled) toggleEmergencyServices();
+                }}
               >
-                <Phone className="h-3 w-3 mr-1" />
+                <Siren className="h-3 w-3 mr-1" />
                 112
               </Button>
               <Button
@@ -325,21 +470,36 @@ export function SOSActionPanel({
               <CardTitle className="text-sm text-zinc-300 flex items-center gap-1.5">
                 <History className="h-3.5 w-3.5" />
                 {t("sos.action.previousAlerts", "Previous Alerts")}
+                {falseAlarmCount > 0 && (
+                  <Badge className="ml-auto text-xs bg-yellow-700 text-yellow-200">
+                    {falseAlarmCount} false alarm{falseAlarmCount !== 1 ? "s" : ""}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3 space-y-1.5">
               {previousAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between bg-zinc-900 rounded px-2 py-1.5 text-xs">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs border-zinc-600 text-zinc-400">
-                      {alert.alert_type.replace("_", " ")}
-                    </Badge>
-                    <span className="text-zinc-500">
-                      {new Date(alert.received_at).toLocaleDateString()}
-                    </span>
+                <div key={alert.id} className="bg-zinc-900 rounded px-2 py-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs border-zinc-600 text-zinc-400">
+                        {alert.alert_type.replace("_", " ")}
+                      </Badge>
+                      <span className="text-zinc-500">
+                        {new Date(alert.received_at).toLocaleDateString()}
+                      </span>
+                      {alert.is_false_alarm && (
+                        <Badge className="text-[10px] bg-yellow-800 text-yellow-300 px-1 py-0">
+                          False
+                        </Badge>
+                      )}
+                    </div>
+                    {alert.resolved_at && (
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                    )}
                   </div>
-                  {alert.resolved_at && (
-                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  {alert.resolution_notes && (
+                    <p className="text-zinc-500 mt-1 truncate">{alert.resolution_notes}</p>
                   )}
                 </div>
               ))}
