@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Download, 
   Users, 
@@ -383,7 +384,40 @@ export default function AnalyticsPage() {
             >
               <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
             </Button>
-            <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm">
+            <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm" onClick={() => {
+              if (!analytics) {
+                toast.info("No analytics data to export");
+                return;
+              }
+              const rows = [
+                ["Metric", "Value"],
+                ["Date Range", `Last ${days} days`],
+                ["Unique Visitors", String(analytics.uniqueVisitors)],
+                ["Page Views", String(analytics.pageViews)],
+                ["Sessions", String(analytics.sessions)],
+                ["Bounce Rate", `${analytics.bounceRate.toFixed(1)}%`],
+                ["Pages/Session", analytics.avgPagesPerSession.toFixed(1)],
+                ["Total Events", String(analytics.totalEvents)],
+                ["", ""],
+                ["Top Pages", "Views"],
+                ...analytics.topPages.map(p => [p.path, String(p.views)]),
+                ["", ""],
+                ["Country", "Events"],
+                ...analytics.countryData.map(c => [c.name, String(c.count)]),
+                ["", ""],
+                ["Device", "Events"],
+                ...analytics.deviceData.map(d => [d.name, String(d.value)]),
+              ];
+              const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `analytics-${format(new Date(), "yyyy-MM-dd")}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success("Analytics exported");
+            }}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>

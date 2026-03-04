@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-  Search, 
-  Plus, 
+import { toast } from "sonner";
+import {
+  Search,
+  Plus,
   MoreHorizontal,
   Eye,
   Battery,
@@ -17,7 +18,8 @@ import {
   Wifi,
   WifiOff,
   Package,
-  Users
+  Users,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -44,6 +47,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { useDeviceRealtime } from "@/hooks/useDeviceRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
@@ -59,11 +72,29 @@ export default function DevicesPage() {
   const [assignmentFilter, setAssignmentFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [deviceToDelete, setDeviceToDelete] = useState<any>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Subscribe to realtime updates
   useDeviceRealtime();
   useAlertsRealtime();
+
+  const deleteDeviceMutation = useMutation({
+    mutationFn: async (deviceId: string) => {
+      const { error } = await supabase.from("devices").delete().eq("id", deviceId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-devices"] });
+      toast.success(t("admin.devices.deleteSuccess", "Device deleted successfully"));
+      setDeviceToDelete(null);
+    },
+    onError: () => {
+      toast.error(t("admin.devices.deleteError", "Failed to delete device. It may be assigned to a member."));
+      setDeviceToDelete(null);
+    },
+  });
   const { data: stockStats } = useDeviceStockStats();
 
   const { data, isLoading } = useQuery({
@@ -340,15 +371,36 @@ export default function DevicesPage() {
                             <Eye className="mr-2 h-4 w-4" />
                             {t("admin.devices.viewDetails")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/devices/${device.id}`);
+                          }}>
                             <Settings className="mr-2 h-4 w-4" />
                             {t("admin.devices.configure")}
                           </DropdownMenuItem>
                           {device.last_location_lat && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`https://www.google.com/maps?q=${device.last_location_lat},${device.last_location_lng}`, "_blank");
+                            }}>
                               <MapPin className="mr-2 h-4 w-4" />
                               {t("admin.devices.viewLocation")}
                             </DropdownMenuItem>
+                          )}
+                          {!device.member_id && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeviceToDelete(device);
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {t("admin.devices.delete", "Delete Device")}
+                              </DropdownMenuItem>
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -400,6 +452,29 @@ export default function DevicesPage() {
       )}
 
       <AddDeviceModal open={addModalOpen} onOpenChange={setAddModalOpen} />
+
+      {/* Delete Device Dialog */}
+      <AlertDialog open={!!deviceToDelete} onOpenChange={(open) => !open && setDeviceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.devices.confirmDelete", "Delete Device?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.devices.deleteWarning", "This will permanently delete this device record (IMEI: {{imei}}). This action cannot be undone.", {
+                imei: deviceToDelete?.imei || "",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deviceToDelete && deleteDeviceMutation.mutate(deviceToDelete.id)}
+            >
+              {t("admin.devices.delete", "Delete Device")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

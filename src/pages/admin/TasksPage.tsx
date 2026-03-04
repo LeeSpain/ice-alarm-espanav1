@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import {
   Loader2, Plus, CheckCircle, Clock, AlertCircle,
   User, Calendar, Search, MoreHorizontal, Phone,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +33,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format, isToday, isPast, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePaginatedQuery } from "@/hooks/useSupabaseQuery";
@@ -95,6 +106,7 @@ export default function TasksPage() {
     assigned_to: "",
     member_id: "",
   });
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   // Pre-filter tasks by tab (domain-specific logic)
   const tabFilteredTasks = useMemo(() => {
@@ -278,6 +290,23 @@ export default function TasksPage() {
     } catch (error) {
       console.error("Error updating task:", error);
       toast.error("Failed to update task");
+    }
+  };
+
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", taskId);
+
+      if (error) throw error;
+      toast.success("Task deleted");
+      setTaskToDelete(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
     }
   };
 
@@ -495,6 +524,14 @@ export default function TasksPage() {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => setTaskToDelete(task)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Task
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -630,6 +667,27 @@ export default function TasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Task Dialog */}
+      <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the task &quot;{taskToDelete?.title}&quot;. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => taskToDelete && deleteTask(taskToDelete.id)}
+            >
+              Delete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

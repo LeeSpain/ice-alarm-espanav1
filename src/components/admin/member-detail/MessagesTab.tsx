@@ -534,19 +534,19 @@ export function MessagesTab({ memberId, memberName }: MessagesTabProps) {
                       </Button>
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <Button variant="outline" size="sm" disabled>
+                      <Button variant="outline" size="sm" onClick={() => toast.info("SMS integration coming soon")}>
                         <MessageSquare className="mr-1 h-3 w-3" />
                         SMS
                       </Button>
-                      <Button variant="outline" size="sm" disabled>
+                      <Button variant="outline" size="sm" onClick={() => toast.info("WhatsApp integration coming soon")}>
                         <MessageSquare className="mr-1 h-3 w-3" />
                         WhatsApp
                       </Button>
-                      <Button variant="outline" size="sm" disabled>
+                      <Button variant="outline" size="sm" onClick={() => toast.info("Email integration coming soon")}>
                         <Mail className="mr-1 h-3 w-3" />
                         Email
                       </Button>
-                      <Button variant="outline" size="sm" disabled>
+                      <Button variant="outline" size="sm" onClick={() => toast.info("Call logging coming soon")}>
                         <Phone className="mr-1 h-3 w-3" />
                         Log Call
                       </Button>

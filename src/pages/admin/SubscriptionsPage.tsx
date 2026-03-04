@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { 
-  Search, 
+import { toast } from "sonner";
+import {
+  Search,
   MoreHorizontal,
   Eye,
   Pause,
@@ -38,6 +39,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 
@@ -45,12 +56,19 @@ const ITEMS_PER_PAGE = 20;
 
 export default function SubscriptionsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [frequencyFilter, setFrequencyFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
+
+  // Confirmation dialog state
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "pause" | "resume" | "cancel";
+    subscription: any;
+  } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-subscriptions", searchQuery, statusFilter, planFilter, frequencyFilter, page],
@@ -83,7 +101,7 @@ export default function SubscriptionsPage() {
       let filtered = subscriptions || [];
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        filtered = filtered.filter((s: any) => 
+        filtered = filtered.filter((s: any) =>
           s.member?.first_name?.toLowerCase().includes(q) ||
           s.member?.last_name?.toLowerCase().includes(q) ||
           s.member?.email?.toLowerCase().includes(q)
@@ -93,6 +111,83 @@ export default function SubscriptionsPage() {
       return { subscriptions: filtered, totalCount: count || 0 };
     },
   });
+
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update(updates)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+      const action = variables.updates.status;
+      const messages: Record<string, string> = {
+        paused: "Subscription paused successfully",
+        active: "Subscription resumed successfully",
+        cancelled: "Subscription cancelled successfully",
+      };
+      toast.success(messages[action] || "Subscription updated");
+      setConfirmAction(null);
+    },
+    onError: () => {
+      toast.error("Failed to update subscription");
+      setConfirmAction(null);
+    },
+  });
+
+  const handleAction = (type: "pause" | "resume" | "cancel", subscription: any) => {
+    setConfirmAction({ type, subscription });
+  };
+
+  const confirmActionHandler = () => {
+    if (!confirmAction) return;
+
+    const { type, subscription } = confirmAction;
+    const updates: Record<string, any> = {};
+
+    switch (type) {
+      case "pause":
+        updates.status = "paused";
+        break;
+      case "resume":
+        updates.status = "active";
+        break;
+      case "cancel":
+        updates.status = "cancelled";
+        updates.cancelled_at = new Date().toISOString();
+        break;
+    }
+
+    updateSubscriptionMutation.mutate({ id: subscription.id, updates });
+  };
+
+  const getConfirmDialogContent = () => {
+    if (!confirmAction) return { title: "", description: "" };
+
+    const memberName = confirmAction.subscription.member
+      ? `${confirmAction.subscription.member.first_name} ${confirmAction.subscription.member.last_name}`
+      : "Unknown member";
+
+    switch (confirmAction.type) {
+      case "pause":
+        return {
+          title: "Pause Subscription?",
+          description: `This will pause the subscription for ${memberName}. The member will not be billed until the subscription is resumed.`,
+        };
+      case "resume":
+        return {
+          title: "Resume Subscription?",
+          description: `This will resume the subscription for ${memberName}. Billing will restart from the next billing cycle.`,
+        };
+      case "cancel":
+        return {
+          title: "Cancel Subscription?",
+          description: `This will permanently cancel the subscription for ${memberName}. This action cannot be easily reversed.`,
+        };
+    }
+  };
 
   const totalPages = Math.ceil((data?.totalCount || 0) / ITEMS_PER_PAGE);
 
@@ -199,8 +294,8 @@ export default function SubscriptionsPage() {
                 </TableRow>
               ) : data?.subscriptions && data.subscriptions.length > 0 ? (
                 data.subscriptions.map((sub: any) => (
-                  <TableRow 
-                    key={sub.id} 
+                  <TableRow
+                    key={sub.id}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/admin/members/${sub.member_id}`)}
                   >
@@ -218,7 +313,7 @@ export default function SubscriptionsPage() {
                       <Badge variant="secondary" className="capitalize">{sub.plan_type}</Badge>
                     </TableCell>
                     <TableCell className="capitalize">{sub.billing_frequency}</TableCell>
-                    <TableCell className="font-medium">€{Number(sub.amount).toFixed(2)}</TableCell>
+                    <TableCell className="font-medium">&euro;{Number(sub.amount).toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(sub.status)}</TableCell>
                     <TableCell>
                       {format(new Date(sub.renewal_date), "dd MMM yyyy")}
@@ -240,21 +335,30 @@ export default function SubscriptionsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {sub.status === "active" && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction("pause", sub);
+                            }}>
                               <Pause className="mr-2 h-4 w-4" />
                               Pause Subscription
                             </DropdownMenuItem>
                           )}
                           {sub.status === "paused" && (
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleAction("resume", sub);
+                            }}>
                               <Play className="mr-2 h-4 w-4" />
                               Resume Subscription
                             </DropdownMenuItem>
                           )}
                           {sub.status === "active" && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               className="text-destructive"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAction("cancel", sub);
+                              }}
                             >
                               <XCircle className="mr-2 h-4 w-4" />
                               Cancel Subscription
@@ -308,6 +412,29 @@ export default function SubscriptionsPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{getConfirmDialogContent().title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getConfirmDialogContent().description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmAction?.type === "cancel" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+              onClick={confirmActionHandler}
+            >
+              {confirmAction?.type === "pause" && "Pause"}
+              {confirmAction?.type === "resume" && "Resume"}
+              {confirmAction?.type === "cancel" && "Cancel Subscription"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

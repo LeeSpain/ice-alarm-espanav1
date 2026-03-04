@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
+import { toast } from "sonner";
+import {
   Download,
   Bell,
   CreditCard,
@@ -83,11 +84,40 @@ export default function ReportsPage() {
            </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            toast.info("PDF export coming soon");
+          }}>
             <Download className="mr-2 h-4 w-4" />
             Export PDF
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            const rows = [
+              ["Report", "Metric", "Value"],
+              ["Subscriptions", "Single", String(subscriptionData?.single || 0)],
+              ["Subscriptions", "Couple", String(subscriptionData?.couple || 0)],
+              ["Subscriptions", "Total Active", String(subscriptionData?.total || 0)],
+              ["Devices", "Active", String(deviceData?.active || 0)],
+              ["Devices", "In Stock", String(deviceData?.in_stock || 0)],
+              ["Devices", "Faulty", String(deviceData?.faulty || 0)],
+              ["Devices", "Returned", String(deviceData?.returned || 0)],
+              ["Alerts (30d)", "SOS Button", String(alertData?.sos_button || 0)],
+              ["Alerts (30d)", "Fall Detected", String(alertData?.fall_detected || 0)],
+              ["Alerts (30d)", "Low Battery", String(alertData?.low_battery || 0)],
+              ["Alerts (30d)", "Geo-fence", String(alertData?.geo_fence || 0)],
+              ["Alerts (30d)", "Total", String(alertData?.total || 0)],
+              ["Alerts (30d)", "Resolved", String(alertData?.resolved || 0)],
+              ["Alerts (30d)", "Resolution Rate", `${alertData?.total ? Math.round((alertData.resolved / alertData.total) * 100) : 0}%`],
+            ];
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `reports-${new Date().toISOString().split("T")[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("Report exported as CSV");
+          }}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>

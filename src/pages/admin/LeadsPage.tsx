@@ -36,9 +36,20 @@ import {
   MoreHorizontal,
   ExternalLink,
   FileEdit,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +135,7 @@ export default function LeadsPage() {
   const [draftDetailOpen, setDraftDetailOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("leads");
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
   useEffect(() => {
     fetchLeads();
@@ -228,6 +240,21 @@ export default function LeadsPage() {
       toast.error("Failed to assign lead");
     } else {
       toast.success("Lead assigned successfully");
+      fetchLeads();
+    }
+  };
+
+  const deleteLead = async (leadId: string) => {
+    const { error } = await supabase
+      .from('leads')
+      .delete()
+      .eq('id', leadId);
+
+    if (error) {
+      toast.error("Failed to delete lead");
+    } else {
+      toast.success("Lead deleted");
+      setLeadToDelete(null);
       fetchLeads();
     }
   };
@@ -602,12 +629,20 @@ export default function LeadsPage() {
                             Convert to Member
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => updateLeadStatus(lead.id, 'lost')}
                             className="text-destructive"
                           >
                             <XCircle className="h-4 w-4 mr-2" />
                             Mark as Lost
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setLeadToDelete(lead)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Lead
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -1094,6 +1129,27 @@ export default function LeadsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Lead Dialog */}
+      <AlertDialog open={!!leadToDelete} onOpenChange={(open) => !open && setLeadToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the lead for {leadToDelete?.first_name} {leadToDelete?.last_name} ({leadToDelete?.email}). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => leadToDelete && deleteLead(leadToDelete.id)}
+            >
+              Delete Lead
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

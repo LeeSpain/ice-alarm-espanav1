@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
-  Search, 
+import { toast } from "sonner";
+import {
+  Search,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -106,7 +107,32 @@ export default function PaymentsPage() {
             {t("adminPayments.subtitle", "View and manage all payment transactions.")}
           </p>
         </div>
-        <Button variant="outline">
+        <Button variant="outline" onClick={() => {
+          if (!data?.payments?.length) {
+            toast.info("No payments to export");
+            return;
+          }
+          const headers = ["Member", "Email", "Amount", "Type", "Method", "Status", "Date", "Invoice"];
+          const rows = data.payments.map((p: any) => [
+            p.member ? `${p.member.first_name} ${p.member.last_name}` : "Unknown",
+            p.member?.email || "",
+            `€${Number(p.amount).toFixed(2)}`,
+            p.payment_type,
+            p.payment_method,
+            p.status,
+            p.paid_at ? format(new Date(p.paid_at), "yyyy-MM-dd") : format(new Date(p.created_at), "yyyy-MM-dd"),
+            p.invoice_number || "",
+          ]);
+          const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
+          const blob = new Blob([csv], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `payments-${format(new Date(), "yyyy-MM-dd")}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast.success("Payments exported");
+        }}>
           <Download className="mr-2 h-4 w-4" />
           {t("adminPayments.export", "Export")}
         </Button>
