@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
 import { extractUtmParams, storeReferralData } from "@/lib/crmEvents";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { usePricingSettings } from "@/hooks/usePricingSettings";
+import { calculateOrder } from "@/config/pricing";
+import { reportEvent, updateDailyMetrics } from "@/lib/syncHub";
 // Step Components
 import { JoinMembershipStep } from "@/components/join/steps/JoinMembershipStep";
 import { JoinPersonalStep } from "@/components/join/steps/JoinPersonalStep";
@@ -45,10 +48,11 @@ export default function JoinWizard() {
   const [wizardData, setWizardData] = useState<JoinWizardData>(initialJoinWizardData);
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting] = useState(false);
-  
+
   // Company settings for dynamic phone/email
   const { settings: companySettings } = useCompanySettings();
-  
+  const { registrationFeeEnabled, registrationFeeDiscount } = usePricingSettings();
+
   // Progressive save hook
   const { saveDraft, clearSession } = useRegistrationDraft();
 
@@ -58,7 +62,7 @@ export default function JoinWizard() {
     if (refCode) {
       // Extract UTM parameters if present
       const utmParams = extractUtmParams(searchParams);
-      
+
       // Store referral code and UTM data - first-touch wins, don't overwrite existing
       storeReferralData(refCode, utmParams);
     }
@@ -76,6 +80,34 @@ export default function JoinWizard() {
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData);
+
+          // Report the sale to Sync Hub
+          try {
+            const order = calculateOrder({
+              membershipType: parsed.membershipType,
+              billingFrequency: parsed.billingFrequency,
+              includePendant: parsed.includePendant,
+              pendantCount: parsed.pendantCount,
+              includeShipping: parsed.includePendant,
+              registrationFeeEnabled: registrationFeeEnabled ?? false,
+              registrationFeeDiscount: registrationFeeDiscount ?? 0
+            });
+            const totalPence = Math.round(order.grandTotal * 100);
+
+            reportEvent('new_sale', {
+              amount: totalPence,
+              label: `New LifeLink sale — £${(totalPence / 100).toFixed(2)}`,
+              metadata: {
+                planName: parsed.membershipType,
+                orderId: orderNumber,
+                email: parsed.primaryMember?.email
+              }
+            });
+            updateDailyMetrics({ revenuePence: totalPence });
+          } catch (e) {
+            console.error('[SyncHub] Error calculating metrics', e);
+          }
+
           setWizardData({
             ...parsed,
             paymentComplete: true,
@@ -256,11 +288,11 @@ export default function JoinWizard() {
   const handleNext = async () => {
     if (validateCurrentStep()) {
       setStepValidation((prev) => ({ ...prev, [currentStep]: true }));
-      
+
       // Save progress to database before advancing
       // This ensures we capture data even if user abandons later
       await saveDraft(currentStep, wizardData);
-      
+
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
       }
@@ -417,8 +449,8 @@ export default function JoinWizard() {
               {t("joinWizard.back")}
             </Button>
 
-            <Button 
-              onClick={handleNext} 
+            <Button
+              onClick={handleNext}
               className="gap-2"
               disabled={isSubmitting}
             >

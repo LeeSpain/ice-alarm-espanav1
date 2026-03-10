@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Logo } from "@/components/ui/logo";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { reportEvent, updateDailyMetrics } from "@/lib/syncHub";
 
 export default function Register() {
   const { t } = useTranslation();
@@ -55,6 +56,12 @@ export default function Register() {
       }
 
       if (data.user) {
+        await reportEvent('new_signup', {
+          label: `New LifeLink member`,
+          metadata: { email: values.email }
+        });
+        await updateDailyMetrics({ newSignups: 1 });
+
         toast.success(t("auth.register.accountCreated"));
         navigate("/complete-registration");
       }

@@ -41,6 +41,7 @@ import {
 } from "recharts";
 import { useTranslation } from "react-i18next";
 import { usePendingCostsTotal } from "@/hooks/useOperationalCosts";
+import { updateFinance } from "@/lib/syncHub";
 
 const CHART_COLORS = {
   primary: "hsl(var(--primary))",
@@ -145,8 +146,7 @@ export default function FinanceDashboard() {
       const monthlyRevenue = monthlyPayments.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
       const lastMonthRevenue = lastMonthPayments.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
       const annualRevenue = yearlyPayments.data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      
-      // Calculate MRR from active subscriptions
+
       const mrr = subscriptions.data?.reduce((sum, s) => {
         if (s.billing_frequency === "annual") {
           return sum + ((s.amount || 0) / 12);
@@ -154,9 +154,21 @@ export default function FinanceDashboard() {
         return sum + (s.amount || 0);
       }, 0) || 0;
 
-      const monthlyRevenueChange = lastMonthRevenue > 0 
-        ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      const monthlyRevenueChange = lastMonthRevenue > 0
+        ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
         : 0;
+
+      try {
+        updateFinance({
+          mrrPence: Math.round(mrr * 100),
+          arrPence: Math.round(mrr * 12 * 100),
+          revenueMtdPence: Math.round(monthlyRevenue * 100),
+          revenueYtdPence: Math.round(annualRevenue * 100),
+          activeSubscriptions: subscriptions.data?.length || 0,
+        });
+      } catch (e) {
+        console.warn('[SyncHub] Failed to update finance metrics', e);
+      }
 
       return {
         monthlyRevenue,
@@ -223,7 +235,7 @@ export default function FinanceDashboard() {
         const date = subMonths(new Date(), i);
         const start = startOfMonth(date);
         const end = endOfMonth(date);
-        
+
         const { data } = await supabase
           .from("payments")
           .select("amount")
@@ -395,13 +407,13 @@ export default function FinanceDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-       <div className="flex items-center justify-between">
-         <div>
-           <h1 className="text-3xl font-bold tracking-tight">{t("adminFinance.title", "Finance Dashboard")}</h1>
-           <p className="text-muted-foreground">
-             {t("adminFinance.subtitle", "Financial overview and key metrics for ICE Alarm España")}
-           </p>
-         </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t("adminFinance.title", "Finance Dashboard")}</h1>
+          <p className="text-muted-foreground">
+            {t("adminFinance.subtitle", "Financial overview and key metrics for ICE Alarm España")}
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to="/admin/reports">
@@ -593,7 +605,7 @@ export default function FinanceDashboard() {
                 <LineChart data={revenueTrend}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `€${v/1000}k`} />
+                  <YAxis className="text-xs" tickFormatter={(v) => `€${v / 1000}k`} />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Line
                     type="monotone"

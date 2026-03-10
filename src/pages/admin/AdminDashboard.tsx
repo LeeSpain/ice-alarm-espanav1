@@ -3,12 +3,12 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { STALE_TIMES, INTERVALS } from "@/config/constants";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Users, 
-  Bell, 
-  Smartphone, 
-  ShoppingCart, 
-  DollarSign, 
+import {
+  Users,
+  Bell,
+  Smartphone,
+  ShoppingCart,
+  DollarSign,
   Calendar,
   TrendingUp,
   Package,
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { updateDailyMetrics } from "@/lib/syncHub";
 import { LeadsWidget } from "@/components/dashboard/LeadsWidget";
 import { SalesCommandStrip } from "@/components/admin/dashboard/SalesCommandStrip";
 import { PaidSalesFeed } from "@/components/admin/dashboard/PaidSalesFeed";
@@ -59,7 +60,19 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
       if (error) throw error;
-      return data as unknown as DashboardStats;
+
+      const statsData = data as unknown as DashboardStats;
+
+      try {
+        updateDailyMetrics({
+          activeUsers: statsData.active_members || 0,
+          totalUsers: statsData.active_members || 0
+        });
+      } catch (e) {
+        console.warn('[SyncHub] Admin metric update failed', e);
+      }
+
+      return statsData;
     },
     staleTime: STALE_TIMES.MEDIUM,
     refetchInterval: INTERVALS.DASHBOARD_REFRESH,
@@ -94,7 +107,7 @@ export default function AdminDashboard() {
         `)
         .order("created_at", { ascending: false })
         .limit(10);
-      
+
       return data || [];
     },
     staleTime: STALE_TIMES.MEDIUM,
@@ -297,21 +310,20 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        alert.alert_type === "sos_button" || alert.alert_type === "fall_detected"
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${alert.alert_type === "sos_button" || alert.alert_type === "fall_detected"
                           ? "bg-alert-sos/20 text-alert-sos"
                           : "bg-amber-500/20 text-amber-500"
-                      }`}>
+                        }`}>
                         <AlertTriangle className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">
                           {alert.alert_type === "sos_button" ? t("alerts.sos", "SOS")
                             : alert.alert_type === "fall_detected" ? t("alerts.fallDetected", "Fall Detected")
-                            : alert.alert_type === "device_offline" ? t("alerts.deviceOffline", "Device Offline")
-                            : alert.alert_type === "low_battery" ? t("alerts.lowBattery", "Low Battery")
-                            : alert.alert_type === "geo_fence" ? t("alerts.geoFenceAlert", "Geo-fence Alert")
-                            : alert.alert_type.replace("_", " ")}
+                              : alert.alert_type === "device_offline" ? t("alerts.deviceOffline", "Device Offline")
+                                : alert.alert_type === "low_battery" ? t("alerts.lowBattery", "Low Battery")
+                                  : alert.alert_type === "geo_fence" ? t("alerts.geoFenceAlert", "Geo-fence Alert")
+                                    : alert.alert_type.replace("_", " ")}
                           {alert.member && ` — ${alert.member.first_name} ${alert.member.last_name}`}
                         </p>
                         <p className="text-xs text-muted-foreground">
